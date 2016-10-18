@@ -36,6 +36,7 @@
 #include <graphene/chain/confidential_object.hpp>
 #include <graphene/chain/fba_object.hpp>
 #include <graphene/chain/global_property_object.hpp>
+#include <graphene/chain/license_objects.hpp>  // TODO: move!
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/operation_history_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
@@ -54,6 +55,7 @@
 #include <graphene/chain/committee_member_evaluator.hpp>
 #include <graphene/chain/confidential_evaluator.hpp>
 #include <graphene/chain/custom_evaluator.hpp>
+#include <graphene/chain/license_evaluator.hpp>
 #include <graphene/chain/market_evaluator.hpp>
 #include <graphene/chain/proposal_evaluator.hpp>
 #include <graphene/chain/transfer_evaluator.hpp>
@@ -126,6 +128,14 @@ const uint8_t witness_object::type_id;
 const uint8_t worker_object::space_id;
 const uint8_t worker_object::type_id;
 
+const uint8_t license_type_object::space_id;
+const uint8_t license_type_object::type_id;
+
+const uint8_t license_request_object::space_id;
+const uint8_t license_request_object::type_id;
+
+const uint8_t account_cycle_balance_object::space_id;
+const uint8_t account_cycle_balance_object::type_id;
 
 void database::initialize_evaluators()
 {
@@ -171,6 +181,14 @@ void database::initialize_evaluators()
    register_evaluator<transfer_from_blind_evaluator>();
    register_evaluator<blind_transfer_evaluator>();
    register_evaluator<asset_claim_fees_evaluator>();
+   register_evaluator<committee_member_update_license_issuer_evaluator>();
+   register_evaluator<committee_member_update_license_authenticator_evaluator>();
+   register_evaluator<license_type_create_evaluator>();
+   register_evaluator<license_type_edit_evaluator>();
+   register_evaluator<license_type_delete_evaluator>();
+   register_evaluator<license_request_evaluator>();
+   register_evaluator<license_approve_evaluator>();
+   register_evaluator<license_deny_evaluator>();
 }
 
 void database::initialize_indexes()
@@ -216,6 +234,11 @@ void database::initialize_indexes()
    add_index< primary_index< buyback_index                                > >();
 
    add_index< primary_index< simple_index< fba_accumulator_object       > > >();
+
+   add_index<primary_index<license_type_index>>();
+   add_index<primary_index<license_request_index>>();
+
+   add_index<primary_index<account_cycle_balance_index>>();
 }
 
 void database::init_genesis(const genesis_state_type& genesis_state)
@@ -646,6 +669,38 @@ void database::init_genesis(const genesis_state_type& genesis_state)
 
        apply_operation(genesis_eval_state, std::move(op));
    });
+
+   // Initialize cycle licensing:
+   {
+      ilog("license issuer name: ${name}", ("name", genesis_state.initial_license_issuing_authority.owner_name));
+      ilog("license authenticator name: ${name}", ("name", genesis_state.initial_license_authentication_authority.owner_name));
+
+      account_id_type issuer = get_account_id(genesis_state.initial_license_issuing_authority.owner_name);
+      account_id_type authenticator = get_account_id(genesis_state.initial_license_authentication_authority.owner_name);
+      // Create license issuing authority:
+      committee_member_update_license_issuer_operation issuer_op;
+      issuer_op.license_issuer = issuer;
+      issuer_op.committee_member_account = GRAPHENE_COMMITTEE_ACCOUNT;
+      apply_operation(genesis_eval_state, std::move(issuer_op));
+
+      // Create license authentication authority:
+      committee_member_update_license_authenticator_operation authenticator_op;
+      authenticator_op.license_authenticator = authenticator;
+      authenticator_op.committee_member_account = GRAPHENE_COMMITTEE_ACCOUNT;
+      apply_operation(genesis_eval_state, std::move(authenticator_op));
+
+      create_license_type("standard", 100, 1, 0);
+      create_license_type("manager", 500, 1, 0);
+      create_license_type("pro", 2000, 1, 0);
+      create_license_type("executive", 5000, 2, 0);
+      create_license_type("president", 25000, 3, 0);
+
+      create_license_type("standard-charter", 100, 1, CYCLE_POLICY_CHARTER_MASK);
+      create_license_type("manager-charter", 500, 1, CYCLE_POLICY_CHARTER_MASK);
+      create_license_type("pro-charter", 2000, 1, CYCLE_POLICY_CHARTER_MASK);
+      create_license_type("executive-charter", 5000, 2, CYCLE_POLICY_CHARTER_MASK);
+      create_license_type("president-charter", 25000, 3, CYCLE_POLICY_CHARTER_MASK);
+   }
 
    // Set active witnesses
    modify(get_global_properties(), [&](global_property_object& p) {

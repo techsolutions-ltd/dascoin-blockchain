@@ -602,6 +602,7 @@ public:
    {
       return get_account(account_name_or_id).get_id();
    }
+
    optional<asset_object> find_asset(asset_id_type id)const
    {
       auto rec = _remote_db->get_assets({id}).front();
@@ -609,6 +610,7 @@ public:
          _asset_cache[id] = *rec;
       return rec;
    }
+
    optional<asset_object> find_asset(string asset_symbol_or_id)const
    {
       FC_ASSERT( asset_symbol_or_id.size() > 0 );
@@ -630,6 +632,7 @@ public:
          return rec;
       }
    }
+
    asset_object get_asset(asset_id_type id)const
    {
       auto opt = find_asset(id);
@@ -652,6 +655,17 @@ public:
       opt_asset = _remote_db->lookup_asset_symbols( {asset_symbol_or_id} );
       FC_ASSERT( (opt_asset.size() > 0) && (opt_asset[0].valid()) );
       return opt_asset[0]->id;
+   }
+
+   license_type_id_type get_license_type_id(string str_or_id) const
+   {
+      FC_ASSERT( str_or_id.size() > 0 );
+      vector<optional<license_type_object>> opt_license_type;
+      if( std::isdigit( str_or_id.front() ) )
+         return fc::variant(str_or_id).as<license_type_id_type>();
+      opt_license_type = _remote_db->lookup_license_type_names( {str_or_id} );
+      FC_ASSERT( (opt_license_type.size() > 0) && (opt_license_type[0].valid()) );
+      return opt_license_type[0]->id;
    }
 
    string                            get_wallet_filename() const
@@ -2404,6 +2418,197 @@ public:
       return sign_transaction(tx, broadcast);
    }
 
+   /////////////////////////////
+   //                         //
+   // LICENSES:               //
+   //                         //
+   /////////////////////////////
+
+   // INTERNAL METHODS:
+
+   optional<license_type_object> find_license_type(license_type_id_type id)const
+   {
+      auto rec = _remote_db->get_license_types({id}).front();
+      if( rec )
+         _license_type_cache[id] = *rec;
+      return rec;
+   }
+
+   optional<license_type_object> find_license_type(string str_or_id)const
+   {
+      FC_ASSERT( str_or_id.size() > 0 );
+
+      if( auto id = maybe_id<license_type_id_type>(str_or_id) )
+      {
+         // It's an ID
+         return find_license_type(*id);
+      } else {
+         // It's a name
+         auto rec = _remote_db->lookup_license_type_names({str_or_id}).front();
+         if( rec )
+         {
+            if( rec->name != str_or_id )
+               return optional<license_type_object>();
+
+            _license_type_cache[rec->id] = *rec;
+         }
+         return rec;
+      }
+   }
+
+   license_type_object get_license_type(license_type_id_type id)const
+   {
+      auto opt = find_license_type(id);
+      FC_ASSERT(opt);
+      return *opt;
+   }
+
+   license_type_object get_license_type(string str_or_id)const
+   {
+      auto opt = find_license_type(str_or_id);
+      FC_ASSERT(opt);
+      return *opt;
+   }
+
+   license_request_object get_license_request(string id_str)const
+   {
+      // TODO: fix this in a template method.
+      auto id_opt = maybe_id<license_request_id_type>( id_str );
+      FC_ASSERT( id_opt );
+      auto opt = _remote_db->get_license_requests({*id_opt}).front();
+      FC_ASSERT( opt );
+      return *opt;
+   }
+
+   // LICENSE CREATION:
+
+   /**
+    * Create a license type, set all policy flags manually.
+    * @param  lic_authenticator MUST be license authenticator account.
+    * @param  name              Name of the license, unique.
+    * @param  amount            Amount of cycles the license grants.
+    * @param  upgrades          Number of upgrades
+    * @param  policy_flags      Policy flags, raw.
+    * @param  broadcast         true broadcast the transaction.
+    * @return                   signed version of the transaction.
+    */
+   signed_transaction create_license_type_with_policy_flags(const string& lic_authenticator,
+                                                            const string& name,
+                                                            share_type amount,
+                                                            uint8_t upgrades,
+                                                            uint32_t policy_flags,
+                                                            bool broadcast /* false */)
+   {
+      auto auth_acc = this->get_account( lic_authenticator );
+
+      FC_ASSERT( upgrades <= GRAPHENE_MAX_LICENSE_UPGRADE_COUNT );
+      FC_ASSERT( !find_license_type(name).valid(), "License with this name already exists!" );
+
+      license_type_create_operation op;
+      op.license_authentication_account = auth_acc.id;
+      op.name = name;
+      op.amount = amount;
+      op.upgrades = upgrades;
+      op.policy_flags = policy_flags;
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+      tx.validate();
+
+      return sign_transaction( tx, broadcast );
+   }
+
+   /**
+    * Edit an existing license type.
+    * @param  lic_authenticator MUST be the license authenticator.
+    * @param  name              New name of the license.
+    * @param  amount            New amount.
+    * @param  upgrades          New upgrade count.
+    * @param  policy_flags      New policy flags.
+    * @param  broadcast         true if you wish to broadcast the transaction.
+    * @return                   Signed version of the transaction.
+    */
+   signed_transaction edit_license_type(const string& lic_authenticator,
+                                        const string& name,
+                                        share_type amount,
+                                        uint8_t upgrades,
+                                        uint32_t policy_flags,
+                                        bool broadcast /* false */)
+   {
+      auto auth_acc = this->get_account( lic_authenticator );
+
+      FC_ASSERT( upgrades <= GRAPHENE_MAX_LICENSE_UPGRADE_COUNT );
+      FC_ASSERT( !find_license_type(name).valid(), "License with this name already exists!" );
+
+      // TODO: figure out how to make every setting optional.
+      license_type_edit_operation op;
+      op.license_authentication_account = auth_acc.id;
+      op.name = name;
+      op.amount = amount;
+      op.upgrades = upgrades;
+      op.policy_flags = policy_flags;
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+      tx.validate();
+
+      return sign_transaction( tx, broadcast );
+   }
+
+   /**
+    * Issue a license to an account. This will create the license request that can be denied by the license
+    * authentication authority.  Only the license issuing authority can do this.
+    * @param  issuer    This MUST be the license issuing authority.
+    * @param  account   Account to benefit the license.
+    * @param  license   License type id to be issued.
+    * @param  broadcast true if you wish to broadcast the transaction.
+    * @return           Signed version of the transaction.
+    */
+   signed_transaction issue_license(
+      const string& issuer,
+      const string& account,
+      const string& license,
+      optional<frequency_type> account_frequency,
+      bool broadcast)
+   {
+      auto issuer_account = this->get_account( issuer );
+      auto beneficiary = get_account( account );
+      auto new_license = get_license_type( license );
+
+      license_request_operation op;
+
+      op.license_issuing_account = issuer_account.id;
+      op.account = beneficiary.id;
+      op.license = new_license.id;
+      op.account_frequency = account_frequency;
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction( tx, broadcast );
+   }
+
+   signed_transaction deny_license_request(const string& authenticator, const string& req_id, bool broadcast)
+   {
+      auto authenticator_account = this->get_account( authenticator );
+      auto request = get_license_request( req_id );
+
+      license_deny_operation op;
+
+      op.license_authentication_account = authenticator_account.id;
+      op.request = request.id;
+
+      signed_transaction tx;
+      tx.operations.push_back( op );
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+
+      return sign_transaction( tx, broadcast );
+   }
+
    void dbg_make_uia(string creator, string symbol)
    {
       asset_options opts;
@@ -2594,6 +2799,7 @@ public:
    const string _wallet_filename_extension = ".wallet";
 
    mutable map<asset_id_type, asset_object> _asset_cache;
+   mutable map<license_type_id_type, license_type_object> _license_type_cache;
 };
 
 std::string operation_printer::fee(const asset& a)const {
@@ -2765,6 +2971,11 @@ vector<asset> wallet_api::list_account_balances(const string& id)
 vector<asset_object> wallet_api::list_assets(const string& lowerbound, uint32_t limit)const
 {
    return my->_remote_db->list_assets( lowerbound, limit );
+}
+
+vector<license_request_object> wallet_api::list_license_requests_by_expiration(uint32_t limit)const
+{
+   return my->_remote_db->list_license_requests_by_expiration( limit );
 }
 
 vector<operation_detail> wallet_api::get_account_history(string name, int limit)const
@@ -4265,6 +4476,80 @@ vector<blind_receipt> wallet_api::blind_history( string key_or_account )
    }
    std::sort( result.begin(), result.end(), [&]( const blind_receipt& a, const blind_receipt& b ){ return a.date > b.date; } );
    return result;
+}
+
+//////////////////////////////////
+//                              //
+// LICENSES:                    //
+//                              //
+//////////////////////////////////
+
+signed_transaction wallet_api::create_license_type_with_policy_flags(const string& lic_authenticator,
+                                                                     const string& name,
+                                                                     share_type amount,
+                                                                     uint8_t upgrades,
+                                                                     uint32_t policy_flags,
+                                                                     bool broadcast /* false */)
+{
+   return my->create_license_type_with_policy_flags( lic_authenticator, name, amount, upgrades, policy_flags, broadcast );
+}
+
+signed_transaction wallet_api::create_license_type_standard(const string& lic_authenticator,
+                                                            const string& name,
+                                                            share_type amount,
+                                                            uint8_t upgrades,
+                                                            bool broadcast /* false */)
+{
+   auto policy_flags = 0;  // No policy flags are set.
+   return my->create_license_type_with_policy_flags(lic_authenticator,
+                                                    name,
+                                                    amount,
+                                                    upgrades,
+                                                    policy_flags,
+                                                    broadcast);
+}
+
+signed_transaction wallet_api::create_license_type_chartered(const string& lic_authenticator,
+                                                             const string& name,
+                                                             share_type amount,
+                                                             uint8_t upgrades,
+                                                             bool broadcast /* false */)
+{
+   auto policy_flags = CYCLE_POLICY_CHARTER_MASK;
+   return my->create_license_type_with_policy_flags(lic_authenticator,
+                                                    name,
+                                                    amount,
+                                                    upgrades,
+                                                    policy_flags,
+                                                    broadcast);
+}
+
+vector<license_type_object> wallet_api::list_license_types_by_name(const string& lowerbound, uint32_t limit)const
+{
+   return my->_remote_db->list_license_types_by_name( lowerbound, limit );
+}
+
+vector<license_type_object> wallet_api::list_license_types_by_amount(const uint32_t lowerbound, uint32_t limit)const
+{
+   return my->_remote_db->list_license_types_by_amount( lowerbound, limit );
+}
+
+signed_transaction wallet_api::issue_license( const string& issuer, const string& account, const string& license,
+                                              const optional<frequency_type> account_frequency, bool broadcast )
+{
+   return my->issue_license( issuer, account, license, account_frequency, broadcast );
+}
+
+signed_transaction wallet_api::deny_license_request( const string& authenticator, const string& req_id, bool broadcast)
+{
+   return my->deny_license_request( authenticator, req_id, broadcast );
+}
+
+share_type wallet_api::get_account_cycle_balance(const string& name_or_id)const
+{
+   if( auto real_id = detail::maybe_id<account_id_type>(name_or_id) )
+      return my->_remote_db->get_account_cycle_balance(*real_id);
+   return my->_remote_db->get_account_cycle_balance(get_account(name_or_id).id);
 }
 
 order_book wallet_api::get_order_book( const string& base, const string& quote, unsigned limit )

@@ -31,6 +31,7 @@
 #include <graphene/chain/protocol/committee_member.hpp>
 #include <graphene/chain/protocol/confidential.hpp>
 #include <graphene/chain/protocol/fba.hpp>
+#include <graphene/chain/protocol/license.hpp>
 #include <graphene/chain/protocol/market.hpp>
 #include <graphene/chain/protocol/proposal.hpp>
 #include <graphene/chain/protocol/transfer.hpp>
@@ -91,18 +92,26 @@ namespace graphene { namespace chain {
             transfer_from_blind_operation,
             asset_settle_cancel_operation,  // VIRTUAL
             asset_claim_fees_operation,
-            fba_distribute_operation        // VIRTUAL
+            fba_distribute_operation,        // VIRTUAL
+            committee_member_update_license_issuer_operation,
+            committee_member_update_license_authenticator_operation,
+            license_type_create_operation,
+            license_type_edit_operation,
+            license_type_delete_operation,
+            license_request_operation,
+            license_approve_operation,
+            license_deny_operation
          > operation;
 
    /// @} // operations group
 
    /**
     *  Appends required authorites to the result vector.  The authorities appended are not the
-    *  same as those returned by get_required_auth 
+    *  same as those returned by get_required_auth
     *
     *  @return a set of required authorities for @ref op
     */
-   void operation_get_required_authorities( const operation& op, 
+   void operation_get_required_authorities( const operation& op,
                                             flat_set<account_id_type>& active,
                                             flat_set<account_id_type>& owner,
                                             vector<authority>&  other );
@@ -122,4 +131,7 @@ namespace graphene { namespace chain {
 } } // graphene::chain
 
 FC_REFLECT_TYPENAME( graphene::chain::operation )
-FC_REFLECT( graphene::chain::op_wrapper, (op) )
+
+FC_REFLECT( graphene::chain::op_wrapper,
+            (op)
+          )

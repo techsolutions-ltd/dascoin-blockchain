@@ -91,16 +91,107 @@ namespace graphene { namespace chain {
       void            validate()const;
    };
 
+
+    /**
+     * @brief Used by committee_members to update the license issuing authority on the blockchain.
+     * @ingroup operations
+     *
+     * This operation allows the committee_members to update the license issuing authority in the global_properties
+     * object on the blockhain. This authority has the power to create licenses, to issue license grant requests to
+     * users. It is checked by the license authorization authority.
+     *
+     * This operation may only be used in a proposed transaction, and a proposed transaction which contains this
+     * operation must have a review period specified in the current global parameters before it may be accepted.
+     */
+    struct committee_member_update_license_issuer_operation : public base_operation
+    {
+      struct fee_parameters_type { uint64_t fee = GRAPHENE_BLOCKCHAIN_PRECISION; };  // TODO: zero the fee?
+
+      asset fee;
+      /// The account to propose:
+      account_id_type license_issuer;
+      /// The commitee member that is proposing the change:
+      account_id_type committee_member_account;
+
+      account_id_type fee_payer()const { return committee_member_account; }
+      void            validate()const;
+    };
+
+    /**
+     * @brief Used by committee_members to update the license authentication authority on the blockchain.
+     * @ingroup operations
+     *
+     * This operation allows the committee_members to update the license authentication authority in the
+     * global_properties object on the blockhain. This authority has the verify and confirm license requests that the
+     * license issuing authority has issued to an user.
+     *
+     * This operation may only be used in a proposed transaction, and a proposed transaction which contains this
+     * operation must have a review period specified in the current global parameters before it may be accepted.
+     */
+    struct committee_member_update_license_authenticator_operation : public base_operation
+    {
+      struct fee_parameters_type { uint64_t fee = GRAPHENE_BLOCKCHAIN_PRECISION; };  // TODO: zero the fee?
+
+      asset fee;
+      /// The account to propose:
+      account_id_type license_authenticator;
+      /// The commitee member that is proposing the change:
+      account_id_type committee_member_account;
+
+      account_id_type fee_payer()const { return committee_member_account; }
+      void            validate()const;
+    };
+
    /// TODO: committee_member_resign_operation : public base_operation
 
 } } // graphene::chain
-FC_REFLECT( graphene::chain::committee_member_create_operation::fee_parameters_type, (fee) )
-FC_REFLECT( graphene::chain::committee_member_update_operation::fee_parameters_type, (fee) )
-FC_REFLECT( graphene::chain::committee_member_update_global_parameters_operation::fee_parameters_type, (fee) )
 
+FC_REFLECT( graphene::chain::committee_member_create_operation::fee_parameters_type,
+            (fee)
+          )
+
+FC_REFLECT( graphene::chain::committee_member_update_operation::fee_parameters_type,
+            (fee)
+          )
+
+FC_REFLECT( graphene::chain::committee_member_update_global_parameters_operation::fee_parameters_type,
+            (fee)
+          )
+
+FC_REFLECT( graphene::chain::committee_member_update_license_issuer_operation::fee_parameters_type,
+            (fee)
+          )
+
+FC_REFLECT( graphene::chain::committee_member_update_license_authenticator_operation::fee_parameters_type,
+            (fee)
+          )
 
 FC_REFLECT( graphene::chain::committee_member_create_operation,
-            (fee)(committee_member_account)(url) )
+            (fee)
+            (committee_member_account)
+            (url)
+          )
+
 FC_REFLECT( graphene::chain::committee_member_update_operation,
-            (fee)(committee_member)(committee_member_account)(new_url) )
-FC_REFLECT( graphene::chain::committee_member_update_global_parameters_operation, (fee)(new_parameters) );
+            (fee)
+            (committee_member)
+            (committee_member_account)
+            (new_url)
+          )
+
+FC_REFLECT( graphene::chain::committee_member_update_global_parameters_operation,
+            (fee)
+            (new_parameters)
+          );
+
+FC_REFLECT( graphene::chain::committee_member_update_license_issuer_operation,
+            (fee)
+            (license_issuer)
+            (committee_member_account)
+          );
+
+FC_REFLECT( graphene::chain::committee_member_update_license_authenticator_operation,
+            (fee)
+            (license_authenticator)
+            (committee_member_account)
+          );

@@ -35,6 +35,7 @@
 #include <graphene/chain/chain_property_object.hpp>
 #include <graphene/chain/committee_member_object.hpp>
 #include <graphene/chain/confidential_object.hpp>
+#include <graphene/chain/license_objects.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/operation_history_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
@@ -555,6 +556,82 @@ class database_api
        */
       vector<blinded_balance_object> get_blinded_balances( const flat_set<commitment_type>& commitments )const;
 
+      //////////////////////////
+      //                      //
+      //  LICENSES:           //
+      //                      //
+      //////////////////////////
+
+      /**
+       * @brief Get a list of license types based on id's.
+       * @param license_type_ids Id's of the license types to retrieve.
+       * @return The license types corresponding to the provided id's.
+       *
+       * This function has semantics identical to @ref get_objects.
+       */
+      vector<optional<license_type_object>> get_license_types(const vector<license_type_id_type>& license_type_ids)const;
+
+      /**
+       * @brief Get a list of license requests sorted by id.
+       * @param license_req_ids Id's of the requests to receive.
+       * @return The requests corresponding to the provided id's.
+       *
+       * This function has semantics identical to @ref get_objects.
+       */
+      vector<optional<license_request_object>> get_license_requests(const vector<license_request_id_type>& license_req_ids)const;
+
+      /**
+       * @brief Get license types active on the blockchain by name.
+       * @param lower_bound_symbol Lower bound of license type names to retrieve
+       * @param limit Maximum number of license types to fetch (must not exceed 100)
+       * @return The license types found
+       */
+      vector<license_type_object> list_license_types_by_name(const string& lower_bound_name, uint32_t limit)const;
+
+      /**
+       * @brief Get license types active on the blockchain by amount.
+       * @param lower_bound_symbol Lower bound of license type names to retrieve.
+       * @param limit Maximum number of license types to fetch (must not exceed 100).
+       *
+       * @return The license types found.
+       */
+      vector<license_type_object> list_license_types_by_amount(const uint32_t lower_bound_amount, uint32_t limit)const;
+
+      /**
+       * @brief Get a list of license types by names
+       * @param asset_symbols Symbols or stringified IDs of the assets to retrieve
+       * @return The assets corresponding to the provided symbols or IDs
+       *
+       * This function has semantics identical to @ref get_objects
+       */
+      vector<optional<license_type_object>> lookup_license_type_names(const vector<string>& names_or_ids)const;
+
+      /**
+       * @brief Get all license request objects on the blockchain by type.
+       * @param limit Maximum number of objects to fetch.
+       * @return The objects found.
+       */
+      vector<license_request_object> list_license_requests_by_type(uint32_t limit)const;
+
+      /**
+       * @brief Get all license request objects on the blockchain by expiration time.
+       * @param limit Maximum number of objects to fetch.
+       * @return The objects found.
+       */
+      vector<license_request_object> list_license_requests_by_expiration(uint32_t limit)const;
+
+      /////////////
+      // CYCLES: //
+      /////////////
+
+      /**
+       * @brief Get the amount of cycles in an acount with the given ID. If the account has no cycle balance object,
+       * the method will return 0.
+       * @param  account_id ID of the account to check.
+       * @return            Amount of cycles attached to the account.
+       */
+      share_type get_account_cycle_balance(const account_id_type account_id)const;
+
    private:
       std::shared_ptr< database_api_impl > my;
 };
@@ -657,4 +734,16 @@ FC_API(graphene::app::database_api,
 
    // Blinded balances
    (get_blinded_balances)
+
+   // Licenses
+   (get_license_types)
+   (get_license_requests)
+   (list_license_types_by_name)
+   (list_license_types_by_amount)
+   (lookup_license_type_names)
+   (list_license_requests_by_type)
+   (list_license_requests_by_expiration)
+
+   // Cycles
+   (get_account_cycle_balance)
 )

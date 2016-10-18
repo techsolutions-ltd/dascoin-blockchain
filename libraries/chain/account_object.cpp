@@ -254,6 +254,28 @@ void account_member_index::object_modified(const object& after)
 
 }
 
+void account_cycle_balance_object::adjust_cycle_balance(const share_type balance_delta)
+{
+  balance += balance_delta;
+}
+
+void account_cycle_balance_object::adjust_upgrades(const uint8_t new_upgrades)
+{
+  remaining_upgrades = new_upgrades;
+}
+
+/*void account_statistics_object::process_db_maintenance(database& db,
+                                                       const optional<license_type_id_type> license_type,
+                                                       const dynamic_global_property_object& dgpo)
+{
+  if (remaining_upgrades > 0)
+  {
+    ilog("Performing test account cycle upgrade!");
+    remaining_upgrades--;
+    cycles *= 2;
+  }
+}*/
+
 void account_referrer_index::object_inserted( const object& obj )
 {
 }

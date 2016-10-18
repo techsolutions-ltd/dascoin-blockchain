@@ -25,6 +25,7 @@
 #include <fc/uint128.hpp>
 
 #include <graphene/chain/protocol/chain_parameters.hpp>
+#include <graphene/chain/protocol/chain_authorities.hpp>
 #include <graphene/chain/protocol/types.hpp>
 #include <graphene/chain/database.hpp>
 #include <graphene/db/object.hpp>
@@ -47,6 +48,8 @@ namespace graphene { namespace chain {
 
          chain_parameters           parameters;
          optional<chain_parameters> pending_parameters;
+
+         chain_authorities          authorities;
 
          uint32_t                           next_available_vote_id = 0;
          vector<committee_member_id_type>   active_committee_members; // updated once per maintenance interval
@@ -101,12 +104,22 @@ namespace graphene { namespace chain {
          fc::uint128_t recent_slots_filled;
 
          /**
+          * The current global frequency:
+          */
+         float frequency = 0.0;
+
+         /**
           * dynamic_flags specifies chain state properties that can be
           * expressed in one bit.
           */
          uint32_t dynamic_flags = 0;
 
          uint32_t last_irreversible_block_num = 0;
+
+         /**
+          * The number of intervals untill the next cycle upgrade. Set to -1 to avoid upgrading at chain startup.
+          */
+         int intervals_until_cycle_upgrade = -1;
 
          enum dynamic_flag_bits
          {
@@ -136,8 +149,10 @@ FC_REFLECT_DERIVED( graphene::chain::dynamic_global_property_object, (graphene::
                     (recently_missed_count)
                     (current_aslot)
                     (recent_slots_filled)
+                    (frequency)
                     (dynamic_flags)
                     (last_irreversible_block_num)
+                    (intervals_until_cycle_upgrade)
                   )
 
 FC_REFLECT_DERIVED( graphene::chain::global_property_object, (graphene::db::object),
@@ -145,5 +160,6 @@ FC_REFLECT_DERIVED( graphene::chain::global_property_object, (graphene::db::obje
                     (pending_parameters)
                     (next_available_vote_id)
                     (active_committee_members)
+                    (authorities)
                     (active_witnesses)
                   )

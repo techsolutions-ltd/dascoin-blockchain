@@ -152,6 +152,22 @@ struct get_impacted_account_visitor
       _impacted.insert( op.committee_member_account );
    }
    void operator()( const committee_member_update_global_parameters_operation& op ) {}
+   void operator()( const committee_member_update_license_issuer_operation& op)
+   {
+      _impacted.insert( op.license_issuer );
+   }
+
+   void operator()( const committee_member_update_license_authenticator_operation& op)
+   {
+      _impacted.insert( op.license_authenticator );
+   }
+
+   void operator()( const license_type_create_operation& op ) {}
+   void operator()( const license_type_edit_operation& op ) {}
+   void operator()( const license_type_delete_operation& op ) {}
+   void operator()( const license_request_operation& op ) {}
+   void operator()( const license_approve_operation& op ) {}  // TODO: check if this should be impacting an account.
+   void operator()( const license_deny_operation& op ) {}
 
    void operator()( const vesting_balance_create_operation& op )
    {

@@ -72,12 +72,12 @@ vector<std::reference_wrapper<const typename Index::object_type>> database::sort
    return refs;
 }
 
-template<class... Types>
-void database::perform_account_maintenance(std::tuple<Types...> helpers)
+template<typename IndexType, typename IndexBy, class... HelperTypes>
+void database::perform_helpers(std::tuple<HelperTypes...> helpers)
 {
-   const auto& idx = get_index_type<account_index>().indices().get<by_name>();
-   for( const account_object& a : idx )
-      detail::for_each(helpers, a, detail::gen_seq<sizeof...(Types)>());
+   const auto& idx = get_index_type<IndexType>().indices().get<IndexBy>();
+   for( const typename IndexType::object_type& a : idx )
+      detail::for_each(helpers, a, detail::gen_seq<sizeof...(HelperTypes)>());
 }
 
 /// @brief A visitor for @ref worker_type which calls pay_worker on the worker within
@@ -164,7 +164,7 @@ void database::update_active_witnesses()
    /// accounts that vote for 0 or 1 witness do not get to express an opinion on
    /// the number of witnesses to have (they abstain and are non-voting accounts)
 
-   share_type stake_tally = 0; 
+   share_type stake_tally = 0;
 
    size_t witness_count = 0;
    if( stake_target > 0 )
@@ -716,9 +716,33 @@ void deprecate_annual_members( database& db )
    return;
 }
 
+// TODO: if necessary, turn this into a template method.
+void database::upgrade_cycles()
+{
+   auto& idx = get_index_type<account_cycle_balance_index>();
+   auto itr = idx.indices().get<by_account_id>().begin();
+   while( itr != idx.indices().get<by_account_id>().end() )
+   {
+      modify( *itr, [&]( account_cycle_balance_object& b ){
+         ilog("Upgrading cycles for account ${a}: before = ${o}, after = ${n}",
+              ("a", b.owner)
+              ("o", b.balance)
+              ("n", b.balance*2));
+         b.balance *= 2;
+      });
+      ++itr;
+   }
+}
+
 void database::perform_chain_maintenance(const signed_block& next_block, const global_property_object& global_props)
 {
    const auto& gpo = get_global_properties();
+   const auto& dgpo = get_dynamic_global_properties();
+
+   auto intervals_until_cycle_upgrade =
+      get<dynamic_global_property_object>(dynamic_global_property_id_type()).intervals_until_cycle_upgrade;
+   auto cycle_upgrade_maintenance_int_count =
+      get<global_property_object>(global_property_id_type()).parameters.cycle_upgrade_maintenance_int_count;
 
    distribute_fba_balances(*this);
    create_buyback_orders(*this);
@@ -799,10 +823,7 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
       }
    } fee_helper(*this, gpo);
 
-   perform_account_maintenance(std::tie(
-      tally_helper,
-      fee_helper
-      ));
+   perform_helpers<account_index, by_name>( std::tie( tally_helper, fee_helper ) );
 
    struct clear_canary {
       clear_canary(vector<uint64_t>& target): target(target){}
@@ -818,6 +839,8 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
    update_active_witnesses();
    update_active_committee_members();
    update_worker_votes();
+   if ( intervals_until_cycle_upgrade == 0 )
+      upgrade_cycles();
 
    modify(gpo, [this](global_property_object& p) {
       // Remove scaling of account registration fee
@@ -862,14 +885,14 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
       }
    }
 
-   const dynamic_global_property_object& dgpo = get_dynamic_global_properties();
-
    if( (dgpo.next_maintenance_time < HARDFORK_613_TIME) && (next_maintenance_time >= HARDFORK_613_TIME) )
       deprecate_annual_members(*this);
 
-   modify(dgpo, [next_maintenance_time](dynamic_global_property_object& d) {
+   modify(dgpo,[next_maintenance_time,cycle_upgrade_maintenance_int_count](dynamic_global_property_object& d) {
       d.next_maintenance_time = next_maintenance_time;
       d.accounts_registered_this_interval = 0;
+      if ( --d.intervals_until_cycle_upgrade < 0 )
+         d.intervals_until_cycle_upgrade = cycle_upgrade_maintenance_int_count;
    });
 
    // Reset all BitAsset force settlement volumes to zero

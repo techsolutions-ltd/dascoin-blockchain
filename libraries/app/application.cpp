@@ -78,29 +78,60 @@ namespace bpo = boost::program_options;
 namespace detail {
 
    genesis_state_type create_example_genesis() {
-      auto nathan_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("nathan")));
-      dlog("Allocating all stake to ${key}", ("key", utilities::key_to_wif(nathan_key)));
       genesis_state_type initial_state;
+
       initial_state.initial_parameters.current_fees = fee_schedule::get_default();//->set_all_fees(GRAPHENE_BLOCKCHAIN_PRECISION);
       initial_state.initial_active_witnesses = GRAPHENE_DEFAULT_MIN_WITNESS_COUNT;
       initial_state.initial_timestamp = time_point_sec(time_point::now().sec_since_epoch() /
             initial_state.initial_parameters.block_interval *
             initial_state.initial_parameters.block_interval);
+
+      auto master_key = fc::ecc::private_key::regenerate(fc::sha256::hash("sys.master"));
+      initial_state.initial_accounts.emplace_back("sys.master",
+                                                  master_key.get_public_key(),
+                                                  master_key.get_public_key(),
+                                                  true);
+
+      // Initial witness accounts:
       for( uint64_t i = 0; i < initial_state.initial_active_witnesses; ++i )
       {
-         auto name = "init"+fc::to_string(i);
+         auto name = "sys.witness"+fc::to_string(i);
+         auto witness_key = fc::ecc::private_key::regenerate(fc::sha256::hash(name));
          initial_state.initial_accounts.emplace_back(name,
-                                                     nathan_key.get_public_key(),
-                                                     nathan_key.get_public_key(),
+                                                     witness_key.get_public_key(),
+                                                     witness_key.get_public_key(),
                                                      true);
-         initial_state.initial_committee_candidates.push_back({name});
-         initial_state.initial_witness_candidates.push_back({name, nathan_key.get_public_key()});
+         initial_state.initial_witness_candidates.push_back({name, witness_key.get_public_key()});
       }
 
-      initial_state.initial_accounts.emplace_back("nathan", nathan_key.get_public_key());
-      initial_state.initial_balances.push_back({nathan_key.get_public_key(),
+      // Initial board members:
+      initial_state.initial_committee_candidates.push_back({"sys.master"});
+
+      // Initial balances:
+      initial_state.initial_balances.push_back({master_key.get_public_key(),
                                                 GRAPHENE_SYMBOL,
                                                 GRAPHENE_MAX_SHARE_SUPPLY});
+
+      auto lic_issuer_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.license-issuer")));
+      initial_state.initial_accounts.emplace_back("sys.license-issuer",
+                                                  lic_issuer_key.get_public_key(),
+                                                  lic_issuer_key.get_public_key(),
+                                                  true);
+      initial_state.initial_license_issuing_authority = {"sys.license-issuer"};
+
+      auto lic_auth_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.license-authenticator")));
+      initial_state.initial_accounts.emplace_back("sys.license-authenticator",
+                                                  lic_auth_key.get_public_key(),
+                                                  lic_auth_key.get_public_key(),
+                                                  true);
+      initial_state.initial_license_authentication_authority = {"sys.license-authenticator"};
+
+      auto faucet_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.faucet")));
+      initial_state.initial_accounts.emplace_back("sys.faucet",
+                                                  faucet_key.get_public_key(),
+                                                  faucet_key.get_public_key(),
+                                                  true);
+
       initial_state.initial_chain_id = fc::sha256::hash( "BOGUS" );
 
       return initial_state;
@@ -468,7 +499,7 @@ namespace detail {
             const auto& witness = blk_msg.block.witness(*_chain_db);
             const auto& witness_account = witness.witness_account(*_chain_db);
             auto last_irr = _chain_db->get_dynamic_global_properties().last_irreversible_block_num;
-            ilog("Got block: #${n} time: ${t} latency: ${l} ms from: ${w}  irreversible: ${i} (-${d})", 
+            ilog("Got block: #${n} time: ${t} latency: ${l} ms from: ${w}  irreversible: ${i} (-${d})",
                  ("t",blk_msg.block.timestamp)
                  ("n", blk_msg.block.block_num())
                  ("l", (latency.count()/1000))
@@ -563,7 +594,7 @@ namespace detail {
 
          result.reserve(limit);
          block_id_type last_known_block_id;
-         
+
          if (blockchain_synopsis.empty() ||
              (blockchain_synopsis.size() == 1 && blockchain_synopsis[0] == block_id_type()))
          {
@@ -624,13 +655,13 @@ namespace detail {
       }
 
       /**
-       * Returns a synopsis of the blockchain used for syncing.  This consists of a list of 
+       * Returns a synopsis of the blockchain used for syncing.  This consists of a list of
        * block hashes at intervals exponentially increasing towards the genesis block.
        * When syncing to a peer, the peer uses this data to determine if we're on the same
        * fork as they are, and if not, what blocks they need to send us to get us on their
        * fork.
        *
-       * In the over-simplified case, this is a straighforward synopsis of our current 
+       * In the over-simplified case, this is a straighforward synopsis of our current
        * preferred blockchain; when we first connect up to a peer, this is what we will be sending.
        * It looks like this:
        *   If the blockchain is empty, it will return the empty list.
@@ -646,7 +677,7 @@ namespace detail {
        *     the last item in the list will be the hash of the most recent block on our preferred chain
        * so if the blockchain had 26 blocks labeled a - z, the synopsis would be:
        *    a n u x z
-       * the idea being that by sending a small (<30) number of block ids, we can summarize a huge 
+       * the idea being that by sending a small (<30) number of block ids, we can summarize a huge
        * blockchain.  The block ids are more dense near the end of the chain where because we are
        * more likely to be almost in sync when we first connect, and forks are likely to be short.
        * If the peer we're syncing with in our example is on a fork that started at block 'v',
@@ -661,27 +692,27 @@ namespace detail {
        * no reason to fetch the blocks.
        *
        * Second, when a peer replies to our initial synopsis and gives us a list of the blocks they think
-       * we are missing, they only send a chunk of a few thousand blocks at once.  After we get those 
+       * we are missing, they only send a chunk of a few thousand blocks at once.  After we get those
        * block ids, we need to request more blocks by sending another synopsis (we can't just say "send me
        * the next 2000 ids" because they may have switched forks themselves and they don't track what
        * they've sent us).  For faster performance, we want to get a fairly long list of block ids first,
        * then start downloading the blocks.
        * The peer doesn't handle these follow-up block id requests any different from the initial request;
        * it treats the synopsis we send as our blockchain and bases its response entirely off that.  So to
-       * get the response we want (the next chunk of block ids following the last one they sent us, or, 
+       * get the response we want (the next chunk of block ids following the last one they sent us, or,
        * failing that, the shortest fork off of the last list of block ids they sent), we need to construct
        * a synopsis as if our blockchain was made up of:
        *    1. the blocks in our block chain up to the fork point (if there is a fork) or the head block (if no fork)
        *    2. the blocks we've already pushed from their fork (if there's a fork)
        *    3. the block ids they've previously sent us
-       * Segment 3 is handled in the p2p code, it just tells us the number of blocks it has (in 
+       * Segment 3 is handled in the p2p code, it just tells us the number of blocks it has (in
        * number_of_blocks_after_reference_point) so we can leave space in the synopsis for them.
        * We're responsible for constructing the synopsis of Segments 1 and 2 from our active blockchain and
        * fork database.  The reference_point parameter is the last block from that peer that has been
        * successfully pushed to the blockchain, so that tells us whether the peer is on a fork or on
        * the main chain.
        */
-      virtual std::vector<item_hash_t> get_blockchain_synopsis(const item_hash_t& reference_point, 
+      virtual std::vector<item_hash_t> get_blockchain_synopsis(const item_hash_t& reference_point,
                                                                uint32_t number_of_blocks_after_reference_point) override
       { try {
           std::vector<item_hash_t> synopsis;
@@ -706,13 +737,13 @@ namespace detail {
 
               if (reference_point_block_num < low_block_num)
               {
-                // we're on the same fork (at least as far as reference_point) but we've passed 
-                // reference point and could no longer undo that far if we diverged after that 
+                // we're on the same fork (at least as far as reference_point) but we've passed
+                // reference point and could no longer undo that far if we diverged after that
                 // block.  This should probably only happen due to a race condition where
-                // the network thread calls this function, and then immediately pushes a bunch of blocks, 
+                // the network thread calls this function, and then immediately pushes a bunch of blocks,
                 // then the main thread finally processes this function.
                 // with the current framework, there's not much we can do to tell the network
-                // thread what our current head block is, so we'll just pretend that 
+                // thread what our current head block is, so we'll just pretend that
                 // our head is actually the reference point.
                 // this *may* enable us to fetch blocks that we're unable to push, but that should
                 // be a rare case (and correctly handled)
@@ -756,7 +787,7 @@ namespace detail {
               if (non_fork_high_block_num < low_block_num)
               {
                 wlog("Unable to generate a usable synopsis because the peer we're generating it for forked too long ago "
-                     "(our chains diverge after block #${non_fork_high_block_num} but only undoable to block #${low_block_num})", 
+                     "(our chains diverge after block #${non_fork_high_block_num} but only undoable to block #${low_block_num})",
                      ("low_block_num", low_block_num)
                      ("non_fork_high_block_num", non_fork_high_block_num));
                 FC_THROW_EXCEPTION(graphene::net::block_older_than_undo_history, "Peer is are on a fork I'm unable to switch to");
@@ -773,11 +804,11 @@ namespace detail {
           }
 
           // at this point:
-          // low_block_num is the block before the first block we can undo, 
+          // low_block_num is the block before the first block we can undo,
           // non_fork_high_block_num is the block before the fork (if the peer is on a fork, or otherwise it is the same as high_block_num)
           // high_block_num is the block number of the reference block, or the end of the chain if no reference provided
 
-          // true_high_block_num is the ending block number after the network code appends any item ids it 
+          // true_high_block_num is the ending block number after the network code appends any item ids it
           // knows about that we don't
           uint32_t true_high_block_num = high_block_num + number_of_blocks_after_reference_point;
           do

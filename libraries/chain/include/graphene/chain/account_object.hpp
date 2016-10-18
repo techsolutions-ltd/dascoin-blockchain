@@ -86,6 +86,16 @@ namespace graphene { namespace chain {
           * Core fees are paid into the account_statistics_object by this method
           */
          void pay_fee( share_type core_fee, share_type cashback_vesting_threshold );
+
+         /**
+          * Do all operations on a regular db maintenance cycle.
+          * @param db A reference to the object database.
+          * @param license_type A reference to the license type object.
+          * @param dgpo A reference to the dynamic global properties object.
+          */
+         void process_db_maintenance(database& db,
+                                     const optional<license_type_id_type> license_type,
+                                     const dynamic_global_property_object& dgpo);
    };
 
    /**
@@ -109,6 +119,31 @@ namespace graphene { namespace chain {
          void  adjust_balance(const asset& delta);
    };
 
+   /**
+    * @brief Tracks the cycle balance of a single account and connects it to a license.
+    * @ingroup object
+    *
+    */
+   class account_cycle_balance_object : public abstract_object<account_cycle_balance_object>
+   {
+      public:
+         static const uint8_t space_id = implementation_ids;
+         static const uint8_t type_id  = impl_account_cycle_balance_object_type;
+
+         account_id_type owner;
+         share_type balance;
+         uint8_t remaining_upgrades;
+
+         share_type get_balance()const { return balance; }
+         uint8_t get_remaining_upgrades()const { return remaining_upgrades; }
+
+         /**
+          * Adjust the cycle balance of the account.
+          * @param delta The amount by which to change.
+          */
+         void adjust_cycle_balance(const share_type balance_delta);
+         void adjust_upgrades(const uint8_t upgrades);
+   };
 
    /**
     * @brief This class represents an account on the object graph
@@ -208,6 +243,21 @@ namespace graphene { namespace chain {
 
          special_authority owner_special_authority = no_special_authority();
          special_authority active_special_authority = no_special_authority();
+
+         /**
+          * A cycle license the account holds:
+          */
+         optional<license_type_id_type> license;
+
+         /**
+          * This value, if set, overrides the global frequency of the account.
+          */
+         optional<frequency_type> account_frequency;
+
+         /**
+          * Is this a chartered account?
+          */
+         bool is_chartered = false;
 
          /**
           * This flag is set when the top_n logic sets both authorities,
@@ -364,6 +414,23 @@ namespace graphene { namespace chain {
     */
    typedef generic_index<account_object, account_multi_index_type> account_index;
 
+   struct by_account_id;
+   typedef multi_index_container<
+      account_cycle_balance_object,
+      indexed_by<
+         ordered_unique< tag<by_id>,
+            member< object, object_id_type, &object::id >
+         >,
+         ordered_non_unique< tag<by_account_id>,
+            member< account_cycle_balance_object, account_id_type, &account_cycle_balance_object::owner>
+         >
+      >
+   > account_cycle_balance_multi_index_type;
+
+   typedef generic_index<
+      account_cycle_balance_object, account_cycle_balance_multi_index_type
+   > account_cycle_balance_index;
+
 }}
 
 FC_REFLECT_DERIVED( graphene::chain::account_object,
@@ -373,7 +440,11 @@ FC_REFLECT_DERIVED( graphene::chain::account_object,
                     (name)(owner)(active)(options)(statistics)(whitelisting_accounts)(blacklisting_accounts)
                     (whitelisted_accounts)(blacklisted_accounts)
                     (cashback_vb)
-                    (owner_special_authority)(active_special_authority)
+                    (owner_special_authority)
+                    (active_special_authority)
+                    (license)
+                    (account_frequency)
+                    (is_chartered)
                     (top_n_control_flags)
                     (allowed_assets)
                     )
@@ -389,6 +460,12 @@ FC_REFLECT_DERIVED( graphene::chain::account_statistics_object,
                     (total_ops)
                     (total_core_in_orders)
                     (lifetime_fees_paid)
-                    (pending_fees)(pending_vested_fees)
+                    (pending_fees)
+                    (pending_vested_fees)
                   )
 
+FC_REFLECT_DERIVED( graphene::chain::account_cycle_balance_object, (graphene::db::object),
+                    (owner)
+                    (balance)
+                    (remaining_upgrades)
+                  )

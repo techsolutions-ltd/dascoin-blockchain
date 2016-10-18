@@ -152,8 +152,6 @@ endif()
 
 add_subdirectory( libraries )
 add_subdirectory( programs )
-add_subdirectory( tests )
-
 
 if (ENABLE_INSTALLER)
 

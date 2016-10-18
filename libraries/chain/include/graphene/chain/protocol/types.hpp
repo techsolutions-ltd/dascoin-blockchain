@@ -107,6 +107,14 @@ namespace graphene { namespace chain {
       implementation_ids    = 2
    };
 
+   enum cycle_policy_flags
+   {
+      auto_submit_to_queue    = 0x01,  /**< are cycles automatically submitted to the queue? */
+      retain_after_submission = 0x02,  /**< after submission, do we spend the cycles*/
+   };
+   const static uint32_t CYCLE_POLICY_AUTO_SUBMIT_MASK = auto_submit_to_queue;
+   const static uint32_t CYCLE_POLICY_CHARTER_MASK = auto_submit_to_queue | retain_after_submission;
+
    inline bool is_relative( object_id_type o ){ return o.space() == 0; }
 
    /**
@@ -155,7 +163,10 @@ namespace graphene { namespace chain {
       impl_budget_record_object_type,
       impl_special_authority_object_type,
       impl_buyback_object_type,
-      impl_fba_accumulator_object_type
+      impl_fba_accumulator_object_type,
+      impl_license_type_object_type,
+      impl_license_request_object_type,
+      impl_account_cycle_balance_object_type
    };
 
    //typedef fc::unsigned_int            object_id_type;
@@ -207,6 +218,9 @@ namespace graphene { namespace chain {
    class special_authority_object;
    class buyback_object;
    class fba_accumulator_object;
+   class license_type_object;
+   class license_request_object;
+   class account_cycle_balance_object;
 
    typedef object_id< implementation_ids, impl_global_property_object_type,  global_property_object>                    global_property_id_type;
    typedef object_id< implementation_ids, impl_dynamic_global_property_object_type,  dynamic_global_property_object>    dynamic_global_property_id_type;
@@ -228,6 +242,19 @@ namespace graphene { namespace chain {
    typedef object_id< implementation_ids, impl_buyback_object_type, buyback_object >                                    buyback_id_type;
    typedef object_id< implementation_ids, impl_fba_accumulator_object_type, fba_accumulator_object >                    fba_accumulator_id_type;
 
+   typedef object_id<
+      implementation_ids, impl_license_type_object_type, license_type_object
+   > license_type_id_type;
+
+   typedef object_id<
+      implementation_ids, impl_license_request_object_type, license_request_object
+   > license_request_id_type;
+
+   typedef object_id<
+    implementation_ids, impl_account_cycle_balance_object_type, account_cycle_balance_object
+   > account_cycle_balance_id_type;
+
+
    typedef fc::array<char, GRAPHENE_MAX_ASSET_SYMBOL_LENGTH>    symbol_type;
    typedef fc::ripemd160                                        block_id_type;
    typedef fc::ripemd160                                        checksum_type;
@@ -236,6 +263,7 @@ namespace graphene { namespace chain {
    typedef fc::ecc::compact_signature                           signature_type;
    typedef safe<int64_t>                                        share_type;
    typedef uint16_t                                             weight_type;
+   typedef float                                                frequency_type;
 
    struct public_key_type
    {
@@ -268,9 +296,9 @@ namespace graphene { namespace chain {
          uint32_t                   check = 0;
          fc::ecc::extended_key_data data;
       };
-      
+
       fc::ecc::extended_key_data key_data;
-       
+
       extended_public_key_type();
       extended_public_key_type( const fc::ecc::extended_key_data& data );
       extended_public_key_type( const fc::ecc::extended_public_key& extpubkey );
@@ -281,7 +309,7 @@ namespace graphene { namespace chain {
       friend bool operator == ( const extended_public_key_type& p1, const extended_public_key_type& p2);
       friend bool operator != ( const extended_public_key_type& p1, const extended_public_key_type& p2);
    };
-   
+
    struct extended_private_key_type
    {
       struct binary_key
@@ -290,9 +318,9 @@ namespace graphene { namespace chain {
          uint32_t                   check = 0;
          fc::ecc::extended_key_data data;
       };
-      
+
       fc::ecc::extended_key_data key_data;
-       
+
       extended_private_key_type();
       extended_private_key_type( const fc::ecc::extended_key_data& data );
       extended_private_key_type( const fc::ecc::extended_private_key& extprivkey );
@@ -359,6 +387,9 @@ FC_REFLECT_ENUM( graphene::chain::impl_object_type,
                  (impl_special_authority_object_type)
                  (impl_buyback_object_type)
                  (impl_fba_accumulator_object_type)
+                 (impl_license_type_object_type)
+                 (impl_license_request_object_type)
+                 (impl_account_cycle_balance_object_type)
                )
 
 FC_REFLECT_TYPENAME( graphene::chain::share_type )
@@ -390,6 +421,9 @@ FC_REFLECT_TYPENAME( graphene::chain::budget_record_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::special_authority_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::buyback_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::fba_accumulator_id_type )
+FC_REFLECT_TYPENAME( graphene::chain::license_type_id_type )
+FC_REFLECT_TYPENAME( graphene::chain::license_request_id_type )
+FC_REFLECT_TYPENAME( graphene::chain::account_cycle_balance_id_type )
 
 FC_REFLECT( graphene::chain::void_t, )
 
@@ -404,3 +438,8 @@ FC_REFLECT_ENUM( graphene::chain::asset_issuer_permission_flags,
    (witness_fed_asset)
    (committee_fed_asset)
    )
+
+FC_REFLECT_ENUM( graphene::chain::cycle_policy_flags,
+                 (auto_submit_to_queue)
+                 (retain_after_submission)
+               )

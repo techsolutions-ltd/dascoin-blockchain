@@ -295,6 +295,13 @@ namespace graphene { namespace chain {
          void adjust_balance(account_id_type account, asset delta);
 
          /**
+          * @brief Adjsut a particular account's cycle balance by a delta.
+          * @param account ID of the account whose balance should be adjusted.
+          * @param delta   Amount to adjust balance by.
+          */
+         void adjust_cycle_balance(account_id_type account, share_type delta, optional<uint8_t> upgrades_delta);
+
+         /**
           * @brief Helper to make lazy deposit to CDD VBO.
           *
           * If the given optional VBID is not valid(),
@@ -304,7 +311,7 @@ namespace graphene { namespace chain {
           * to newly created VBID and return it.
           *
           * Otherwise, credit amount to ovbid.
-          * 
+          *
           * @return ID of newly created VBO, but only if VBO was created.
           */
          optional< vesting_balance_id_type > deposit_lazy_vesting(
@@ -386,7 +393,6 @@ namespace graphene { namespace chain {
           */
          processed_transaction validate_transaction( const signed_transaction& trx );
 
-
          /** when popping a block, the transactions that were removed get cached here so they
           * can be reapplied at the proper time */
          std::deque< signed_transaction >       _popped_tx;
@@ -394,6 +400,12 @@ namespace graphene { namespace chain {
          /**
           * @}
           */
+
+         //////////////////// db_license.cpp ////////////////////
+         void create_license_type(const string& name, const share_type amount, const uint8_t upgrades,
+                                  const uint32_t flags);
+
+
    protected:
          //Mark pop_undo() as protected -- we do not want outside calling pop_undo(); it should call pop_block() instead
          void pop_undo() { object_database::pop_undo(); }
@@ -435,6 +447,8 @@ namespace graphene { namespace chain {
          void update_maintenance_flag( bool new_maintenance_flag );
          void update_withdraw_permissions();
          bool check_for_blackswan( const asset_object& mia, bool enable_black_swan = true );
+         void assign_licenses();
+         void deny_license_request(const license_request_object& req);
 
          ///Steps performed only at maintenance intervals
          ///@{
@@ -447,10 +461,11 @@ namespace graphene { namespace chain {
          void perform_chain_maintenance(const signed_block& next_block, const global_property_object& global_props);
          void update_active_witnesses();
          void update_active_committee_members();
+         void upgrade_cycles();
          void update_worker_votes();
 
-         template<class... Types>
-         void perform_account_maintenance(std::tuple<Types...> helpers);
+         template<typename IndexType, typename IndexBy, class... HelperTypes>
+         void perform_helpers(std::tuple<HelperTypes...> helpers);
          ///@}
          ///@}
 

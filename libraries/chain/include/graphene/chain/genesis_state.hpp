@@ -98,6 +98,10 @@ struct genesis_state_type {
       string owner_name;
       share_type daily_pay;
    };
+   struct initial_chain_authority_type {
+     /// Must correspond to one of the initial accounts
+     string owner_name;
+   };
 
    time_point_sec                           initial_timestamp;
    share_type                               max_core_supply = GRAPHENE_MAX_SHARE_SUPPLY;
@@ -113,9 +117,15 @@ struct genesis_state_type {
    vector<initial_worker_type>              initial_worker_candidates;
 
    /**
+    * Initial chain authorities.
+    */
+   initial_chain_authority_type             initial_license_issuing_authority;
+   initial_chain_authority_type             initial_license_authentication_authority;
+
+   /**
     * Temporary, will be moved elsewhere.
     */
-   chain_id_type                            initial_chain_id;
+   chain_id_type                          initial_chain_id;
 
    /**
     * Get the chain_id corresponding to this genesis state.
@@ -127,29 +137,77 @@ struct genesis_state_type {
 
 } } // namespace graphene::chain
 
-FC_REFLECT(graphene::chain::genesis_state_type::initial_account_type, (name)(owner_key)(active_key)(is_lifetime_member))
+FC_REFLECT( graphene::chain::genesis_state_type::initial_account_type,
+            (name)
+            (owner_key)
+            (active_key)
+            (is_lifetime_member)
+          )
 
-FC_REFLECT(graphene::chain::genesis_state_type::initial_asset_type,
-           (symbol)(issuer_name)(description)(precision)(max_supply)(accumulated_fees)(is_bitasset)(collateral_records))
+FC_REFLECT( graphene::chain::genesis_state_type::initial_asset_type,
+            (symbol)
+            (issuer_name)
+            (description)
+            (precision)
+            (max_supply)
+            (accumulated_fees)
+            (is_bitasset)
+            (collateral_records)
+          )
 
-FC_REFLECT(graphene::chain::genesis_state_type::initial_asset_type::initial_collateral_position,
-           (owner)(collateral)(debt))
+FC_REFLECT( graphene::chain::genesis_state_type::initial_asset_type::initial_collateral_position,
+            (owner)
+            (collateral)
+            (debt)
+          )
 
-FC_REFLECT(graphene::chain::genesis_state_type::initial_balance_type,
-           (owner)(asset_symbol)(amount))
+FC_REFLECT( graphene::chain::genesis_state_type::initial_balance_type,
+            (owner)
+            (asset_symbol)
+            (amount)
+          )
 
-FC_REFLECT(graphene::chain::genesis_state_type::initial_vesting_balance_type,
-           (owner)(asset_symbol)(amount)(begin_timestamp)(vesting_duration_seconds)(begin_balance))
+FC_REFLECT( graphene::chain::genesis_state_type::initial_vesting_balance_type,
+            (owner)
+            (asset_symbol)
+            (amount)
+            (begin_timestamp)
+            (vesting_duration_seconds)
+            (begin_balance)
+          )
 
-FC_REFLECT(graphene::chain::genesis_state_type::initial_witness_type, (owner_name)(block_signing_key))
+FC_REFLECT( graphene::chain::genesis_state_type::initial_witness_type,
+            (owner_name)
+            (block_signing_key)
+          )
 
-FC_REFLECT(graphene::chain::genesis_state_type::initial_committee_member_type, (owner_name))
+FC_REFLECT( graphene::chain::genesis_state_type::initial_committee_member_type,
+            (owner_name)
+          )
 
-FC_REFLECT(graphene::chain::genesis_state_type::initial_worker_type, (owner_name)(daily_pay))
+FC_REFLECT( graphene::chain::genesis_state_type::initial_worker_type,
+            (owner_name)
+            (daily_pay)
+          )
 
-FC_REFLECT(graphene::chain::genesis_state_type,
-           (initial_timestamp)(max_core_supply)(initial_parameters)(initial_accounts)(initial_assets)(initial_balances)
-           (initial_vesting_balances)(initial_active_witnesses)(initial_witness_candidates)
-           (initial_committee_candidates)(initial_worker_candidates)
-           (initial_chain_id)
-           (immutable_parameters))
+FC_REFLECT( graphene::chain::genesis_state_type::initial_chain_authority_type,
+            (owner_name)
+          )
+
+FC_REFLECT( graphene::chain::genesis_state_type,
+            (initial_timestamp)
+            (max_core_supply)
+            (initial_parameters)
+            (initial_accounts)
+            (initial_assets)
+            (initial_balances)
+            (initial_vesting_balances)
+            (initial_active_witnesses)
+            (initial_witness_candidates)
+            (initial_committee_candidates)
+            (initial_worker_candidates)
+            (initial_license_issuing_authority)
+            (initial_license_authentication_authority)
+            (initial_chain_id)
+            (immutable_parameters)
+          )

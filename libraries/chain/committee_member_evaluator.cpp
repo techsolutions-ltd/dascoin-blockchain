@@ -89,4 +89,36 @@ void_result committee_member_update_global_parameters_evaluator::do_apply(const 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
+void_result committee_member_update_license_issuer_evaluator::do_evaluate(const committee_member_update_license_issuer_operation& o)
+{ try {
+   // Check if the license issuer is a lifetime member.
+   FC_ASSERT( db().get(o.license_issuer).is_lifetime_member() );
+   return void_result();
+} FC_CAPTURE_AND_RETHROW( (o) )}
+
+void_result committee_member_update_license_issuer_evaluator::do_apply(const committee_member_update_license_issuer_operation& o)
+{ try {
+   // Modifiy the global properties object and set the new license issuing authority.
+   db().modify(db().get_global_properties(), [&o](global_property_object& p) {
+      p.authorities.license_issuer = o.license_issuer;
+   });
+   return void_result();
+} FC_CAPTURE_AND_RETHROW( (o) )}
+
+void_result committee_member_update_license_authenticator_evaluator::do_evaluate(const committee_member_update_license_authenticator_operation& o)
+{ try {
+   // Check if the license authenticator is a lifetime member.
+   FC_ASSERT( db().get(o.license_authenticator).is_lifetime_member() );
+   return void_result();
+} FC_CAPTURE_AND_RETHROW( (o) )}
+
+void_result committee_member_update_license_authenticator_evaluator::do_apply(const committee_member_update_license_authenticator_operation& o)
+{ try {
+   // Modifiy the global properties object and set the new license authentication authority.
+   db().modify(db().get_global_properties(), [&o](global_property_object& p) {
+      p.authorities.license_authenticator = o.license_authenticator;
+   });
+   return void_result();
+} FC_CAPTURE_AND_RETHROW( (o) )}
+
 } } // graphene::chain

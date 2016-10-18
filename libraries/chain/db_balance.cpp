@@ -59,7 +59,7 @@ void database::adjust_balance(account_id_type account, asset delta )
    auto itr = index.find(boost::make_tuple(account, delta.asset_id));
    if(itr == index.end())
    {
-      FC_ASSERT( delta.amount > 0, "Insufficient Balance: ${a}'s balance of ${b} is less than required ${r}", 
+      FC_ASSERT( delta.amount > 0, "Insufficient Balance: ${a}'s balance of ${b} is less than required ${r}",
                  ("a",account(*this).name)
                  ("b",to_pretty_string(asset(0,delta.asset_id)))
                  ("r",to_pretty_string(-delta)));
@@ -73,6 +73,46 @@ void database::adjust_balance(account_id_type account, asset delta )
          FC_ASSERT( itr->get_balance() >= -delta, "Insufficient Balance: ${a}'s balance of ${b} is less than required ${r}", ("a",account(*this).name)("b",to_pretty_string(itr->get_balance()))("r",to_pretty_string(-delta)));
       modify(*itr, [delta](account_balance_object& b) {
          b.adjust_balance(delta);
+      });
+   }
+
+} FC_CAPTURE_AND_RETHROW( (account)(delta) ) }
+
+void database::adjust_cycle_balance(account_id_type account, share_type delta, optional<uint8_t> upgrades)
+{ try {
+
+   if( delta == 0 )
+      return;
+
+   if ( upgrades.valid() )
+      FC_ASSERT( *upgrades > 0, "Upgrades must be increased by a positive amont: upgrades = ${u} ", ("u",upgrades) );
+
+   auto& index = get_index_type<account_cycle_balance_index>().indices().get<by_account_id>();
+   auto itr = index.find(account);
+   if(itr == index.end())
+   {
+      FC_ASSERT( delta > 0, "Insufficient Balance: ${a}'s balance of cycles is less than required ${r}",
+                 ("a",account(*this).name)
+                 ("r",to_pretty_string(-delta)));
+
+      create<account_cycle_balance_object>([account,delta,upgrades](account_cycle_balance_object& b) {
+         b.owner = account;
+         b.balance = delta;
+         if ( upgrades.valid() )
+            b.remaining_upgrades = *upgrades;
+      });
+   } else {
+      if( delta < 0 )
+         FC_ASSERT( itr->get_balance() >= -delta,
+                    "Insufficient Balance: ${a}'s balance of ${b} is less than required ${r}",
+                    ("a",account(*this).name)
+                    ("b",to_pretty_string(itr->get_balance()))
+                    ("r",to_pretty_string(-delta)));
+
+      modify(*itr, [delta,upgrades](account_cycle_balance_object& b) {
+         b.adjust_cycle_balance(delta);
+         if ( upgrades.valid() )
+            b.adjust_upgrades(*upgrades);
       });
    }
 

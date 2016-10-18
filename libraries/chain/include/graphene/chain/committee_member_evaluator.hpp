@@ -54,4 +54,28 @@ namespace graphene { namespace chain {
          void_result do_apply( const committee_member_update_global_parameters_operation& o );
    };
 
+   //////////////////////////////////////////////
+   // Evaluators for chain authority updates:  //
+   //////////////////////////////////////////////
+
+   class committee_member_update_license_issuer_evaluator
+      : public evaluator<committee_member_update_license_issuer_evaluator>
+   {
+      public:
+         typedef committee_member_update_license_issuer_operation operation_type;
+
+         void_result do_evaluate( const committee_member_update_license_issuer_operation& o );
+         void_result do_apply( const committee_member_update_license_issuer_operation& o );
+   };
+
+   class committee_member_update_license_authenticator_evaluator
+      : public evaluator<committee_member_update_license_authenticator_evaluator>
+   {
+      public:
+         typedef committee_member_update_license_authenticator_operation operation_type;
+
+         void_result do_evaluate( const committee_member_update_license_authenticator_operation& o );
+         void_result do_apply( const committee_member_update_license_authenticator_operation& o );
+   };
+
 } } // graphene::chain

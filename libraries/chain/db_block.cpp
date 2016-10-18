@@ -534,6 +534,10 @@ void database::_apply_block( const signed_block& next_block )
    // to be called for header validation?
    update_maintenance_flag( maint_needed );
    update_witness_schedule();
+
+   // Handle completed license requests.
+   assign_licenses();
+
    if( !_node_property_object.debug_updates.empty() )
       apply_debug_updates();
 
@@ -546,7 +550,7 @@ void database::_apply_block( const signed_block& next_block )
 
 void database::notify_changed_objects()
 { try {
-   if( _undo_db.enabled() ) 
+   if( _undo_db.enabled() )
    {
       const auto& head_undo = _undo_db.head();
       vector<object_id_type> changed_ids;  changed_ids.reserve(head_undo.old_values.size());
@@ -667,7 +671,7 @@ const witness_object& database::validate_block_header( uint32_t skip, const sign
    FC_ASSERT( head_block_time() < next_block.timestamp, "", ("head_block_time",head_block_time())("next",next_block.timestamp)("blocknum",next_block.block_num()) );
    const witness_object& witness = next_block.witness(*this);
 
-   if( !(skip&skip_witness_signature) ) 
+   if( !(skip&skip_witness_signature) )
       FC_ASSERT( next_block.validate_signee( witness.signing_key ) );
 
    if( !(skip&skip_witness_schedule_check) )

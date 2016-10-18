@@ -60,7 +60,7 @@ void database::update_global_dynamic_data( const signed_block& b )
          modify( witness_missed, [&]( witness_object& w ) {
            w.total_missed++;
          });
-      } 
+      }
    }
 
    // dynamic global properties updating
@@ -190,7 +190,7 @@ void database::clear_expired_proposals()
 
 /**
  *  let HB = the highest bid for the collateral  (aka who will pay the most DEBT for the least collateral)
- *  let SP = current median feed's Settlement Price 
+ *  let SP = current median feed's Settlement Price
  *  let LC = the least collateralized call order's swan price (debt/collateral)
  *
  *  If there is no valid price feed or no bids then there is no black swan.
@@ -236,7 +236,7 @@ bool database::check_for_blackswan( const asset_object& mia, bool enable_black_s
     }
 
     auto least_collateral = call_itr->collateralization();
-    if( ~least_collateral >= highest  ) 
+    if( ~least_collateral >= highest  )
     {
        elog( "Black Swan detected: \n"
              "   Least collateralized call: ${lc}  ${~lc}\n"
@@ -250,7 +250,7 @@ bool database::check_for_blackswan( const asset_object& mia, bool enable_black_s
        FC_ASSERT( enable_black_swan, "Black swan was detected during a margin update which is not allowed to trigger a blackswan" );
        globally_settle_asset(mia, ~least_collateral );
        return true;
-    } 
+    }
     return false;
 }
 
@@ -407,8 +407,8 @@ void database::clear_expired_orders()
             }
             try {
                settled += match(*itr, order, settlement_price, max_settlement);
-            } 
-            catch ( const black_swan_exception& e ) { 
+            }
+            catch ( const black_swan_exception& e ) {
                wlog( "black swan detected: ${e}", ("e", e.to_detail_string() ) );
                cancel_order( order );
                break;
@@ -474,4 +474,34 @@ void database::update_withdraw_permissions()
       remove(*permit_index.begin());
 }
 
-} }
+void database::assign_licenses()
+{ try {
+  transaction_evaluation_state assign_context(this);
+  const auto& idx = get_index_type<license_request_index>().indices().get<by_expiration>();
+
+  while ( !idx.empty() && idx.begin()->expiration <= head_block_time() )
+  {
+    const auto& req = *idx.begin();
+    const auto& gpo = get_global_properties();
+    ilog("Appliying license request ${id}", ("id", req.id));
+
+    license_approve_operation op;
+    op.license_authentication_account = gpo.authorities.license_authenticator;
+    op.request = req.id;
+
+    assign_context.skip_fee_schedule_check = true;  // TODO: this is set in limit order cancel, determine why!
+    apply_operation( assign_context, op );
+
+    remove(req);
+
+  }
+} FC_CAPTURE_AND_RETHROW() }
+
+void database::deny_license_request(const license_request_object& req)
+{ try {
+
+  remove(req);
+
+} FC_CAPTURE_AND_RETHROW() }
+
+} }  // namespace database::chain

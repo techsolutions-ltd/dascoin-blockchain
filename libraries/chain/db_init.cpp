@@ -264,6 +264,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    } inhibitor(*this);
 
    transaction_evaluation_state genesis_eval_state(this);
+   genesis_eval_state.skip_chain_authority_check = true;
 
    flat_index<block_summary_object>& bsi = get_mutable_index_type< flat_index<block_summary_object> >();
    bsi.resize(0xffff+1);

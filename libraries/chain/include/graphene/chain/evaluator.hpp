@@ -102,11 +102,14 @@ namespace graphene { namespace chain {
        */
       void pay_fba_fee( uint64_t fba_id );
 
-      // the next two functions are helpers that allow template functions declared in this 
+      // the next two functions are helpers that allow template functions declared in this
       // header to call db() without including database.hpp, which would
       // cause a circular dependency
       share_type calculate_fee_for_operation(const operation& op) const;
       void db_adjust_balance(const account_id_type& fee_payer, asset fee_from_account);
+
+      // Checks based on transaction state of the evaluator:
+      bool skip_chain_authority_check() const { return trx_state->skip_chain_authority_check; }
 
       asset                            fee_from_account;
       share_type                       core_fee_paid;

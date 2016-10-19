@@ -929,33 +929,16 @@ public:
    signed_transaction register_account(string name,
                                        public_key_type owner,
                                        public_key_type active,
-                                       string  registrar_account,
-                                       string  referrer_account,
-                                       uint32_t referrer_percent,
                                        bool broadcast = false)
    { try {
       FC_ASSERT( !self.is_locked() );
       FC_ASSERT( is_valid_name(name) );
-      account_create_operation account_create_op;
 
-      // #449 referrer_percent is on 0-100 scale, if user has larger
-      // number it means their script is using GRAPHENE_100_PERCENT scale
-      // instead of 0-100 scale.
-      FC_ASSERT( referrer_percent <= 100 );
       // TODO:  process when pay_from_account is ID
+      account_object registrar_account_object = this->get_account( "sys.registrar" );
 
-      account_object registrar_account_object =
-            this->get_account( registrar_account );
-      FC_ASSERT( registrar_account_object.is_lifetime_member() );
-
-      account_id_type registrar_account_id = registrar_account_object.id;
-
-      account_object referrer_account_object =
-            this->get_account( referrer_account );
-      account_create_op.referrer = referrer_account_object.id;
-      account_create_op.referrer_percent = uint16_t( referrer_percent * GRAPHENE_1_PERCENT );
-
-      account_create_op.registrar = registrar_account_id;
+      account_create_operation account_create_op;
+      account_create_op.registrar = registrar_account_object.id;
       account_create_op.name = name;
       account_create_op.owner = authority(1, owner, 1);
       account_create_op.active = authority(1, active, 1);
@@ -992,7 +975,7 @@ public:
       if( broadcast )
          _remote_net_broadcast->broadcast_transaction( tx );
       return tx;
-   } FC_CAPTURE_AND_RETHROW( (name)(owner)(active)(registrar_account)(referrer_account)(referrer_percent)(broadcast) ) }
+   } FC_CAPTURE_AND_RETHROW( (name)(owner)(active)(broadcast) ) }
 
 
    signed_transaction upgrade_account(string name, bool broadcast)
@@ -1050,8 +1033,6 @@ public:
 
    signed_transaction create_account_with_private_key(fc::ecc::private_key owner_privkey,
                                                       string account_name,
-                                                      string registrar_account,
-                                                      string referrer_account,
                                                       bool broadcast = false,
                                                       bool save_wallet = true)
    { try {
@@ -1069,11 +1050,13 @@ public:
 
          // TODO:  process when pay_from_account is ID
 
-         account_object registrar_account_object = get_account( registrar_account );
+         // TODO: this value is hardcoded, do this in a more elegant manner.
+         account_object registrar_account_object = get_account("sys.registrar");
 
          account_id_type registrar_account_id = registrar_account_object.id;
 
-         account_object referrer_account_object = get_account( referrer_account );
+         // TODO: referrer is set to NULL, it is pending to be removed.
+         account_object referrer_account_object = get_account( GRAPHENE_NULL_ACCOUNT );
          account_create_op.referrer = referrer_account_object.id;
          account_create_op.referrer_percent = referrer_account_object.referrer_rewards_percentage;
 
@@ -1121,12 +1104,10 @@ public:
          if( broadcast )
             _remote_net_broadcast->broadcast_transaction( tx );
          return tx;
-   } FC_CAPTURE_AND_RETHROW( (account_name)(registrar_account)(referrer_account)(broadcast) ) }
+   } FC_CAPTURE_AND_RETHROW( (account_name)(broadcast) ) }
 
    signed_transaction create_account_with_brain_key(string brain_key,
                                                     string account_name,
-                                                    string registrar_account,
-                                                    string referrer_account,
                                                     bool broadcast = false,
                                                     bool save_wallet = true)
    { try {
@@ -1134,8 +1115,8 @@ public:
       string normalized_brain_key = normalize_brain_key( brain_key );
       // TODO:  scan blockchain for accounts that exist with same brain key
       fc::ecc::private_key owner_privkey = derive_private_key( normalized_brain_key, 0 );
-      return create_account_with_private_key(owner_privkey, account_name, registrar_account, referrer_account, broadcast, save_wallet);
-   } FC_CAPTURE_AND_RETHROW( (account_name)(registrar_account)(referrer_account) ) }
+      return create_account_with_private_key( owner_privkey, account_name, broadcast, save_wallet );
+   } FC_CAPTURE_AND_RETHROW( (account_name) ) }
 
 
    signed_transaction create_asset(string issuer,
@@ -2735,7 +2716,7 @@ public:
          {
             std::ostringstream brain_key;
             brain_key << "brain key for account " << prefix << i;
-            signed_transaction trx = create_account_with_brain_key(brain_key.str(), prefix + fc::to_string(i), master.name, master.name, /* broadcast = */ true, /* save wallet = */ false);
+            signed_transaction trx = create_account_with_brain_key(brain_key.str(), prefix + fc::to_string(i), /* broadcast = */ true, /* save wallet = */ false);
          }
          fc::time_point end = fc::time_point::now();
          ilog("Created ${n} accounts in ${time} milliseconds",
@@ -3315,21 +3296,15 @@ fc::ecc::private_key wallet_api::derive_private_key(const std::string& prefix_st
 signed_transaction wallet_api::register_account(string name,
                                                 public_key_type owner_pubkey,
                                                 public_key_type active_pubkey,
-                                                string  registrar_account,
-                                                string  referrer_account,
-                                                uint32_t referrer_percent,
                                                 bool broadcast)
 {
-   return my->register_account( name, owner_pubkey, active_pubkey, registrar_account, referrer_account, referrer_percent, broadcast );
+   return my->register_account( name, owner_pubkey, active_pubkey, broadcast );
 }
-signed_transaction wallet_api::create_account_with_brain_key(string brain_key, string account_name,
-                                                             string registrar_account, string referrer_account,
+signed_transaction wallet_api::create_account_with_brain_key(string brain_key,
+                                                             string account_name,
                                                              bool broadcast /* = false */)
 {
-   return my->create_account_with_brain_key(
-            brain_key, account_name, registrar_account,
-            referrer_account, broadcast
-            );
+   return my->create_account_with_brain_key( brain_key, account_name, broadcast );
 }
 signed_transaction wallet_api::issue_asset(string to_account, string amount, string symbol,
                                            string memo, bool broadcast)

@@ -95,6 +95,8 @@ void verify_account_votes( const database& db, const account_options& options )
 void_result account_create_evaluator::do_evaluate( const account_create_operation& op )
 { try {
    database& d = db();
+   account_id_type registrar_id = d.get_global_properties().authorities.registrar;
+
    if( d.head_block_time() < HARDFORK_516_TIME )
    {
       FC_ASSERT( !op.extensions.value.owner_special_authority.valid() );
@@ -109,8 +111,11 @@ void_result account_create_evaluator::do_evaluate( const account_create_operatio
    }
 
    FC_ASSERT( d.find_object(op.options.voting_account), "Invalid proxy account specified." );
-   FC_ASSERT( fee_paying_account->is_lifetime_member(), "Only Lifetime members may register an account." );
    FC_ASSERT( op.referrer(d).is_member(d.head_block_time()), "The referrer must be either a lifetime or annual subscriber." );
+
+   // Check for validity of chain authorities:
+   if ( !skip_chain_authority_check() )
+      FC_ASSERT( fee_paying_account->id == registrar_id, "Account can only be registered by current registrar chain authority" );
 
    try
    {

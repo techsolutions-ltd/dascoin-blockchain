@@ -95,6 +95,7 @@ namespace graphene { namespace chain {
             fba_distribute_operation,        // VIRTUAL
             committee_member_update_license_issuer_operation,
             committee_member_update_license_authenticator_operation,
+            committee_member_update_account_registrar_operation,
             license_type_create_operation,
             license_type_edit_operation,
             license_type_delete_operation,

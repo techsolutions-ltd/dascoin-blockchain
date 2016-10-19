@@ -25,7 +25,7 @@
 #include <graphene/chain/protocol/base.hpp>
 #include <graphene/chain/protocol/chain_parameters.hpp>
 
-namespace graphene { namespace chain { 
+namespace graphene { namespace chain {
 
    /**
     * @brief Create a committee_member object, as a bid to hold a committee_member seat on the network.
@@ -122,7 +122,7 @@ namespace graphene { namespace chain {
      * @ingroup operations
      *
      * This operation allows the committee_members to update the license authentication authority in the
-     * global_properties object on the blockhain. This authority has the verify and confirm license requests that the
+     * global_properties object on the blockhain. This authority has to verify and confirm license requests that the
      * license issuing authority has issued to an user.
      *
      * This operation may only be used in a proposed transaction, and a proposed transaction which contains this
@@ -140,6 +140,29 @@ namespace graphene { namespace chain {
 
       account_id_type fee_payer()const { return committee_member_account; }
       void            validate()const;
+    };
+
+    /**
+     * @brief Used by commitee members to update the account registrar on the blockchain.
+     * @ingroup operations
+     *
+     * This operation allows the committee members to update the account registrar authority in the global properties
+     * object on the blockchain. This authority must sign each account registration into the blockchain.
+     *
+     * This operation may only be used in a proposed transaction, and a proposed transaction which contains this
+     * operation must have a review period specified in the current global parameters before it may be accepted.
+     */
+    struct committee_member_update_account_registrar_operation : public base_operation
+    {
+      struct fee_parameters_type { uint64_t fee = GRAPHENE_BLOCKCHAIN_PRECISION; };  // TODO: zero the fee?
+
+      asset fee;
+
+      account_id_type registrar;  // The account to propose.
+      account_id_type committee_member_account;  // The committee member that is proposing the change.
+
+      account_id_type fee_payer()const { return committee_member_account; }
+      void validate()const;
     };
 
    /// TODO: committee_member_resign_operation : public base_operation
@@ -163,6 +186,10 @@ FC_REFLECT( graphene::chain::committee_member_update_license_issuer_operation::f
           )
 
 FC_REFLECT( graphene::chain::committee_member_update_license_authenticator_operation::fee_parameters_type,
+            (fee)
+          )
+
+FC_REFLECT( graphene::chain::committee_member_update_account_registrar_operation::fee_parameters_type,
             (fee)
           )
 
@@ -193,5 +220,11 @@ FC_REFLECT( graphene::chain::committee_member_update_license_issuer_operation,
 FC_REFLECT( graphene::chain::committee_member_update_license_authenticator_operation,
             (fee)
             (license_authenticator)
+            (committee_member_account)
+          );
+
+FC_REFLECT( graphene::chain::committee_member_update_account_registrar_operation,
+            (fee)
+            (registrar)
             (committee_member_account)
           );

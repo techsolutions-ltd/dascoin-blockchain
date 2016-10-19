@@ -81,7 +81,7 @@ namespace graphene { namespace chain {
       };
 
       asset           fee;
-      /// This account pays the fee. Must be a lifetime member.
+      /// This MUST BE the current registrar chain authority.
       account_id_type registrar;
 
       /// This account receives a portion of the fee split between registrar and referrer. Must be a member.
@@ -218,7 +218,7 @@ namespace graphene { namespace chain {
     */
    struct account_upgrade_operation : public base_operation
    {
-      struct fee_parameters_type { 
+      struct fee_parameters_type {
          uint64_t membership_annual_fee   =  2000 * GRAPHENE_BLOCKCHAIN_PRECISION;
          uint64_t membership_lifetime_fee = 10000 * GRAPHENE_BLOCKCHAIN_PRECISION; ///< the cost to upgrade to a lifetime member
       };

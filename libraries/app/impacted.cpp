@@ -157,9 +157,14 @@ struct get_impacted_account_visitor
       _impacted.insert( op.license_issuer );
    }
 
-   void operator()( const committee_member_update_license_authenticator_operation& op)
+   void operator()( const committee_member_update_license_authenticator_operation& op )
    {
       _impacted.insert( op.license_authenticator );
+   }
+
+   void operator()( const committee_member_update_account_registrar_operation& op )
+   {
+      _impacted.insert( op.registrar );
    }
 
    void operator()( const license_type_create_operation& op ) {}

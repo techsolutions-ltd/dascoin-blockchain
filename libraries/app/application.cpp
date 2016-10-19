@@ -112,6 +112,8 @@ namespace detail {
                                                 GRAPHENE_SYMBOL,
                                                 GRAPHENE_MAX_SHARE_SUPPLY});
 
+      // Initial chain authorities:
+      // License issuer:
       auto lic_issuer_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.license-issuer")));
       initial_state.initial_accounts.emplace_back("sys.license-issuer",
                                                   lic_issuer_key.get_public_key(),
@@ -119,6 +121,7 @@ namespace detail {
                                                   true);
       initial_state.initial_license_issuing_authority = {"sys.license-issuer"};
 
+      // License authenticator:
       auto lic_auth_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.license-authenticator")));
       initial_state.initial_accounts.emplace_back("sys.license-authenticator",
                                                   lic_auth_key.get_public_key(),
@@ -126,11 +129,13 @@ namespace detail {
                                                   true);
       initial_state.initial_license_authentication_authority = {"sys.license-authenticator"};
 
-      auto faucet_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.faucet")));
-      initial_state.initial_accounts.emplace_back("sys.faucet",
+      // Account registrar:
+      auto faucet_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.registrar")));
+      initial_state.initial_accounts.emplace_back("sys.registrar",
                                                   faucet_key.get_public_key(),
                                                   faucet_key.get_public_key(),
                                                   true);
+      initial_state.initial_registrar = {"sys.registrar"};
 
       initial_state.initial_chain_id = fc::sha256::hash( "BOGUS" );
 

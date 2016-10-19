@@ -121,4 +121,20 @@ void_result committee_member_update_license_authenticator_evaluator::do_apply(co
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) )}
 
+void_result committee_member_update_account_registrar_evaluator::do_evaluate(const committee_member_update_account_registrar_operation& o)
+{ try {
+   // Check if the license authenticator is a lifetime member.
+   FC_ASSERT( db().get(o.registrar).is_lifetime_member() );
+   return void_result();
+} FC_CAPTURE_AND_RETHROW( (o) )}
+
+void_result committee_member_update_account_registrar_evaluator::do_apply(const committee_member_update_account_registrar_operation& o)
+{ try {
+   // Modifiy the global properties object and set the new license authentication authority.
+   db().modify(db().get_global_properties(), [&o](global_property_object& p) {
+      p.authorities.registrar = o.registrar;
+   });
+   return void_result();
+} FC_CAPTURE_AND_RETHROW( (o) )}
+
 } } // graphene::chain

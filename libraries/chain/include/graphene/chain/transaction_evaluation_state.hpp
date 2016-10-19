@@ -47,5 +47,6 @@ namespace graphene { namespace chain {
          bool                             _is_proposed_trx = false;
          bool                             skip_fee = false;
          bool                             skip_fee_schedule_check = false;
+         bool skip_chain_authority_check = false;
    };
 } } // namespace graphene::chain

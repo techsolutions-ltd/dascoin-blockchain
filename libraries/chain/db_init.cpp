@@ -183,6 +183,7 @@ void database::initialize_evaluators()
    register_evaluator<asset_claim_fees_evaluator>();
    register_evaluator<committee_member_update_license_issuer_evaluator>();
    register_evaluator<committee_member_update_license_authenticator_evaluator>();
+   register_evaluator<committee_member_update_account_registrar_evaluator>();
    register_evaluator<license_type_create_evaluator>();
    register_evaluator<license_type_edit_evaluator>();
    register_evaluator<license_type_delete_evaluator>();
@@ -700,6 +701,19 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       create_license_type("pro-charter", 2000, 1, CYCLE_POLICY_CHARTER_MASK);
       create_license_type("executive-charter", 5000, 2, CYCLE_POLICY_CHARTER_MASK);
       create_license_type("president-charter", 25000, 3, CYCLE_POLICY_CHARTER_MASK);
+   }
+
+   // Initialize account registration:
+   {
+      ilog("Registrar name: ${name}", ("name", genesis_state.initial_registrar.owner_name));
+
+      account_id_type registrar = get_account_id(genesis_state.initial_registrar.owner_name);
+
+      // Create account registrar authority:
+      committee_member_update_account_registrar_operation op;
+      op.registrar = registrar;
+      op.committee_member_account = GRAPHENE_COMMITTEE_ACCOUNT;
+      apply_operation( genesis_eval_state, std::move(op) );
    }
 
    // Set active witnesses

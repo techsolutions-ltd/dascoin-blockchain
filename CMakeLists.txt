@@ -201,3 +201,5 @@ endif(LINUX)
 
  include(CPack)
 endif(ENABLE_INSTALLER)
+
+set(GRAPHENE_DISABLE_UNITY_BUILD 1)

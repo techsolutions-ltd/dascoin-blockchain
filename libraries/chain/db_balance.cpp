@@ -50,6 +50,20 @@ string database::to_pretty_string( const asset& a )const
    return a.asset_id(*this).amount_to_pretty_string(a.amount);
 }
 
+share_type database::get_cycle_balance(account_id_type owner) const
+{
+   const auto& idx = get_index_type<account_cycle_balance_index>().indices().get<by_account_id>();
+   const auto& itr = idx.find(owner);
+   if( itr == idx.end() )
+      return 0;
+   return itr->balance;
+}
+
+share_type database::get_cycle_balance(const account_object& owner) const
+{
+   return get_cycle_balance(owner.get_id());
+}
+
 void database::adjust_balance(account_id_type account, asset delta )
 { try {
    if( delta.amount == 0 )

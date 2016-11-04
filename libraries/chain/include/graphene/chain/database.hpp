@@ -411,8 +411,8 @@ namespace graphene { namespace chain {
           */
 
          //////////////////// db_license.cpp ////////////////////
-         void create_license_type(const string& name, const share_type amount, const uint8_t upgrades,
-                                  const uint32_t flags);
+         object_id_type create_license_type(const string& name, const share_type amount, const uint8_t upgrades,
+                                            const uint32_t flags);
 
 
    protected:

@@ -101,7 +101,10 @@ namespace graphene { namespace chain {
             license_type_delete_operation,
             license_request_operation,
             license_approve_operation,
-            license_deny_operation
+            license_deny_operation,
+            tether_accounts_operation,
+            transfer_cycles_operation,
+            upgrade_account_cycles_operation
          > operation;
 
    /// @} // operations group

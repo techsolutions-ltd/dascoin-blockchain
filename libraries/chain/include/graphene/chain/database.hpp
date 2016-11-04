@@ -288,6 +288,15 @@ namespace graphene { namespace chain {
          asset get_balance(const account_object& owner, const asset_object& asset_obj)const;
 
          /**
+          * @brief Retrieve a particular account's cycle balance.
+          * @param  owner Account IF whose cycle balance should be retrieved.
+          * @return       Balance of cycles.
+          */
+         share_type get_cycle_balance(account_id_type owner)const;
+         /// This is an overloaded method.
+         share_type get_cycle_balance(const account_object& owner)const;
+
+         /**
           * @brief Adjust a particular account's balance in a given asset by a delta
           * @param account ID of account whose balance should be adjusted
           * @param delta Asset ID and amount to adjust balance by
@@ -299,7 +308,7 @@ namespace graphene { namespace chain {
           * @param account ID of the account whose balance should be adjusted.
           * @param delta   Amount to adjust balance by.
           */
-         void adjust_cycle_balance(account_id_type account, share_type delta, optional<uint8_t> upgrades_delta);
+         void adjust_cycle_balance(account_id_type account, share_type delta, optional<uint8_t> upgrades_delta = {});
 
          /**
           * @brief Helper to make lazy deposit to CDD VBO.
@@ -402,8 +411,8 @@ namespace graphene { namespace chain {
           */
 
          //////////////////// db_license.cpp ////////////////////
-         void create_license_type(const string& name, const share_type amount, const uint8_t upgrades,
-                                  const uint32_t flags);
+         object_id_type create_license_type(const string& name, const share_type amount, const uint8_t upgrades,
+                                            const uint32_t flags);
 
 
    protected:

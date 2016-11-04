@@ -33,6 +33,7 @@
 #include <graphene/chain/asset_object.hpp>
 #include <graphene/chain/committee_member_object.hpp>
 #include <graphene/chain/fba_object.hpp>
+#include <graphene/chain/license_objects.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
 #include <graphene/chain/witness_object.hpp>
@@ -57,6 +58,58 @@ namespace graphene { namespace chain {
 using std::cout;
 using std::cerr;
 
+void database_fixture::init_genesis_state()
+{
+   genesis_state.initial_timestamp = time_point_sec( GRAPHENE_TESTING_GENESIS_TIMESTAMP );
+
+   // Master account:
+   auto master_key = fc::ecc::private_key::regenerate(fc::sha256::hash("sys.master"));
+   genesis_state.initial_accounts.emplace_back("sys.master",
+                                               master_key.get_public_key(),
+                                               master_key.get_public_key(),
+                                               true);
+
+   // Initial witness accounts:
+   genesis_state.initial_active_witnesses = 10;
+   for( size_t i = 0; i < genesis_state.initial_active_witnesses; ++i )
+   {
+      auto name = "init_witness"+fc::to_string(i);
+      genesis_state.initial_accounts.emplace_back(name,
+                                                  init_account_priv_key.get_public_key(),
+                                                  init_account_priv_key.get_public_key(),
+                                                  true);
+      genesis_state.initial_committee_candidates.push_back({name});
+      genesis_state.initial_witness_candidates.push_back({name, init_account_priv_key.get_public_key()});
+   }
+
+   // Initial chain authorities:
+   // License issuer:
+   auto lic_issuer_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.license-issuer")));
+   genesis_state.initial_accounts.emplace_back("sys.license-issuer",
+                                               lic_issuer_key.get_public_key(),
+                                               lic_issuer_key.get_public_key(),
+                                               true);
+   genesis_state.initial_license_issuing_authority = {"sys.license-issuer"};
+
+   // License authenticator:
+   auto lic_auth_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.license-authenticator")));
+   genesis_state.initial_accounts.emplace_back("sys.license-authenticator",
+                                               lic_auth_key.get_public_key(),
+                                               lic_auth_key.get_public_key(),
+                                               true);
+   genesis_state.initial_license_authentication_authority = {"sys.license-authenticator"};
+
+   // Account registrar:
+   auto faucet_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.registrar")));
+   genesis_state.initial_accounts.emplace_back("sys.registrar",
+                                               faucet_key.get_public_key(),
+                                               faucet_key.get_public_key(),
+                                               true);
+   genesis_state.initial_registrar = {"sys.registrar"};
+
+   genesis_state.initial_parameters.current_fees->zero_all_fees();
+}
+
 database_fixture::database_fixture()
    : app(), db( *app.chain_database() )
 {
@@ -75,12 +128,14 @@ database_fixture::database_fixture()
    auto mhplugin = app.register_plugin<graphene::market_history::market_history_plugin>();
    init_account_pub_key = init_account_priv_key.get_public_key();
 
+   init_genesis_state();
+
    boost::program_options::variables_map options;
 
    genesis_state.initial_timestamp = time_point_sec( GRAPHENE_TESTING_GENESIS_TIMESTAMP );
 
    genesis_state.initial_active_witnesses = 10;
-   for( int i = 0; i < genesis_state.initial_active_witnesses; ++i )
+   for( size_t i = 0; i < genesis_state.initial_active_witnesses; ++i )
    {
       auto name = "init"+fc::to_string(i);
       genesis_state.initial_accounts.emplace_back(name,
@@ -337,14 +392,17 @@ void database_fixture::generate_blocks(fc::time_point_sec timestamp, bool miss_i
 }
 
 account_create_operation database_fixture::make_account(
+   const account_kind kind,
+   const account_id_type registrar,
    const std::string& name /* = "nathan" */,
    public_key_type key /* = key_id_type() */
    )
 { try {
    account_create_operation create_account;
-   create_account.registrar = account_id_type();
 
+   create_account.kind = static_cast<uint8_t>(kind);
    create_account.name = name;
+   create_account.registrar = registrar;
    create_account.owner = authority(123, key, 123);
    create_account.active = authority(321, key, 321);
    create_account.options.memo_key = key;
@@ -379,6 +437,7 @@ account_create_operation database_fixture::make_account(
    {
       account_create_operation          create_account;
 
+      create_account.kind = static_cast<uint8_t>(account_kind::wallet);
       create_account.registrar          = registrar.id;
       create_account.referrer           = referrer.id;
       create_account.referrer_percent   = referrer_percent;
@@ -567,11 +626,12 @@ void database_fixture::change_fees(
 }
 
 const account_object& database_fixture::create_account(
+   const account_id_type registrar,
    const string& name,
    const public_key_type& key /* = public_key_type() */
    )
 {
-   trx.operations.push_back(make_account(name, key));
+   trx.operations.push_back(make_account( account_kind::wallet, registrar, name, key ));
    trx.validate();
    processed_transaction ptx = db.push_transaction(trx, ~0);
    auto& result = db.get<account_object>(ptx.operation_results[0].get<object_id_type>());
@@ -1053,6 +1113,181 @@ vector< operation_history_object > database_fixture::get_operation_history( acco
    }
    return result;
 }
+
+const account_object& database_fixture::make_new_account_base(
+   const account_kind kind,
+   const account_id_type registrar,
+   const string& name,
+   const public_key_type& key /* = public_key_type() */)
+{ try {
+   account_create_operation op;
+
+   op.kind = static_cast<uint8_t>(kind);
+   op.name = name;
+   op.registrar = registrar;
+   op.owner = authority(123, key, 123);
+   op.active = authority(321, key, 321);
+   op.options.memo_key = key;
+   op.options.voting_account = GRAPHENE_PROXY_TO_SELF_ACCOUNT;
+
+   auto& active_committee_members = db.get_global_properties().active_committee_members;
+   if( active_committee_members.size() > 0 )
+   {
+      set<vote_id_type> votes;
+      votes.insert(active_committee_members[rand() % active_committee_members.size()](db).vote_id);
+      votes.insert(active_committee_members[rand() % active_committee_members.size()](db).vote_id);
+      votes.insert(active_committee_members[rand() % active_committee_members.size()](db).vote_id);
+      votes.insert(active_committee_members[rand() % active_committee_members.size()](db).vote_id);
+      votes.insert(active_committee_members[rand() % active_committee_members.size()](db).vote_id);
+      op.options.votes = flat_set<vote_id_type>(votes.begin(), votes.end());
+   }
+   op.options.num_committee = op.options.votes.size();
+
+   op.fee = db.current_fee_schedule().calculate_fee( op );
+
+   trx.operations.push_back(op);
+   trx.validate();
+   auto r = db.push_transaction(trx, ~0);
+   const auto& result = db.get<account_object>(r.operation_results[0].get<object_id_type>());
+   trx.operations.clear();
+
+   return result;
+
+} FC_CAPTURE_AND_RETHROW() }
+
+const account_object& database_fixture::create_new_account(
+   const account_id_type registrar,
+   const string& name,
+   const public_key_type& key /* = public_key_type() */)
+{ try {
+
+   return make_new_account_base( account_kind::wallet, registrar, name, key );
+
+} FC_CAPTURE_AND_RETHROW() }
+
+const account_object& database_fixture::create_new_vault_account(
+   const account_id_type registrar,
+   const string& name,
+   const public_key_type& key /* = public_key_type() */)
+{ try {
+
+   return make_new_account_base( account_kind::vault, registrar, name, key );
+
+} FC_CAPTURE_AND_RETHROW() }
+
+const license_type_object* database_fixture::create_license_type(
+   const string& name,
+   share_type amount,
+   uint8_t upgrades,
+   bool is_chartered /* = false */)
+{
+   uint32_t flags = is_chartered ? CYCLE_POLICY_CHARTER_MASK : 0;
+
+   license_type_create_operation op;
+   op.license_authentication_account = get_license_authenticator_id();
+   op.name = name;
+   op.amount = amount;
+   op.upgrades = upgrades;
+   op.policy_flags = flags;
+
+   trx.operations.push_back( op );
+   trx.validate();
+   processed_transaction ptx = db.push_transaction( trx, ~0 );
+   trx.operations.clear();
+
+   return db.find<license_type_object>(ptx.operation_results[0].get<object_id_type>());
+}
+
+account_id_type database_fixture::get_license_issuer_id()const
+{
+   return db.get_global_properties().authorities.license_issuer;
+}
+
+account_id_type database_fixture::get_license_authenticator_id()const
+{
+   return db.get_global_properties().authorities.license_authenticator;
+}
+
+account_id_type database_fixture::get_registrar_id()const
+{
+   return db.get_global_properties().authorities.registrar;
+}
+
+const license_type_object& database_fixture::get_license_type( const string& name )const
+{
+   const auto& idx = db.get_index_type<license_type_index>().indices().get<by_name>();
+   const auto itr = idx.find(name);
+   assert( itr != idx.end() );
+   return *itr;
+}
+
+const license_request_object* database_fixture::issue_license_to_vault_account(
+   const account_id_type issuer_id,
+   const account_id_type vault_account_id,
+   const license_type_id_type license_id,
+   optional<frequency_type> account_frequency)
+{
+   license_request_operation op;
+
+   op.license_issuing_account = issuer_id;
+   op.account = vault_account_id;
+   op.license = license_id;
+   op.account_frequency = account_frequency;
+
+   trx.operations.push_back( op );
+   trx.validate();
+   processed_transaction ptx = db.push_transaction( trx, ~0 );
+   trx.operations.clear();
+
+   return db.find<license_request_object>( ptx.operation_results[0].get<object_id_type>() );
+}
+
+void database_fixture::tether_accounts(const account_id_type wallet, const account_id_type vault)
+{ try {
+   tether_accounts_operation op;
+
+   ilog("Attempting to tether '${wa}' and '${va}'", ("wa", wallet)("va", vault));
+
+   op.wallet_account = wallet;
+   op.vault_account = vault;
+
+   trx.operations.push_back( op );
+   trx.validate();
+   processed_transaction ptx = db.push_transaction( trx, ~0 );
+   trx.operations.clear();
+
+} FC_CAPTURE_AND_RETHROW ( (wallet)(vault) ) }
+
+share_type database_fixture::get_cycle_balance(const account_id_type owner)const
+{
+   return db.get_cycle_balance(owner);
+}
+
+void database_fixture::adjust_cycles(const account_id_type id, const share_type amount)
+{
+   db.adjust_cycle_balance(id, amount, {});
+}
+
+void database_fixture::transfer_cycles(
+   const account_id_type from_wallet,
+   const account_id_type to_vault,
+   const share_type amount)
+{ try {
+   transfer_cycles_operation op;
+
+   ilog("Attempting to transfer ${c} cycles from '${wa}' to '${va}'",
+      ("wa", from_wallet)("va", to_vault)("c", amount));
+
+   op.from_wallet = from_wallet;
+   op.to_vault = to_vault;
+   op.amount = amount;
+
+   trx.operations.push_back( op );
+   trx.validate();
+   processed_transaction ptx = db.push_transaction( trx, ~0 );
+   trx.operations.clear();
+
+} FC_CAPTURE_AND_RETHROW ( (from_wallet)(to_vault)(amount) ) }
 
 namespace test {
 

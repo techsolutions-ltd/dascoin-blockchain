@@ -130,7 +130,7 @@ extern uint32_t GRAPHENE_TESTING_GENESIS_TIMESTAMP;
 
 #define ACTOR(name) \
    PREP_ACTOR(name) \
-   const auto& name = create_account(BOOST_PP_STRINGIZE(name), name ## _public_key); \
+   const auto& name = create_new_account(get_registrar_id(), BOOST_PP_STRINGIZE(name), name ## _public_key); \
    account_id_type name ## _id = name.id; (void)name ## _id;
 
 #define GET_ACTOR(name) \
@@ -141,6 +141,14 @@ extern uint32_t GRAPHENE_TESTING_GENESIS_TIMESTAMP;
 
 #define ACTORS_IMPL(r, data, elem) ACTOR(elem)
 #define ACTORS(names) BOOST_PP_SEQ_FOR_EACH(ACTORS_IMPL, ~, names)
+
+#define VAULT_ACTOR(name) \
+   PREP_ACTOR(name) \
+   const auto& name = create_new_vault_account(get_registrar_id(), BOOST_PP_STRINGIZE(name), name ## _public_key); \
+   account_id_type name ## _id = name.id; (void)name ## _id;
+
+#define VAULT_ACTORS_IMPL(r, data, elem) VAULT_ACTOR(elem)
+#define VAULT_ACTORS(names) BOOST_PP_SEQ_FOR_EACH(VAULT_ACTORS_IMPL, ~, names)
 
 namespace graphene { namespace chain {
 
@@ -164,6 +172,8 @@ struct database_fixture {
    database_fixture();
    ~database_fixture();
 
+   void init_genesis_state();
+
    static fc::ecc::private_key generate_private_key(string seed);
    string generate_anon_acct_name();
    static void verify_asset_supplies( const database& db );
@@ -186,6 +196,8 @@ struct database_fixture {
    void generate_blocks(fc::time_point_sec timestamp, bool miss_intermediate_blocks = true, uint32_t skip = ~0);
 
    account_create_operation make_account(
+      const account_kind kind,
+      const account_id_type registrar,
       const std::string& name = "nathan",
       public_key_type = public_key_type()
       );
@@ -233,6 +245,7 @@ struct database_fixture {
    void issue_uia( account_id_type recipient_id, asset amount );
 
    const account_object& create_account(
+      const account_id_type registrar,
       const string& name,
       const public_key_type& key = public_key_type()
       );
@@ -251,6 +264,12 @@ struct database_fixture {
       const account_id_type& registrar_id = account_id_type(),
       const account_id_type& referrer_id = account_id_type(),
       uint8_t referrer_percent = 100
+      );
+
+   const account_object& create_vault_account(
+      const account_id_type registrar,
+      const string& name,
+      const public_key_type& key = public_key_type()
       );
 
    const committee_member_object& create_committee_member( const account_object& owner );
@@ -281,6 +300,51 @@ struct database_fixture {
    int64_t get_balance( account_id_type account, asset_id_type a )const;
    int64_t get_balance( const account_object& account, const asset_object& a )const;
    vector< operation_history_object > get_operation_history( account_id_type account_id )const;
+
+   const account_object& make_new_account_base(
+      const account_kind kind,
+      const account_id_type registrar,
+      const string& name,
+      const public_key_type& key = public_key_type()
+      );
+
+   // Use this method to create accounts for DAS tests.
+   const account_object& create_new_account(
+      const account_id_type registrar,
+      const string& name,
+      const public_key_type& key = public_key_type()
+      );
+
+   // Use this method to create vault accounts for DAS tests.
+   const account_object& create_new_vault_account(
+      const account_id_type registrar,
+      const string& name,
+      const public_key_type& key = public_key_type()
+      );
+
+   const license_type_object* create_license_type(
+      const string& name,
+      share_type amount,
+      uint8_t upgrades = 0,
+      bool is_chartered = false);
+
+   account_id_type get_registrar_id()const;
+   account_id_type get_license_issuer_id()const;
+   account_id_type get_license_authenticator_id()const;
+   const license_type_object& get_license_type( const string& name )const;
+
+   const license_request_object* issue_license_to_vault_account(
+      const account_id_type issuer_id,
+      const account_id_type vault_account_id,
+      const license_type_id_type license_id,
+      optional<frequency_type> account_frequency = optional<frequency_type>());
+
+   void tether_accounts(account_id_type wallet, account_id_type vault);
+
+   share_type get_cycle_balance(const account_id_type owner)const;
+   void adjust_cycles(const account_id_type id, const share_type amount);
+   void transfer_cycles(const account_id_type from_wallet, const account_id_type to_vault, const share_type amount);
+
 };
 
 namespace test {

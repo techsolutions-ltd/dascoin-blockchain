@@ -30,7 +30,7 @@
 namespace graphene { namespace chain {
 void_result transfer_evaluator::do_evaluate( const transfer_operation& op )
 { try {
-   
+
    const database& d = db();
 
    const account_object& from_account    = op.from(d);
@@ -66,7 +66,7 @@ void_result transfer_evaluator::do_evaluate( const transfer_operation& op )
 
       bool insufficient_balance = d.get_balance( from_account, asset_type ).amount >= op.amount.amount;
       FC_ASSERT( insufficient_balance,
-                 "Insufficient Balance: ${balance}, unable to transfer '${total_transfer}' from account '${a}' to '${t}'", 
+                 "Insufficient Balance: ${balance}, unable to transfer '${total_transfer}' from account '${a}' to '${t}'",
                  ("a",from_account.name)("t",to_account.name)("total_transfer",d.to_pretty_string(op.amount))("balance",d.to_pretty_string(d.get_balance(from_account, asset_type))) );
 
       return void_result();
@@ -80,8 +80,6 @@ void_result transfer_evaluator::do_apply( const transfer_operation& o )
    db().adjust_balance( o.to, o.amount );
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
-
-
 
 void_result override_transfer_evaluator::do_evaluate( const override_transfer_operation& op )
 { try {
@@ -120,5 +118,36 @@ void_result override_transfer_evaluator::do_apply( const override_transfer_opera
    db().adjust_balance( o.to, o.amount );
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
+
+void_result transfer_cycles_evaluator::do_evaluate(const transfer_cycles_operation& op)
+{ try {
+   const database& d = db();
+   const account_object& from_account    = op.from_wallet(d);
+   const account_object& to_account      = op.to_vault(d);
+   share_type from_balance = d.get_cycle_balance(from_account);
+
+   FC_ASSERT( from_account.is_wallet(), "Source '${f}'' must be a wallet account", ("f", from_account.name) );
+   FC_ASSERT( to_account.is_vault(), "Destination '${t}'' must be a vault account ", ("t", to_account.name) );
+
+   FC_ASSERT( from_balance >= op.amount,
+              "Insufficient Balance: ${balance}, unable to transfer '${total_transfer}' from account '${a}' to '${t}'",
+              ("a",from_account.name)
+              ("t",to_account.name)
+              ("total_transfer",op.amount)
+              ("balance",from_balance)
+            );
+   return void_result();
+
+} FC_CAPTURE_AND_RETHROW((op)) }
+
+void_result transfer_cycles_evaluator::do_apply(const transfer_cycles_operation& o)
+{ try {
+   database& d = db();
+
+   d.adjust_cycle_balance( o.from_wallet, -o.amount );
+   d.adjust_cycle_balance( o.to_vault, o.amount );
+   return void_result();
+
+} FC_CAPTURE_AND_RETHROW((o)) }
 
 } } // graphene::chain

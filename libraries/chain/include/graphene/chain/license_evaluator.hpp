@@ -19,7 +19,7 @@ public:
 
   void_result do_evaluate(const license_type_create_operation& op);
 
-  void_result do_apply(const license_type_create_operation& op);
+  object_id_type do_apply(const license_type_create_operation& op);
 };
 
 class license_type_edit_evaluator : public evaluator<license_type_edit_evaluator>
@@ -49,7 +49,7 @@ public:
 
   void_result do_evaluate(const license_request_operation& op);
 
-  void_result do_apply(const license_request_operation& op);
+  object_id_type do_apply(const license_request_operation& op);
 
 private:
   const account_object* _account_obj = nullptr;

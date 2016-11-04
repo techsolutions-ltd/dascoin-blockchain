@@ -167,6 +167,7 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
    }
 
    const auto& new_acnt_object = db().create<account_object>( [&]( account_object& obj ){
+         obj.kind = static_cast<account_kind>(o.kind);
          obj.registrar = o.registrar;
          obj.referrer = o.referrer;
          obj.lifetime_referrer = o.referrer(db()).lifetime_referrer;
@@ -207,12 +208,13 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
       ++p.accounts_registered_this_interval;
    });
 
-   const auto& global_properties = db().get_global_properties();
-   if( dynamic_properties.accounts_registered_this_interval %
-       global_properties.parameters.accounts_per_fee_scale == 0 )
-      db().modify(global_properties, [&dynamic_properties](global_property_object& p) {
-         p.parameters.current_fees->get<account_create_operation>().basic_fee <<= p.parameters.account_fee_scale_bitshifts;
-      });
+   // NOTE: fees are disabled, pay scaling is disabled as well
+   // const auto& global_properties = db().get_global_properties();
+   // if( dynamic_properties.accounts_registered_this_interval %
+   //     global_properties.parameters.accounts_per_fee_scale == 0 )
+   //    db().modify(global_properties, [&dynamic_properties](global_property_object& p) {
+   //       p.parameters.current_fees->get<account_create_operation>().basic_fee <<= p.parameters.account_fee_scale_bitshifts;
+   //    });
 
    if(    o.extensions.value.owner_special_authority.valid()
        || o.extensions.value.active_special_authority.valid() )
@@ -410,5 +412,45 @@ void_result account_upgrade_evaluator::do_apply(const account_upgrade_evaluator:
 
    return {};
 } FC_RETHROW_EXCEPTIONS( error, "Unable to upgrade account '${a}'", ("a",o.account_to_upgrade(db()).name) ) }
+
+void_result tether_accounts_evaluator::do_evaluate(const tether_accounts_operation& op)
+{
+   auto& d = db();
+   wallet_account = &d.get(op.wallet_account);
+   vault_account = &d.get(op.vault_account);
+
+   GRAPHENE_ASSERT(
+      wallet_account->is_wallet(),
+      tether_accounts_no_wallet_account,
+      "Unable to tether account '${va}' to '${wa}', '${wa}' is not a wallet account",
+      ("wa", wallet_account->name)
+      ("va", vault_account->name)
+   );
+   GRAPHENE_ASSERT(
+      vault_account->is_vault(),
+      tether_accounts_no_vault_account,
+      "Unable to tether account '${va}' to '${wa}', '${va}' is not a vault account",
+      ("wa", wallet_account->name)
+      ("va", vault_account->name)
+
+   );
+   return void_result();
+}
+
+void_result tether_accounts_evaluator::do_apply(const tether_accounts_operation& op)
+{ try {
+   auto& d = db();
+
+   d.modify(*wallet_account, [&](account_object& wa) {
+      wa.vault.insert(vault_account->id);
+   });
+   d.modify(*vault_account, [&](account_object& va) {
+      va.parents.insert(wallet_account->id);
+      va.hierarchy_depth = 1;
+   });
+
+   return void_result();
+
+} FC_CAPTURE_AND_RETHROW((op)) }
 
 } } // graphene::chain

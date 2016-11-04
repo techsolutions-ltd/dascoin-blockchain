@@ -33,15 +33,12 @@ share_type transfer_operation::calculate_fee( const fee_parameters_type& schedul
    return core_fee_required;
 }
 
-
 void transfer_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );
    FC_ASSERT( from != to );
    FC_ASSERT( amount.amount > 0 );
 }
-
-
 
 share_type override_transfer_operation::calculate_fee( const fee_parameters_type& schedule )const
 {
@@ -51,13 +48,19 @@ share_type override_transfer_operation::calculate_fee( const fee_parameters_type
    return core_fee_required;
 }
 
-
 void override_transfer_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );
    FC_ASSERT( from != to );
    FC_ASSERT( amount.amount > 0 );
    FC_ASSERT( issuer != from );
+}
+
+void transfer_cycles_operation::validate()const
+{
+   FC_ASSERT( fee.amount >= 0 );
+   FC_ASSERT( from_wallet != to_vault );
+   FC_ASSERT( amount > 0 );
 }
 
 } } // graphene::chain

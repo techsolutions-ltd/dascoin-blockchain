@@ -21,38 +21,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#pragma once
-#include <graphene/chain/protocol/operations.hpp>
-#include <graphene/chain/evaluator.hpp>
-#include <graphene/chain/database.hpp>
+#include <cstdlib>
+#include <iostream>
+#include <boost/test/included/unit_test.hpp>
 
-namespace graphene { namespace chain {
+extern uint32_t GRAPHENE_TESTING_GENESIS_TIMESTAMP;
 
-   class transfer_evaluator : public evaluator<transfer_evaluator>
+boost::unit_test::test_suite* init_unit_test_suite(int argc, char* argv[]) {
+   std::srand(time(NULL));
+   std::cout << "Random number generator seeded to " << time(NULL) << std::endl;
+   const char* genesis_timestamp_str = getenv("GRAPHENE_TESTING_GENESIS_TIMESTAMP");
+   if( genesis_timestamp_str != nullptr )
    {
-      public:
-         typedef transfer_operation operation_type;
-
-         void_result do_evaluate( const transfer_operation& o );
-         void_result do_apply( const transfer_operation& o );
-   };
-
-   class override_transfer_evaluator : public evaluator<override_transfer_evaluator>
-   {
-      public:
-         typedef override_transfer_operation operation_type;
-
-         void_result do_evaluate( const override_transfer_operation& o );
-         void_result do_apply( const override_transfer_operation& o );
-   };
-
-   class transfer_cycles_evaluator : public evaluator<transfer_cycles_evaluator>
-   {
-      public:
-         typedef transfer_cycles_operation operation_type;
-
-         void_result do_evaluate( const operation_type& o );
-         void_result do_apply( const operation_type& o );
-   };
-
-} } // graphene::chain
+      GRAPHENE_TESTING_GENESIS_TIMESTAMP = std::stoul( genesis_timestamp_str );
+   }
+   std::cout << "GRAPHENE_TESTING_GENESIS_TIMESTAMP is " << GRAPHENE_TESTING_GENESIS_TIMESTAMP << std::endl;
+   return nullptr;
+}

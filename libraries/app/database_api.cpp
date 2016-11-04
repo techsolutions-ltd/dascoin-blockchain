@@ -143,8 +143,8 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<optional<license_type_object>> get_license_types(const vector<license_type_id_type>& license_type_ids) const;
       vector<optional<license_request_object>> get_license_requests(const vector<license_request_id_type>& license_req_ids)const;
 
-      //Cycles:
-      share_type get_account_cycle_balance(const account_id_type id)const;
+      // Cycles:
+      share_type get_account_cycle_balance(const account_id_type account_id)const;
 
       template<typename T>
       void subscribe_to_item( const T& i )const
@@ -1917,23 +1917,14 @@ vector<license_request_object> database_api::list_license_requests_by_expiration
 //                                                                  //
 //////////////////////////////////////////////////////////////////////
 
-share_type database_api::get_account_cycle_balance( const account_id_type id )const
+share_type database_api::get_account_cycle_balance(const account_id_type id)const
 {
-   return my->get_account_cycle_balance( id );
+   return my->get_account_cycle_balance(id);
 }
 
-share_type database_api_impl::get_account_cycle_balance( const account_id_type id )const
+share_type database_api_impl::get_account_cycle_balance(const account_id_type id)const
 {
-   try
-   {
-      const auto& idx = _db.get_index_type<account_cycle_balance_index>().indices().get<by_account_id>();
-      const auto& it = idx.find( id );
-
-      if (it != idx.end())
-         return it->balance;
-      return 0;
-   }
-   FC_CAPTURE_AND_RETHROW( (id) )
+   return _db.get_cycle_balance(id);
 }
 
 //////////////////////////////////////////////////////////////////////

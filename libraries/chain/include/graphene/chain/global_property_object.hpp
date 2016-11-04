@@ -117,6 +117,11 @@ namespace graphene { namespace chain {
          uint32_t last_irreversible_block_num = 0;
 
          /**
+          * The time point the spend limit will be reset for all balances.
+          */
+         time_point_sec next_spend_limit_reset;
+
+         /**
           * The number of intervals untill the next cycle upgrade. Set to -1 to avoid upgrading at chain startup.
           */
          int intervals_until_cycle_upgrade = -1;
@@ -152,6 +157,7 @@ FC_REFLECT_DERIVED( graphene::chain::dynamic_global_property_object, (graphene::
                     (frequency)
                     (dynamic_flags)
                     (last_irreversible_block_num)
+                    (next_spend_limit_reset)
                     (intervals_until_cycle_upgrade)
                   )
 

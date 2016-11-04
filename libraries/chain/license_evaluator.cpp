@@ -31,12 +31,10 @@ void_result license_type_create_evaluator::do_evaluate(const license_type_create
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result license_type_create_evaluator::do_apply(const license_type_create_operation& op)
+object_id_type license_type_create_evaluator::do_apply(const license_type_create_operation& op)
 { try {
 
-  db().create_license_type( op.name, op.amount, op.upgrades, op.policy_flags );
-
-  return void_result();
+  return db().create_license_type( op.name, op.amount, op.upgrades, op.policy_flags );
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
@@ -125,19 +123,16 @@ void_result license_request_evaluator::do_evaluate(const license_request_operati
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result license_request_evaluator::do_apply(const license_request_operation& op)
+object_id_type license_request_evaluator::do_apply(const license_request_operation& op)
 { try {
 
-  auto& _db = db();
-
-  _db.create<license_request_object>([&] (license_request_object &o) {
+  return db().create<license_request_object>([&] (license_request_object &o) {
     o.license_issuing_account = op.license_issuing_account;
     o.account = op.account;
     o.license = op.license;
     o.expiration = fc::time_point::now() + fc::minutes(2);  // TODO: Final value here.
-  });
+  }).id;
 
-  return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
 ///////////////////////////////

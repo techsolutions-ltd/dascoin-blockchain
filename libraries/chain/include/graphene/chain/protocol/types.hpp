@@ -84,6 +84,14 @@ namespace graphene { namespace chain {
    typedef fc::ecc::private_key        private_key_type;
    typedef fc::sha256 chain_id_type;
 
+   enum class account_kind : uint8_t
+   {
+      wallet = 0x0,
+      vault = 0x1,
+      special = 0x02,
+      VAULT_KIND_COUNT
+   };
+
    enum asset_issuer_permission_flags
    {
       charge_market_fee    = 0x01, /**< an issuer-specified percentage of all market trades in this asset is paid to the issuer */
@@ -342,6 +350,13 @@ namespace fc
     void to_variant( const graphene::chain::extended_private_key_type& var, fc::variant& vo );
     void from_variant( const fc::variant& var, graphene::chain::extended_private_key_type& vo );
 }
+
+FC_REFLECT_ENUM( graphene::chain::account_kind,
+                 (wallet)
+                 (vault)
+                 (special)
+                 (VAULT_KIND_COUNT)
+               )
 
 FC_REFLECT( graphene::chain::public_key_type, (key_data) )
 FC_REFLECT( graphene::chain::public_key_type::binary_key, (data)(check) )

@@ -46,4 +46,13 @@ namespace graphene { namespace chain {
          void_result do_apply( const override_transfer_operation& o );
    };
 
+   class transfer_cycles_evaluator : public evaluator<transfer_cycles_evaluator>
+   {
+      public:
+         typedef transfer_cycles_operation operation_type;
+
+         void_result do_evaluate( const operation_type& o );
+         void_result do_apply( const operation_type& o );
+   };
+
 } } // graphene::chain

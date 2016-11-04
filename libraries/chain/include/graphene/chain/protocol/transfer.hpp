@@ -27,6 +27,10 @@
 
 namespace graphene { namespace chain {
 
+////////////////////////////////
+// OPERATIONS:                //
+////////////////////////////////
+
    /**
     * @ingroup operations
     *
@@ -66,6 +70,28 @@ namespace graphene { namespace chain {
    };
 
    /**
+    * @class transfer_cycles_operation
+    * @brief Transfers cycles from a wallet to a vault account that are tethered.
+    * @ingroup operations
+    */
+   struct transfer_cycles_operation : public base_operation
+   {
+      struct fee_parameters_type {};
+
+      asset fee;
+
+      account_id_type from_wallet;
+      account_id_type to_vault;
+      share_type amount;
+
+      extensions_type   extensions;
+
+      account_id_type fee_payer()const { return from_wallet; }
+      void            validate()const;
+      share_type      calculate_fee(const fee_parameters_type& k)const { return 0; }
+   };
+
+   /**
     *  @class override_transfer_operation
     *  @brief Allows the issuer of an asset to transfer an asset from any account to any account if they have override_authority
     *  @ingroup operations
@@ -100,8 +126,27 @@ namespace graphene { namespace chain {
 
 }} // graphene::chain
 
-FC_REFLECT( graphene::chain::transfer_operation::fee_parameters_type, (fee)(price_per_kbyte) )
-FC_REFLECT( graphene::chain::override_transfer_operation::fee_parameters_type, (fee)(price_per_kbyte) )
+////////////////////////////////
+// REFLECTIONS:               //
+////////////////////////////////
 
+// override_transfer_operation
+
+FC_REFLECT( graphene::chain::override_transfer_operation::fee_parameters_type, (fee)(price_per_kbyte) )
 FC_REFLECT( graphene::chain::override_transfer_operation, (fee)(issuer)(from)(to)(amount)(memo)(extensions) )
+
+// transfer_operation:
+
+FC_REFLECT( graphene::chain::transfer_operation::fee_parameters_type, (fee)(price_per_kbyte) )
 FC_REFLECT( graphene::chain::transfer_operation, (fee)(from)(to)(amount)(memo)(extensions) )
+
+// transfer_cycles_operation:
+
+FC_REFLECT( graphene::chain::transfer_cycles_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::transfer_cycles_operation,
+            (fee)
+            (from_wallet)
+            (to_vault)
+            (amount)
+            (extensions)
+          )

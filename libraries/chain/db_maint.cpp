@@ -723,13 +723,20 @@ void database::upgrade_cycles()
    auto itr = idx.indices().get<by_account_id>().begin();
    while( itr != idx.indices().get<by_account_id>().end() )
    {
+      share_type new_balance = itr->balance * 2;
       modify( *itr, [&]( account_cycle_balance_object& b ){
          ilog("Upgrading cycles for account ${a}: before = ${o}, after = ${n}",
               ("a", b.owner)
               ("o", b.balance)
-              ("n", b.balance*2));
-         b.balance *= 2;
+              ("n", new_balance));
+         b.balance = new_balance;
       });
+
+      upgrade_account_cycles_operation vop;
+      vop.account = itr->owner;
+      vop.new_balance = new_balance;
+      push_applied_operation(vop);
+
       ++itr;
    }
 }
@@ -844,9 +851,9 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
 
    modify(gpo, [this](global_property_object& p) {
       // Remove scaling of account registration fee
-      const auto& dgpo = get_dynamic_global_properties();
-      p.parameters.current_fees->get<account_create_operation>().basic_fee >>= p.parameters.account_fee_scale_bitshifts *
-            (dgpo.accounts_registered_this_interval / p.parameters.accounts_per_fee_scale);
+      // const auto& dgpo = get_dynamic_global_properties();
+      // p.parameters.current_fees->get<account_create_operation>().basic_fee >>= p.parameters.account_fee_scale_bitshifts *
+      //       (dgpo.accounts_registered_this_interval / p.parameters.accounts_per_fee_scale);
 
       if( p.pending_parameters )
       {

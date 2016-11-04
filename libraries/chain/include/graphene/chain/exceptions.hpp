@@ -112,6 +112,10 @@ namespace graphene { namespace chain {
    GRAPHENE_DECLARE_OP_EVALUATE_EXCEPTION( max_auth_exceeded, account_update, 1, "Exceeds max authority fan-out" )
    GRAPHENE_DECLARE_OP_EVALUATE_EXCEPTION( auth_account_not_found, account_update, 2, "Auth account not found" )
 
+   GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( tether_accounts );
+   GRAPHENE_DECLARE_OP_EVALUATE_EXCEPTION( no_wallet_account, tether_accounts, 1, "Cannot tether without a wallet account" )
+   GRAPHENE_DECLARE_OP_EVALUATE_EXCEPTION( no_vault_account, tether_accounts, 2, "Cannot tether without a vault account" )
+
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( account_whitelist );
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( account_upgrade );
    //GRAPHENE_DECLARE_OP_BASE_EXCEPTIONS( account_transfer );

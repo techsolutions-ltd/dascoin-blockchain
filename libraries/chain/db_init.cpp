@@ -190,6 +190,8 @@ void database::initialize_evaluators()
    register_evaluator<license_request_evaluator>();
    register_evaluator<license_approve_evaluator>();
    register_evaluator<license_deny_evaluator>();
+   register_evaluator<tether_accounts_evaluator>();
+   register_evaluator<transfer_cycles_evaluator>();
 }
 
 void database::initialize_indexes()

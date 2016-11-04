@@ -224,6 +224,22 @@ struct get_impacted_account_visitor
       _impacted.insert( op.account_id );
    }
 
+   void operator()( const tether_accounts_operation& op )
+   {
+      _impacted.insert( op.wallet_account );
+      _impacted.insert( op.vault_account );
+   }
+
+   void operator()( const transfer_cycles_operation& op )
+   {
+      _impacted.insert( op.to_vault );
+   }
+
+   void operator()( const upgrade_account_cycles_operation& op )
+   {
+      _impacted.insert( op.account );
+   }
+
 };
 
 void operation_get_impacted_accounts( const operation& op, flat_set<account_id_type>& result )

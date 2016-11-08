@@ -162,6 +162,15 @@ optional<limits_type> database::get_account_limits(const account_id_type account
    return {};
 } FC_CAPTURE_AND_RETHROW( (account) ) }
 
+optional<uint8_t> database::get_account_pi_level(const account_id_type account) const
+{ try {
+   auto& index = get_index_type<account_index>().indices().get<by_id>();
+   auto itr = index.find(account);
+   if (itr != index.end())
+      return {itr->pi_level};
+   return {};
+} FC_CAPTURE_AND_RETHROW( (account) ) }
+
 optional< vesting_balance_id_type > database::deposit_lazy_vesting(
    const optional< vesting_balance_id_type >& ovbid,
    share_type amount, uint32_t req_vesting_seconds,

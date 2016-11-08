@@ -1938,6 +1938,11 @@ optional<limits_type> database_api::get_account_limits(const account_id_type id)
    return my->_db.get_account_limits(id);
 }
 
+optional<uint8_t> database_api::get_account_pi_level(const account_id_type id) const
+{
+   return my->_db.get_account_pi_level(id);
+}
+
 //////////////////////////////////////////////////////////////////////
 //                                                                  //
 // Private methods                                                  //

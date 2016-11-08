@@ -57,6 +57,7 @@
 #include <graphene/chain/custom_evaluator.hpp>
 #include <graphene/chain/license_evaluator.hpp>
 #include <graphene/chain/market_evaluator.hpp>
+#include <graphene/chain/personal_identity_evaluator.hpp>
 #include <graphene/chain/proposal_evaluator.hpp>
 #include <graphene/chain/transfer_evaluator.hpp>
 #include <graphene/chain/vesting_balance_evaluator.hpp>
@@ -192,6 +193,7 @@ void database::initialize_evaluators()
    register_evaluator<license_deny_evaluator>();
    register_evaluator<tether_accounts_evaluator>();
    register_evaluator<transfer_cycles_evaluator>();
+   register_evaluator<update_pi_limits_evaluator>();
 }
 
 void database::initialize_indexes()

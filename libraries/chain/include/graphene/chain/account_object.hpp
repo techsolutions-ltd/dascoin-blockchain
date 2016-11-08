@@ -113,6 +113,8 @@ namespace graphene { namespace chain {
       bool check()const { return spent < max; }
       void spend( share_type amount ) { spent += amount;  }
       void validate()const;
+
+      friend bool operator < ( const balance_limit& a, const balance_limit& b ) { return a.max < b.max; }
    };
 
    /**
@@ -292,6 +294,16 @@ namespace graphene { namespace chain {
           * A cycle license the account holds:
           */
          optional<license_type_id_type> license;
+
+         /**
+          * The level of verified persional information assigned to the account.
+          */
+         uint8_t pi_level;
+
+         /**
+          * Limit levels defined to different transfer operations in the blockchain.
+          */
+         flat_set<share_type> limits;
 
          /**
           * This value, if set, overrides the global frequency of the account.
@@ -513,6 +525,8 @@ FC_REFLECT_DERIVED( graphene::chain::account_object, (graphene::db::object),
                     (owner_special_authority)
                     (active_special_authority)
                     (license)
+                    (pi_level)
+                    (limits)
                     (account_frequency)
                     (is_chartered)
                     (top_n_control_flags)

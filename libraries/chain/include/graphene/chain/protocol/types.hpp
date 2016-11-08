@@ -92,6 +92,13 @@ namespace graphene { namespace chain {
       VAULT_KIND_COUNT
    };
 
+   enum class limit_kind
+   {
+      vault_to_wallet = 0,
+      wire_out = 1,
+      LIMIT_KIND_COUNT
+   };
+
    enum asset_issuer_permission_flags
    {
       charge_market_fee     = 0x01, /**< an issuer-specified percentage of all market trades in this asset is paid to the issuer */
@@ -371,6 +378,12 @@ namespace fc
     void to_variant( const graphene::chain::extended_private_key_type& var, fc::variant& vo );
     void from_variant( const fc::variant& var, graphene::chain::extended_private_key_type& vo );
 }
+
+FC_REFLECT_ENUM( graphene::chain::limit_kind,
+                 (vault_to_wallet)
+                 (wire_out)
+                 (LIMIT_KIND_COUNT)
+               )
 
 FC_REFLECT_ENUM( graphene::chain::account_kind,
                  (wallet)

@@ -38,14 +38,29 @@ void_result update_pi_limits_evaluator::do_evaluate(const update_pi_limits_opera
 
 void_result update_pi_limits_evaluator::do_apply(const update_pi_limits_operation& op)
 { try {
+  auto& d = db();
+
   // Update the levels and the limits on the account:
   db().modify(*acnt, [&](account_object& a) {
     a.pi_level = op.level;
     if ( op.new_limits.valid() )
       a.limits = *op.new_limits;
   });
+
+  // For each vault account, for each parent check if the parents pi_level is less then the updated one and, in that
+  // case, update the pi_level and the limits.
+  if ( acnt->is_vault() )
+    for ( auto parent_id : acnt->parents )
+    {
+      const auto& parent = parent_id(d);
+      if ( parent.pi_level < op.level )
+        d.modify(parent, [&](account_object& a){
+          a.pi_level = op.level;
+          if ( op.new_limits.valid() )
+            a.limits = *op.new_limits;
+        });
+    }
   // TODO: for each balance, set the new limits.
-  // TODO: for each wallet, update the wallet's level if the vault's level is greater.
 } FC_CAPTURE_AND_RETHROW((op)) }
 
 } }  // namespace graphene::chain

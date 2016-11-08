@@ -121,6 +121,8 @@ namespace graphene { namespace chain {
          uint8_t precision = 0;
          /// ID of the account which issued this asset.
          account_id_type issuer;
+         /// ID of the account that authenticates issuing requests. May not be set.
+         optional<account_id_type> authenticator;
 
          asset_options options;
 
@@ -153,7 +155,7 @@ namespace graphene { namespace chain {
          { return db.get(dynamic_asset_data_id); }
 
          /**
-          *  The total amount of an asset that is reserved for future issuance. 
+          *  The total amount of an asset that is reserved for future issuance.
           */
          template<class DB>
          share_type reserved( const DB& db )const
@@ -267,6 +269,7 @@ FC_REFLECT_DERIVED( graphene::chain::asset_object, (graphene::db::object),
                     (symbol)
                     (precision)
                     (issuer)
+                    (authenticator)
                     (options)
                     (dynamic_asset_data_id)
                     (bitasset_data_id)

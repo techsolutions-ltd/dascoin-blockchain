@@ -16,8 +16,10 @@ namespace graphene { namespace chain {
 
     asset fee;
     account_id_type pi_validator;  // This is the id of the validation authority that assigns the pi and levels.
-    uint8_t level;  // The new level
-    optional<flat_set<share_type>> new_limits;
+
+    account_id_type account;  // The account whose level and limits are being modified.
+    uint8_t level;  // The new level of PI.
+    optional<flat_set<share_type>> new_limits;  // (optional) New limits.
 
     extensions_type extensions;
 
@@ -37,6 +39,7 @@ FC_REFLECT( graphene::chain::update_pi_limits_operation::fee_parameters_type,  )
 FC_REFLECT( graphene::chain::update_pi_limits_operation,
             (fee)
             (pi_validator)
+            (account)
             (level)
             (new_limits)
             (extensions)

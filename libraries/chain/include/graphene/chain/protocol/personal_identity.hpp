@@ -19,7 +19,7 @@ namespace graphene { namespace chain {
 
     account_id_type account;  // The account whose level and limits are being modified.
     uint8_t level;  // The new level of PI.
-    optional<flat_set<share_type>> new_limits;  // (optional) New limits.
+    optional<limit_type> new_limits;  // (optional) New limits.
 
     extensions_type extensions;
 

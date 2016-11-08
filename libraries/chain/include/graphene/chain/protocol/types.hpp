@@ -92,7 +92,7 @@ namespace graphene { namespace chain {
       VAULT_KIND_COUNT
    };
 
-   enum class limit_kind
+   enum limit_kind
    {
       vault_to_wallet = 0,
       wire_out = 1,
@@ -300,6 +300,7 @@ namespace graphene { namespace chain {
    typedef safe<int64_t>                                        share_type;
    typedef uint16_t                                             weight_type;
    typedef float                                                frequency_type;
+   typedef std::vector<share_type>                              limit_type;
 
    struct public_key_type
    {

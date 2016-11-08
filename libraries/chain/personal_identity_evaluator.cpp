@@ -22,17 +22,15 @@ void_result update_pi_limits_evaluator::do_evaluate(const update_pi_limits_opera
 
   if( op.new_limits.valid() )
   {
-    auto& new_limits = *op.new_limits;
-    FC_ASSERT( new_limits.size() < static_cast<uint8_t>(limit_kind::LIMIT_KIND_COUNT) );  // Must not have more fields than the set amount.
-
     auto min = gpo.parameters.minimum_transfer_limit;
     auto max = gpo.parameters.maximum_transfer_limit;
-    for ( auto limit : new_limits )
+    for ( auto limit : *op.new_limits )
     {
       FC_ASSERT( limit > min && limit < max );
     }
   }
   acnt = &account;
+  return void_result();
 
 } FC_CAPTURE_AND_RETHROW((op)) }
 
@@ -47,9 +45,10 @@ void_result update_pi_limits_evaluator::do_apply(const update_pi_limits_operatio
       a.limits = *op.new_limits;
   });
 
-  // For each vault account, for each parent check if the parents pi_level is less then the updated one and, in that
-  // case, update the pi_level and the limits.
   if ( acnt->is_vault() )
+  {
+    // For each parent check if the parents pi_level is less then the updated one and, in that case, update the
+    // pi_level and the limits.
     for ( auto parent_id : acnt->parents )
     {
       const auto& parent = parent_id(d);
@@ -60,7 +59,15 @@ void_result update_pi_limits_evaluator::do_apply(const update_pi_limits_operatio
             a.limits = *op.new_limits;
         });
     }
-  // TODO: for each balance, set the new limits.
+    // For each vault account, in the cycle balance, update the maximum on the cycle balance_limit.
+    if ( op.new_limits.valid() )
+    {
+      auto& new_limits = *op.new_limits;
+      d.update_cycle_balance_limits(op.account, new_limits.at(limit_kind::vault_to_wallet));
+    }
+  }
+  return void_result();
+
 } FC_CAPTURE_AND_RETHROW((op)) }
 
 } }  // namespace graphene::chain

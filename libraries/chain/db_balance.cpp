@@ -132,6 +132,27 @@ void database::adjust_cycle_balance(account_id_type account, share_type delta, o
 
 } FC_CAPTURE_AND_RETHROW( (account)(delta) ) }
 
+void database::update_cycle_balance_limits(account_id_type account, share_type limit_max)
+{ try {
+   auto& index = get_index_type<account_cycle_balance_index>().indices().get<by_account_id>();
+   auto itr = index.find(account);
+   if(itr == index.end())
+   {
+      create<account_cycle_balance_object>([account,limit_max](account_cycle_balance_object& b) {
+         b.owner = account;
+         b.balance = 0;
+         b.remaining_upgrades = 0;
+         b.limit.max = limit_max;
+      });
+   } else {
+      modify(*itr, [limit_max](account_cycle_balance_object& b) {
+         // NOTE: we do not touch the current spent amount.
+         // TODO: find out if the limit can only increase?
+         b.limit.max = limit_max;
+      });
+   }
+} FC_CAPTURE_AND_RETHROW( (account)(limit_max) ) }
+
 optional< vesting_balance_id_type > database::deposit_lazy_vesting(
    const optional< vesting_balance_id_type >& ovbid,
    share_type amount, uint32_t req_vesting_seconds,

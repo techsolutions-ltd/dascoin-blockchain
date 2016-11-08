@@ -311,6 +311,13 @@ namespace graphene { namespace chain {
          void adjust_cycle_balance(account_id_type account, share_type delta, optional<uint8_t> upgrades_delta = {});
 
          /**
+          * @brief update the balance limits on a balance object belonging to a
+          * @param account_id_type The account that owns the cycle balance object.
+          * @param limit_max       Maximum limit to be updated.
+          */
+         void update_cycle_balance_limits(account_id_type account, share_type limit_max);
+
+         /**
           * @brief Helper to make lazy deposit to CDD VBO.
           *
           * If the given optional VBID is not valid(),

@@ -58,6 +58,7 @@ add_library( graphene_chain
              protocol/confidential.cpp
              protocol/vote.cpp
              protocol/license.cpp
+             protocol/personal_identity.cpp
 
              genesis_state.cpp
              get_config.cpp

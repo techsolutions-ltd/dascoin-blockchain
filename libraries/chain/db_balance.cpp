@@ -153,6 +153,15 @@ void database::update_cycle_balance_limits(account_id_type account, share_type l
    }
 } FC_CAPTURE_AND_RETHROW( (account)(limit_max) ) }
 
+optional<limits_type> database::get_account_limits(const account_id_type account) const
+{ try {
+   auto& index = get_index_type<account_index>().indices().get<by_id>();
+   auto itr = index.find(account);
+   if (itr != index.end())
+      return {itr->limits};
+   return {};
+} FC_CAPTURE_AND_RETHROW( (account) ) }
+
 optional< vesting_balance_id_type > database::deposit_lazy_vesting(
    const optional< vesting_balance_id_type >& ovbid,
    share_type amount, uint32_t req_vesting_seconds,

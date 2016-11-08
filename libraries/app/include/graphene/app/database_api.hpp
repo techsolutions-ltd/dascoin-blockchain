@@ -632,6 +632,12 @@ class database_api
        */
       share_type get_account_cycle_balance(const account_id_type account_id)const;
 
+      //////////////////////////
+      // PI:                  //
+      //////////////////////////
+
+      optional<limits_type> get_account_limits(const account_id_type id)const;
+
    private:
       std::shared_ptr< database_api_impl > my;
 };
@@ -746,4 +752,7 @@ FC_API(graphene::app::database_api,
 
    // Cycles
    (get_account_cycle_balance)
+
+   // PI
+   (get_account_limits)
 )

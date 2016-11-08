@@ -317,6 +317,8 @@ namespace graphene { namespace chain {
           */
          void update_cycle_balance_limits(account_id_type account, share_type limit_max);
 
+         optional<limits_type> get_account_limits(const account_id_type account)const;
+
          /**
           * @brief Helper to make lazy deposit to CDD VBO.
           *

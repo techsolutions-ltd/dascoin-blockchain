@@ -303,7 +303,7 @@ namespace graphene { namespace chain {
          /**
           * Limit levels defined to different transfer operations in the blockchain.
           */
-         limit_type limits;
+         limits_type limits;
 
          /**
           * This value, if set, overrides the global frequency of the account.

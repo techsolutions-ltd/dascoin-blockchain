@@ -263,7 +263,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       boost::signals2::scoped_connection                                                                                           _applied_block_connection;
       boost::signals2::scoped_connection                                                                                           _pending_trx_connection;
       map< pair<asset_id_type,asset_id_type>, std::function<void(const variant&)> >      _market_subscriptions;
-      graphene::chain::database&                                                                                                            _db;
+      graphene::chain::database& _db;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -1925,6 +1925,17 @@ share_type database_api::get_account_cycle_balance(const account_id_type id)cons
 share_type database_api_impl::get_account_cycle_balance(const account_id_type id)const
 {
    return _db.get_cycle_balance(id);
+}
+
+//////////////////////////////////////////////////////////////////////
+//                                                                  //
+// PI:                                                              //
+//                                                                  //
+//////////////////////////////////////////////////////////////////////
+
+optional<limits_type> database_api::get_account_limits(const account_id_type id) const
+{
+   return my->_db.get_account_limits(id);
 }
 
 //////////////////////////////////////////////////////////////////////

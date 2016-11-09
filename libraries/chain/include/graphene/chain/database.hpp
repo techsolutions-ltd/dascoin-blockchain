@@ -318,6 +318,14 @@ namespace graphene { namespace chain {
          void update_cycle_balance_limits(account_id_type account, share_type limit_max);
 
          /**
+          * @brief Update the balance limits on a balance object for a given asset that belongs to an account.
+          * @param asset_id  The ID of the asset being updated.
+          * @param account   The account that owns the balance object.
+          * @param limit_max Maximum limit to be updated.
+          */
+         void update_balance_limits(asset_id_type asset_id, account_id_type account, share_type limit_max);
+
+         /**
           * @brief Get the set transfer limits for a given account.
           * @param account_id_type The ID of the account.
           */

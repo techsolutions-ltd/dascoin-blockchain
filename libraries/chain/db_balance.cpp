@@ -153,6 +153,28 @@ void database::update_cycle_balance_limits(account_id_type account, share_type l
    }
 } FC_CAPTURE_AND_RETHROW( (account)(limit_max) ) }
 
+void database::update_balance_limits(asset_id_type asset_id, account_id_type account, share_type limit_max)
+{ try {
+   auto& index = get_index_type<account_balance_index>().indices().get<by_account_asset>();
+   auto itr = index.find(boost::make_tuple(account, asset_id));
+   if(itr == index.end())
+   {
+      create<account_balance_object>([asset_id, account, limit_max](account_balance_object& b) {
+         b.owner = account;
+         b.asset_type = asset_id;
+         b.balance = 0;
+         b.limit.max = limit_max;
+      });
+   } else {
+      modify(*itr, [limit_max](account_balance_object& b) {
+         // NOTE: we do not touch the current spent amount.
+         // TODO: find out if the limit can only increase?
+         b.limit.max = limit_max;
+      });
+   }
+
+} FC_CAPTURE_AND_RETHROW((asset_id)(account)(limit_max)) }
+
 optional<limits_type> database::get_account_limits(const account_id_type account) const
 { try {
    auto& index = get_index_type<account_index>().indices().get<by_id>();

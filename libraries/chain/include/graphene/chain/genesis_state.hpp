@@ -121,7 +121,10 @@ struct genesis_state_type {
     */
    initial_chain_authority_type             initial_license_issuing_authority;
    initial_chain_authority_type             initial_license_authentication_authority;
+   initial_chain_authority_type             initial_webasset_issuing_authority;
+   initial_chain_authority_type             initial_webasset_authentication_authority;
    initial_chain_authority_type             initial_registrar;
+   initial_chain_authority_type             initial_personal_identity_validation_authority;
 
    /**
     * Temporary, will be moved elsewhere.

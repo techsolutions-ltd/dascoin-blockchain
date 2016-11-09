@@ -118,12 +118,7 @@ namespace graphene { namespace chain {
     */
    struct asset_create_operation : public base_operation
    {
-      struct fee_parameters_type {
-         uint64_t symbol3        = 500000 * GRAPHENE_BLOCKCHAIN_PRECISION;
-         uint64_t symbol4        = 300000 * GRAPHENE_BLOCKCHAIN_PRECISION;
-         uint64_t long_symbol    = 5000   * GRAPHENE_BLOCKCHAIN_PRECISION;
-         uint32_t price_per_kbyte = 10; /// only required for large memos.
-      };
+      struct fee_parameters_type { };
 
       asset                   fee;
       /// This account must sign and pay the fee for this operation. Later, this account may update the asset
@@ -148,7 +143,7 @@ namespace graphene { namespace chain {
 
       account_id_type fee_payer()const { return issuer; }
       void            validate()const;
-      share_type      calculate_fee( const fee_parameters_type& k )const;
+      share_type      calculate_fee( const fee_parameters_type& k )const { return 0; }
    };
 
    /**
@@ -445,6 +440,10 @@ namespace graphene { namespace chain {
 
 } } // graphene::chain
 
+////////////////////////////////
+// REFLECTIONS:               //
+////////////////////////////////
+
 FC_REFLECT( graphene::chain::asset_claim_fees_operation, (fee)(issuer)(amount_to_claim)(extensions) )
 FC_REFLECT( graphene::chain::asset_claim_fees_operation::fee_parameters_type, (fee) )
 
@@ -473,7 +472,6 @@ FC_REFLECT( graphene::chain::bitasset_options,
           )
 
 
-FC_REFLECT( graphene::chain::asset_create_operation::fee_parameters_type, (symbol3)(symbol4)(long_symbol)(price_per_kbyte) )
 FC_REFLECT( graphene::chain::asset_global_settle_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::asset_settle_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::asset_settle_cancel_operation::fee_parameters_type, )
@@ -485,7 +483,8 @@ FC_REFLECT( graphene::chain::asset_publish_feed_operation::fee_parameters_type, 
 FC_REFLECT( graphene::chain::asset_issue_operation::fee_parameters_type, (fee)(price_per_kbyte) )
 FC_REFLECT( graphene::chain::asset_reserve_operation::fee_parameters_type, (fee) )
 
-
+// Asset create operation:
+FC_REFLECT( graphene::chain::asset_create_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::asset_create_operation,
             (fee)
             (issuer)
@@ -496,6 +495,7 @@ FC_REFLECT( graphene::chain::asset_create_operation,
             (is_prediction_market)
             (extensions)
           )
+
 FC_REFLECT( graphene::chain::asset_update_operation,
             (fee)
             (issuer)

@@ -92,21 +92,49 @@ namespace graphene { namespace chain {
       VAULT_KIND_COUNT
    };
 
+   enum limit_kind
+   {
+      vault_to_wallet = 0,
+      wire_out = 1,
+      LIMIT_KIND_COUNT
+   };
+
    enum asset_issuer_permission_flags
    {
-      charge_market_fee    = 0x01, /**< an issuer-specified percentage of all market trades in this asset is paid to the issuer */
-      white_list           = 0x02, /**< accounts must be whitelisted in order to hold this asset */
-      override_authority   = 0x04, /**< issuer may transfer asset back to himself */
-      transfer_restricted  = 0x08, /**< require the issuer to be one party to every transfer */
-      disable_force_settle = 0x10, /**< disable force settling */
-      global_settle        = 0x20, /**< allow the bitasset issuer to force a global settling -- this may be set in permissions, but not flags */
-      disable_confidential = 0x40, /**< allow the asset to be used with confidential transactions */
-      witness_fed_asset    = 0x80, /**< allow the asset to be fed by witnesses */
-      committee_fed_asset  = 0x100 /**< allow the asset to be fed by the committee */
+      charge_market_fee     = 0x01, /**< an issuer-specified percentage of all market trades in this asset is paid to the issuer */
+      white_list            = 0x02, /**< accounts must be whitelisted in order to hold this asset */
+      override_authority    = 0x04, /**< issuer may transfer asset back to himself */
+      transfer_restricted   = 0x08, /**< require the issuer to be one party to every transfer */
+      disable_force_settle  = 0x10, /**< disable force settling */
+      global_settle         = 0x20, /**< allow the bitasset issuer to force a global settling -- this may be set in permissions, but not flags */
+      disable_confidential  = 0x40, /**< allow the asset to be used with confidential transactions */
+      witness_fed_asset     = 0x80, /**< allow the asset to be fed by witnesses */
+      committee_fed_asset   = 0x100, /**< allow the asset to be fed by the committee */
+      dual_auth_issue_asset = 0x200 /**< the asset depends on the request/authentication issuing */
    };
-   const static uint32_t ASSET_ISSUER_PERMISSION_MASK = charge_market_fee|white_list|override_authority|transfer_restricted|disable_force_settle|global_settle|disable_confidential
-      |witness_fed_asset|committee_fed_asset;
-   const static uint32_t UIA_ASSET_ISSUER_PERMISSION_MASK = charge_market_fee|white_list|override_authority|transfer_restricted|disable_confidential;
+
+   const static uint32_t ASSET_ISSUER_PERMISSION_MASK = charge_market_fee
+      | white_list
+      | override_authority
+      | transfer_restricted
+      | disable_force_settle
+      | global_settle
+      | disable_confidential
+      | witness_fed_asset
+      | committee_fed_asset
+      | dual_auth_issue_asset;
+
+   const static uint32_t UIA_ASSET_ISSUER_PERMISSION_MASK = charge_market_fee
+      | white_list
+      | override_authority
+      | transfer_restricted
+      | disable_confidential;
+
+   const static uint32_t WEB_ASSET_ISSUER_PERMISSION_MASK = white_list
+      | override_authority
+      | transfer_restricted
+      | disable_confidential
+      | dual_auth_issue_asset;
 
    enum reserved_spaces
    {
@@ -272,6 +300,7 @@ namespace graphene { namespace chain {
    typedef safe<int64_t>                                        share_type;
    typedef uint16_t                                             weight_type;
    typedef float                                                frequency_type;
+   typedef std::vector<share_type>                              limits_type;
 
    struct public_key_type
    {
@@ -350,6 +379,12 @@ namespace fc
     void to_variant( const graphene::chain::extended_private_key_type& var, fc::variant& vo );
     void from_variant( const fc::variant& var, graphene::chain::extended_private_key_type& vo );
 }
+
+FC_REFLECT_ENUM( graphene::chain::limit_kind,
+                 (vault_to_wallet)
+                 (wire_out)
+                 (LIMIT_KIND_COUNT)
+               )
 
 FC_REFLECT_ENUM( graphene::chain::account_kind,
                  (wallet)
@@ -443,16 +478,17 @@ FC_REFLECT_TYPENAME( graphene::chain::account_cycle_balance_id_type )
 FC_REFLECT( graphene::chain::void_t, )
 
 FC_REFLECT_ENUM( graphene::chain::asset_issuer_permission_flags,
-   (charge_market_fee)
-   (white_list)
-   (transfer_restricted)
-   (override_authority)
-   (disable_force_settle)
-   (global_settle)
-   (disable_confidential)
-   (witness_fed_asset)
-   (committee_fed_asset)
-   )
+                (charge_market_fee)
+                (white_list)
+                (transfer_restricted)
+                (override_authority)
+                (disable_force_settle)
+                (global_settle)
+                (disable_confidential)
+                (witness_fed_asset)
+                (committee_fed_asset)
+                (dual_auth_issue_asset)
+               )
 
 FC_REFLECT_ENUM( graphene::chain::cycle_policy_flags,
                  (auto_submit_to_queue)

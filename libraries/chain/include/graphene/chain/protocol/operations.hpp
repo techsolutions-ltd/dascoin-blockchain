@@ -33,6 +33,7 @@
 #include <graphene/chain/protocol/fba.hpp>
 #include <graphene/chain/protocol/license.hpp>
 #include <graphene/chain/protocol/market.hpp>
+#include <graphene/chain/protocol/personal_identity.hpp>
 #include <graphene/chain/protocol/proposal.hpp>
 #include <graphene/chain/protocol/transfer.hpp>
 #include <graphene/chain/protocol/vesting.hpp>
@@ -104,7 +105,8 @@ namespace graphene { namespace chain {
             license_deny_operation,
             tether_accounts_operation,
             transfer_cycles_operation,
-            upgrade_account_cycles_operation
+            upgrade_account_cycles_operation,
+            update_pi_limits_operation
          > operation;
 
    /// @} // operations group

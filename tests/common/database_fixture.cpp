@@ -1287,7 +1287,7 @@ void database_fixture::transfer_cycles(
    processed_transaction ptx = db.push_transaction( trx, ~0 );
    trx.operations.clear();
 
-} FC_CAPTURE_AND_RETHROW ( (from_wallet)(to_vault)(amount) ) }
+} FC_CAPTURE_AND_RETHROW( (from_wallet)(to_vault)(amount) ) }
 
 namespace test {
 

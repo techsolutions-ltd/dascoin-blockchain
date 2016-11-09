@@ -15,6 +15,8 @@ namespace graphene { namespace chain {
     account_id_type license_authenticator;
     // Registration of accounts:
     account_id_type registrar;
+    // Validation of personal information:
+    account_id_type pi_validator;
   };
 
 } } // namespace graphene::chain
@@ -22,5 +24,6 @@ namespace graphene { namespace chain {
 FC_REFLECT( graphene::chain::chain_authorities,
             (license_issuer)
             (license_authenticator)
+            (pi_validator)
             (registrar)
           );

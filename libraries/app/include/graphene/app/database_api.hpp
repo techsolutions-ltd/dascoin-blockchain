@@ -632,6 +632,24 @@ class database_api
        */
       share_type get_account_cycle_balance(const account_id_type account_id)const;
 
+      //////////////////////////
+      // PI:                  //
+      //////////////////////////
+
+      /**
+       * @brief Get the vector of transfer limits for the account with the given ID.
+       * @param  account_id ID of the account to check.
+       * @return            Vector of transfer limits.
+       */
+      optional<limits_type> get_account_limits(const account_id_type id)const;
+
+      /**
+       * @brtief Get the verified PI level for the account with the given ID.
+       * @param  account_id ID if the account to check.
+       * @return            Verified PI level of the account.
+       */
+      optional<uint8_t> get_account_pi_level(const account_id_type id) const;
+
    private:
       std::shared_ptr< database_api_impl > my;
 };
@@ -746,4 +764,8 @@ FC_API(graphene::app::database_api,
 
    // Cycles
    (get_account_cycle_balance)
+
+   // PI
+   (get_account_limits)
+   (get_account_pi_level)
 )

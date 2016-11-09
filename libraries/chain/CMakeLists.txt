@@ -58,6 +58,7 @@ add_library( graphene_chain
              protocol/confidential.cpp
              protocol/vote.cpp
              protocol/license.cpp
+             protocol/personal_identity.cpp
 
              genesis_state.cpp
              get_config.cpp
@@ -79,6 +80,7 @@ add_library( graphene_chain
              worker_evaluator.cpp
              confidential_evaluator.cpp
              license_evaluator.cpp
+             personal_identity_evaluator.cpp
              special_authority.cpp
              buyback.cpp
 

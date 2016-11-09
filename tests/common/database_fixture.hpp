@@ -345,6 +345,9 @@ struct database_fixture {
    void adjust_cycles(const account_id_type id, const share_type amount);
    void transfer_cycles(const account_id_type from_wallet, const account_id_type to_vault, const share_type amount);
 
+   const global_property_object& get_global_properties() const { return db.get_global_properties(); }
+   const chain_parameters& get_chain_parameters() const { return db.get_global_properties().parameters; }
+
 };
 
 namespace test {

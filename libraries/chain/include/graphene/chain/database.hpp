@@ -311,6 +311,34 @@ namespace graphene { namespace chain {
          void adjust_cycle_balance(account_id_type account, share_type delta, optional<uint8_t> upgrades_delta = {});
 
          /**
+          * @brief Update the balance limits on a balance object belonging to an account.
+          * @param account_id_type The account that owns the cycle balance object.
+          * @param limit_max       Maximum limit to be updated.
+          */
+         void update_cycle_balance_limits(account_id_type account, share_type limit_max);
+
+         /**
+          * @brief Update the balance limits on a balance object for a given asset that belongs to an account.
+          * @param asset_id  The ID of the asset being updated.
+          * @param account   The account that owns the balance object.
+          * @param limit_max Maximum limit to be updated.
+          */
+         void update_balance_limits(asset_id_type asset_id, account_id_type account, share_type limit_max);
+
+         /**
+          * @brief Get the set transfer limits for a given account.
+          * @param account_id_type The ID of the account.
+          */
+         optional<limits_type> get_account_limits(const account_id_type account)const;
+
+         /**
+          * @brief Get the accounts verified personal information level.
+          * @param  account The ID of the account we are checking.
+          * @return         Level of the verified PI.
+          */
+         optional<uint8_t> get_account_pi_level(const account_id_type account) const;
+
+         /**
           * @brief Helper to make lazy deposit to CDD VBO.
           *
           * If the given optional VBID is not valid(),

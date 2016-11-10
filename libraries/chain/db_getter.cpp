@@ -52,6 +52,11 @@ const chain_property_object& database::get_chain_properties()const
    return get( chain_property_id_type() );
 }
 
+const chain_authorities& database::get_chain_authorities() const
+{
+   return get_global_properties().authorities;
+}
+
 const dynamic_global_property_object&database::get_dynamic_global_properties() const
 {
    return get( dynamic_global_property_id_type() );

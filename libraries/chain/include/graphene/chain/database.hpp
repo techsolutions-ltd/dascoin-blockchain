@@ -247,6 +247,7 @@ namespace graphene { namespace chain {
          const asset_object&                    get_web_asset()const;
          const chain_property_object&           get_chain_properties()const;
          const global_property_object&          get_global_properties()const;
+         const chain_authorities&               get_chain_authorities()const;
          const dynamic_global_property_object&  get_dynamic_global_properties()const;
          const node_property_object&            get_node_properties()const;
          const fee_schedule&                    current_fee_schedule()const;

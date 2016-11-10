@@ -149,6 +149,7 @@ void_result asset_issue_evaluator::do_evaluate( const asset_issue_operation& o )
    const database& d = db();
 
    const asset_object& a = o.asset_to_issue.asset_id(d);
+   FC_ASSERT( !a.is_dual_auth_issue(), "Cannot do a single issue on a dual authority asset" );
    FC_ASSERT( o.issuer == a.issuer );
    FC_ASSERT( !a.is_market_issued(), "Cannot manually issue a market-issued asset." );
 

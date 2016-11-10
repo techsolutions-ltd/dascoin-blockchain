@@ -212,4 +212,9 @@ void asset_claim_fees_operation::validate()const {
    FC_ASSERT( amount_to_claim.amount > 0 );
 }
 
+void asset_create_issue_request_operation::validate() const {
+   FC_ASSERT( fee.amount >= 0 );
+   FC_ASSERT( amount.amount > 0 );
+}
+
 } } // namespace graphene::chain

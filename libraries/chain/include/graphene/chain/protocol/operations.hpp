@@ -106,7 +106,8 @@ namespace graphene { namespace chain {
             tether_accounts_operation,
             transfer_cycles_operation,
             upgrade_account_cycles_operation,
-            update_pi_limits_operation
+            update_pi_limits_operation,
+            asset_create_issue_request_operation
          > operation;
 
    /// @} // operations group

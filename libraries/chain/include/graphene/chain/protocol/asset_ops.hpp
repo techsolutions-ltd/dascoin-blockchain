@@ -437,6 +437,22 @@ namespace graphene { namespace chain {
       void            validate()const;
    };
 
+   struct asset_create_issue_request_operation : public base_operation
+   {
+      struct fee_parameters_type {};
+
+      asset fee;
+
+      account_id_type issuer;
+      account_id_type account;
+      asset amount;
+
+      extensions_type extensions;
+
+      account_id_type fee_payer() const { return issuer; }
+      share_type calculate_fee(const fee_parameters_type& k) const { return 0; }
+      void validate() const;
+   };
 
 } } // graphene::chain
 
@@ -525,3 +541,14 @@ FC_REFLECT( graphene::chain::asset_reserve_operation,
             (fee)(payer)(amount_to_reserve)(extensions) )
 
 FC_REFLECT( graphene::chain::asset_fund_fee_pool_operation, (fee)(from_account)(asset_id)(amount)(extensions) );
+
+// asset_create_issue_request_operation:
+FC_REFLECT( graphene::chain::asset_create_issue_request_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::asset_create_issue_request_operation,
+            (fee)
+            (issuer)
+            (account)
+            (amount)
+            (extensions)
+          )
+

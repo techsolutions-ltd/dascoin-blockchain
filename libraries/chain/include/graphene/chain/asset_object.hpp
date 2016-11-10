@@ -234,7 +234,7 @@ namespace graphene { namespace chain {
 
       account_id_type issuer;
       account_id_type receiver;
-      share_type amount;
+      asset amount;
       fc::time_point_sec expiration;
 
       extensions_type extensions;

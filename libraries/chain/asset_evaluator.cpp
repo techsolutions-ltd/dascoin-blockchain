@@ -587,6 +587,7 @@ void_result asset_create_issue_request_evaluator::do_evaluate(const asset_create
    FC_ASSERT( (asset_dyn_data.current_supply + o.amount.amount) <= a.options.max_supply );
 
    return void_result();
+
 } FC_CAPTURE_AND_RETHROW((o)) }
 
 object_id_type asset_create_issue_request_evaluator::do_apply(const asset_create_issue_request_operation& o)
@@ -597,18 +598,25 @@ object_id_type asset_create_issue_request_evaluator::do_apply(const asset_create
      req.amount = o.amount;
      req.expiration = fc::time_point::now() + fc::minutes(2);  // TODO: Final value here.
    }).id;
+
 } FC_CAPTURE_AND_RETHROW((o)) }
 
 void_result asset_deny_issue_request_evaluator::do_evaluate(const asset_deny_issue_request_operation& o)
 { try {
+   const auto& d = db();
 
+   req_obj = &o.request(d);
+   const auto& asset_object = req_obj->amount.asset_id(d);  // Fetch the asset object.
+   FC_ASSERT( o.authenticator == *asset_object.authenticator );
    return {};
+
 } FC_CAPTURE_AND_RETHROW((o)) }
 
 void_result asset_deny_issue_request_evaluator::do_apply(const asset_deny_issue_request_operation& o)
 { try {
-
+   db().remove(*req_obj);
    return {};
+
 } FC_CAPTURE_AND_RETHROW((o)) }
 
 } } // graphene::chain

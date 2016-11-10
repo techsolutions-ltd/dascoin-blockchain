@@ -484,7 +484,6 @@ void database::assign_licenses()
   {
     const auto& req = *idx.begin();
     const auto& ca = get_chain_authorities();
-    ilog("Appliying license request ${id}", ("id", req.id));
 
     license_approve_operation op;
     op.license_authentication_account = ca.license_authenticator;
@@ -506,9 +505,12 @@ void database::assign_assets()
   while (!idx.empty() && idx.begin()->expiration <= head_block_time())
   {
     const auto& req = *idx.begin();
-
-    // TODO: fill assset issue_operation and submit it.
-
+    const auto& asset_obj = req.amount.asset_id(*this);
+    adjust_balance(req.receiver, req.amount);
+    modify(asset_obj.dynamic_asset_data_id(*this), [&](asset_dynamic_data_object& data){
+         data.current_supply += req.amount.amount;
+    });
+    // TODO: emit a virtual operation as a record of the asset being issued.
     remove(req);
   }
 } FC_CAPTURE_AND_RETHROW() }

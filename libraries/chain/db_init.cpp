@@ -138,6 +138,9 @@ const uint8_t license_request_object::type_id;
 const uint8_t account_cycle_balance_object::space_id;
 const uint8_t account_cycle_balance_object::type_id;
 
+const uint8_t issue_asset_request_object::space_id;
+const uint8_t issue_asset_request_object::type_id;
+
 void database::initialize_evaluators()
 {
    _operation_evaluators.resize(255);
@@ -244,6 +247,8 @@ void database::initialize_indexes()
    add_index<primary_index<license_request_index>>();
 
    add_index<primary_index<account_cycle_balance_index>>();
+
+   add_index<primary_index<issue_asset_request_index>>();
 }
 
 void database::init_genesis(const genesis_state_type& genesis_state)

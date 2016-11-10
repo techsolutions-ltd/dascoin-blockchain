@@ -133,6 +133,7 @@ namespace graphene { namespace chain {
          account_id_type   owner;
          asset_id_type     asset_type;
          share_type        balance;
+         share_type reserved = 0;
          balance_limit     limit;
 
          asset get_balance()const { return asset(balance, asset_type); }
@@ -152,6 +153,7 @@ namespace graphene { namespace chain {
 
          account_id_type owner;
          share_type balance;
+         share_type reserved = 0;
          uint8_t remaining_upgrades;
          balance_limit limit;
 
@@ -547,6 +549,7 @@ FC_REFLECT_DERIVED( graphene::chain::account_balance_object, (graphene::db::obje
                     (owner)
                     (asset_type)
                     (balance)
+                    (reserved)
                     (limit)
                   )
 
@@ -555,6 +558,7 @@ FC_REFLECT_DERIVED( graphene::chain::account_balance_object, (graphene::db::obje
 FC_REFLECT_DERIVED( graphene::chain::account_cycle_balance_object, (graphene::db::object),
                     (owner)
                     (balance)
+                    (reserved)
                     (remaining_upgrades)
                     (limit)
                   )

@@ -145,4 +145,13 @@ namespace graphene { namespace chain {
          void_result do_apply( const asset_claim_fees_operation& o );
    };
 
+   class asset_create_issue_request_evaluator : public evaluator<asset_create_issue_request_evaluator>
+   {
+      public:
+         typedef asset_create_issue_request_operation operation_type;
+
+         void_result do_evaluate(const asset_create_issue_request_operation& o);
+         void_result do_apply(const asset_create_issue_request_operation& o);
+   };
+
 } } // graphene::chain

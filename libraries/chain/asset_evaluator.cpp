@@ -570,5 +570,16 @@ void_result asset_claim_fees_evaluator::do_apply( const asset_claim_fees_operati
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
+void_result asset_create_issue_request_evaluator::do_evaluate(const asset_create_issue_request_operation& o)
+{ try {
+   // TODO: fill
+   return void_result();
+} FC_CAPTURE_AND_RETHROW((o)) }
+
+void_result asset_create_issue_request_evaluator::do_apply(const asset_create_issue_request_operation& o)
+{ try {
+   // TODO: fill
+   return void_result();
+} FC_CAPTURE_AND_RETHROW((o)) }
 
 } } // graphene::chain

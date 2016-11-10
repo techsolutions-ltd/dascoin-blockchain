@@ -480,6 +480,23 @@ namespace graphene { namespace chain {
       void validate() const { FC_ASSERT(false); }
    };
 
+   /**
+    * @brief As the asset authenticator on a dual authentication issuing asset, deny an asset issue request.
+    */
+   struct asset_deny_issue_request_operation : public base_operation
+   {
+      struct fee_parameters_type {};
+      asset fee;
+
+      account_id_type authenticator;
+      issue_asset_request_id_type request;
+
+      extensions_type extensions;
+
+      account_id_type fee_payer() const { return authenticator; }
+      share_type calculate_fee(const fee_parameters_type& k) const { return 0; }
+      void validate() const;
+   };
 
 } } // graphene::chain
 
@@ -586,5 +603,14 @@ FC_REFLECT( graphene::chain::asset_distribute_completed_request_operation,
             (issuer)
             (receiver)
             (amount)
+            (extensions)
+          )
+
+// asset_deny_issue_request_operation:
+FC_REFLECT( graphene::chain::asset_deny_issue_request_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::asset_deny_issue_request_operation,
+            (fee)
+            (authenticator)
+            (request)
             (extensions)
           )

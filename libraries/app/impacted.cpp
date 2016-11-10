@@ -246,6 +246,10 @@ struct get_impacted_account_visitor
    }
 
    void operator()( const asset_create_issue_request_operation& op ) {}
+   void operator()( const asset_distribute_completed_request_operation& op )
+   {
+      _impacted.insert(op.receiver);
+   }
 
 };
 

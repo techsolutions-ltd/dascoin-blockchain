@@ -510,7 +510,13 @@ void database::assign_assets()
     modify(asset_obj.dynamic_asset_data_id(*this), [&](asset_dynamic_data_object& data){
          data.current_supply += req.amount.amount;
     });
-    // TODO: emit a virtual operation as a record of the asset being issued.
+
+    asset_distribute_completed_request_operation vop;
+    vop.issuer = req.issuer;
+    vop.receiver = req.receiver;
+    vop.amount = req.amount;
+    push_applied_operation(vop);
+
     remove(req);
   }
 } FC_CAPTURE_AND_RETHROW() }

@@ -107,7 +107,8 @@ namespace graphene { namespace chain {
             transfer_cycles_operation,
             upgrade_account_cycles_operation,
             update_pi_limits_operation,
-            asset_create_issue_request_operation
+            asset_create_issue_request_operation,
+            asset_distribute_completed_request_operation  // VIRTUAL
          > operation;
 
    /// @} // operations group

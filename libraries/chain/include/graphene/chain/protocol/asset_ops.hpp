@@ -421,6 +421,7 @@ namespace graphene { namespace chain {
 
    /**
     * @brief used to transfer accumulated fees back to the issuer's balance.
+    * @ingroup operations
     */
    struct asset_claim_fees_operation : public base_operation
    {
@@ -437,10 +438,15 @@ namespace graphene { namespace chain {
       void            validate()const;
    };
 
+   /**
+    * @brief For dual authority issued assets, create an asset issue request that can be denied by the asset
+    * authenticator.
+    * @ingroup operations
+    * @note You cannot use this operation on single issuer assets.
+    */
    struct asset_create_issue_request_operation : public base_operation
    {
       struct fee_parameters_type {};
-
       asset fee;
 
       account_id_type issuer;
@@ -453,6 +459,27 @@ namespace graphene { namespace chain {
       share_type calculate_fee(const fee_parameters_type& k) const { return 0; }
       void validate() const;
    };
+
+   /**
+    * @brief Record the asset distribution when a dual authority asset issue request elapses.
+    * @ingroup operations
+    */
+   struct asset_distribute_completed_request_operation : public base_operation
+   {
+      struct fee_parameters_type {};
+      asset fee;
+
+      account_id_type issuer;
+      account_id_type receiver;
+      asset amount;
+
+      extensions_type extensions;
+
+      account_id_type fee_payer() const { return issuer; }
+      share_type calculate_fee(const fee_parameters_type& k) const { return 0; }
+      void validate() const { FC_ASSERT(false); }
+   };
+
 
 } } // graphene::chain
 
@@ -552,3 +579,12 @@ FC_REFLECT( graphene::chain::asset_create_issue_request_operation,
             (extensions)
           )
 
+// asset_distribute_completed_request_operation:
+FC_REFLECT( graphene::chain::asset_distribute_completed_request_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::asset_distribute_completed_request_operation,
+            (fee)
+            (issuer)
+            (receiver)
+            (amount)
+            (extensions)
+          )

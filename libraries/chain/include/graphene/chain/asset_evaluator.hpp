@@ -151,7 +151,7 @@ namespace graphene { namespace chain {
          typedef asset_create_issue_request_operation operation_type;
 
          void_result do_evaluate(const asset_create_issue_request_operation& o);
-         void_result do_apply(const asset_create_issue_request_operation& o);
+         object_id_type do_apply(const asset_create_issue_request_operation& o);
    };
 
 } } // graphene::chain

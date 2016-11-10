@@ -444,7 +444,7 @@ namespace graphene { namespace chain {
       asset fee;
 
       account_id_type issuer;
-      account_id_type account;
+      account_id_type receiver;
       asset amount;
 
       extensions_type extensions;
@@ -547,7 +547,7 @@ FC_REFLECT( graphene::chain::asset_create_issue_request_operation::fee_parameter
 FC_REFLECT( graphene::chain::asset_create_issue_request_operation,
             (fee)
             (issuer)
-            (account)
+            (receiver)
             (amount)
             (extensions)
           )

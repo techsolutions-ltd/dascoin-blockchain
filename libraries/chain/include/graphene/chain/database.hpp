@@ -487,6 +487,7 @@ namespace graphene { namespace chain {
          void update_withdraw_permissions();
          bool check_for_blackswan( const asset_object& mia, bool enable_black_swan = true );
          void assign_licenses();
+         void assign_assets();
          void deny_license_request(const license_request_object& req);
 
          ///Steps performed only at maintenance intervals

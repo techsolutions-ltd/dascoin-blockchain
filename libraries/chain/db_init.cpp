@@ -198,6 +198,7 @@ void database::initialize_evaluators()
    register_evaluator<transfer_cycles_evaluator>();
    register_evaluator<update_pi_limits_evaluator>();
    register_evaluator<asset_create_issue_request_evaluator>();
+   register_evaluator<asset_deny_issue_request_evaluator>();
 }
 
 void database::initialize_indexes()

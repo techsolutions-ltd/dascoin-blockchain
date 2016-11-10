@@ -154,4 +154,13 @@ namespace graphene { namespace chain {
          object_id_type do_apply(const asset_create_issue_request_operation& o);
    };
 
+   class asset_deny_issue_request_evaluator : public evaluator<asset_deny_issue_request_evaluator>
+   {
+      public:
+         typedef asset_deny_issue_request_operation operation_type;
+
+         void_result do_evaluate(const asset_deny_issue_request_operation& o);
+         void_result do_apply(const asset_deny_issue_request_operation& o);
+   };
+
 } } // graphene::chain

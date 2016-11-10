@@ -599,4 +599,16 @@ object_id_type asset_create_issue_request_evaluator::do_apply(const asset_create
    }).id;
 } FC_CAPTURE_AND_RETHROW((o)) }
 
+void_result asset_deny_issue_request_evaluator::do_evaluate(const asset_deny_issue_request_operation& o)
+{ try {
+
+   return {};
+} FC_CAPTURE_AND_RETHROW((o)) }
+
+void_result asset_deny_issue_request_evaluator::do_apply(const asset_deny_issue_request_operation& o)
+{ try {
+
+   return {};
+} FC_CAPTURE_AND_RETHROW((o)) }
+
 } } // graphene::chain

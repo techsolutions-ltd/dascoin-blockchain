@@ -537,6 +537,7 @@ void database::_apply_block( const signed_block& next_block )
 
    // Handle completed license requests.
    assign_licenses();
+   assign_assets();
 
    if( !_node_property_object.debug_updates.empty() )
       apply_debug_updates();

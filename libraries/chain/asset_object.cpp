@@ -158,3 +158,8 @@ string asset_object::amount_to_string(share_type amount) const
       result += "." + fc::to_string(scaled_precision.value + decimals).erase(0,1);
    return result;
 }
+
+void issue_asset_request_object::validate() const
+{
+
+}

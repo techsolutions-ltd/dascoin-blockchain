@@ -97,6 +97,7 @@ namespace graphene { namespace chain {
          bool is_transfer_restricted()const { return options.flags & transfer_restricted; }
          bool can_override()const { return options.flags & override_authority; }
          bool allow_confidential()const { return !(options.flags & asset_issuer_permission_flags::disable_confidential); }
+         bool is_dual_auth_issue() const { return options.flags & dual_auth_issue_asset; }
 
          /// Helper function to get an asset object with the given amount in this asset's type
          asset amount(share_type a)const { return asset(a, id); }
@@ -220,6 +221,28 @@ namespace graphene { namespace chain {
          void update_median_feeds(time_point_sec current_time);
    };
 
+   /**
+    * @brief Represent a request to issue asset that can be denied by the authenticator.
+    *
+    * @ingroup object
+    * @ingroup implementation
+    */
+   class issue_asset_request_object : public abstract_object<issue_asset_request_object>
+   {
+   public:
+      static const uint8_t space_id = implementation_ids;
+      static const uint8_t type_id  = impl_issue_asset_request_object_type;
+
+      account_id_type issuer;
+      account_id_type receiver;
+      asset amount;
+      fc::time_point_sec expiration;
+
+      extensions_type extensions;
+
+      void validate() const;
+   };
+
    struct by_feed_expiration;
    typedef multi_index_container<
       asset_bitasset_data_object,
@@ -249,6 +272,31 @@ namespace graphene { namespace chain {
    > asset_object_multi_index_type;
    typedef generic_index<asset_object, asset_object_multi_index_type> asset_index;
 
+   struct by_account;
+   struct by_issuer;
+   struct by_expiration;
+   typedef multi_index_container<
+      issue_asset_request_object,
+      indexed_by<
+         ordered_unique< tag<by_id>,
+           member< object, object_id_type, &object::id >
+         >,
+         ordered_non_unique< tag<by_account>,
+           member< issue_asset_request_object, account_id_type, &issue_asset_request_object::receiver >
+         >,
+         ordered_non_unique< tag<by_issuer>,
+           member< issue_asset_request_object, account_id_type, &issue_asset_request_object::issuer >
+         >,
+         ordered_unique< tag<by_expiration>,
+           composite_key< issue_asset_request_object,
+             member< issue_asset_request_object, time_point_sec, &issue_asset_request_object::expiration >,
+             member< object, object_id_type, &object::id>
+           >
+         >
+      >
+   > issue_asset_request_multi_index_type;
+   typedef generic_index<issue_asset_request_object, issue_asset_request_multi_index_type> issue_asset_request_index;
+
 } } // graphene::chain
 
 FC_REFLECT_DERIVED( graphene::chain::asset_dynamic_data_object, (graphene::db::object),
@@ -274,4 +322,12 @@ FC_REFLECT_DERIVED( graphene::chain::asset_object, (graphene::db::object),
                     (dynamic_asset_data_id)
                     (bitasset_data_id)
                     (buyback_account)
+                  )
+
+FC_REFLECT_DERIVED( graphene::chain::issue_asset_request_object, (graphene::db::object),
+                    (issuer)
+                    (receiver)
+                    (amount)
+                    (expiration)
+                    (extensions)
                   )

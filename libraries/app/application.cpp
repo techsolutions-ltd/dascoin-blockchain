@@ -129,6 +129,22 @@ namespace detail {
                                                   true);
       initial_state.initial_license_authentication_authority = {"sys.license-authenticator"};
 
+      // Webasset issuer:
+      auto web_issuer_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.webasset-issuer")));
+      initial_state.initial_accounts.emplace_back("sys.webasset-issuer",
+                                                  web_issuer_key.get_public_key(),
+                                                  web_issuer_key.get_public_key(),
+                                                  true);
+      initial_state.initial_webasset_issuing_authority = {"sys.webasset-issuer"};
+
+      // Webasset authenticator:
+      auto web_auth_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.webasset-authenticator")));
+      initial_state.initial_accounts.emplace_back("sys.webasset-authenticator",
+                                                  web_auth_key.get_public_key(),
+                                                  web_auth_key.get_public_key(),
+                                                  true);
+      initial_state.initial_webasset_authentication_authority = {"sys.webasset-authenticator"};
+
       // Account registrar:
       auto faucet_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.registrar")));
       initial_state.initial_accounts.emplace_back("sys.registrar",
@@ -136,6 +152,14 @@ namespace detail {
                                                   faucet_key.get_public_key(),
                                                   true);
       initial_state.initial_registrar = {"sys.registrar"};
+
+      // PI validator:
+      auto pi_validator_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.pi-validator")));
+      initial_state.initial_accounts.emplace_back("sys.pi-validator",
+                                                  pi_validator_key.get_public_key(),
+                                                  pi_validator_key.get_public_key(),
+                                                  true);
+      initial_state.initial_personal_identity_validation_authority = {"sys.pi-validator"};
 
       initial_state.initial_chain_id = fc::sha256::hash( "BOGUS" );
 

@@ -244,8 +244,10 @@ namespace graphene { namespace chain {
 
          const chain_id_type&                   get_chain_id()const;
          const asset_object&                    get_core_asset()const;
+         const asset_object&                    get_web_asset()const;
          const chain_property_object&           get_chain_properties()const;
          const global_property_object&          get_global_properties()const;
+         const chain_authorities&               get_chain_authorities()const;
          const dynamic_global_property_object&  get_dynamic_global_properties()const;
          const node_property_object&            get_node_properties()const;
          const fee_schedule&                    current_fee_schedule()const;
@@ -485,6 +487,7 @@ namespace graphene { namespace chain {
          void update_withdraw_permissions();
          bool check_for_blackswan( const asset_object& mia, bool enable_black_swan = true );
          void assign_licenses();
+         void assign_assets();
          void deny_license_request(const license_request_object& req);
 
          ///Steps performed only at maintenance intervals

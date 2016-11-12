@@ -37,6 +37,11 @@ const asset_object& database::get_core_asset() const
    return get(asset_id_type());
 }
 
+const asset_object& database::get_web_asset() const
+{
+   return get(asset_id_type(DASCOIN_WEB_ASSET_INDEX));
+}
+
 const global_property_object& database::get_global_properties()const
 {
    return get( global_property_id_type() );
@@ -45,6 +50,11 @@ const global_property_object& database::get_global_properties()const
 const chain_property_object& database::get_chain_properties()const
 {
    return get( chain_property_id_type() );
+}
+
+const chain_authorities& database::get_chain_authorities() const
+{
+   return get_global_properties().authorities;
 }
 
 const dynamic_global_property_object&database::get_dynamic_global_properties() const

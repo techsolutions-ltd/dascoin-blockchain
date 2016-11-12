@@ -93,7 +93,7 @@ namespace graphene { namespace chain {
             transfer_from_blind_operation,
             asset_settle_cancel_operation,  // VIRTUAL
             asset_claim_fees_operation,
-            fba_distribute_operation,        // VIRTUAL
+            fba_distribute_operation,  // VIRTUAL
             committee_member_update_license_issuer_operation,
             committee_member_update_license_authenticator_operation,
             committee_member_update_account_registrar_operation,
@@ -106,7 +106,10 @@ namespace graphene { namespace chain {
             tether_accounts_operation,
             transfer_cycles_operation,
             upgrade_account_cycles_operation,
-            update_pi_limits_operation
+            update_pi_limits_operation,
+            asset_create_issue_request_operation,
+            asset_distribute_completed_request_operation,  // VIRTUAL
+            asset_deny_issue_request_operation
          > operation;
 
    /// @} // operations group

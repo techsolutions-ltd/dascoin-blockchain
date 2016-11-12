@@ -483,11 +483,10 @@ void database::assign_licenses()
   while ( !idx.empty() && idx.begin()->expiration <= head_block_time() )
   {
     const auto& req = *idx.begin();
-    const auto& gpo = get_global_properties();
-    ilog("Appliying license request ${id}", ("id", req.id));
+    const auto& ca = get_chain_authorities();
 
     license_approve_operation op;
-    op.license_authentication_account = gpo.authorities.license_authenticator;
+    op.license_authentication_account = ca.license_authenticator;
     op.request = req.id;
 
     assign_context.skip_fee_schedule_check = true;  // TODO: this is set in limit order cancel, determine why!
@@ -495,6 +494,30 @@ void database::assign_licenses()
 
     remove(req);
 
+  }
+} FC_CAPTURE_AND_RETHROW() }
+
+void database::assign_assets()
+{ try {
+  transaction_evaluation_state assign_context(this);
+  const auto& idx = get_index_type<issue_asset_request_index>().indices().get<by_expiration>();
+
+  while (!idx.empty() && idx.begin()->expiration <= head_block_time())
+  {
+    const auto& req = *idx.begin();
+    const auto& asset_obj = req.amount.asset_id(*this);
+    adjust_balance(req.receiver, req.amount);
+    modify(asset_obj.dynamic_asset_data_id(*this), [&](asset_dynamic_data_object& data){
+         data.current_supply += req.amount.amount;
+    });
+
+    asset_distribute_completed_request_operation vop;
+    vop.issuer = req.issuer;
+    vop.receiver = req.receiver;
+    vop.amount = req.amount;
+    push_applied_operation(vop);
+
+    remove(req);
   }
 } FC_CAPTURE_AND_RETHROW() }
 

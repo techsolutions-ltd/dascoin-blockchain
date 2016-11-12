@@ -149,6 +149,7 @@ void_result asset_issue_evaluator::do_evaluate( const asset_issue_operation& o )
    const database& d = db();
 
    const asset_object& a = o.asset_to_issue.asset_id(d);
+   FC_ASSERT( !a.is_dual_auth_issue(), "Cannot do a single issue on a dual authority asset" );
    FC_ASSERT( o.issuer == a.issuer );
    FC_ASSERT( !a.is_market_issued(), "Cannot manually issue a market-issued asset." );
 
@@ -570,5 +571,52 @@ void_result asset_claim_fees_evaluator::do_apply( const asset_claim_fees_operati
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
+void_result asset_create_issue_request_evaluator::do_evaluate(const asset_create_issue_request_operation& o)
+{ try {
+   const database& d = db();
+
+   const auto& a = o.amount.asset_id(d);
+   FC_ASSERT( a.is_dual_auth_issue(), "Cannot do a dual authority issue on a single issuer based asset" );
+   FC_ASSERT( o.issuer == a.issuer );
+   FC_ASSERT( !a.is_market_issued(), "Cannot manually issue a market-issued asset." );
+
+   const account_object& reciever = o.receiver(d);
+   FC_ASSERT( is_authorized_asset( d, reciever, a ) );
+
+   const auto& asset_dyn_data = a.dynamic_asset_data_id(d);
+   FC_ASSERT( (asset_dyn_data.current_supply + o.amount.amount) <= a.options.max_supply );
+
+   return void_result();
+
+} FC_CAPTURE_AND_RETHROW((o)) }
+
+object_id_type asset_create_issue_request_evaluator::do_apply(const asset_create_issue_request_operation& o)
+{ try {
+   return db().create<issue_asset_request_object>([&] (issue_asset_request_object &req) {
+     req.issuer = o.issuer;
+     req.receiver = o.receiver;
+     req.amount = o.amount;
+     req.expiration = fc::time_point::now() + fc::minutes(2);  // TODO: Final value here.
+   }).id;
+
+} FC_CAPTURE_AND_RETHROW((o)) }
+
+void_result asset_deny_issue_request_evaluator::do_evaluate(const asset_deny_issue_request_operation& o)
+{ try {
+   const auto& d = db();
+
+   req_obj = &o.request(d);
+   const auto& asset_object = req_obj->amount.asset_id(d);  // Fetch the asset object.
+   FC_ASSERT( o.authenticator == *asset_object.authenticator );
+   return {};
+
+} FC_CAPTURE_AND_RETHROW((o)) }
+
+void_result asset_deny_issue_request_evaluator::do_apply(const asset_deny_issue_request_operation& o)
+{ try {
+   db().remove(*req_obj);
+   return {};
+
+} FC_CAPTURE_AND_RETHROW((o)) }
 
 } } // graphene::chain

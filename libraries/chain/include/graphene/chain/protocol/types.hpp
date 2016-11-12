@@ -202,7 +202,8 @@ namespace graphene { namespace chain {
       impl_fba_accumulator_object_type,
       impl_license_type_object_type,
       impl_license_request_object_type,
-      impl_account_cycle_balance_object_type
+      impl_account_cycle_balance_object_type,
+      impl_issue_asset_request_object_type
    };
 
    //typedef fc::unsigned_int            object_id_type;
@@ -257,6 +258,7 @@ namespace graphene { namespace chain {
    class license_type_object;
    class license_request_object;
    class account_cycle_balance_object;
+   class issue_asset_request_object;
 
    typedef object_id< implementation_ids, impl_global_property_object_type,  global_property_object>                    global_property_id_type;
    typedef object_id< implementation_ids, impl_dynamic_global_property_object_type,  dynamic_global_property_object>    dynamic_global_property_id_type;
@@ -287,9 +289,12 @@ namespace graphene { namespace chain {
    > license_request_id_type;
 
    typedef object_id<
-    implementation_ids, impl_account_cycle_balance_object_type, account_cycle_balance_object
+      implementation_ids, impl_account_cycle_balance_object_type, account_cycle_balance_object
    > account_cycle_balance_id_type;
 
+   typedef object_id<
+      implementation_ids, impl_issue_asset_request_object_type, issue_asset_request_object
+   > issue_asset_request_id_type;
 
    typedef fc::array<char, GRAPHENE_MAX_ASSET_SYMBOL_LENGTH>    symbol_type;
    typedef fc::ripemd160                                        block_id_type;
@@ -440,6 +445,7 @@ FC_REFLECT_ENUM( graphene::chain::impl_object_type,
                  (impl_license_type_object_type)
                  (impl_license_request_object_type)
                  (impl_account_cycle_balance_object_type)
+                 (impl_issue_asset_request_object_type)
                )
 
 FC_REFLECT_TYPENAME( graphene::chain::share_type )
@@ -474,6 +480,7 @@ FC_REFLECT_TYPENAME( graphene::chain::fba_accumulator_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::license_type_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::license_request_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::account_cycle_balance_id_type )
+FC_REFLECT_TYPENAME( graphene::chain::issue_asset_request_id_type )
 
 FC_REFLECT( graphene::chain::void_t, )
 

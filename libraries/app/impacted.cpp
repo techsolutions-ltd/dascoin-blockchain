@@ -245,6 +245,15 @@ struct get_impacted_account_visitor
       _impacted.insert( op.pi_validator );
    }
 
+   void operator()( const asset_create_issue_request_operation& op ) {}
+
+   void operator()( const asset_distribute_completed_request_operation& op )
+   {
+      _impacted.insert(op.receiver);
+   }
+
+   void operator()( const asset_deny_issue_request_operation& op ) {}
+
 };
 
 void operation_get_impacted_accounts( const operation& op, flat_set<account_id_type>& result )

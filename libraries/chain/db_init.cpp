@@ -138,6 +138,9 @@ const uint8_t license_request_object::type_id;
 const uint8_t account_cycle_balance_object::space_id;
 const uint8_t account_cycle_balance_object::type_id;
 
+const uint8_t issue_asset_request_object::space_id;
+const uint8_t issue_asset_request_object::type_id;
+
 void database::initialize_evaluators()
 {
    _operation_evaluators.resize(255);
@@ -194,6 +197,8 @@ void database::initialize_evaluators()
    register_evaluator<tether_accounts_evaluator>();
    register_evaluator<transfer_cycles_evaluator>();
    register_evaluator<update_pi_limits_evaluator>();
+   register_evaluator<asset_create_issue_request_evaluator>();
+   register_evaluator<asset_deny_issue_request_evaluator>();
 }
 
 void database::initialize_indexes()
@@ -244,6 +249,8 @@ void database::initialize_indexes()
    add_index<primary_index<license_request_index>>();
 
    add_index<primary_index<account_cycle_balance_index>>();
+
+   add_index<primary_index<issue_asset_request_index>>();
 }
 
 void database::init_genesis(const genesis_state_type& genesis_state)
@@ -360,8 +367,8 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       remove( acct );
    }
 
-   // Create core asset
-   const asset_dynamic_data_object& dyn_asset =
+   // Create core asset;
+   const asset_dynamic_data_object& core_dyn_asset =
       create<asset_dynamic_data_object>([&](asset_dynamic_data_object& a) {
          a.current_supply = GRAPHENE_MAX_SHARE_SUPPLY;
       });
@@ -377,10 +384,34 @@ void database::init_genesis(const genesis_state_type& genesis_state)
          a.options.core_exchange_rate.base.asset_id = asset_id_type(0);
          a.options.core_exchange_rate.quote.amount = 1;
          a.options.core_exchange_rate.quote.asset_id = asset_id_type(0);
-         a.dynamic_asset_data_id = dyn_asset.id;
+         a.dynamic_asset_data_id = core_dyn_asset.id;
       });
    assert( asset_id_type(core_asset.id) == asset().asset_id );
-   assert( get_balance(account_id_type(), asset_id_type()) == asset(dyn_asset.current_supply) );
+   assert( get_balance(account_id_type(), asset_id_type()) == asset(core_dyn_asset.current_supply) );
+
+   // Create web asset:
+   const asset_dynamic_data_object& web_dyn_asset =
+      create<asset_dynamic_data_object>([&](asset_dynamic_data_object& a) {
+         a.current_supply = 0;  // Web starts with 0 initial supply.
+      });
+   const asset_object& web_asset =
+     create<asset_object>( [&]( asset_object& a ) {
+         a.symbol = DASCOIN_WEBASSET_SYMBOL;
+         a.options.max_supply = genesis_state.max_core_supply;  // TODO: this should remain 10 trillion?
+         a.precision = GRAPHENE_BLOCKCHAIN_PRECISION_DIGITS;
+         a.options.flags = 0;  // TODO: set the appropriate flags.
+         a.options.issuer_permissions = 0;  // TODO: set the appropriate issuer permissions.
+         a.issuer = GRAPHENE_NULL_ACCOUNT;
+         a.authenticator = GRAPHENE_NULL_ACCOUNT;
+         // TODO: figure out the base conversion rates.
+         a.options.core_exchange_rate.base.amount = 1;
+         a.options.core_exchange_rate.base.asset_id = asset_id_type(0);
+         a.options.core_exchange_rate.quote.amount = 1;
+         a.options.core_exchange_rate.quote.asset_id = asset_id_type(0);
+         a.dynamic_asset_data_id = web_dyn_asset.id;
+      });
+   FC_ASSERT( asset_id_type(web_asset.id) == asset(DASCOIN_WEB_ASSET_INDEX).asset_id );
+
    // Create more special assets
    while( true )
    {
@@ -674,6 +705,14 @@ void database::init_genesis(const genesis_state_type& genesis_state)
        op.initializer = vesting_balance_worker_initializer{uint16_t(0)};
 
        apply_operation(genesis_eval_state, std::move(op));
+   });
+
+   // Modify the WEB asset and set the initial accounts:
+   account_id_type web_issuer = get_account_id(genesis_state.initial_webasset_issuing_authority.owner_name);
+   account_id_type web_auth = get_account_id(genesis_state.initial_webasset_authentication_authority.owner_name);
+   modify(web_asset, [&](asset_object& a){
+      a.issuer = web_issuer;
+      a.authenticator = web_auth;
    });
 
    // Initialize cycle licensing:

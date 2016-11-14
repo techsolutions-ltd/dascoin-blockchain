@@ -16,6 +16,9 @@ namespace graphene { namespace chain {
     void_result do_evaluate(const wire_out_operation& op);
 
     object_id_type do_apply(const wire_out_operation& op);
+
+    const asset_dynamic_data_object* asset_dyn_data = nullptr;
+    const account_object*            from_account = nullptr;
   };
 
 } }  // namespace graphene::chain

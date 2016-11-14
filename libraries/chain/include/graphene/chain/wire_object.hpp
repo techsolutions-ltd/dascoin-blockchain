@@ -18,6 +18,7 @@ namespace graphene { namespace chain {
 
       account_id_type account;
       asset asset_to_wire;
+
       extensions_type extensions;
       void validate() const;
   };

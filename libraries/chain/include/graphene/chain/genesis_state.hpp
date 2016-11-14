@@ -125,6 +125,7 @@ struct genesis_state_type {
    initial_chain_authority_type             initial_webasset_authentication_authority;
    initial_chain_authority_type             initial_registrar;
    initial_chain_authority_type             initial_personal_identity_validation_authority;
+   initial_chain_authority_type             initial_wire_out_handler;
 
    /**
     * Temporary, will be moved elsewhere.
@@ -216,6 +217,7 @@ FC_REFLECT( graphene::chain::genesis_state_type,
             (initial_webasset_authentication_authority)
             (initial_registrar)
             (initial_personal_identity_validation_authority)
+            (initial_wire_out_handler)
             (initial_chain_id)
             (immutable_parameters)
           )

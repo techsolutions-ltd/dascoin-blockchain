@@ -37,6 +37,7 @@
 #include <graphene/chain/protocol/proposal.hpp>
 #include <graphene/chain/protocol/transfer.hpp>
 #include <graphene/chain/protocol/vesting.hpp>
+#include <graphene/chain/protocol/wire.hpp>
 #include <graphene/chain/protocol/withdraw_permission.hpp>
 #include <graphene/chain/protocol/witness.hpp>
 #include <graphene/chain/protocol/worker.hpp>
@@ -109,7 +110,10 @@ namespace graphene { namespace chain {
             update_pi_limits_operation,
             asset_create_issue_request_operation,
             asset_distribute_completed_request_operation,  // VIRTUAL
-            asset_deny_issue_request_operation
+            asset_deny_issue_request_operation,
+            wire_out_operation,
+            wire_out_complete_operation,
+            wire_out_reject_operation
          > operation;
 
    /// @} // operations group

@@ -20,6 +20,8 @@ namespace graphene { namespace chain {
     account_id_type registrar;
     // Validation of personal information:
     account_id_type pi_validator;
+    // Handling of wire_out payments:
+    account_id_type wire_out_handler;
   };
 
 } } // namespace graphene::chain
@@ -29,6 +31,7 @@ FC_REFLECT( graphene::chain::chain_authorities,
             (license_authenticator)
             (webasset_issuer)
             (webasset_authenticator)
-            (pi_validator)
             (registrar)
+            (pi_validator)
+            (wire_out_handler)
           );

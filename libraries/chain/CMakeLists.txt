@@ -59,6 +59,7 @@ add_library( graphene_chain
              protocol/vote.cpp
              protocol/license.cpp
              protocol/personal_identity.cpp
+             protocol/wire.cpp
 
              genesis_state.cpp
              get_config.cpp
@@ -95,6 +96,8 @@ add_library( graphene_chain
              is_authorized_asset.cpp
 
              license_objects.cpp
+             wire_object.cpp
+             wire_evaluator.cpp
 
              ${HEADERS}
              "${CMAKE_CURRENT_BINARY_DIR}/include/graphene/chain/hardfork.hpp"

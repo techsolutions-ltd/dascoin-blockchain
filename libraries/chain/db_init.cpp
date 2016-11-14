@@ -62,6 +62,7 @@
 #include <graphene/chain/proposal_evaluator.hpp>
 #include <graphene/chain/transfer_evaluator.hpp>
 #include <graphene/chain/vesting_balance_evaluator.hpp>
+#include <graphene/chain/wire_evaluator.hpp>
 #include <graphene/chain/withdraw_permission_evaluator.hpp>
 #include <graphene/chain/witness_evaluator.hpp>
 #include <graphene/chain/worker_evaluator.hpp>
@@ -203,6 +204,8 @@ void database::initialize_evaluators()
    register_evaluator<update_pi_limits_evaluator>();
    register_evaluator<asset_create_issue_request_evaluator>();
    register_evaluator<asset_deny_issue_request_evaluator>();
+   register_evaluator<wire_out_evaluator>();
+   register_evaluator<wire_out_complete_evaluator>();
 }
 
 void database::initialize_indexes()

@@ -926,7 +926,8 @@ public:
    }
 
 
-   signed_transaction register_account(string name,
+   signed_transaction register_account(account_kind kind,
+                                       string name,
                                        public_key_type owner,
                                        public_key_type active,
                                        bool broadcast = false)
@@ -938,6 +939,7 @@ public:
       account_object registrar_account_object = this->get_account( "sys.registrar" );
 
       account_create_operation account_create_op;
+      account_create_op.kind = static_cast<uint8_t>(kind);
       account_create_op.registrar = registrar_account_object.id;
       account_create_op.name = name;
       account_create_op.owner = authority(1, owner, 1);
@@ -3298,8 +3300,17 @@ signed_transaction wallet_api::register_account(string name,
                                                 public_key_type active_pubkey,
                                                 bool broadcast)
 {
-   return my->register_account( name, owner_pubkey, active_pubkey, broadcast );
+   return my->register_account( account_kind::wallet, name, owner_pubkey, active_pubkey, broadcast );
 }
+
+signed_transaction wallet_api::register_vault_account(string name,
+                                                      public_key_type owner_pubkey,
+                                                      public_key_type active_pubkey,
+                                                      bool broadcast)
+{
+   return my->register_account( account_kind::vault, name, owner_pubkey, active_pubkey, broadcast );
+}
+
 signed_transaction wallet_api::create_account_with_brain_key(string brain_key,
                                                              string account_name,
                                                              bool broadcast /* = false */)

@@ -641,6 +641,28 @@ class wallet_api
                                           public_key_type active,
                                           bool broadcast = false);
 
+      /** Registers a third party's vault account on the blockckain.
+       *
+       * This function is used to register a vault account for which you do not own the private keys.
+       * When acting as a registrar, an end user will generate their own private keys and send
+       * you the public keys.  The registrar will use this function to register the account
+       * on behalf of the end user.
+       *
+       * @see register_account()
+       *
+       * @param name the name of the account, must be unique on the blockchain.  Shorter names
+       *             are more expensive to register; the rules are still in flux, but in general
+       *             names of more than 8 characters with at least one digit will be cheap.
+       * @param owner the owner key for the new account
+       * @param active the active key for the new account
+       * @param broadcast true to broadcast the transaction on the network
+       * @returns the signed transaction registering the account
+      */
+      signed_transaction register_vault_account(string name,
+                                                 public_key_type owner,
+                                                 public_key_type active,
+                                                 bool broadcast = false);
+
       /**
        *  Upgrades an account to prime status.
        *  This makes the account holder a 'lifetime member'.
@@ -1709,6 +1731,7 @@ FC_API( graphene::wallet::wallet_api,
         (import_balance)
         (suggest_brain_key)
         (register_account)
+        (register_vault_account)
         (upgrade_account)
         (create_account_with_brain_key)
         (sell_asset)

@@ -260,6 +260,7 @@ struct get_impacted_account_visitor
    }
 
    void operator()( const wire_out_complete_operation& op ) {}
+   void operator()( const wire_out_reject_operation& op ) {}
 
 };
 

@@ -34,6 +34,20 @@ namespace graphene { namespace chain {
     share_type calculate_fee(const fee_parameters_type& k) const { return 0; }
   };
 
+  struct wire_out_reject_operation : public base_operation
+  {
+    struct fee_parameters_type {};
+    asset fee;   // always zero
+
+    account_id_type wire_out_handler;
+    wire_out_holder_id_type holder_object_id;
+    extensions_type extensions;
+
+    account_id_type fee_payer() const { return wire_out_handler; }
+    void validate() const;
+    share_type calculate_fee(const fee_parameters_type& k) const { return 0; }
+  };
+
 } }  // namespace graphene::chain
 
 ////////////////////////////////
@@ -49,6 +63,13 @@ FC_REFLECT( graphene::chain::wire_out_operation,
 
 FC_REFLECT( graphene::chain::wire_out_complete_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::wire_out_complete_operation,
+            (wire_out_handler)
+            (holder_object_id)
+            (extensions)
+          )
+
+FC_REFLECT( graphene::chain::wire_out_reject_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::wire_out_reject_operation,
             (wire_out_handler)
             (holder_object_id)
             (extensions)

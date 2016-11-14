@@ -112,7 +112,8 @@ namespace graphene { namespace chain {
             asset_distribute_completed_request_operation,  // VIRTUAL
             asset_deny_issue_request_operation,
             wire_out_operation,
-            wire_out_complete_operation
+            wire_out_complete_operation,
+            wire_out_reject_operation
          > operation;
 
    /// @} // operations group

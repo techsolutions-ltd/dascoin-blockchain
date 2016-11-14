@@ -12,4 +12,9 @@ namespace graphene { namespace chain {
     FC_ASSERT( asset_to_wire.amount > 0 );
   }
 
+  void wire_out_complete_operation::validate() const
+  {
+
+  }
+
 } } // namespace graphene::chain

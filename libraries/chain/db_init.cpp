@@ -43,6 +43,7 @@
 #include <graphene/chain/special_authority_object.hpp>
 #include <graphene/chain/transaction_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
+#include <graphene/chain/wire_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
 #include <graphene/chain/witness_object.hpp>
 #include <graphene/chain/witness_schedule_object.hpp>
@@ -140,6 +141,9 @@ const uint8_t account_cycle_balance_object::type_id;
 
 const uint8_t issue_asset_request_object::space_id;
 const uint8_t issue_asset_request_object::type_id;
+
+const uint8_t wire_out_holder_object::space_id;
+const uint8_t wire_out_holder_object::type_id;
 
 void database::initialize_evaluators()
 {
@@ -251,6 +255,8 @@ void database::initialize_indexes()
    add_index<primary_index<account_cycle_balance_index>>();
 
    add_index<primary_index<issue_asset_request_index>>();
+
+   add_index<primary_index<wire_out_holder_index>>();
 }
 
 void database::init_genesis(const genesis_state_type& genesis_state)

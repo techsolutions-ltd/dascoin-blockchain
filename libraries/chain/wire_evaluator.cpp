@@ -41,13 +41,27 @@ namespace graphene { namespace chain {
   void_result wire_out_complete_evaluator::do_evaluate(const wire_out_complete_operation& op)
   { try {
     const auto& d = db();
+    const auto& holder_obj = op.holder_object_id(d);
+    const auto& asset_obj = holder_obj.asset_to_wire.asset_id(d);
+    const auto& dyn_data_obj = asset_obj.dynamic_asset_data_id(d);
+
+    FC_ASSERT( (asset_dyn_data->current_supply - holder_obj.asset_to_wire.amount) >= 0 );
+
+    holder = &holder_obj;
+    asset_dyn_data = &dyn_data_obj;
 
     return {};
   } FC_CAPTURE_AND_RETHROW( (op) ) }
 
   void_result wire_out_complete_evaluator::do_apply(const wire_out_complete_operation& op)
   { try {
-    const auto& d = db();
+    auto& d = db();
+
+    d.modify( *asset_dyn_data, [&]( asset_dynamic_data_object& data ){
+         data.current_supply -= holder->asset_to_wire.amount;
+    });
+    d.remove(*holder);
+
     return {};
   } FC_CAPTURE_AND_RETHROW( (op) ) }
 

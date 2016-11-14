@@ -161,6 +161,14 @@ namespace detail {
                                                   true);
       initial_state.initial_personal_identity_validation_authority = {"sys.pi-validator"};
 
+      // Wire out authority:
+      auto wire_out_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.wire-out-handler")));
+      initial_state.initial_accounts.emplace_back("sys.wire-out-handler",
+                                                  wire_out_key.get_public_key(),
+                                                  wire_out_key.get_public_key(),
+                                                  true);
+      initial_state.initial_wire_out_handler = {"sys.wire-out-handler"};
+
       initial_state.initial_chain_id = fc::sha256::hash( "BOGUS" );
 
       return initial_state;

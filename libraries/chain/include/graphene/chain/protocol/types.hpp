@@ -94,8 +94,8 @@ namespace graphene { namespace chain {
 
    enum limit_kind
    {
-      vault_to_wallet = 0,
-      wallet_out = 1,
+      vault_to_wallet_webasset = 0,
+      wallet_out_webasset = 1,
       LIMIT_KIND_COUNT
    };
 
@@ -392,8 +392,8 @@ namespace fc
 }
 
 FC_REFLECT_ENUM( graphene::chain::limit_kind,
-                 (vault_to_wallet)
-                 (wallet_out)
+                 (vault_to_wallet_webasset)
+                 (wallet_out_webasset)
                  (LIMIT_KIND_COUNT)
                )
 

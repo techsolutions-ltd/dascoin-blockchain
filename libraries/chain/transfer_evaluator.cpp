@@ -162,6 +162,12 @@ void_result transfer_vault_to_wallet_evaluator::do_evaluate(const transfer_vault
    FC_ASSERT( from_account.is_vault(), "Source '${f}'' must be a vault account", ("f", from_account.name) );
    FC_ASSERT( to_account.is_wallet(), "Destination '${t}' must be a wallet account", ("t", to_account.name) );
 
+      // Accounts must be tethered:
+   FC_ASSERT( from_account.has_in_parents(op.to_wallet), "Accounts '${f}' and '${t}' must be tethered",
+              ("f", from_account.name)
+              ("t", to_account.name)
+            );
+
    // Must have sufficient balance:
    asset from_balance = d.get_balance_and_check_limit(from_account, asset_type, op.asset_to_transfer.amount);
    bool insufficient_balance = from_balance.amount >= op.asset_to_transfer.amount;
@@ -194,6 +200,12 @@ void_result transfer_wallet_to_vault_evaluator::do_evaluate(const transfer_walle
    // Must be WALLET --> VAULT:
    FC_ASSERT( from_account.is_wallet(), "Source '${f}'' must be a wallet account", ("f", from_account.name) );
    FC_ASSERT( to_account.is_vault(), "Destination '${t}' must be a vault account", ("t", to_account.name) );
+
+   // Accounts must be tethered:
+   FC_ASSERT( from_account.has_in_vault(op.to_vault), "Accounts '${f}' and '${t}' must be tethered",
+              ("f", from_account.name)
+              ("t", to_account.name)
+            );
 
    // Must have sufficient balance:
    asset from_balance = d.get_balance(from_account, asset_type);

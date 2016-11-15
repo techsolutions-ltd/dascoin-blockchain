@@ -110,9 +110,10 @@ namespace graphene { namespace chain {
        */
       share_type        spent = 0;
 
-      bool check()const { return spent < max; }
+      bool check() const { return spent <= max; }
+      bool check(share_type amount) const { return spent + amount <= max; }
       void spend( share_type amount ) { spent += amount;  }
-      void validate()const;
+      void validate() const;
 
       friend bool operator < ( const balance_limit& a, const balance_limit& b ) { return a.max < b.max; }
    };

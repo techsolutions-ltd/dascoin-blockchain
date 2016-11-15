@@ -45,6 +45,30 @@ asset database::get_balance(const account_object& owner, const asset_object& ass
    return get_balance(owner.get_id(), asset_obj.get_id());
 }
 
+asset database::get_balance_and_check_limit(account_id_type owner, asset_id_type asset_id, share_type to_spend) const
+{ try {
+   auto& index = get_index_type<account_balance_index>().indices().get<by_account_asset>();
+   auto itr = index.find(boost::make_tuple(owner, asset_id));
+   if( itr == index.end() )
+      return asset(0, asset_id);
+
+   FC_ASSERT ( itr->limit.check(to_spend),
+               "Daily limit exceeded: account ${a} has already transferred ${spent} of ${max} limit",
+               ("a",owner(*this).name)
+               ("spent",itr->limit.spent)
+               ("max",itr->limit.max)
+             );
+   return itr->get_balance();
+
+} FC_CAPTURE_AND_RETHROW((owner)(asset_id)(to_spend)) }
+
+asset database::get_balance_and_check_limit(const account_object& owner, const asset_object& asset_obj, share_type to_spend) const
+{ try {
+
+   return get_balance_and_check_limit(owner.get_id(), asset_obj.get_id(), to_spend);
+
+} FC_CAPTURE_AND_RETHROW((owner.get_id())(asset_obj.get_id())(to_spend)) }
+
 string database::to_pretty_string( const asset& a )const
 {
    return a.asset_id(*this).amount_to_pretty_string(a.amount);
@@ -64,7 +88,7 @@ share_type database::get_cycle_balance(const account_object& owner) const
    return get_cycle_balance(owner.get_id());
 }
 
-void database::adjust_balance(account_id_type account, asset delta )
+void database::adjust_balance(account_id_type account, asset delta, bool modify_limit)
 { try {
    if( delta.amount == 0 )
       return;
@@ -84,9 +108,17 @@ void database::adjust_balance(account_id_type account, asset delta )
       });
    } else {
       if( delta.amount < 0 )
-         FC_ASSERT( itr->get_balance() >= -delta, "Insufficient Balance: ${a}'s balance of ${b} is less than required ${r}", ("a",account(*this).name)("b",to_pretty_string(itr->get_balance()))("r",to_pretty_string(-delta)));
-      modify(*itr, [delta](account_balance_object& b) {
+         FC_ASSERT( itr->get_balance() >= -delta,
+                    "Insufficient Balance: ${a}'s balance of ${b} is less than required ${r}",
+                    ("a",account(*this).name)
+                    ("b",to_pretty_string(itr->get_balance()))
+                    ("r",to_pretty_string(-delta))
+                  );
+      modify(*itr, [delta, modify_limit](account_balance_object& b) {
          b.adjust_balance(delta);
+         // We adjust the limit ONLY IF the asset is REMOVED from the balance so the delta must be negative!
+         if ( modify_limit && delta.amount < 0 )
+            b.limit.spend(-delta.amount);
       });
    }
 

@@ -288,6 +288,12 @@ namespace graphene { namespace chain {
          asset get_balance(account_id_type owner, asset_id_type asset_id)const;
          /// This is an overloaded method.
          asset get_balance(const account_object& owner, const asset_object& asset_obj)const;
+         /// Just like the previous, but checks the spending limit:
+         asset get_balance_and_check_limit(account_id_type owner, asset_id_type asset_id, share_type to_spend) const;
+         /// This is an overloaded method:
+         asset get_balance_and_check_limit(const account_object& owner,
+            const asset_object& asset_obj,
+            share_type to_spend) const;
 
          /**
           * @brief Retrieve a particular account's cycle balance.
@@ -302,8 +308,9 @@ namespace graphene { namespace chain {
           * @brief Adjust a particular account's balance in a given asset by a delta
           * @param account ID of account whose balance should be adjusted
           * @param delta Asset ID and amount to adjust balance by
+          * @param enforce_limits Check and update the limits on the balance.
           */
-         void adjust_balance(account_id_type account, asset delta);
+         void adjust_balance(account_id_type account, asset delta, bool touch_limit = false);
 
          /**
           * @brief Adjsut a particular account's cycle balance by a delta.

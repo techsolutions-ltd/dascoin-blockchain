@@ -152,21 +152,66 @@ void_result transfer_cycles_evaluator::do_apply(const transfer_cycles_operation&
 
 void_result transfer_vault_to_wallet_evaluator::do_evaluate(const transfer_vault_to_wallet_operation& op)
 { try {
+   const database& d = db();
+
+   const account_object& from_account = op.from_vault(d);
+   const account_object& to_account = op.to_wallet(d);
+   const asset_object& asset_type = op.asset_to_transfer.asset_id(d);
+
+   // Must be VAULT --> WALLET:
+   FC_ASSERT( from_account.is_vault(), "Source '${f}'' must be a vault account", ("f", from_account.name) );
+   FC_ASSERT( to_account.is_wallet(), "Destination '${t}' must be a wallet account", ("t", to_account.name) );
+
+   // Must have sufficient balance:
+   asset from_balance = d.get_balance_and_check_limit(from_account, asset_type, op.asset_to_transfer.amount);
+   bool insufficient_balance = from_balance.amount >= op.asset_to_transfer.amount;
+   FC_ASSERT( insufficient_balance,
+              "Insufficient balance: ${balance}, unable to transfer '${total_transfer}' from account '${a}' to '${t}'",
+              ("a",from_account.name)
+              ("t",to_account.name)
+              ("total_transfer",d.to_pretty_string(op.asset_to_transfer))
+              ("balance",d.to_pretty_string(from_balance))
+            );
    return {};
+
 } FC_CAPTURE_AND_RETHROW((op)) }
 
 void_result transfer_vault_to_wallet_evaluator::do_apply(const transfer_vault_to_wallet_operation& o)
 { try {
+   db().adjust_balance(o.from_vault, -o.asset_to_transfer, /* modify_limit = */ true);
+   db().adjust_balance(o.to_wallet, o.asset_to_transfer);
    return {};
 } FC_CAPTURE_AND_RETHROW((o)) }
 
 void_result transfer_wallet_to_vault_evaluator::do_evaluate(const transfer_wallet_to_vault_operation& op)
 { try {
+   const database& d = db();
+
+   const account_object& from_account = op.from_wallet(d);
+   const account_object& to_account = op.to_vault(d);
+   const asset_object& asset_type = op.asset_to_transfer.asset_id(d);
+
+   // Must be WALLET --> VAULT:
+   FC_ASSERT( from_account.is_wallet(), "Source '${f}'' must be a wallet account", ("f", from_account.name) );
+   FC_ASSERT( to_account.is_vault(), "Destination '${t}' must be a vault account", ("t", to_account.name) );
+
+   // Must have sufficient balance:
+   asset from_balance = d.get_balance(from_account, asset_type);
+   bool insufficient_balance = from_balance.amount >= op.asset_to_transfer.amount;
+   FC_ASSERT( insufficient_balance,
+              "Insufficient balance: ${balance}, unable to transfer '${total_transfer}' from account '${a}' to '${t}'",
+              ("a",from_account.name)
+              ("t",to_account.name)
+              ("total_transfer",d.to_pretty_string(op.asset_to_transfer))
+              ("balance",d.to_pretty_string(from_balance))
+            );
    return {};
 } FC_CAPTURE_AND_RETHROW((op)) }
 
 void_result transfer_wallet_to_vault_evaluator::do_apply(const transfer_wallet_to_vault_operation& o)
 { try {
+   db().adjust_balance(o.from_wallet, -o.asset_to_transfer);
+   db().adjust_balance(o.to_vault, o.asset_to_transfer);
    return {};
 } FC_CAPTURE_AND_RETHROW((o)) }
 

@@ -535,9 +535,12 @@ void database::_apply_block( const signed_block& next_block )
    update_maintenance_flag( maint_needed );
    update_witness_schedule();
 
-   // Handle completed license requests.
+   // Handle completed license requests:
    assign_licenses();
+   // Complete any asset issue request objects:
    assign_assets();
+   // Reset any daily limits if necessary:
+   reset_spending_limits();
 
    if( !_node_property_object.debug_updates.empty() )
       apply_debug_updates();

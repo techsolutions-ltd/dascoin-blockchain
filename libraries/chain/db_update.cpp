@@ -528,4 +528,20 @@ void database::deny_license_request(const license_request_object& req)
 
 } FC_CAPTURE_AND_RETHROW() }
 
+void database::reset_spending_limits()
+{ try {
+  const auto& params = get_global_properties().parameters;
+  const auto& dgpo = get_dynamic_global_properties();
+
+  if ( dgpo.next_spend_limit_reset >= head_block_time() )
+  {
+    // Set the new point in time to reset the spending limit.
+    // fc::time_point_sec interval_len = fc::seconds(params.limit_interval_elapse_time_seconds);
+    modify(dgpo, [&](dynamic_global_property_object& o){
+      o.next_spend_limit_reset = head_block_time() + params.limit_interval_elapse_time_seconds;
+    });
+  }
+
+} FC_CAPTURE_AND_RETHROW() }
+
 } }  // namespace database::chain

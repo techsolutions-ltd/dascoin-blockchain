@@ -489,6 +489,7 @@ namespace graphene { namespace chain {
          void assign_licenses();
          void assign_assets();
          void deny_license_request(const license_request_object& req);
+         void reset_spending_limits();
 
          ///Steps performed only at maintenance intervals
          ///@{

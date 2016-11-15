@@ -55,4 +55,22 @@ namespace graphene { namespace chain {
          void_result do_apply( const operation_type& o );
    };
 
+   class transfer_vault_to_wallet_evaluator : public evaluator<transfer_vault_to_wallet_evaluator>
+   {
+      public:
+         typedef transfer_vault_to_wallet_operation operation_type;
+
+         void_result do_evaluate( const operation_type& o );
+         void_result do_apply( const operation_type& o );
+   };
+
+   class transfer_wallet_to_vault_evaluator : public evaluator<transfer_wallet_to_vault_evaluator>
+   {
+      public:
+         typedef transfer_wallet_to_vault_operation operation_type;
+
+         void_result do_evaluate( const operation_type& o );
+         void_result do_apply( const operation_type& o );
+   };
+
 } } // graphene::chain

@@ -150,4 +150,24 @@ void_result transfer_cycles_evaluator::do_apply(const transfer_cycles_operation&
 
 } FC_CAPTURE_AND_RETHROW((o)) }
 
+void_result transfer_vault_to_wallet_evaluator::do_evaluate(const transfer_vault_to_wallet_operation& op)
+{ try {
+   return {};
+} FC_CAPTURE_AND_RETHROW((op)) }
+
+void_result transfer_vault_to_wallet_evaluator::do_apply(const transfer_vault_to_wallet_operation& o)
+{ try {
+   return {};
+} FC_CAPTURE_AND_RETHROW((o)) }
+
+void_result transfer_wallet_to_vault_evaluator::do_evaluate(const transfer_wallet_to_vault_operation& op)
+{ try {
+   return {};
+} FC_CAPTURE_AND_RETHROW((op)) }
+
+void_result transfer_wallet_to_vault_evaluator::do_apply(const transfer_wallet_to_vault_operation& o)
+{ try {
+   return {};
+} FC_CAPTURE_AND_RETHROW((o)) }
+
 } } // graphene::chain

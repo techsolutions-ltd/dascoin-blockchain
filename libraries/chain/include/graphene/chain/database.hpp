@@ -295,6 +295,11 @@ namespace graphene { namespace chain {
             const asset_object& asset_obj,
             share_type to_spend) const;
 
+         void evaluate_transfer(account_id_type from, asset delta, share_type delta_reserved = 0,
+                                bool check_limits = false) const;
+         void complete_transfer(account_id_type from_id, account_id_type to_id, asset delta,
+                                share_type delta_reserved = 0, bool update_spent = false);
+
          /**
           * @brief Retrieve a particular account's cycle balance.
           * @param  owner Account IF whose cycle balance should be retrieved.

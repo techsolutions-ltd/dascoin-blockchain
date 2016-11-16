@@ -139,6 +139,8 @@ namespace graphene { namespace chain {
 
          asset get_balance()const { return asset(balance, asset_type); }
          void  adjust_balance(const asset& delta);
+         bool check_limits(share_type balance_delta, share_type reserved_delta) const;
+         void increase_spent(share_type balance_delta, share_type reserved_delta);
    };
 
    /**

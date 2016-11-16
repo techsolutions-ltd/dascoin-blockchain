@@ -48,6 +48,16 @@ void account_balance_object::adjust_balance(const asset& delta)
    balance += delta.amount;
 }
 
+bool account_balance_object::check_limits(share_type balance_delta, share_type reserved_delta) const
+{
+   return limit.spent + balance_delta + reserved_delta <= limit.max;
+}
+
+void account_balance_object::increase_spent(share_type balance_delta, share_type reserved_delta)
+{
+   limit.spent += (balance_delta + reserved_delta);
+}
+
 void account_statistics_object::process_fees(const account_object& a, database& d) const
 {
    if( pending_fees > 0 || pending_vested_fees > 0 )

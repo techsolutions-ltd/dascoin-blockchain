@@ -119,37 +119,6 @@ void_result override_transfer_evaluator::do_apply( const override_transfer_opera
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-void_result transfer_cycles_evaluator::do_evaluate(const transfer_cycles_operation& op)
-{ try {
-   const database& d = db();
-   const account_object& from_account    = op.from_wallet(d);
-   const account_object& to_account      = op.to_vault(d);
-   share_type from_balance = d.get_cycle_balance(from_account);
-
-   FC_ASSERT( from_account.is_wallet(), "Source '${f}'' must be a wallet account", ("f", from_account.name) );
-   FC_ASSERT( to_account.is_vault(), "Destination '${t}'' must be a vault account ", ("t", to_account.name) );
-
-   FC_ASSERT( from_balance >= op.amount,
-              "Insufficient Balance: ${balance}, unable to transfer '${total_transfer}' from account '${a}' to '${t}'",
-              ("a",from_account.name)
-              ("t",to_account.name)
-              ("total_transfer",op.amount)
-              ("balance",from_balance)
-            );
-   return void_result();
-
-} FC_CAPTURE_AND_RETHROW((op)) }
-
-void_result transfer_cycles_evaluator::do_apply(const transfer_cycles_operation& o)
-{ try {
-   database& d = db();
-
-   d.adjust_cycle_balance( o.from_wallet, -o.amount );
-   d.adjust_cycle_balance( o.to_vault, o.amount );
-   return void_result();
-
-} FC_CAPTURE_AND_RETHROW((o)) }
-
 void_result transfer_vault_to_wallet_evaluator::do_evaluate(const transfer_vault_to_wallet_operation& op)
 { try {
    const database& d = db();

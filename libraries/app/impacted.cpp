@@ -230,11 +230,6 @@ struct get_impacted_account_visitor
       _impacted.insert( op.vault_account );
    }
 
-   void operator()( const transfer_cycles_operation& op )
-   {
-      _impacted.insert( op.to_vault );
-   }
-
    void operator()( const upgrade_account_cycles_operation& op )
    {
       _impacted.insert( op.account );

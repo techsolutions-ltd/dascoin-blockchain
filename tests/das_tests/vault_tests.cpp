@@ -79,19 +79,4 @@ BOOST_AUTO_TEST_CASE( tether_accounts_test )
 
 } FC_LOG_AND_RETHROW() }
 
-BOOST_AUTO_TEST_CASE( transfer_cycles_test )
-{ try {
-  ACTORS((src)(poorguy));
-  VAULT_ACTORS((dst)(dst2));
-
-  adjust_cycles(src_id, 10000);
-  BOOST_CHECK(get_cycle_balance(src_id) == 10000);
-
-  transfer_cycles(src_id, dst_id, 5000);
-  BOOST_CHECK(get_cycle_balance(src_id) == 5000);
-  BOOST_CHECK(get_cycle_balance(dst_id) == 5000);
-
-
-} FC_LOG_AND_RETHROW() }
-
 BOOST_AUTO_TEST_SUITE_END()

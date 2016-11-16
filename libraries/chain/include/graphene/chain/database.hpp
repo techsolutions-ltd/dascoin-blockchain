@@ -353,6 +353,14 @@ namespace graphene { namespace chain {
          optional<uint8_t> get_account_pi_level(const account_id_type account) const;
 
          /**
+          * @brief Create an empty balance object with optional no limits set.
+          * @param  owner    ID of the owner of the balance.
+          * @param  asset_id ID of the asset.
+          * @return          ID of the created object.
+          */
+         object_id_type create_empty_balance(account_id_type owner, asset_id_type asset_id);
+
+         /**
           * @brief Helper to make lazy deposit to CDD VBO.
           *
           * If the given optional VBID is not valid(),

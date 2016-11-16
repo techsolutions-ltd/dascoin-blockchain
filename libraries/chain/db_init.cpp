@@ -399,7 +399,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    assert( asset_id_type(core_asset.id) == asset().asset_id );
    assert( get_balance(account_id_type(), asset_id_type()) == asset(core_dyn_asset.current_supply) );
 
-   // Create web asset:
+   // Create web assets:
    const asset_dynamic_data_object& web_dyn_asset =
       create<asset_dynamic_data_object>([&](asset_dynamic_data_object& a) {
          a.current_supply = 0;  // Web starts with 0 initial supply.
@@ -609,6 +609,13 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       });
 
       total_supplies[ asset_id ] += handout.amount;
+   }
+
+   // For each account in the system, create a web asset balance:
+   for ( auto acc_obj : get_index_type<account_index>().indices().get<by_id>() )
+   {
+      // TODO: this needs to be done for each other web asset in the system!
+      create_empty_balance(acc_obj.id, asset_id_type(DASCOIN_WEB_ASSET_INDEX));
    }
 
    // Create initial vesting balances

@@ -45,6 +45,16 @@ asset database::get_balance(const account_object& owner, const asset_object& ass
    return get_balance(owner.get_id(), asset_obj.get_id());
 }
 
+object_id_type database::create_empty_balance(account_id_type owner_id, asset_id_type asset_id)
+{
+   return create<account_balance_object>([&](account_balance_object& abo) {
+      abo.owner = owner_id;
+      abo.asset_type = asset_id;
+      abo.balance = 0;
+      abo.reserved = 0;
+   }).id;
+}
+
 void database::evaluate_transfer(account_id_type from, asset delta, share_type delta_reserved, bool check_limits) const
 {
    auto& index = get_index_type<account_balance_index>().indices().get<by_account_asset>();

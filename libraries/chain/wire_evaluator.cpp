@@ -12,7 +12,7 @@ namespace graphene { namespace chain {
 
     const auto& d = db();
     // We can only wire out web assets for now. TODO: assets must be marked for wire out ability.
-    FC_ASSERT( op.asset_to_wire.asset_id == asset_id_type(DASCOIN_WEB_ASSET_INDEX) );
+    FC_ASSERT( op.asset_to_wire.asset_id == d.get_web_asset_id() );
 
     const auto& acc_obj = op.account(d);
     op.asset_to_wire.asset_id(d);

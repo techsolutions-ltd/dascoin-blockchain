@@ -45,6 +45,20 @@ asset database::get_balance(const account_object& owner, const asset_object& ass
    return get_balance(owner.get_id(), asset_obj.get_id());
 }
 
+asset database::get_reserved_balance(account_id_type owner, asset_id_type asset_id) const
+{
+   auto& index = get_index_type<account_balance_index>().indices().get<by_account_asset>();
+   auto itr = index.find(boost::make_tuple(owner, asset_id));
+   if( itr == index.end() )
+      return asset(0, asset_id);
+   return itr->get_reserved_balance();
+}
+/// This is an overloaded method.
+asset database::get_reserved_balance(const account_object& owner, const asset_object& asset_obj) const
+{
+   return get_reserved_balance(owner.id, asset_obj.id);
+}
+
 const account_balance_object& database::get_balance_object(account_id_type owner, asset_id_type asset_id) const
 {
    auto& index = get_index_type<account_balance_index>().indices().get<by_account_asset>();

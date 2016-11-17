@@ -119,6 +119,7 @@ namespace graphene { namespace chain {
          share_type spent_reserved = 0;  // Reserved balance spent in limit interval.
 
          asset get_balance()const { return asset(balance, asset_type); }
+         asset get_reserved_balance() const { return asset(reserved, asset_type); }
          void  adjust_balance(const asset& delta);
    };
 

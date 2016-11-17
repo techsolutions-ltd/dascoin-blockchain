@@ -149,14 +149,24 @@ void_result transfer_vault_to_wallet_evaluator::do_evaluate(const transfer_vault
    const auto& from_balance_obj = d.get_balance_object(op.from_vault, d.get_web_asset_id());
    const auto& to_balance_obj = d.get_balance_object(op.to_wallet, d.get_web_asset_id());
 
-   // Check if we have enough balance in the FROM account:
-   bool insufficient_balance = from_balance_obj.balance >= op.asset_to_transfer.amount;
-   FC_ASSERT( insufficient_balance,
+   // Check if we have enough cash balance in the FROM account:
+   bool balance_ok = from_balance_obj.balance >= op.asset_to_transfer.amount;
+   FC_ASSERT( balance_ok,
               "Insufficient balance: ${balance}, unable to transfer '${total_transfer}' from account '${a}' to '${t}'",
               ("a",from_acc_obj.name)
               ("t",to_acc_obj.name)
               ("total_transfer",d.to_pretty_string(op.asset_to_transfer))
               ("balance",d.to_pretty_string(d.get_balance(op.from_vault, d.get_web_asset_id())))
+            );
+
+   // Check if we have enough reserved balance in the FROM account:
+   bool reserved_balance_ok = from_balance_obj.reserved >= op.reserved_to_transfer;
+   FC_ASSERT( reserved_balance_ok,
+              "Insufficient reserved balance: ${balance}, unable to transfer '${total_transfer}' from account '${a}' to '${t}'",
+              ("a",from_acc_obj.name)
+              ("t",to_acc_obj.name)
+              ("total_transfer",d.to_pretty_string(asset(op.reserved_to_transfer, d.get_web_asset_id())))
+              ("balance",d.to_pretty_string(d.get_reserved_balance(op.from_vault, d.get_web_asset_id())))
             );
 
    // Check if the cash part of the transfer would breach the cash limit:
@@ -224,6 +234,16 @@ void_result transfer_wallet_to_vault_evaluator::do_evaluate(const transfer_walle
               ("t",to_acc_obj.name)
               ("total_transfer",d.to_pretty_string(op.asset_to_transfer))
               ("balance",d.to_pretty_string(d.get_balance(op.from_wallet, d.get_web_asset_id())))
+            );
+
+   // Check if we have enough reserved balance in the FROM account:
+   bool reserved_balance_ok = from_balance_obj.reserved >= op.reserved_to_transfer;
+   FC_ASSERT( reserved_balance_ok,
+              "Insufficient reserved balance: ${balance}, unable to transfer '${total_transfer}' from account '${a}' to '${t}'",
+              ("a",from_acc_obj.name)
+              ("t",to_acc_obj.name)
+              ("total_transfer",d.to_pretty_string(asset(op.reserved_to_transfer, d.get_web_asset_id())))
+              ("balance",d.to_pretty_string(d.get_reserved_balance(op.from_wallet, d.get_web_asset_id())))
             );
 
    from_balance_obj_ = &from_balance_obj;

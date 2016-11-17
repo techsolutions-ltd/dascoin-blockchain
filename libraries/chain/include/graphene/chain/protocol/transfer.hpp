@@ -83,6 +83,7 @@ namespace graphene { namespace chain {
       account_id_type from_vault;
       account_id_type to_wallet;
       asset asset_to_transfer;
+      share_type reserved_to_transfer;
 
       extensions_type   extensions;
 
@@ -105,6 +106,7 @@ namespace graphene { namespace chain {
       account_id_type from_wallet;
       account_id_type to_vault;
       asset asset_to_transfer;
+      share_type reserved_to_transfer;
 
       extensions_type   extensions;
 
@@ -170,6 +172,7 @@ FC_REFLECT( graphene::chain::transfer_vault_to_wallet_operation,
             (from_vault)
             (to_wallet)
             (asset_to_transfer)
+            (reserved_to_transfer)
             (extensions)
           )
 
@@ -181,5 +184,6 @@ FC_REFLECT( graphene::chain::transfer_wallet_to_vault_operation,
             (from_wallet)
             (to_vault)
             (asset_to_transfer)
+            (reserved_to_transfer)
             (extensions)
           )

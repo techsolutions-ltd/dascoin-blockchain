@@ -290,6 +290,10 @@ namespace graphene { namespace chain {
          /// This is an overloaded method.
          asset get_balance(const account_object& owner, const asset_object& asset_obj)const;
 
+         asset get_reserved_balance(account_id_type owner, asset_id_type asset_id) const;
+         /// This is an overloaded method.
+         asset get_reserved_balance(const account_object& owner, const asset_object& asset_obj) const;
+
          const account_balance_object& get_balance_object(account_id_type owner, asset_id_type asset_id) const;
 
          pair<asset, share_type> get_balance_and_spent(account_id_type owner, asset_id_type asset_id) const;

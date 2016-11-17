@@ -123,77 +123,129 @@ void_result transfer_vault_to_wallet_evaluator::do_evaluate(const transfer_vault
 { try {
    const database& d = db();
 
-   const account_object& from_account = op.from_vault(d);
-   const account_object& to_account = op.to_wallet(d);
-   const asset_object& asset_type = op.asset_to_transfer.asset_id(d);
+   // Check if we are transferring web assets:
+   // NOTE: this check must be modified to apply for every kind of web asset there is.
+   FC_ASSERT ( op.asset_to_transfer.asset_id == d.get_web_asset_id(), "Can only transfer web assets" );
+
+   // Check if the accounts exist:
+   const account_object& from_acc_obj = op.from_vault(d);
+   const account_object& to_acc_obj = op.to_wallet(d);
+
+   // Get the limits:
+   share_type cash_limit = from_acc_obj.get_max_from_limit(limit_kind::vault_to_wallet_webasset);
+   share_type reserved_limit = from_acc_obj.get_max_from_limit(limit_kind::vault_to_wallet_reserved_webasset);
 
    // Must be VAULT --> WALLET:
-   FC_ASSERT( from_account.is_vault(), "Source '${f}'' must be a vault account", ("f", from_account.name) );
-   FC_ASSERT( to_account.is_wallet(), "Destination '${t}' must be a wallet account", ("t", to_account.name) );
+   FC_ASSERT( from_acc_obj.is_vault(), "Source '${f}' must be a vault account", ("f", from_acc_obj.name) );
+   FC_ASSERT( to_acc_obj.is_wallet(), "Destination '${t}' must be a wallet account", ("t", to_acc_obj.name) );
 
       // Accounts must be tethered:
-   FC_ASSERT( from_account.has_in_parents(op.to_wallet), "Accounts '${f}' and '${t}' must be tethered",
-              ("f", from_account.name)
-              ("t", to_account.name)
+   FC_ASSERT( from_acc_obj.has_in_parents(op.to_wallet), "Accounts '${f}' and '${t}' must be tethered",
+              ("f", from_acc_obj.name)
+              ("t", to_acc_obj.name)
             );
 
-   // Must have sufficient balance:
-   asset from_balance = d.get_balance_and_check_limit(from_account, asset_type, op.asset_to_transfer.amount);
-   bool insufficient_balance = from_balance.amount >= op.asset_to_transfer.amount;
+   // Get both balance objects:
+   const auto& from_balance_obj = d.get_balance_object(op.from_vault, d.get_web_asset_id());
+   const auto& to_balance_obj = d.get_balance_object(op.to_wallet, d.get_web_asset_id());
+
+   // Check if we have enough balance in the FROM account:
+   bool insufficient_balance = from_balance_obj.balance >= op.asset_to_transfer.amount;
    FC_ASSERT( insufficient_balance,
               "Insufficient balance: ${balance}, unable to transfer '${total_transfer}' from account '${a}' to '${t}'",
-              ("a",from_account.name)
-              ("t",to_account.name)
+              ("a",from_acc_obj.name)
+              ("t",to_acc_obj.name)
               ("total_transfer",d.to_pretty_string(op.asset_to_transfer))
-              ("balance",d.to_pretty_string(from_balance))
+              ("balance",d.to_pretty_string(d.get_balance(op.from_vault, d.get_web_asset_id())))
             );
+
+   // Check if the cash part of the transfer would breach the cash limit:
+   bool cash_limit_ok = from_balance_obj.spent <= cash_limit;
+   FC_ASSERT( cash_limit_ok );
+
+   // Check if the reserved part of the transfer would breach the  reserved limit:
+   bool reserved_limit_ok = from_balance_obj.spent_reserved <= reserved_limit;
+   FC_ASSERT( reserved_limit_ok );
+
+   from_balance_obj_ = &from_balance_obj;
+   to_balance_obj_ = &to_balance_obj;
    return {};
 
 } FC_CAPTURE_AND_RETHROW((op)) }
 
-void_result transfer_vault_to_wallet_evaluator::do_apply(const transfer_vault_to_wallet_operation& o)
+void_result transfer_vault_to_wallet_evaluator::do_apply(const transfer_vault_to_wallet_operation& op)
 { try {
-   db().adjust_balance(o.from_vault, -o.asset_to_transfer, /* modify_limit = */ true);
-   db().adjust_balance(o.to_wallet, o.asset_to_transfer);
+   auto& d = db();
+
+   d.modify(*from_balance_obj_, [&](account_balance_object& from_b){
+    from_b.balance -= op.asset_to_transfer.amount;
+    from_b.spent += op.asset_to_transfer.amount;
+   });
+
+   d.modify(*from_balance_obj_, [&](account_balance_object& to_b){
+    to_b.balance += op.asset_to_transfer.amount;
+   });
+
    return {};
-} FC_CAPTURE_AND_RETHROW((o)) }
+
+} FC_CAPTURE_AND_RETHROW((op)) }
 
 void_result transfer_wallet_to_vault_evaluator::do_evaluate(const transfer_wallet_to_vault_operation& op)
 { try {
    const database& d = db();
 
-   const account_object& from_account = op.from_wallet(d);
-   const account_object& to_account = op.to_vault(d);
-   const asset_object& asset_type = op.asset_to_transfer.asset_id(d);
+   // Check if we are transferring web assets:
+   // NOTE: this check must be modified to apply for every kind of web asset there is.
+   FC_ASSERT ( op.asset_to_transfer.asset_id == d.get_web_asset_id(), "Can only transfer web assets" );
+
+   // Check if the accounts exist:
+   const account_object& from_acc_obj = op.from_wallet(d);
+   const account_object& to_acc_obj = op.to_vault(d);
 
    // Must be WALLET --> VAULT:
-   FC_ASSERT( from_account.is_wallet(), "Source '${f}'' must be a wallet account", ("f", from_account.name) );
-   FC_ASSERT( to_account.is_vault(), "Destination '${t}' must be a vault account", ("t", to_account.name) );
+   FC_ASSERT( from_acc_obj.is_wallet(), "Source '${f}' must be a wallet account", ("f", from_acc_obj.name) );
+   FC_ASSERT( to_acc_obj.is_vault(), "Destination '${t}' must be a vault account", ("t", to_acc_obj.name) );
 
    // Accounts must be tethered:
-   FC_ASSERT( from_account.has_in_vault(op.to_vault), "Accounts '${f}' and '${t}' must be tethered",
-              ("f", from_account.name)
-              ("t", to_account.name)
+   FC_ASSERT( from_acc_obj.has_in_vault(op.to_vault), "Accounts '${f}' and '${t}' must be tethered",
+              ("f", from_acc_obj.name)
+              ("t", to_acc_obj.name)
             );
 
-   // Must have sufficient balance:
-   asset from_balance = d.get_balance(from_account, asset_type);
-   bool insufficient_balance = from_balance.amount >= op.asset_to_transfer.amount;
+   // Get both balance objects:
+   const auto& from_balance_obj = d.get_balance_object(op.from_wallet, d.get_web_asset_id());
+   const auto& to_balance_obj = d.get_balance_object(op.to_vault, d.get_web_asset_id());
+
+   // Check if we have enough balance in the FROM account:
+   bool insufficient_balance = from_balance_obj.balance >= op.asset_to_transfer.amount;
    FC_ASSERT( insufficient_balance,
               "Insufficient balance: ${balance}, unable to transfer '${total_transfer}' from account '${a}' to '${t}'",
-              ("a",from_account.name)
-              ("t",to_account.name)
+              ("a",from_acc_obj.name)
+              ("t",to_acc_obj.name)
               ("total_transfer",d.to_pretty_string(op.asset_to_transfer))
-              ("balance",d.to_pretty_string(from_balance))
+              ("balance",d.to_pretty_string(d.get_balance(op.from_wallet, d.get_web_asset_id())))
             );
+
+   from_balance_obj_ = &from_balance_obj;
+   to_balance_obj_ = &to_balance_obj;
    return {};
+
 } FC_CAPTURE_AND_RETHROW((op)) }
 
-void_result transfer_wallet_to_vault_evaluator::do_apply(const transfer_wallet_to_vault_operation& o)
+void_result transfer_wallet_to_vault_evaluator::do_apply(const transfer_wallet_to_vault_operation& op)
 { try {
-   db().adjust_balance(o.from_wallet, -o.asset_to_transfer);
-   db().adjust_balance(o.to_vault, o.asset_to_transfer);
+   auto& d = db();
+
+   d.modify(*from_balance_obj_, [&](account_balance_object& from_b){
+    from_b.balance -= op.asset_to_transfer.amount;
+   });
+
+   d.modify(*from_balance_obj_, [&](account_balance_object& to_b){
+    to_b.balance += op.asset_to_transfer.amount;
+   });
+
    return {};
-} FC_CAPTURE_AND_RETHROW((o)) }
+
+} FC_CAPTURE_AND_RETHROW((op)) }
 
 } } // graphene::chain

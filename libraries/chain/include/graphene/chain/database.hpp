@@ -245,6 +245,7 @@ namespace graphene { namespace chain {
          const chain_id_type&                   get_chain_id()const;
          const asset_object&                    get_core_asset()const;
          const asset_object&                    get_web_asset()const;
+         asset_id_type                          get_web_asset_id() const;
          const chain_property_object&           get_chain_properties()const;
          const global_property_object&          get_global_properties()const;
          const chain_authorities&               get_chain_authorities()const;
@@ -288,17 +289,10 @@ namespace graphene { namespace chain {
          asset get_balance(account_id_type owner, asset_id_type asset_id)const;
          /// This is an overloaded method.
          asset get_balance(const account_object& owner, const asset_object& asset_obj)const;
-         /// Just like the previous, but checks the spending limit:
-         asset get_balance_and_check_limit(account_id_type owner, asset_id_type asset_id, share_type to_spend) const;
-         /// This is an overloaded method:
-         asset get_balance_and_check_limit(const account_object& owner,
-            const asset_object& asset_obj,
-            share_type to_spend) const;
 
-         void evaluate_transfer(account_id_type from, asset delta, share_type delta_reserved = 0,
-                                bool check_limits = false) const;
-         void complete_transfer(account_id_type from_id, account_id_type to_id, asset delta,
-                                share_type delta_reserved = 0, bool update_spent = false);
+         const account_balance_object& get_balance_object(account_id_type owner, asset_id_type asset_id) const;
+
+         pair<asset, share_type> get_balance_and_spent(account_id_type owner, asset_id_type asset_id) const;
 
          /**
           * @brief Retrieve a particular account's cycle balance.
@@ -323,21 +317,6 @@ namespace graphene { namespace chain {
           * @param delta   Amount to adjust balance by.
           */
          void adjust_cycle_balance(account_id_type account, share_type delta, optional<uint8_t> upgrades_delta = {});
-
-         /**
-          * @brief Update the balance limits on a balance object belonging to an account.
-          * @param account_id_type The account that owns the cycle balance object.
-          * @param limit_max       Maximum limit to be updated.
-          */
-         void update_cycle_balance_limits(account_id_type account, share_type limit_max);
-
-         /**
-          * @brief Update the balance limits on a balance object for a given asset that belongs to an account.
-          * @param asset_id  The ID of the asset being updated.
-          * @param account   The account that owns the balance object.
-          * @param limit_max Maximum limit to be updated.
-          */
-         void update_balance_limits(asset_id_type asset_id, account_id_type account, share_type limit_max);
 
          /**
           * @brief Get the set transfer limits for a given account.

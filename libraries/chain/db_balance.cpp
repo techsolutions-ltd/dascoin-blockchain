@@ -45,6 +45,14 @@ asset database::get_balance(const account_object& owner, const asset_object& ass
    return get_balance(owner.get_id(), asset_obj.get_id());
 }
 
+const account_balance_object& database::get_balance_object(account_id_type owner, asset_id_type asset_id) const
+{
+   auto& index = get_index_type<account_balance_index>().indices().get<by_account_asset>();
+   auto itr = index.find(boost::make_tuple(owner, asset_id));
+   FC_ASSERT( itr != index.end(), "Account '${n}' has no balance object", ("n", owner(*this).name) );
+   return *itr;
+}
+
 object_id_type database::create_empty_balance(account_id_type owner_id, asset_id_type asset_id)
 {
    return create<account_balance_object>([&](account_balance_object& abo) {
@@ -55,7 +63,7 @@ object_id_type database::create_empty_balance(account_id_type owner_id, asset_id
    }).id;
 }
 
-void database::evaluate_transfer(account_id_type from, asset delta, share_type delta_reserved, bool check_limits) const
+/*void database::evaluate_transfer(account_id_type from, asset delta, share_type delta_reserved, bool check_limits) const
 {
    auto& index = get_index_type<account_balance_index>().indices().get<by_account_asset>();
    auto itr = index.find(boost::make_tuple(from, delta.asset_id));
@@ -97,31 +105,7 @@ void database::complete_transfer(account_id_type from_id, account_id_type to_id,
          abo.reserved += delta_reserved;
       });
    }
-}
-
-asset database::get_balance_and_check_limit(account_id_type owner, asset_id_type asset_id, share_type to_spend) const
-{ try {
-   auto& index = get_index_type<account_balance_index>().indices().get<by_account_asset>();
-   auto itr = index.find(boost::make_tuple(owner, asset_id));
-   if( itr == index.end() )
-      return asset(0, asset_id);
-
-   FC_ASSERT ( itr->limit.check(to_spend),
-               "Daily limit exceeded: account ${a} has already transferred ${spent} of ${max} limit",
-               ("a",owner(*this).name)
-               ("spent",itr->limit.spent)
-               ("max",itr->limit.max)
-             );
-   return itr->get_balance();
-
-} FC_CAPTURE_AND_RETHROW((owner)(asset_id)(to_spend)) }
-
-asset database::get_balance_and_check_limit(const account_object& owner, const asset_object& asset_obj, share_type to_spend) const
-{ try {
-
-   return get_balance_and_check_limit(owner.get_id(), asset_obj.get_id(), to_spend);
-
-} FC_CAPTURE_AND_RETHROW((owner.get_id())(asset_obj.get_id())(to_spend)) }
+}*/
 
 string database::to_pretty_string( const asset& a )const
 {
@@ -172,7 +156,7 @@ void database::adjust_balance(account_id_type account, asset delta, bool modify_
          b.adjust_balance(delta);
          // We adjust the limit ONLY IF the asset is REMOVED from the balance so the delta must be negative!
          if ( modify_limit && delta.amount < 0 )
-            b.limit.spend(-delta.amount);
+            b.spent -= delta.amount;
       });
    }
 
@@ -217,49 +201,6 @@ void database::adjust_cycle_balance(account_id_type account, share_type delta, o
    }
 
 } FC_CAPTURE_AND_RETHROW( (account)(delta) ) }
-
-void database::update_cycle_balance_limits(account_id_type account, share_type limit_max)
-{ try {
-   auto& index = get_index_type<account_cycle_balance_index>().indices().get<by_account_id>();
-   auto itr = index.find(account);
-   if(itr == index.end())
-   {
-      create<account_cycle_balance_object>([account,limit_max](account_cycle_balance_object& b) {
-         b.owner = account;
-         b.balance = 0;
-         b.remaining_upgrades = 0;
-         b.limit.max = limit_max;
-      });
-   } else {
-      modify(*itr, [limit_max](account_cycle_balance_object& b) {
-         // NOTE: we do not touch the current spent amount.
-         // TODO: find out if the limit can only increase?
-         b.limit.max = limit_max;
-      });
-   }
-} FC_CAPTURE_AND_RETHROW( (account)(limit_max) ) }
-
-void database::update_balance_limits(asset_id_type asset_id, account_id_type account, share_type limit_max)
-{ try {
-   auto& index = get_index_type<account_balance_index>().indices().get<by_account_asset>();
-   auto itr = index.find(boost::make_tuple(account, asset_id));
-   if(itr == index.end())
-   {
-      create<account_balance_object>([asset_id, account, limit_max](account_balance_object& b) {
-         b.owner = account;
-         b.asset_type = asset_id;
-         b.balance = 0;
-         b.limit.max = limit_max;
-      });
-   } else {
-      modify(*itr, [limit_max](account_balance_object& b) {
-         // NOTE: we do not touch the current spent amount.
-         // TODO: find out if the limit can only increase?
-         b.limit.max = limit_max;
-      });
-   }
-
-} FC_CAPTURE_AND_RETHROW((asset_id)(account)(limit_max)) }
 
 optional<limits_type> database::get_account_limits(const account_id_type account) const
 { try {

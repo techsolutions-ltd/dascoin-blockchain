@@ -98,26 +98,6 @@ namespace graphene { namespace chain {
                                      const dynamic_global_property_object& dgpo);
    };
 
-   struct balance_limit
-   {
-      /**
-       * The maximum limit on this balance object per limit cycle.
-       */
-      share_type        max = 0;
-
-      /**
-       * How much of this asset was spent on this limit cycle.
-       */
-      share_type        spent = 0;
-
-      bool check() const { return spent <= max; }
-      bool check(share_type amount) const { return spent + amount <= max; }
-      void spend( share_type amount ) { spent += amount;  }
-      void validate() const;
-
-      friend bool operator < ( const balance_limit& a, const balance_limit& b ) { return a.max < b.max; }
-   };
-
    /**
     * @brief Tracks the balance of a single account/asset pair
     * @ingroup object
@@ -135,12 +115,11 @@ namespace graphene { namespace chain {
          asset_id_type     asset_type;
          share_type        balance;
          share_type reserved = 0;
-         balance_limit limit;
+         share_type spent = 0;  // Balance spent in limit interval.
+         share_type spent_reserved = 0;  // Reserved balance spent in limit interval.
 
          asset get_balance()const { return asset(balance, asset_type); }
          void  adjust_balance(const asset& delta);
-         bool check_limits(share_type balance_delta, share_type reserved_delta) const;
-         void increase_spent(share_type balance_delta, share_type reserved_delta);
    };
 
    /**
@@ -158,7 +137,6 @@ namespace graphene { namespace chain {
          share_type balance;
          share_type reserved = 0;
          uint8_t remaining_upgrades;
-         balance_limit limit;
 
          share_type get_balance()const { return balance; }
          uint8_t get_remaining_upgrades()const { return remaining_upgrades; }
@@ -391,6 +369,8 @@ namespace graphene { namespace chain {
          }
 
          account_id_type get_id()const { return id; }
+
+         share_type get_max_from_limit(const limit_kind kind) const;
    };
 
    /**
@@ -512,12 +492,7 @@ namespace graphene { namespace chain {
       account_cycle_balance_object, account_cycle_balance_multi_index_type
    > account_cycle_balance_index;
 
-}}
-
-FC_REFLECT( graphene::chain::balance_limit,
-            (max)
-            (spent)
-          )
+} }  // namsepace graphene::chain
 
 FC_REFLECT_DERIVED( graphene::chain::account_object, (graphene::db::object),
                     (kind)
@@ -553,7 +528,8 @@ FC_REFLECT_DERIVED( graphene::chain::account_balance_object, (graphene::db::obje
                     (asset_type)
                     (balance)
                     (reserved)
-                    (limit)
+                    (spent)
+                    (spent_reserved)
                   )
 
 
@@ -563,5 +539,4 @@ FC_REFLECT_DERIVED( graphene::chain::account_cycle_balance_object, (graphene::db
                     (balance)
                     (reserved)
                     (remaining_upgrades)
-                    (limit)
                   )

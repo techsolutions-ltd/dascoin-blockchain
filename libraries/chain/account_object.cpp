@@ -42,20 +42,16 @@ share_type cut_fee(share_type a, uint16_t p)
    return r.to_uint64();
 }
 
+share_type account_object::get_max_from_limit(const limit_kind kind) const
+{
+   // TODO: assert that this type of limit is set.
+   return limits.at(kind);
+}
+
 void account_balance_object::adjust_balance(const asset& delta)
 {
    assert(delta.asset_id == asset_type);
    balance += delta.amount;
-}
-
-bool account_balance_object::check_limits(share_type balance_delta, share_type reserved_delta) const
-{
-   return limit.spent + balance_delta + reserved_delta <= limit.max;
-}
-
-void account_balance_object::increase_spent(share_type balance_delta, share_type reserved_delta)
-{
-   limit.spent += (balance_delta + reserved_delta);
 }
 
 void account_statistics_object::process_fees(const account_object& a, database& d) const

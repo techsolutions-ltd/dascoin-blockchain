@@ -17,7 +17,8 @@ namespace graphene { namespace chain {
     const auto& acc_obj = op.account(d);
     op.asset_to_wire.asset_id(d);
 
-    asset from_balance = d.get_balance_and_check_limit(op.account, op.asset_to_wire.asset_id, op.asset_to_wire.amount);
+    // TODO: fixme!
+    asset from_balance = d.get_balance(op.account, op.asset_to_wire.asset_id);
     bool insufficient_balance = from_balance.amount >= op.asset_to_wire.amount;
     FC_ASSERT( insufficient_balance,
                "Insufficient Balance: ${balance}, unable to initiate wire transfer '${total}' from account '${a}'",

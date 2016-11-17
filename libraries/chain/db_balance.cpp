@@ -45,6 +45,82 @@ asset database::get_balance(const account_object& owner, const asset_object& ass
    return get_balance(owner.get_id(), asset_obj.get_id());
 }
 
+asset database::get_reserved_balance(account_id_type owner, asset_id_type asset_id) const
+{
+   auto& index = get_index_type<account_balance_index>().indices().get<by_account_asset>();
+   auto itr = index.find(boost::make_tuple(owner, asset_id));
+   if( itr == index.end() )
+      return asset(0, asset_id);
+   return itr->get_reserved_balance();
+}
+/// This is an overloaded method.
+asset database::get_reserved_balance(const account_object& owner, const asset_object& asset_obj) const
+{
+   return get_reserved_balance(owner.id, asset_obj.id);
+}
+
+const account_balance_object& database::get_balance_object(account_id_type owner, asset_id_type asset_id) const
+{
+   auto& index = get_index_type<account_balance_index>().indices().get<by_account_asset>();
+   auto itr = index.find(boost::make_tuple(owner, asset_id));
+   FC_ASSERT( itr != index.end(), "Account '${n}' has no balance object", ("n", owner(*this).name) );
+   return *itr;
+}
+
+object_id_type database::create_empty_balance(account_id_type owner_id, asset_id_type asset_id)
+{
+   return create<account_balance_object>([&](account_balance_object& abo) {
+      abo.owner = owner_id;
+      abo.asset_type = asset_id;
+      abo.balance = 0;
+      abo.reserved = 0;
+   }).id;
+}
+
+/*void database::evaluate_transfer(account_id_type from, asset delta, share_type delta_reserved, bool check_limits) const
+{
+   auto& index = get_index_type<account_balance_index>().indices().get<by_account_asset>();
+   auto itr = index.find(boost::make_tuple(from, delta.asset_id));
+   // Check if the object was found
+   // Check the cash part of the balance >= delta
+   // Check the reserved part of the balance >= delta_reserved:
+   bool amount_ok = (itr != index.end() && itr->get_balance() >= delta && itr->reserved >= delta_reserved);
+   FC_ASSERT( amount_ok, "Insufficient balance in account '${a}'", ("a",from(*this).name) );
+   if ( check_limits )
+      FC_ASSERT( itr->check_limits(delta.amount, delta_reserved), "Limit exceeded on account '${a}'",
+                 ("a",from(*this).name)
+               );
+}
+
+void database::complete_transfer(account_id_type from_id, account_id_type to_id, asset delta, share_type delta_reserved,
+                                 bool update_spent)
+{
+   auto& index = get_index_type<account_balance_index>().indices().get<by_account_asset>();
+   auto from = index.find(boost::make_tuple(from_id, delta.asset_id));
+   modify(*from, [&](account_balance_object& b){
+      b.balance -= delta.amount;
+      b.reserved -= delta_reserved;
+      if ( update_spent )
+         b.increase_spent(delta.amount, delta_reserved);
+   });
+
+   auto to = index.find(boost::make_tuple(to_id, delta.asset_id));
+   if ( to == index.end() )
+   {
+      create<account_balance_object>([&](account_balance_object& abo) {
+         abo.owner = to_id;
+         abo.asset_type = delta.asset_id;
+         abo.balance = delta.amount.value;
+         abo.reserved = delta_reserved;
+      });
+   } else {
+      modify(*to, [&](account_balance_object& abo) {
+         abo.balance += delta.amount;
+         abo.reserved += delta_reserved;
+      });
+   }
+}*/
+
 string database::to_pretty_string( const asset& a )const
 {
    return a.asset_id(*this).amount_to_pretty_string(a.amount);
@@ -64,7 +140,7 @@ share_type database::get_cycle_balance(const account_object& owner) const
    return get_cycle_balance(owner.get_id());
 }
 
-void database::adjust_balance(account_id_type account, asset delta )
+void database::adjust_balance(account_id_type account, asset delta, share_type reserved_delta)
 { try {
    if( delta.amount == 0 )
       return;
@@ -73,20 +149,40 @@ void database::adjust_balance(account_id_type account, asset delta )
    auto itr = index.find(boost::make_tuple(account, delta.asset_id));
    if(itr == index.end())
    {
+      // bool amounts_ok = delta.amount > 0 && reserved_delta > 0;
       FC_ASSERT( delta.amount > 0, "Insufficient Balance: ${a}'s balance of ${b} is less than required ${r}",
                  ("a",account(*this).name)
                  ("b",to_pretty_string(asset(0,delta.asset_id)))
                  ("r",to_pretty_string(-delta)));
-      create<account_balance_object>([account,&delta](account_balance_object& b) {
+      // NOTE: the reserved amount CAN BE ZERO!
+      FC_ASSERT( reserved_delta >= 0, "Insufficient Balance: ${a}'s reserved balance of ${b} is less than required ${r}",
+                 ("a",account(*this).name)
+                 ("b",to_pretty_string(asset(0,delta.asset_id)))
+                 ("r",to_pretty_string(-asset(reserved_delta, delta.asset_id))));
+      create<account_balance_object>([account, &delta, reserved_delta](account_balance_object& b) {
          b.owner = account;
          b.asset_type = delta.asset_id;
          b.balance = delta.amount.value;
+         b.reserved = reserved_delta;
       });
    } else {
       if( delta.amount < 0 )
-         FC_ASSERT( itr->get_balance() >= -delta, "Insufficient Balance: ${a}'s balance of ${b} is less than required ${r}", ("a",account(*this).name)("b",to_pretty_string(itr->get_balance()))("r",to_pretty_string(-delta)));
-      modify(*itr, [delta](account_balance_object& b) {
+         FC_ASSERT( itr->get_balance() >= -delta,
+                    "Insufficient Balance: ${a}'s balance of ${b} is less than required ${r}",
+                    ("a",account(*this).name)
+                    ("b",to_pretty_string(itr->get_balance()))
+                    ("r",to_pretty_string(-delta))
+                  );
+      if ( reserved_delta < 0)
+         FC_ASSERT( itr->reserved >= -reserved_delta,
+                    "Insufficient Balance: ${a}'s balance of ${b} is less than required ${r}",
+                    ("a",account(*this).name)
+                    ("b",to_pretty_string(itr->get_reserved_balance()))
+                    ("r",to_pretty_string(asset(-reserved_delta, delta.asset_id)))
+                  );
+      modify(*itr, [delta, reserved_delta](account_balance_object& b) {
          b.adjust_balance(delta);
+         b.reserved += reserved_delta;
       });
    }
 
@@ -131,49 +227,6 @@ void database::adjust_cycle_balance(account_id_type account, share_type delta, o
    }
 
 } FC_CAPTURE_AND_RETHROW( (account)(delta) ) }
-
-void database::update_cycle_balance_limits(account_id_type account, share_type limit_max)
-{ try {
-   auto& index = get_index_type<account_cycle_balance_index>().indices().get<by_account_id>();
-   auto itr = index.find(account);
-   if(itr == index.end())
-   {
-      create<account_cycle_balance_object>([account,limit_max](account_cycle_balance_object& b) {
-         b.owner = account;
-         b.balance = 0;
-         b.remaining_upgrades = 0;
-         b.limit.max = limit_max;
-      });
-   } else {
-      modify(*itr, [limit_max](account_cycle_balance_object& b) {
-         // NOTE: we do not touch the current spent amount.
-         // TODO: find out if the limit can only increase?
-         b.limit.max = limit_max;
-      });
-   }
-} FC_CAPTURE_AND_RETHROW( (account)(limit_max) ) }
-
-void database::update_balance_limits(asset_id_type asset_id, account_id_type account, share_type limit_max)
-{ try {
-   auto& index = get_index_type<account_balance_index>().indices().get<by_account_asset>();
-   auto itr = index.find(boost::make_tuple(account, asset_id));
-   if(itr == index.end())
-   {
-      create<account_balance_object>([asset_id, account, limit_max](account_balance_object& b) {
-         b.owner = account;
-         b.asset_type = asset_id;
-         b.balance = 0;
-         b.limit.max = limit_max;
-      });
-   } else {
-      modify(*itr, [limit_max](account_balance_object& b) {
-         // NOTE: we do not touch the current spent amount.
-         // TODO: find out if the limit can only increase?
-         b.limit.max = limit_max;
-      });
-   }
-
-} FC_CAPTURE_AND_RETHROW((asset_id)(account)(limit_max)) }
 
 optional<limits_type> database::get_account_limits(const account_id_type account) const
 { try {

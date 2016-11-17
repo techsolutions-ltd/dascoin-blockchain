@@ -118,8 +118,9 @@ namespace graphene { namespace chain {
 
          /**
           * The time point the spend limit will be reset for all balances.
+          * NOTE: the value is set to maximum at the beginning to trigger a reset on the first block.
           */
-         time_point_sec next_spend_limit_reset;
+         time_point_sec next_spend_limit_reset = fc::time_point_sec::maximum();
 
          /**
           * The number of intervals untill the next cycle upgrade. Set to -1 to avoid upgrading at chain startup.

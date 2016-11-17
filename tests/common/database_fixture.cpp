@@ -1268,27 +1268,6 @@ void database_fixture::adjust_cycles(const account_id_type id, const share_type 
    db.adjust_cycle_balance(id, amount, {});
 }
 
-void database_fixture::transfer_cycles(
-   const account_id_type from_wallet,
-   const account_id_type to_vault,
-   const share_type amount)
-{ try {
-   transfer_cycles_operation op;
-
-   ilog("Attempting to transfer ${c} cycles from '${wa}' to '${va}'",
-      ("wa", from_wallet)("va", to_vault)("c", amount));
-
-   op.from_wallet = from_wallet;
-   op.to_vault = to_vault;
-   op.amount = amount;
-
-   trx.operations.push_back( op );
-   trx.validate();
-   processed_transaction ptx = db.push_transaction( trx, ~0 );
-   trx.operations.clear();
-
-} FC_CAPTURE_AND_RETHROW( (from_wallet)(to_vault)(amount) ) }
-
 namespace test {
 
 void set_expiration( const database& db, transaction& tx )

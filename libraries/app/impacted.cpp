@@ -230,11 +230,6 @@ struct get_impacted_account_visitor
       _impacted.insert( op.vault_account );
    }
 
-   void operator()( const transfer_cycles_operation& op )
-   {
-      _impacted.insert( op.to_vault );
-   }
-
    void operator()( const upgrade_account_cycles_operation& op )
    {
       _impacted.insert( op.account );
@@ -261,6 +256,16 @@ struct get_impacted_account_visitor
 
    void operator()( const wire_out_complete_operation& op ) {}
    void operator()( const wire_out_reject_operation& op ) {}
+
+   void operator()( const transfer_vault_to_wallet_operation& op )
+   {
+      _impacted.insert( op.to_wallet );
+   }
+
+   void operator()( const transfer_wallet_to_vault_operation& op )
+   {
+      _impacted.insert( op.to_vault );
+   }
 
 };
 

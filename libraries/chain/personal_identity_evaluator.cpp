@@ -37,7 +37,6 @@ void_result update_pi_limits_evaluator::do_evaluate(const update_pi_limits_opera
 void_result update_pi_limits_evaluator::do_apply(const update_pi_limits_operation& op)
 { try {
   auto& d = db();
-
   // Update the levels and the limits on the account:
   db().modify(*acnt, [&](account_object& a) {
     a.pi_level = op.level;
@@ -58,12 +57,6 @@ void_result update_pi_limits_evaluator::do_apply(const update_pi_limits_operatio
           if ( op.new_limits.valid() )
             a.limits = *op.new_limits;
         });
-    }
-    // For each vault account, in the cycle balance, update the maximum on the cycle balance_limit.
-    if ( op.new_limits.valid() )
-    {
-      auto& new_limits = *op.new_limits;
-      d.update_cycle_balance_limits(op.account, new_limits.at(limit_kind::vault_to_wallet));
     }
   }
   return void_result();

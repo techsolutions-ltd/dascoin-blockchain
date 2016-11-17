@@ -12,12 +12,14 @@ namespace graphene { namespace chain {
 
     const auto& d = db();
     // We can only wire out web assets for now. TODO: assets must be marked for wire out ability.
-    FC_ASSERT( op.asset_to_wire.asset_id == asset_id_type(DASCOIN_WEB_ASSET_INDEX) );
+    FC_ASSERT( op.asset_to_wire.asset_id == d.get_web_asset_id() );
 
     const auto& acc_obj = op.account(d);
     op.asset_to_wire.asset_id(d);
 
-    bool insufficient_balance = d.get_balance(op.account, op.asset_to_wire.asset_id).amount >= op.asset_to_wire.amount;
+    // TODO: fixme!
+    asset from_balance = d.get_balance(op.account, op.asset_to_wire.asset_id);
+    bool insufficient_balance = from_balance.amount >= op.asset_to_wire.amount;
     FC_ASSERT( insufficient_balance,
                "Insufficient Balance: ${balance}, unable to initiate wire transfer '${total}' from account '${a}'",
                ("a", acc_obj.name)
@@ -33,7 +35,7 @@ namespace graphene { namespace chain {
   object_id_type wire_out_evaluator::do_apply(const wire_out_operation& op)
   { try {
     auto& d = db();
-    d.adjust_balance(op.account, -op.asset_to_wire.amount);
+    d.adjust_balance(op.account, -op.asset_to_wire.amount, /* modify_limits = */ true);
     return d.create<wire_out_holder_object>([&](wire_out_holder_object& w){
       w.account = op.account;
       w.asset_to_wire = op.asset_to_wire;

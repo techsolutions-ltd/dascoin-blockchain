@@ -240,6 +240,9 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
       } );
    }
 
+   // TODO: this needs to be done of every kind of web asset there is!
+   db().create_empty_balance(new_acnt_object.id, db().get_web_asset_id());
+
    return new_acnt_object.id;
 } FC_CAPTURE_AND_RETHROW((o)) }
 

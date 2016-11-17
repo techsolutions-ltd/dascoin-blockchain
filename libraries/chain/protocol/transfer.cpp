@@ -56,11 +56,21 @@ void override_transfer_operation::validate()const
    FC_ASSERT( issuer != from );
 }
 
-void transfer_cycles_operation::validate()const
+void transfer_vault_to_wallet_operation::validate() const
+{
+   FC_ASSERT( fee.amount >= 0 );
+   FC_ASSERT( from_vault != to_wallet );
+   FC_ASSERT( asset_to_transfer.amount > 0 );
+   FC_ASSERT( reserved_to_transfer >= 0 );
+}
+
+void transfer_wallet_to_vault_operation::validate() const
 {
    FC_ASSERT( fee.amount >= 0 );
    FC_ASSERT( from_wallet != to_vault );
-   FC_ASSERT( amount > 0 );
+   FC_ASSERT( asset_to_transfer.amount > 0 );
+   FC_ASSERT( reserved_to_transfer >= 0 );
 }
+
 
 } } // graphene::chain

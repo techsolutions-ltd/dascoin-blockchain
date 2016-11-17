@@ -245,6 +245,7 @@ namespace graphene { namespace chain {
          const chain_id_type&                   get_chain_id()const;
          const asset_object&                    get_core_asset()const;
          const asset_object&                    get_web_asset()const;
+         asset_id_type                          get_web_asset_id() const;
          const chain_property_object&           get_chain_properties()const;
          const global_property_object&          get_global_properties()const;
          const chain_authorities&               get_chain_authorities()const;
@@ -289,6 +290,14 @@ namespace graphene { namespace chain {
          /// This is an overloaded method.
          asset get_balance(const account_object& owner, const asset_object& asset_obj)const;
 
+         asset get_reserved_balance(account_id_type owner, asset_id_type asset_id) const;
+         /// This is an overloaded method.
+         asset get_reserved_balance(const account_object& owner, const asset_object& asset_obj) const;
+
+         const account_balance_object& get_balance_object(account_id_type owner, asset_id_type asset_id) const;
+
+         pair<asset, share_type> get_balance_and_spent(account_id_type owner, asset_id_type asset_id) const;
+
          /**
           * @brief Retrieve a particular account's cycle balance.
           * @param  owner Account IF whose cycle balance should be retrieved.
@@ -302,8 +311,9 @@ namespace graphene { namespace chain {
           * @brief Adjust a particular account's balance in a given asset by a delta
           * @param account ID of account whose balance should be adjusted
           * @param delta Asset ID and amount to adjust balance by
+          * @param enforce_limits Check and update the limits on the balance.
           */
-         void adjust_balance(account_id_type account, asset delta);
+         void adjust_balance(account_id_type account, asset delta, share_type reserved_delta = 0);
 
          /**
           * @brief Adjsut a particular account's cycle balance by a delta.
@@ -311,21 +321,6 @@ namespace graphene { namespace chain {
           * @param delta   Amount to adjust balance by.
           */
          void adjust_cycle_balance(account_id_type account, share_type delta, optional<uint8_t> upgrades_delta = {});
-
-         /**
-          * @brief Update the balance limits on a balance object belonging to an account.
-          * @param account_id_type The account that owns the cycle balance object.
-          * @param limit_max       Maximum limit to be updated.
-          */
-         void update_cycle_balance_limits(account_id_type account, share_type limit_max);
-
-         /**
-          * @brief Update the balance limits on a balance object for a given asset that belongs to an account.
-          * @param asset_id  The ID of the asset being updated.
-          * @param account   The account that owns the balance object.
-          * @param limit_max Maximum limit to be updated.
-          */
-         void update_balance_limits(asset_id_type asset_id, account_id_type account, share_type limit_max);
 
          /**
           * @brief Get the set transfer limits for a given account.
@@ -339,6 +334,14 @@ namespace graphene { namespace chain {
           * @return         Level of the verified PI.
           */
          optional<uint8_t> get_account_pi_level(const account_id_type account) const;
+
+         /**
+          * @brief Create an empty balance object with optional no limits set.
+          * @param  owner    ID of the owner of the balance.
+          * @param  asset_id ID of the asset.
+          * @return          ID of the created object.
+          */
+         object_id_type create_empty_balance(account_id_type owner, asset_id_type asset_id);
 
          /**
           * @brief Helper to make lazy deposit to CDD VBO.
@@ -487,8 +490,9 @@ namespace graphene { namespace chain {
          void update_withdraw_permissions();
          bool check_for_blackswan( const asset_object& mia, bool enable_black_swan = true );
          void assign_licenses();
-         void assign_assets();
+         void distribute_issue_requested_assets();
          void deny_license_request(const license_request_object& req);
+         void reset_spending_limits();
 
          ///Steps performed only at maintenance intervals
          ///@{

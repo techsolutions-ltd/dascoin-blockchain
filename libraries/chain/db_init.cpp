@@ -200,12 +200,13 @@ void database::initialize_evaluators()
    register_evaluator<license_approve_evaluator>();
    register_evaluator<license_deny_evaluator>();
    register_evaluator<tether_accounts_evaluator>();
-   register_evaluator<transfer_cycles_evaluator>();
    register_evaluator<update_pi_limits_evaluator>();
    register_evaluator<asset_create_issue_request_evaluator>();
    register_evaluator<asset_deny_issue_request_evaluator>();
    register_evaluator<wire_out_evaluator>();
    register_evaluator<wire_out_complete_evaluator>();
+   register_evaluator<transfer_vault_to_wallet_evaluator>();
+   register_evaluator<transfer_wallet_to_vault_evaluator>();
 }
 
 void database::initialize_indexes()
@@ -296,6 +297,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    });
    const account_object& committee_account =
       create<account_object>( [&](account_object& n) {
+         n.kind = account_kind::special;
          n.membership_expiration_date = time_point_sec::maximum();
          n.network_fee_percentage = GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
          n.lifetime_referrer_fee_percentage = GRAPHENE_100_PERCENT - GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
@@ -306,6 +308,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       });
    FC_ASSERT(committee_account.get_id() == GRAPHENE_COMMITTEE_ACCOUNT);
    FC_ASSERT(create<account_object>([this](account_object& a) {
+       a.kind = account_kind::special;
        a.name = "witness-account";
        a.statistics = create<account_statistics_object>([&](account_statistics_object& s){s.owner = a.id;}).id;
        a.owner.weight_threshold = 1;
@@ -316,6 +319,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
        a.lifetime_referrer_fee_percentage = GRAPHENE_100_PERCENT - GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
    }).get_id() == GRAPHENE_WITNESS_ACCOUNT);
    FC_ASSERT(create<account_object>([this](account_object& a) {
+       a.kind = account_kind::special;
        a.name = "relaxed-committee-account";
        a.statistics = create<account_statistics_object>([&](account_statistics_object& s){s.owner = a.id;}).id;
        a.owner.weight_threshold = 1;
@@ -326,6 +330,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
        a.lifetime_referrer_fee_percentage = GRAPHENE_100_PERCENT - GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
    }).get_id() == GRAPHENE_RELAXED_COMMITTEE_ACCOUNT);
    FC_ASSERT(create<account_object>([this](account_object& a) {
+       a.kind = account_kind::special;
        a.name = "null-account";
        a.statistics = create<account_statistics_object>([&](account_statistics_object& s){s.owner = a.id;}).id;
        a.owner.weight_threshold = 1;
@@ -336,6 +341,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
        a.lifetime_referrer_fee_percentage = GRAPHENE_100_PERCENT;
    }).get_id() == GRAPHENE_NULL_ACCOUNT);
    FC_ASSERT(create<account_object>([this](account_object& a) {
+       a.kind = account_kind::special;
        a.name = "temp-account";
        a.statistics = create<account_statistics_object>([&](account_statistics_object& s){s.owner = a.id;}).id;
        a.owner.weight_threshold = 0;
@@ -346,6 +352,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
        a.lifetime_referrer_fee_percentage = GRAPHENE_100_PERCENT - GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
    }).get_id() == GRAPHENE_TEMP_ACCOUNT);
    FC_ASSERT(create<account_object>([this](account_object& a) {
+       a.kind = account_kind::special;
        a.name = "proxy-to-self";
        a.statistics = create<account_statistics_object>([&](account_statistics_object& s){s.owner = a.id;}).id;
        a.owner.weight_threshold = 1;
@@ -363,6 +370,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       if( id >= genesis_state.immutable_parameters.num_special_accounts )
          break;
       const account_object& acct = create<account_object>([&](account_object& a) {
+          a.kind = account_kind::special;
           a.name = "special-account-" + std::to_string(id);
           a.statistics = create<account_statistics_object>([&](account_statistics_object& s){s.owner = a.id;}).id;
           a.owner.weight_threshold = 1;
@@ -398,7 +406,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    assert( asset_id_type(core_asset.id) == asset().asset_id );
    assert( get_balance(account_id_type(), asset_id_type()) == asset(core_dyn_asset.current_supply) );
 
-   // Create web asset:
+   // Create web assets:
    const asset_dynamic_data_object& web_dyn_asset =
       create<asset_dynamic_data_object>([&](asset_dynamic_data_object& a) {
          a.current_supply = 0;  // Web starts with 0 initial supply.
@@ -419,7 +427,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
          a.options.core_exchange_rate.quote.asset_id = asset_id_type(0);
          a.dynamic_asset_data_id = web_dyn_asset.id;
       });
-   FC_ASSERT( asset_id_type(web_asset.id) == asset(DASCOIN_WEB_ASSET_INDEX).asset_id );
+   FC_ASSERT( asset_id_type(web_asset.id) == get_web_asset_id() );
 
    // Create more special assets
    while( true )

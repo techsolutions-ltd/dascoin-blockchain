@@ -452,6 +452,7 @@ namespace graphene { namespace chain {
       account_id_type issuer;
       account_id_type receiver;
       asset amount;
+      share_type reserved_amount;
 
       extensions_type extensions;
 
@@ -472,6 +473,7 @@ namespace graphene { namespace chain {
       account_id_type issuer;
       account_id_type receiver;
       asset amount;
+      share_type reserved_amount;
 
       extensions_type extensions;
 
@@ -593,6 +595,7 @@ FC_REFLECT( graphene::chain::asset_create_issue_request_operation,
             (issuer)
             (receiver)
             (amount)
+            (reserved_amount)
             (extensions)
           )
 
@@ -603,6 +606,7 @@ FC_REFLECT( graphene::chain::asset_distribute_completed_request_operation,
             (issuer)
             (receiver)
             (amount)
+            (reserved_amount)
             (extensions)
           )
 

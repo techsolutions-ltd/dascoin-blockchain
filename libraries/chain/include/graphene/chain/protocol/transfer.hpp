@@ -70,11 +70,34 @@ namespace graphene { namespace chain {
    };
 
    /**
-    * @class transfer_cycles_operation
-    * @brief Transfers cycles from a wallet to a vault account that are tethered.
+    * @class transfer_vault_to_wallet_operation
+    * @brief Transfers assets from a tethered vault to its parent wallet, with limits enforced.
     * @ingroup operations
     */
-   struct transfer_cycles_operation : public base_operation
+   struct transfer_vault_to_wallet_operation : public base_operation
+   {
+      struct fee_parameters_type {};
+
+      asset fee;
+
+      account_id_type from_vault;
+      account_id_type to_wallet;
+      asset asset_to_transfer;
+      share_type reserved_to_transfer;
+
+      extensions_type   extensions;
+
+      account_id_type fee_payer()const { return from_vault; }
+      void            validate()const;
+      share_type      calculate_fee(const fee_parameters_type& k)const { return 0; }
+   };
+
+   /**
+    * @class transfer_wallet_to_vault_operation
+    * @brief Transfers assets from a tethered vault to its parent wallet. NO LIMITS are enforced.
+    * @ingroup operations
+    */
+   struct transfer_wallet_to_vault_operation : public base_operation
    {
       struct fee_parameters_type {};
 
@@ -82,7 +105,8 @@ namespace graphene { namespace chain {
 
       account_id_type from_wallet;
       account_id_type to_vault;
-      share_type amount;
+      asset asset_to_transfer;
+      share_type reserved_to_transfer;
 
       extensions_type   extensions;
 
@@ -140,13 +164,26 @@ FC_REFLECT( graphene::chain::override_transfer_operation, (fee)(issuer)(from)(to
 FC_REFLECT( graphene::chain::transfer_operation::fee_parameters_type, (fee)(price_per_kbyte) )
 FC_REFLECT( graphene::chain::transfer_operation, (fee)(from)(to)(amount)(memo)(extensions) )
 
-// transfer_cycles_operation:
+// transfer_vault_to_wallet_operation:
 
-FC_REFLECT( graphene::chain::transfer_cycles_operation::fee_parameters_type, )
-FC_REFLECT( graphene::chain::transfer_cycles_operation,
+FC_REFLECT( graphene::chain::transfer_vault_to_wallet_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::transfer_vault_to_wallet_operation,
+            (fee)
+            (from_vault)
+            (to_wallet)
+            (asset_to_transfer)
+            (reserved_to_transfer)
+            (extensions)
+          )
+
+// transfer_wallet_to_vault_operation:
+
+FC_REFLECT( graphene::chain::transfer_wallet_to_vault_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::transfer_wallet_to_vault_operation,
             (fee)
             (from_wallet)
             (to_vault)
-            (amount)
+            (asset_to_transfer)
+            (reserved_to_transfer)
             (extensions)
           )

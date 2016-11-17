@@ -596,6 +596,7 @@ object_id_type asset_create_issue_request_evaluator::do_apply(const asset_create
      req.issuer = o.issuer;
      req.receiver = o.receiver;
      req.amount = o.amount;
+     req.reserved_amount = o.reserved_amount;
      req.expiration = fc::time_point::now() + fc::minutes(2);  // TODO: Final value here.
    }).id;
 

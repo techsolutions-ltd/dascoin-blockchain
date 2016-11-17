@@ -497,7 +497,7 @@ void database::assign_licenses()
   }
 } FC_CAPTURE_AND_RETHROW() }
 
-void database::assign_assets()
+void database::distribute_issue_requested_assets()
 { try {
   transaction_evaluation_state assign_context(this);
   const auto& idx = get_index_type<issue_asset_request_index>().indices().get<by_expiration>();

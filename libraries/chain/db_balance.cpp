@@ -140,7 +140,7 @@ share_type database::get_cycle_balance(const account_object& owner) const
    return get_cycle_balance(owner.get_id());
 }
 
-void database::adjust_balance(account_id_type account, asset delta, bool modify_limit)
+void database::adjust_balance(account_id_type account, asset delta, share_type reserved_delta)
 { try {
    if( delta.amount == 0 )
       return;
@@ -149,14 +149,21 @@ void database::adjust_balance(account_id_type account, asset delta, bool modify_
    auto itr = index.find(boost::make_tuple(account, delta.asset_id));
    if(itr == index.end())
    {
+      // bool amounts_ok = delta.amount > 0 && reserved_delta > 0;
       FC_ASSERT( delta.amount > 0, "Insufficient Balance: ${a}'s balance of ${b} is less than required ${r}",
                  ("a",account(*this).name)
                  ("b",to_pretty_string(asset(0,delta.asset_id)))
                  ("r",to_pretty_string(-delta)));
-      create<account_balance_object>([account,&delta](account_balance_object& b) {
+      // NOTE: the reserved amount CAN BE ZERO!
+      FC_ASSERT( reserved_delta >= 0, "Insufficient Balance: ${a}'s reserved balance of ${b} is less than required ${r}",
+                 ("a",account(*this).name)
+                 ("b",to_pretty_string(asset(0,delta.asset_id)))
+                 ("r",to_pretty_string(-asset(reserved_delta, delta.asset_id))));
+      create<account_balance_object>([account, &delta, reserved_delta](account_balance_object& b) {
          b.owner = account;
          b.asset_type = delta.asset_id;
          b.balance = delta.amount.value;
+         b.reserved = reserved_delta;
       });
    } else {
       if( delta.amount < 0 )
@@ -166,11 +173,16 @@ void database::adjust_balance(account_id_type account, asset delta, bool modify_
                     ("b",to_pretty_string(itr->get_balance()))
                     ("r",to_pretty_string(-delta))
                   );
-      modify(*itr, [delta, modify_limit](account_balance_object& b) {
+      if ( reserved_delta < 0)
+         FC_ASSERT( itr->reserved >= -reserved_delta,
+                    "Insufficient Balance: ${a}'s balance of ${b} is less than required ${r}",
+                    ("a",account(*this).name)
+                    ("b",to_pretty_string(itr->get_reserved_balance()))
+                    ("r",to_pretty_string(asset(-reserved_delta, delta.asset_id)))
+                  );
+      modify(*itr, [delta, reserved_delta](account_balance_object& b) {
          b.adjust_balance(delta);
-         // We adjust the limit ONLY IF the asset is REMOVED from the balance so the delta must be negative!
-         if ( modify_limit && delta.amount < 0 )
-            b.spent -= delta.amount;
+         b.reserved += reserved_delta;
       });
    }
 

@@ -538,7 +538,7 @@ void database::_apply_block( const signed_block& next_block )
    // Handle completed license requests:
    assign_licenses();
    // Complete any asset issue request objects:
-   assign_assets();
+   distribute_issue_requested_assets();
    // Reset any daily limits if necessary:
    reset_spending_limits();
 

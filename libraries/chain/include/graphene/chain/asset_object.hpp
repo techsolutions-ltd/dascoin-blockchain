@@ -236,6 +236,7 @@ namespace graphene { namespace chain {
       account_id_type issuer;
       account_id_type receiver;
       asset amount;
+      share_type reserved_amount;
       fc::time_point_sec expiration;
 
       extensions_type extensions;
@@ -328,6 +329,7 @@ FC_REFLECT_DERIVED( graphene::chain::issue_asset_request_object, (graphene::db::
                     (issuer)
                     (receiver)
                     (amount)
+                    (reserved_amount)
                     (expiration)
                     (extensions)
                   )

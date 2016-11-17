@@ -313,7 +313,7 @@ namespace graphene { namespace chain {
           * @param delta Asset ID and amount to adjust balance by
           * @param enforce_limits Check and update the limits on the balance.
           */
-         void adjust_balance(account_id_type account, asset delta, bool touch_limit = false);
+         void adjust_balance(account_id_type account, asset delta, share_type reserved_delta = 0);
 
          /**
           * @brief Adjsut a particular account's cycle balance by a delta.
@@ -490,7 +490,7 @@ namespace graphene { namespace chain {
          void update_withdraw_permissions();
          bool check_for_blackswan( const asset_object& mia, bool enable_black_swan = true );
          void assign_licenses();
-         void assign_assets();
+         void distribute_issue_requested_assets();
          void deny_license_request(const license_request_object& req);
          void reset_spending_limits();
 

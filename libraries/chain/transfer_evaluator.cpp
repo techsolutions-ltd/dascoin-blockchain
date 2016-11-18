@@ -189,11 +189,13 @@ void_result transfer_vault_to_wallet_evaluator::do_apply(const transfer_vault_to
 
    d.modify(*from_balance_obj_, [&](account_balance_object& from_b){
     from_b.balance -= op.asset_to_transfer.amount;
-    from_b.spent += op.asset_to_transfer.amount;
+    from_b.reserved -= op.reserved_to_transfer;
+    from_b.spent += (op.asset_to_transfer.amount + op.reserved_to_transfer);
    });
 
-   d.modify(*from_balance_obj_, [&](account_balance_object& to_b){
+   d.modify(*to_balance_obj_, [&](account_balance_object& to_b){
     to_b.balance += op.asset_to_transfer.amount;
+    to_b.reserved += op.reserved_to_transfer;
    });
 
    return {};
@@ -258,10 +260,12 @@ void_result transfer_wallet_to_vault_evaluator::do_apply(const transfer_wallet_t
 
    d.modify(*from_balance_obj_, [&](account_balance_object& from_b){
     from_b.balance -= op.asset_to_transfer.amount;
+    from_b.reserved -= op.reserved_to_transfer;
    });
 
-   d.modify(*from_balance_obj_, [&](account_balance_object& to_b){
+   d.modify(*to_balance_obj_, [&](account_balance_object& to_b){
     to_b.balance += op.asset_to_transfer.amount;
+    to_b.reserved += op.reserved_to_transfer;
    });
 
    return {};

@@ -1259,22 +1259,6 @@ const license_request_object* database_fixture::issue_license_to_vault_account(
    return db.find<license_request_object>( ptx.operation_results[0].get<object_id_type>() );
 }
 
-void database_fixture::tether_accounts(const account_id_type wallet, const account_id_type vault)
-{ try {
-   tether_accounts_operation op;
-
-   ilog("Attempting to tether '${wa}' and '${va}'", ("wa", wallet)("va", vault));
-
-   op.wallet_account = wallet;
-   op.vault_account = vault;
-
-   trx.operations.push_back( op );
-   trx.validate();
-   processed_transaction ptx = db.push_transaction( trx, ~0 );
-   trx.operations.clear();
-
-} FC_CAPTURE_AND_RETHROW ( (wallet)(vault) ) }
-
 share_type database_fixture::get_cycle_balance(const account_id_type owner)const
 {
    return db.get_cycle_balance(owner);

@@ -336,8 +336,6 @@ struct database_fixture {
       const license_type_id_type license_id,
       optional<frequency_type> account_frequency = optional<frequency_type>());
 
-   void tether_accounts(account_id_type wallet, account_id_type vault);
-
    share_type get_cycle_balance(const account_id_type owner)const;
    void adjust_cycles(const account_id_type id, const share_type amount);
 
@@ -353,9 +351,16 @@ struct database_fixture {
    account_id_type get_wire_out_handler_id() const;
    asset_id_type get_web_asset_id() const;
 
+   // fix_accounts.cpp
+   void tether_accounts(account_id_type wallet, account_id_type vault);
+
    // fix_web_assets.cpp
    const issue_asset_request_object* issue_webasset(account_id_type receiver_id, share_type cash, share_type reserved);
    std::pair<share_type, share_type> get_web_asset_amounts(account_id_type owner_id);
+   void transfer_webasset_vault_to_wallet(account_id_type vault_id, account_id_type wallet_id,
+                                          std::pair<share_type, share_type> amounts);
+   void transfer_webasset_wallet_to_vault(account_id_type walelt_id, account_id_type vault_id,
+                                          std::pair<share_type, share_type> amounts);
 
 };
 

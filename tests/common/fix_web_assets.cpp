@@ -30,30 +30,71 @@
 
 #include "database_fixture.hpp"
 
+using namespace graphene::chain::test;
+
 namespace graphene { namespace chain {
 
 const issue_asset_request_object* database_fixture::issue_webasset(account_id_type receiver_id, share_type cash,
                                                                    share_type reserved)
-{
+{ try {
   asset_create_issue_request_operation op;
-
   op.issuer = get_webasset_issuer_id();
   op.receiver = receiver_id;
   op.amount = asset(cash, get_web_asset_id());
   op.reserved_amount = reserved;
 
-  trx.operations.push_back( op );
+  trx.operations.clear();
+  trx.operations.push_back(op);
   trx.validate();
   processed_transaction ptx = db.push_transaction( trx, ~0 );
-  trx.operations.clear();
 
   return db.find<issue_asset_request_object>( ptx.operation_results[0].get<object_id_type>() );
-}
+} FC_LOG_AND_RETHROW() }
 
 std::pair<share_type, share_type> database_fixture::get_web_asset_amounts(account_id_type owner_id)
 {
- return std::make_pair(db.get_balance(owner_id, get_web_asset_id()).amount,
-                       db.get_reserved_balance(owner_id, get_web_asset_id()).amount);
+  return std::make_pair(db.get_balance(owner_id, get_web_asset_id()).amount,
+                        db.get_reserved_balance(owner_id, get_web_asset_id()).amount);
 }
+
+void database_fixture::transfer_webasset_vault_to_wallet(account_id_type vault_id, account_id_type wallet_id,
+                                                         std::pair<share_type, share_type> amounts)
+{ try {
+  share_type cash, reserved;
+  std::tie(cash, reserved) = amounts;
+
+  transfer_vault_to_wallet_operation op;
+  op.from_vault = vault_id;
+  op.to_wallet = wallet_id;
+  op.asset_to_transfer = asset(cash, db.get_web_asset_id());
+  op.reserved_to_transfer = reserved;
+
+  set_expiration( db, trx );
+  trx.operations.clear();
+  trx.operations.push_back(op);
+  trx.validate();
+  processed_transaction ptx = db.push_transaction(trx, ~0);
+
+} FC_LOG_AND_RETHROW() }
+
+void database_fixture::transfer_webasset_wallet_to_vault(account_id_type wallet_id, account_id_type vault_id,
+                                                         std::pair<share_type, share_type> amounts)
+{ try {
+  share_type cash, reserved;
+  std::tie(cash, reserved) = amounts;
+
+  transfer_wallet_to_vault_operation op;
+  op.from_wallet = wallet_id;
+  op.to_vault = vault_id;
+  op.asset_to_transfer = asset(cash, db.get_web_asset_id());
+  op.reserved_to_transfer = reserved;
+
+  set_expiration( db, trx );
+  trx.operations.clear();
+  trx.operations.push_back(op);
+  trx.validate();
+  processed_transaction ptx = db.push_transaction(trx, ~0);
+
+} FC_LOG_AND_RETHROW() }
 
 } }  // namespace graphene::chain

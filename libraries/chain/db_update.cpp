@@ -506,7 +506,7 @@ void database::distribute_issue_requested_assets()
   {
     const auto& req = *idx.begin();
     const auto& asset_obj = req.amount.asset_id(*this);
-    adjust_balance(req.receiver, req.amount);
+    adjust_balance(req.receiver, req.amount, req.reserved_amount);
     modify(asset_obj.dynamic_asset_data_id(*this), [&](asset_dynamic_data_object& data){
          data.current_supply += req.amount.amount;
     });

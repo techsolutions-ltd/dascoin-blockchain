@@ -50,4 +50,10 @@ const issue_asset_request_object* database_fixture::issue_webasset(account_id_ty
   return db.find<issue_asset_request_object>( ptx.operation_results[0].get<object_id_type>() );
 }
 
+std::pair<share_type, share_type> database_fixture::get_web_asset_amounts(account_id_type owner_id)
+{
+ return std::make_pair(db.get_balance(owner_id, get_web_asset_id()).amount,
+                       db.get_reserved_balance(owner_id, get_web_asset_id()).amount);
+}
+
 } }  // namespace graphene::chain

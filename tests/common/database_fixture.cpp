@@ -99,6 +99,22 @@ void database_fixture::init_genesis_state()
                                                true);
    genesis_state.initial_license_authentication_authority = {"sys.license-authenticator"};
 
+   // Webasset issuer:
+   auto web_issuer_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.webasset-issuer")));
+   genesis_state.initial_accounts.emplace_back("sys.webasset-issuer",
+                                               web_issuer_key.get_public_key(),
+                                               web_issuer_key.get_public_key(),
+                                               true);
+   genesis_state.initial_webasset_issuing_authority = {"sys.webasset-issuer"};
+
+   // Webasset authenticator:
+   auto web_auth_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.webasset-authenticator")));
+   genesis_state.initial_accounts.emplace_back("sys.webasset-authenticator",
+                                               web_auth_key.get_public_key(),
+                                               web_auth_key.get_public_key(),
+                                               true);
+   genesis_state.initial_webasset_authentication_authority = {"sys.webasset-authenticator"};
+
    // Account registrar:
    auto faucet_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.registrar")));
    genesis_state.initial_accounts.emplace_back("sys.registrar",
@@ -106,6 +122,22 @@ void database_fixture::init_genesis_state()
                                                faucet_key.get_public_key(),
                                                true);
    genesis_state.initial_registrar = {"sys.registrar"};
+
+   // PI validator:
+   auto pi_validator_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.pi-validator")));
+   genesis_state.initial_accounts.emplace_back("sys.pi-validator",
+                                               pi_validator_key.get_public_key(),
+                                               pi_validator_key.get_public_key(),
+                                               true);
+   genesis_state.initial_personal_identity_validation_authority = {"sys.pi-validator"};
+
+   // Wire out authority:
+   auto wire_out_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.wire-out-handler")));
+   genesis_state.initial_accounts.emplace_back("sys.wire-out-handler",
+                                               wire_out_key.get_public_key(),
+                                               wire_out_key.get_public_key(),
+                                               true);
+   genesis_state.initial_wire_out_handler = {"sys.wire-out-handler"};
 
    genesis_state.initial_parameters.current_fees->zero_all_fees();
 }

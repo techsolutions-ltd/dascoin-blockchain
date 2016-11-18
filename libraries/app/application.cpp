@@ -102,6 +102,11 @@ namespace detail {
                                                      witness_key.get_public_key(),
                                                      true);
          initial_state.initial_witness_candidates.push_back({name, witness_key.get_public_key()});
+
+         ilog("Initial witness '${n}' keypair: [${pub},${priv}]",
+              ("n", name)
+              ("pub", chain::public_key_type(witness_key.get_public_key()))
+              ("priv", graphene::utilities::key_to_wif(witness_key)));
       }
 
       // Initial board members:

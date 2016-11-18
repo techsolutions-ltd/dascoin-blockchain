@@ -416,8 +416,8 @@ void database::init_genesis(const genesis_state_type& genesis_state)
          a.symbol = DASCOIN_WEBASSET_SYMBOL;
          a.options.max_supply = genesis_state.max_core_supply;  // TODO: this should remain 10 trillion?
          a.precision = GRAPHENE_BLOCKCHAIN_PRECISION_DIGITS;
-         a.options.flags = 0;  // TODO: set the appropriate flags.
-         a.options.issuer_permissions = 0;  // TODO: set the appropriate issuer permissions.
+         a.options.flags = WEB_ASSET_INITIAL_FLAGS;
+         a.options.issuer_permissions = WEB_ASSET_ISSUER_PERMISSION_MASK;  // TODO: set the appropriate issuer permissions.
          a.issuer = GRAPHENE_NULL_ACCOUNT;
          a.authenticator = GRAPHENE_NULL_ACCOUNT;
          // TODO: figure out the base conversion rates.

@@ -328,9 +328,6 @@ struct database_fixture {
       uint8_t upgrades = 0,
       bool is_chartered = false);
 
-   account_id_type get_registrar_id()const;
-   account_id_type get_license_issuer_id()const;
-   account_id_type get_license_authenticator_id()const;
    const license_type_object& get_license_type( const string& name )const;
 
    const license_request_object* issue_license_to_vault_account(
@@ -344,8 +341,21 @@ struct database_fixture {
    share_type get_cycle_balance(const account_id_type owner)const;
    void adjust_cycles(const account_id_type id, const share_type amount);
 
-   const global_property_object& get_global_properties() const { return db.get_global_properties(); }
-   const chain_parameters& get_chain_parameters() const { return db.get_global_properties().parameters; }
+   // fix_getter.cpp
+   const global_property_object& get_global_properties() const;
+   const chain_parameters& get_chain_parameters() const;
+   account_id_type get_license_issuer_id() const;
+   account_id_type get_license_authenticator_id() const;
+   account_id_type get_webasset_issuer_id() const;
+   account_id_type get_webasset_authenticator_id() const;
+   account_id_type get_registrar_id() const;
+   account_id_type get_pi_validator_id() const;
+   account_id_type get_wire_out_handler_id() const;
+   asset_id_type get_web_asset_id() const;
+   //
+
+   // fix_web_assets.cpp
+   const issue_asset_request_object* issue_webasset(account_id_type receiver_id, share_type cash, share_type reserved);
 
 };
 

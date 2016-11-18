@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE( account_create_test )
 
 } FC_LOG_AND_RETHROW() }
 
-BOOST_AUTO_TEST_CASE( tether_accounts_test )
+/*BOOST_AUTO_TEST_CASE( tether_accounts_test )
 { try {
   ACTORS((wallet1)(wallet2)(wallet3));
   VAULT_ACTORS((vault1)(vault2)(vault3));
@@ -77,6 +77,6 @@ BOOST_AUTO_TEST_CASE( tether_accounts_test )
   // tether_accounts( wallet2_id,  vault1_id );
   // BOOST_CHECK( wallet2.has_in_vault(vault1_id) );
 
-} FC_LOG_AND_RETHROW() }
+} FC_LOG_AND_RETHROW() }*/
 
 BOOST_AUTO_TEST_SUITE_END()

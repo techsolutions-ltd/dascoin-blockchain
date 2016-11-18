@@ -1230,21 +1230,6 @@ const license_type_object* database_fixture::create_license_type(
    return db.find<license_type_object>(ptx.operation_results[0].get<object_id_type>());
 }
 
-account_id_type database_fixture::get_license_issuer_id()const
-{
-   return db.get_global_properties().authorities.license_issuer;
-}
-
-account_id_type database_fixture::get_license_authenticator_id()const
-{
-   return db.get_global_properties().authorities.license_authenticator;
-}
-
-account_id_type database_fixture::get_registrar_id()const
-{
-   return db.get_global_properties().authorities.registrar;
-}
-
 const license_type_object& database_fixture::get_license_type( const string& name )const
 {
    const auto& idx = db.get_index_type<license_type_index>().indices().get<by_name>();

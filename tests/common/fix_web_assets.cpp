@@ -40,15 +40,19 @@ const issue_asset_request_object* database_fixture::issue_webasset(account_id_ty
   asset_create_issue_request_operation op;
   op.issuer = get_webasset_issuer_id();
   op.receiver = receiver_id;
-  op.amount = asset(cash, get_web_asset_id());
+  op.amount = cash;
+  op.asset_id =  get_web_asset_id();
   op.reserved_amount = reserved;
 
-  trx.operations.clear();
-  trx.operations.push_back(op);
-  trx.validate();
-  processed_transaction ptx = db.push_transaction( trx, ~0 );
+  signed_transaction tx;
+  set_expiration(db, tx);
+  tx.operations.push_back(op);
+  tx.validate();
+  processed_transaction ptx = db.push_transaction(tx, ~0);
+  tx.clear();
 
-  return db.find<issue_asset_request_object>( ptx.operation_results[0].get<object_id_type>() );
+  return db.find<issue_asset_request_object>(ptx.operation_results[0].get<object_id_type>());
+
 } FC_LOG_AND_RETHROW() }
 
 std::pair<share_type, share_type> database_fixture::get_web_asset_amounts(account_id_type owner_id)
@@ -69,11 +73,11 @@ void database_fixture::transfer_webasset_vault_to_wallet(account_id_type vault_i
   op.asset_to_transfer = asset(cash, db.get_web_asset_id());
   op.reserved_to_transfer = reserved;
 
-  set_expiration( db, trx );
+  set_expiration(db, trx);
   trx.operations.clear();
   trx.operations.push_back(op);
   trx.validate();
-  processed_transaction ptx = db.push_transaction(trx, ~0);
+  db.push_transaction(trx, ~0);
 
 } FC_LOG_AND_RETHROW() }
 
@@ -89,12 +93,35 @@ void database_fixture::transfer_webasset_wallet_to_vault(account_id_type wallet_
   op.asset_to_transfer = asset(cash, db.get_web_asset_id());
   op.reserved_to_transfer = reserved;
 
-  set_expiration( db, trx );
+  set_expiration(db, trx);
   trx.operations.clear();
   trx.operations.push_back(op);
   trx.validate();
-  processed_transaction ptx = db.push_transaction(trx, ~0);
+  db.push_transaction(trx, ~0);
 
+} FC_LOG_AND_RETHROW() }
+
+void database_fixture::deny_issue_request(issue_asset_request_id_type request_id)
+{ try {
+  asset_deny_issue_request_operation op;
+  op.authenticator = get_webasset_authenticator_id();
+  op.request = request_id;
+
+  set_expiration(db, trx);
+  trx.operations.clear();
+  trx.operations.push_back(op);
+  trx.validate();
+  db.push_transaction(trx, ~0);
+
+} FC_LOG_AND_RETHROW() }
+
+vector<issue_asset_request_id> database_fixture::get_asset_request_ids(account_id_type account_id, asset_id_type asset_id)
+{ try {
+  const auto& idx = db.get_index_type<issue_asset_request_index>().indices().get<by_account_asset>();
+  auto itr = idx.find(boost::make_tuple(owner, asset_id));
+  if( itr == idx.end() )
+     return asset(0, asset_id);
+  return
 } FC_LOG_AND_RETHROW() }
 
 } }  // namespace graphene::chain

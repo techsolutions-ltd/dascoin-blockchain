@@ -353,14 +353,18 @@ struct database_fixture {
 
    // fix_accounts.cpp
    void tether_accounts(account_id_type wallet, account_id_type vault);
+   const account_balance_object& get_account_balance_object(account_id_type account_id, asset_id_type aset_id);
 
    // fix_web_assets.cpp
    const issue_asset_request_object* issue_webasset(account_id_type receiver_id, share_type cash, share_type reserved);
+   void deny_issue_request(issue_asset_request_id_type request_id);
    std::pair<share_type, share_type> get_web_asset_amounts(account_id_type owner_id);
    void transfer_webasset_vault_to_wallet(account_id_type vault_id, account_id_type wallet_id,
                                           std::pair<share_type, share_type> amounts);
    void transfer_webasset_wallet_to_vault(account_id_type walelt_id, account_id_type vault_id,
                                           std::pair<share_type, share_type> amounts);
+
+   vector<issue_asset_request_id> get_asset_request_ids(account_id_type account_id, asset_id_type asset_id);
 
 };
 

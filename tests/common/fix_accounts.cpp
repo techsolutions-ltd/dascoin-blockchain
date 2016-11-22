@@ -49,4 +49,9 @@ void database_fixture::tether_accounts(const account_id_type wallet, const accou
 
 } FC_CAPTURE_AND_RETHROW ( (wallet)(vault) ) }
 
+const account_balance_object& database_fixture::get_account_balance_object(account_id_type account_id, asset_id_type asset_id)
+{
+  return db.get_balance_object(account_id, asset_id);
+}
+
 } }  // namespace graphene::chain

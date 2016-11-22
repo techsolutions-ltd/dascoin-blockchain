@@ -235,11 +235,15 @@ namespace graphene { namespace chain {
 
       account_id_type issuer;
       account_id_type receiver;
-      asset amount;
+      share_type amount;
+      asset_id_type asset_id;
       share_type reserved_amount;
       fc::time_point_sec expiration;
 
       extensions_type extensions;
+
+      void set_asset_amount(asset a) { amount = a.amount; asset_id = a.asset_id; }
+      asset get_balance() const { return asset(amount, asset_id); }
 
       void validate() const;
    };
@@ -273,7 +277,7 @@ namespace graphene { namespace chain {
    > asset_object_multi_index_type;
    typedef generic_index<asset_object, asset_object_multi_index_type> asset_index;
 
-   struct by_account;
+   struct by_account_asset;
    struct by_issuer;
    struct by_expiration;
    typedef multi_index_container<
@@ -282,8 +286,14 @@ namespace graphene { namespace chain {
          ordered_unique< tag<by_id>,
            member< object, object_id_type, &object::id >
          >,
-         ordered_non_unique< tag<by_account>,
-           member< issue_asset_request_object, account_id_type, &issue_asset_request_object::receiver >
+         ordered_unique< tag<by_account_asset>,
+            composite_key<
+               issue_asset_request_object,
+               member< object, object_id_type, &object::id >,
+               member< issue_asset_request_object, asset_id_type, &issue_asset_request_object::asset_id >,
+               // member< issue_asset_request_object, time_point_sec, &issue_asset_request_object::expiration >,
+               member< issue_asset_request_object, account_id_type, &issue_asset_request_object::receiver >
+            >
          >,
          ordered_non_unique< tag<by_issuer>,
            member< issue_asset_request_object, account_id_type, &issue_asset_request_object::issuer >
@@ -329,6 +339,7 @@ FC_REFLECT_DERIVED( graphene::chain::issue_asset_request_object, (graphene::db::
                     (issuer)
                     (receiver)
                     (amount)
+                    (asset_id)
                     (reserved_amount)
                     (expiration)
                     (extensions)

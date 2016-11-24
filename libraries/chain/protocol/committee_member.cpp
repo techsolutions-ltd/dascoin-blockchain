@@ -56,7 +56,17 @@ void committee_member_update_license_authenticator_operation::validate() const
 
 void committee_member_update_account_registrar_operation::validate() const
 {
-    FC_ASSERT( fee.amount >= 0 );
+  FC_ASSERT( fee.amount >= 0 );
+}
+
+void committee_member_update_webasset_issuer_operation::validate() const
+{
+  FC_ASSERT( fee.amount >= 0 );
+}
+
+void committee_member_update_webasset_authenticator_operation::validate() const
+{
+  FC_ASSERT( fee.amount >= 0 );
 }
 
 } } // graphene::chain

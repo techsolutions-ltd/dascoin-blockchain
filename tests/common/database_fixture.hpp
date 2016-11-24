@@ -359,12 +359,16 @@ struct database_fixture {
    const issue_asset_request_object* issue_webasset(account_id_type receiver_id, share_type cash, share_type reserved);
    void deny_issue_request(issue_asset_request_id_type request_id);
    std::pair<share_type, share_type> get_web_asset_amounts(account_id_type owner_id);
+   std::pair<asset, asset> get_web_asset_balances(account_id_type owner_id);
    void transfer_webasset_vault_to_wallet(account_id_type vault_id, account_id_type wallet_id,
                                           std::pair<share_type, share_type> amounts);
    void transfer_webasset_wallet_to_vault(account_id_type walelt_id, account_id_type vault_id,
                                           std::pair<share_type, share_type> amounts);
+   vector<issue_asset_request_object> get_asset_request_objects(account_id_type account_id);
+   const wire_out_holder_object& wire_out(account_id_type account_id_type, asset balance, share_type reserved);
 
-   vector<issue_asset_request_id> get_asset_request_ids(account_id_type account_id, asset_id_type asset_id);
+   // fix_pi_limits.cpp
+   void update_pi_limits(account_id_type account_id, uint8_t level, limits_type new_limits);
 
 };
 

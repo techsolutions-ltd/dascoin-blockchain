@@ -61,6 +61,13 @@ std::pair<share_type, share_type> database_fixture::get_web_asset_amounts(accoun
                         db.get_reserved_balance(owner_id, get_web_asset_id()).amount);
 }
 
+std::pair<asset, asset> database_fixture::get_web_asset_balances(account_id_type owner_id)
+{
+  share_type cash, reserved;
+  std::tie(cash, reserved) = get_web_asset_amounts(owner_id);
+  return std::make_pair(asset(cash, get_web_asset_id()), asset(reserved, get_web_asset_id()));
+}
+
 void database_fixture::transfer_webasset_vault_to_wallet(account_id_type vault_id, account_id_type wallet_id,
                                                          std::pair<share_type, share_type> amounts)
 { try {
@@ -115,13 +122,34 @@ void database_fixture::deny_issue_request(issue_asset_request_id_type request_id
 
 } FC_LOG_AND_RETHROW() }
 
-vector<issue_asset_request_id> database_fixture::get_asset_request_ids(account_id_type account_id, asset_id_type asset_id)
+vector<issue_asset_request_object> database_fixture::get_asset_request_objects(account_id_type account_id)
 { try {
+  vector<issue_asset_request_object> result;
+
   const auto& idx = db.get_index_type<issue_asset_request_index>().indices().get<by_account_asset>();
-  auto itr = idx.find(boost::make_tuple(owner, asset_id));
-  if( itr == idx.end() )
-     return asset(0, asset_id);
-  return
+  for( auto itr = idx.find(boost::make_tuple(account_id)); itr != idx.end() && itr->receiver == account_id; itr++)
+    result.emplace_back(*itr);
+
+  return result;
+
+} FC_LOG_AND_RETHROW() }
+
+const wire_out_holder_object& database_fixture::wire_out(account_id_type account_id, asset balance,
+                                                         share_type reserved)
+{ try {
+
+  account = account_id;
+  asset_to_wire;
+
+  signed_transaction tx;
+  set_expiration(db, tx);
+  tx.operations.push_back(op);
+  tx.validate();
+  processed_transaction ptx = db.push_transaction(tx, ~0);
+  tx.clear();
+
+  return db.find<issue_asset_request_object>(ptx.operation_results[0].get<object_id_type>());
+
 } FC_LOG_AND_RETHROW() }
 
 } }  // namespace graphene::chain

@@ -20,12 +20,16 @@ BOOST_FIXTURE_TEST_SUITE( dascoin_tests, database_fixture )
 
 BOOST_AUTO_TEST_CASE( web_asset_test )
 { try {
-  ACTORS((wallet)(richguy))
-  VAULT_ACTORS((vault))
+  ACTOR(wallet);
+  generate_block();
+  VAULT_ACTOR(vault);
+  generate_block();
+  ACTOR(richguy);
   generate_block();
 
-  const auto check_cash_reserved = [this](const account_object& account, share_type expected_cash,
-                                          share_type expected_reserved) {
+  const auto check_balances = [this](const account_object& account, share_type expected_cash,
+                                     share_type expected_reserved)
+  {
     share_type cash, reserved;
     std::tie(cash, reserved) = get_web_asset_amounts(account.id);
     bool amount_ok = (cash == expected_cash && reserved == expected_reserved);
@@ -33,14 +37,16 @@ BOOST_AUTO_TEST_CASE( web_asset_test )
               ("n", account.name)("c", cash)("r", reserved)("ec", expected_cash)("er", expected_reserved));
   };
 
-  const auto issue_request = [this](const account_object& account, share_type cash, share_type reserved) {
+  const auto issue_request = [this](const account_object& account, share_type cash, share_type reserved)
+  {
     const issue_asset_request_object* p = issue_webasset(account.id, cash, reserved);
     FC_ASSERT( p, "Asset request object for '${n}' was not created",("n",account.name));
-    BOOST_CHECK( p->issuer == get_webasset_issuer_id() );
-    BOOST_CHECK( p->receiver == account.id );
-    BOOST_CHECK( p->amount == cash );
-    BOOST_CHECK( p->asset_id == get_web_asset_id() );
-    BOOST_CHECK( p->reserved_amount == reserved );
+    // ilog( "Creating asset request for '${n}'", ("n", (p->receiver)(db).name));
+    FC_ASSERT( p->issuer == get_webasset_issuer_id() );
+    FC_ASSERT( p->receiver == account.id, "Receiver: '${n}', Account: '${an}'", ("n", (p->receiver)(db).name)("an", account.name));
+    FC_ASSERT( p->amount == cash );
+    FC_ASSERT( p->asset_id == get_web_asset_id() );
+    FC_ASSERT( p->reserved_amount == reserved );
   };
 
   issue_request(wallet, 100, 100);
@@ -49,39 +55,56 @@ BOOST_AUTO_TEST_CASE( web_asset_test )
   issue_request(richguy, 300, 300);
   issue_request(richguy, 100, 100);
 
-  generate_block();
-  generate_blocks(db.head_block_time() + fc::minutes(10));
+  BOOST_CHECK_EQUAL( get_asset_request_objects(wallet_id).size(), 1);
+  BOOST_CHECK_EQUAL( get_asset_request_objects(vault_id).size(), 1);
+  BOOST_CHECK_EQUAL( get_asset_request_objects(richguy_id).size(), 3);
 
-  check_cash_reserved(wallet, 100, 100);
-  check_cash_reserved(vault, 100, 100);
-  check_cash_reserved(richguy, 1000, 1000);
+  generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
 
-  issue_request(richguy, 100, 100);
+  check_balances(wallet, 100, 100);
+  check_balances(vault, 100, 100);
+  check_balances(richguy, 1000, 1000);
 
-  generate_blocks(fc::time_point::now() + fc::minutes(1));
+  issue_request(richguy, 100, 0);
+  BOOST_CHECK_EQUAL( get_asset_request_objects(richguy_id).size(), 1);
+  deny_issue_request(get_asset_request_objects(richguy_id)[0].id);
+  BOOST_CHECK_EQUAL( get_asset_request_objects(richguy_id).size(), 0);
+  check_balances(richguy, 1000, 1000);
 
-  // // deny_issue_request(req_id);
+  // Transfer funds wallet --> vault:
+  // Reject, arguments reversed:
+  GRAPHENE_REQUIRE_THROW( transfer_webasset_wallet_to_vault(vault_id, wallet_id, {50,50}), fc::exception );
+  // Reject, accounts are not tethered:
+  GRAPHENE_REQUIRE_THROW( transfer_webasset_wallet_to_vault(wallet_id, vault_id, {50,50}), fc::exception );
 
-  generate_blocks(fc::time_point::now() + fc::minutes(1));
-
-  // // TODO: check if the request object exists.
-
-  // check_cash_reserved(wallet_id, 100, 100);
-  // check_cash_reserved(vault_id, 100, 100);
-  // check_cash_reserved(richguy_id, 1000, 1000);
-
-  // // Transfer funds wallet --> vault:
-  // // Arguments reversed:
-  // GRAPHENE_REQUIRE_THROW( transfer_webasset_wallet_to_vault(vault_id, wallet_id, {50,50}), fc::exception );
-  // // Accounts are not tethered!
-  // GRAPHENE_REQUIRE_THROW( transfer_webasset_wallet_to_vault(wallet_id, vault_id, {50,50}), fc::exception );
-
-  // tether_accounts(wallet_id, vault_id);
-  // transfer_webasset_wallet_to_vault(wallet_id, vault_id, {50,50});
-  // check_cash_reserved(vault_id, 150, 150);
+  tether_accounts(wallet_id, vault_id);
+  transfer_webasset_wallet_to_vault(wallet_id, vault_id, {50,50});
+  check_balances(wallet, 50, 50);
+  check_balances(vault, 150, 150);
 
   // Reject, not enough balance:
-  // GRAPHENE_REQUIRE_THROW( transfer_webasset_wallet_to_vault(wallet_id, vault_id, {1000,1100}), fc::exception );
+  GRAPHENE_REQUIRE_THROW( transfer_webasset_wallet_to_vault(wallet_id, vault_id, {1000,1100}), fc::exception );
+
+  // Reject, limits do not exist:
+  GRAPHENE_REQUIRE_THROW( transfer_webasset_vault_to_wallet(vault_id, wallet_id, {50,50}), fc::exception );
+
+  // Reject, bad limits vector:
+  // TODO: this is a validation failure, handle it somehow.
+  // GRAPHENE_REQUIRE_THROW( update_pi_limits(vault_id, 99, {50,50,50,50,50,50,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}), fc::exception );
+
+  // Update the limits to allow vault -> wallet transfer:
+  update_pi_limits(vault_id, 99, {100,100,100});
+  ilog( "Vault account limits ${l}", ("l", vault_id(db).limits) );
+
+  // Reject, arguments reversed:
+  GRAPHENE_REQUIRE_THROW( transfer_webasset_wallet_to_vault(wallet_id, vault_id, {100,100}), fc::exception );
+
+  transfer_webasset_vault_to_wallet(vault_id, wallet_id, {75,75});
+  check_balances(wallet, 125, 125);
+  check_balances(vault, 75, 75);
+
+  GRAPHENE_REQUIRE_THROW( transfer_webasset_vault_to_wallet(vault_id, wallet_id, {25,25}), fc::exception );
+
 
 } FC_LOG_AND_RETHROW() }
 

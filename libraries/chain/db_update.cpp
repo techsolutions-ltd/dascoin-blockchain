@@ -506,7 +506,6 @@ void database::distribute_issue_requested_assets()
   {
     const auto& req = *idx.begin();
     const auto& asset_obj = req.asset_id(*this);
-    ilog( "REQ: (${c}/${r}) -> '${n}'", ("n", req.receiver(*this).name)("c", req.amount)("r", req.reserved_amount) );
     adjust_balance(req.receiver, req.get_balance(), req.reserved_amount);
     modify(asset_obj.dynamic_asset_data_id(*this), [&](asset_dynamic_data_object& data){
          // TODO: reserved part factors in here as well.

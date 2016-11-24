@@ -170,12 +170,22 @@ void_result transfer_vault_to_wallet_evaluator::do_evaluate(const transfer_vault
             );
 
    // Check if the cash part of the transfer would breach the cash limit:
-   bool cash_limit_ok = from_balance_obj.spent <= cash_limit;
-   FC_ASSERT( cash_limit_ok );
+   bool cash_limit_ok = from_balance_obj.spent < cash_limit;
+   FC_ASSERT( cash_limit_ok,
+              "Cash limit has been exceeded, ${spent}/${max} on account ${a}",
+              ("a",from_acc_obj.name)
+              ("spent",d.to_pretty_string(asset(from_balance_obj.spent, d.get_web_asset_id())))
+              ("max",d.to_pretty_string(asset(cash_limit, d.get_web_asset_id())))
+            );
 
-   // Check if the reserved part of the transfer would breach the  reserved limit:
-   bool reserved_limit_ok = from_balance_obj.spent_reserved <= reserved_limit;
-   FC_ASSERT( reserved_limit_ok );
+   // Check if the reserved part of the transfer would breach the reserved limit:
+   bool reserved_limit_ok = from_balance_obj.spent_reserved < reserved_limit;
+   FC_ASSERT( reserved_limit_ok,
+              "Reserved limit has been exceeded, ${spent}/${max} on account ${a}",
+              ("a",from_acc_obj.name)
+              ("spent",d.to_pretty_string(asset(from_balance_obj.spent_reserved, d.get_web_asset_id())))
+              ("max",d.to_pretty_string(asset(reserved_limit, d.get_web_asset_id())))
+            );
 
    from_balance_obj_ = &from_balance_obj;
    to_balance_obj_ = &to_balance_obj;

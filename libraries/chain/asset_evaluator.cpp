@@ -605,8 +605,7 @@ object_id_type asset_create_issue_request_evaluator::do_apply(const asset_create
      req.amount = o.amount;
      req.asset_id = o.asset_id;
      req.reserved_amount = o.reserved_amount;
-     req.expiration = db().head_block_time() + fc::minutes(2);  // TODO: Final value here.
-     ilog( "Expiration time is: ${e}", ("e", req.expiration) );
+     req.expiration = db().head_block_time() + fc::hours(24);  // TODO: make this a part of the chain parameters.
    }).id;
 
 } FC_CAPTURE_AND_RETHROW((o)) }
@@ -617,7 +616,7 @@ void_result asset_deny_issue_request_evaluator::do_evaluate(const asset_deny_iss
 
    req_obj = &o.request(d);
    const auto& asset_object = req_obj->asset_id(d);  // Fetch the asset object.
-   FC_ASSERT( o.authenticator == *asset_object.authenticator );
+   FC_ASSERT( o.authenticator == *asset_object.authenticator, "${o} != ${a}", ("o", o.authenticator)("a", *asset_object.authenticator) );
    return {};
 
 } FC_CAPTURE_AND_RETHROW((o)) }

@@ -289,10 +289,9 @@ namespace graphene { namespace chain {
          ordered_unique< tag<by_account_asset>,
             composite_key<
                issue_asset_request_object,
-               member< object, object_id_type, &object::id >,
+               member< issue_asset_request_object, account_id_type, &issue_asset_request_object::receiver >,
                member< issue_asset_request_object, asset_id_type, &issue_asset_request_object::asset_id >,
-               // member< issue_asset_request_object, time_point_sec, &issue_asset_request_object::expiration >,
-               member< issue_asset_request_object, account_id_type, &issue_asset_request_object::receiver >
+               member< object, object_id_type, &object::id >
             >
          >,
          ordered_non_unique< tag<by_issuer>,

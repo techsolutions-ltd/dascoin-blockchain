@@ -365,7 +365,7 @@ struct database_fixture {
    void transfer_webasset_wallet_to_vault(account_id_type walelt_id, account_id_type vault_id,
                                           std::pair<share_type, share_type> amounts);
    vector<issue_asset_request_object> get_asset_request_objects(account_id_type account_id);
-   const wire_out_holder_object& wire_out(account_id_type account_id_type, asset balance, share_type reserved);
+   const wire_out_holder_object& wire_out(account_id_type account_id_type, asset amount);
 
    // fix_pi_limits.cpp
    void update_pi_limits(account_id_type account_id, uint8_t level, limits_type new_limits);

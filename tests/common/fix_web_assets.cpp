@@ -11,6 +11,8 @@
 
 #include <graphene/chain/asset_object.hpp>
 #include <graphene/chain/protocol/asset_ops.hpp>
+#include <graphene/chain/protocol/wire.hpp>
+#include <graphene/chain/wire_object.hpp>
 // #include <graphene/chain/account_object.hpp>
 // #include <graphene/chain/committee_member_object.hpp>
 // #include <graphene/chain/fba_object.hpp>
@@ -134,12 +136,12 @@ vector<issue_asset_request_object> database_fixture::get_asset_request_objects(a
 
 } FC_LOG_AND_RETHROW() }
 
-const wire_out_holder_object& database_fixture::wire_out(account_id_type account_id, asset balance,
-                                                         share_type reserved)
+const wire_out_holder_object& database_fixture::wire_out(account_id_type account_id, asset asset_to_wire)
 { try {
 
-  account = account_id;
-  asset_to_wire;
+  wire_out_operation op;
+  op.account = account_id;
+  op.asset_to_wire = asset_to_wire;
 
   signed_transaction tx;
   set_expiration(db, tx);
@@ -148,7 +150,7 @@ const wire_out_holder_object& database_fixture::wire_out(account_id_type account
   processed_transaction ptx = db.push_transaction(tx, ~0);
   tx.clear();
 
-  return db.find<issue_asset_request_object>(ptx.operation_results[0].get<object_id_type>());
+  return db.get<wire_out_holder_object>(ptx.operation_results[0].get<object_id_type>());
 
 } FC_LOG_AND_RETHROW() }
 

@@ -96,6 +96,87 @@ namespace graphene { namespace chain {
       }
    };
 
+   struct asset_reserved
+   {
+      asset_reserved(share_type b, share_type r, asset_id_type id = asset_id_type())
+      : balance(b), asset_id(id), reserved(r) {}
+      asset_reserved(const asset& a) : balance(a.amount), asset_id(a.asset_id), reserved(0) {}
+
+      share_type balance;
+      asset_id_type asset_id;
+      share_type reserved;
+
+      asset get_balance() { return asset(balance, asset_id); }
+      asset get_reserved_balance() { return asset(reserved, asset_id); }
+
+      asset_reserved& operator += (const asset_reserved& o)
+      {
+         FC_ASSERT( asset_id == o.asset_id );
+         balance += o.balance;
+         reserved += o.reserved;
+         return *this;
+      }
+
+      asset_reserved& operator -= (const asset_reserved& o)
+      {
+         FC_ASSERT( asset_id == o.asset_id );
+         balance -= o.balance;
+         reserved -= o.reserved;
+         return *this;
+      }
+
+      asset_reserved operator -() const { return asset_reserved(-balance, -reserved, asset_id); }
+
+      friend bool operator == (const asset_reserved& a, const asset_reserved& b)
+      {
+         return std::tie(a.asset_id, a.balance, a.reserved) == std::tie(b.asset_id, b.balance, a.reserved);
+      }
+
+      friend bool operator < (const asset_reserved& a, const asset_reserved& b)
+      {
+         FC_ASSERT( a.asset_id == b.asset_id );
+         return (a.balance < b.balance && a.reserved < b.reserved);
+      }
+
+      friend bool operator <= ( const asset_reserved& a, const asset_reserved& b )
+      {
+         return (a == b) || (a < b);
+      }
+
+      friend bool operator != ( const asset_reserved& a, const asset_reserved& b )
+      {
+         return !(a == b);
+      }
+      friend bool operator > ( const asset_reserved& a, const asset_reserved& b )
+      {
+         return !(a <= b);
+      }
+      friend bool operator >= ( const asset_reserved& a, const asset_reserved& b )
+      {
+         return !(a < b);
+      }
+
+      friend asset_reserved operator - ( const asset_reserved& a, const asset_reserved& b )
+      {
+         FC_ASSERT( a.asset_id == b.asset_id );
+         return {a.balance - b.balance, a.reserved - b.reserved, a.asset_id};
+      }
+
+      friend asset_reserved operator + ( const asset_reserved& a, const asset_reserved& b )
+      {
+         FC_ASSERT( a.asset_id == b.asset_id );
+         return {a.balance + b.balance, a.reserved + b.reserved, a.asset_id};
+      }
+
+      static share_type scaled_precision( uint8_t precision )
+      {
+         FC_ASSERT( precision < 19 );
+         return scaled_precision_lut[ precision ];
+      }
+
+
+   };
+
    /**
     * @brief The price struct stores asset prices in the Graphene system.
     *
@@ -212,6 +293,7 @@ namespace graphene { namespace chain {
 } }
 
 FC_REFLECT( graphene::chain::asset, (amount)(asset_id) )
+FC_REFLECT( graphene::chain::asset_reserved, (balance)(asset_id)(reserved) )
 FC_REFLECT( graphene::chain::price, (base)(quote) )
 
 #define GRAPHENE_PRICE_FEED_FIELDS (settlement_price)(maintenance_collateral_ratio)(maximum_short_squeeze_ratio) \

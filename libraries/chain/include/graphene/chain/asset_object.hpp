@@ -115,6 +115,12 @@ namespace graphene { namespace chain {
          /// Convert an asset to a textual representation with symbol, i.e. "123.45 USD"
          string amount_to_pretty_string(const asset &amount)const
          { FC_ASSERT(amount.asset_id == id); return amount_to_pretty_string(amount.amount); }
+         /// Convert amount with reserved to a textual representation with symbol, i.e."123.45/789.99 USD"
+         string amount_to_pretty_string(const asset_reserved &a) const
+         {
+            FC_ASSERT(a.asset_id == id);
+            return amount_to_string(a.balance) + "/" + amount_to_string(a.reserved) + " " + symbol;
+         }
 
          /// Ticker symbol for this asset, i.e. "USD"
          string symbol;

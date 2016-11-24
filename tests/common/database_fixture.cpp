@@ -1230,21 +1230,6 @@ const license_type_object* database_fixture::create_license_type(
    return db.find<license_type_object>(ptx.operation_results[0].get<object_id_type>());
 }
 
-account_id_type database_fixture::get_license_issuer_id()const
-{
-   return db.get_global_properties().authorities.license_issuer;
-}
-
-account_id_type database_fixture::get_license_authenticator_id()const
-{
-   return db.get_global_properties().authorities.license_authenticator;
-}
-
-account_id_type database_fixture::get_registrar_id()const
-{
-   return db.get_global_properties().authorities.registrar;
-}
-
 const license_type_object& database_fixture::get_license_type( const string& name )const
 {
    const auto& idx = db.get_index_type<license_type_index>().indices().get<by_name>();
@@ -1273,22 +1258,6 @@ const license_request_object* database_fixture::issue_license_to_vault_account(
 
    return db.find<license_request_object>( ptx.operation_results[0].get<object_id_type>() );
 }
-
-void database_fixture::tether_accounts(const account_id_type wallet, const account_id_type vault)
-{ try {
-   tether_accounts_operation op;
-
-   ilog("Attempting to tether '${wa}' and '${va}'", ("wa", wallet)("va", vault));
-
-   op.wallet_account = wallet;
-   op.vault_account = vault;
-
-   trx.operations.push_back( op );
-   trx.validate();
-   processed_transaction ptx = db.push_transaction( trx, ~0 );
-   trx.operations.clear();
-
-} FC_CAPTURE_AND_RETHROW ( (wallet)(vault) ) }
 
 share_type database_fixture::get_cycle_balance(const account_id_type owner)const
 {

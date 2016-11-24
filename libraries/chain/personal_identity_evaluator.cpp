@@ -30,7 +30,8 @@ void_result update_pi_limits_evaluator::do_evaluate(const update_pi_limits_opera
     }
   }
   acnt = &account;
-  return void_result();
+
+  return {};
 
 } FC_CAPTURE_AND_RETHROW((op)) }
 

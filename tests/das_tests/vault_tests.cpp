@@ -18,31 +18,31 @@ using namespace graphene::chain::test;
 
 BOOST_FIXTURE_TEST_SUITE( dascoin_tests, database_fixture )
 
-BOOST_AUTO_TEST_CASE( account_create_test )
-{ try {
-  ACTORS((alice)(charlie));
-  VAULT_ACTORS((bob)(dude)(ethel));
+// BOOST_AUTO_TEST_CASE( account_create_test )
+// { try {
+//   ACTORS((alice)(charlie));
+//   VAULT_ACTORS((bob)(dude)(ethel));
 
-  account_object test_obj;
-  test_obj = get_account("alice");
-  BOOST_CHECK( test_obj.is_wallet() );
-  BOOST_CHECK( alice_id == test_obj.id );
+//   account_object test_obj;
+//   test_obj = get_account("alice");
+//   BOOST_CHECK( test_obj.is_wallet() );
+//   BOOST_CHECK( alice_id == test_obj.id );
 
-  test_obj = get_account("bob");
-  BOOST_CHECK( test_obj.is_vault() );
-  BOOST_CHECK( bob_id == test_obj.id );
+//   test_obj = get_account("bob");
+//   BOOST_CHECK( test_obj.is_vault() );
+//   BOOST_CHECK( bob_id == test_obj.id );
 
-  test_obj = get_account("charlie");
-  BOOST_CHECK( test_obj.is_wallet() );
-  BOOST_CHECK( charlie_id == test_obj.id );
+//   test_obj = get_account("charlie");
+//   BOOST_CHECK( test_obj.is_wallet() );
+//   BOOST_CHECK( charlie_id == test_obj.id );
 
-  test_obj = get_account("dude");
-  BOOST_CHECK( test_obj.is_vault() );
-  BOOST_CHECK( dude_id == test_obj.id );
+//   test_obj = get_account("dude");
+//   BOOST_CHECK( test_obj.is_vault() );
+//   BOOST_CHECK( dude_id == test_obj.id );
 
-} FC_LOG_AND_RETHROW() }
+// } FC_LOG_AND_RETHROW() }
 
-BOOST_AUTO_TEST_CASE( tether_accounts_test )
+/*BOOST_AUTO_TEST_CASE( tether_accounts_test )
 { try {
   ACTORS((wallet1)(wallet2)(wallet3));
   VAULT_ACTORS((vault1)(vault2)(vault3));
@@ -77,6 +77,6 @@ BOOST_AUTO_TEST_CASE( tether_accounts_test )
   // tether_accounts( wallet2_id,  vault1_id );
   // BOOST_CHECK( wallet2.has_in_vault(vault1_id) );
 
-} FC_LOG_AND_RETHROW() }
+} FC_LOG_AND_RETHROW() }*/
 
 BOOST_AUTO_TEST_SUITE_END()

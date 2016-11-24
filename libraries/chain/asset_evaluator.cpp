@@ -575,16 +575,23 @@ void_result asset_create_issue_request_evaluator::do_evaluate(const asset_create
 { try {
    const database& d = db();
 
-   const auto& a = o.amount.asset_id(d);
+   // Check if we are transferring web assets:
+   // NOTE: this check must be modified to apply for every kind of web asset there is.
+   FC_ASSERT ( o.asset_id == d.get_web_asset_id(), "Can only transfer web assets" );
+   const auto& a = o.asset_id(d);
    FC_ASSERT( a.is_dual_auth_issue(), "Cannot do a dual authority issue on a single issuer based asset" );
-   FC_ASSERT( o.issuer == a.issuer );
+   FC_ASSERT( o.issuer == d.get_chain_authorities().webasset_issuer,
+              "Account '${o_issuer_n}' is not the current webasset issuer ('${c_issuer_n}')",
+              ("o_issuer_n", o.issuer(d).name)
+              ("c_issuer_n", d.get_chain_authorities().webasset_issuer(d).name)
+            );
    FC_ASSERT( !a.is_market_issued(), "Cannot manually issue a market-issued asset." );
 
    const account_object& reciever = o.receiver(d);
    FC_ASSERT( is_authorized_asset( d, reciever, a ) );
 
    const auto& asset_dyn_data = a.dynamic_asset_data_id(d);
-   FC_ASSERT( (asset_dyn_data.current_supply + o.amount.amount) <= a.options.max_supply );
+   FC_ASSERT( (asset_dyn_data.current_supply + o.amount) <= a.options.max_supply );
 
    return void_result();
 
@@ -596,8 +603,9 @@ object_id_type asset_create_issue_request_evaluator::do_apply(const asset_create
      req.issuer = o.issuer;
      req.receiver = o.receiver;
      req.amount = o.amount;
+     req.asset_id = o.asset_id;
      req.reserved_amount = o.reserved_amount;
-     req.expiration = fc::time_point::now() + fc::minutes(2);  // TODO: Final value here.
+     req.expiration = db().head_block_time() + fc::hours(24);  // TODO: make this a part of the chain parameters.
    }).id;
 
 } FC_CAPTURE_AND_RETHROW((o)) }
@@ -607,8 +615,8 @@ void_result asset_deny_issue_request_evaluator::do_evaluate(const asset_deny_iss
    const auto& d = db();
 
    req_obj = &o.request(d);
-   const auto& asset_object = req_obj->amount.asset_id(d);  // Fetch the asset object.
-   FC_ASSERT( o.authenticator == *asset_object.authenticator );
+   const auto& asset_object = req_obj->asset_id(d);  // Fetch the asset object.
+   FC_ASSERT( o.authenticator == *asset_object.authenticator, "${o} != ${a}", ("o", o.authenticator)("a", *asset_object.authenticator) );
    return {};
 
 } FC_CAPTURE_AND_RETHROW((o)) }

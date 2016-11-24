@@ -193,6 +193,8 @@ void database::initialize_evaluators()
    register_evaluator<committee_member_update_license_issuer_evaluator>();
    register_evaluator<committee_member_update_license_authenticator_evaluator>();
    register_evaluator<committee_member_update_account_registrar_evaluator>();
+   register_evaluator<committee_member_update_webasset_issuer_evaluator>();
+   register_evaluator<committee_member_update_webasset_authenticator_evaluator>();
    register_evaluator<license_type_create_evaluator>();
    register_evaluator<license_type_edit_evaluator>();
    register_evaluator<license_type_delete_evaluator>();
@@ -416,8 +418,8 @@ void database::init_genesis(const genesis_state_type& genesis_state)
          a.symbol = DASCOIN_WEBASSET_SYMBOL;
          a.options.max_supply = genesis_state.max_core_supply;  // TODO: this should remain 10 trillion?
          a.precision = GRAPHENE_BLOCKCHAIN_PRECISION_DIGITS;
-         a.options.flags = 0;  // TODO: set the appropriate flags.
-         a.options.issuer_permissions = 0;  // TODO: set the appropriate issuer permissions.
+         a.options.flags = WEB_ASSET_INITIAL_FLAGS;
+         a.options.issuer_permissions = WEB_ASSET_ISSUER_PERMISSION_MASK;  // TODO: set the appropriate issuer permissions.
          a.issuer = GRAPHENE_NULL_ACCOUNT;
          a.authenticator = GRAPHENE_NULL_ACCOUNT;
          // TODO: figure out the base conversion rates.
@@ -724,19 +726,28 @@ void database::init_genesis(const genesis_state_type& genesis_state)
        apply_operation(genesis_eval_state, std::move(op));
    });
 
-   // Modify the WEB asset and set the initial accounts:
-   account_id_type web_issuer = get_account_id(genesis_state.initial_webasset_issuing_authority.owner_name);
-   account_id_type web_auth = get_account_id(genesis_state.initial_webasset_authentication_authority.owner_name);
-   modify(web_asset, [&](asset_object& a){
-      a.issuer = web_issuer;
-      a.authenticator = web_auth;
-   });
+   {
+      // Modify the WEB asset and set the initial accounts:
+      account_id_type web_issuer_id = get_account_id(genesis_state.initial_webasset_issuing_authority.owner_name);
+      account_id_type web_auth_id = get_account_id(genesis_state.initial_webasset_authentication_authority.owner_name);
+      modify(web_asset, [&](asset_object& a){
+         a.issuer = web_issuer_id;
+         a.authenticator = web_auth_id;
+      });
+
+      committee_member_update_webasset_issuer_operation issuer_op;
+      issuer_op.issuer = web_issuer_id;
+      issuer_op.committee_member_account = GRAPHENE_COMMITTEE_ACCOUNT;
+      apply_operation(genesis_eval_state, std::move(issuer_op));
+
+      committee_member_update_webasset_authenticator_operation auth_op;
+      auth_op.authenticator = web_auth_id;
+      auth_op.committee_member_account = GRAPHENE_COMMITTEE_ACCOUNT;
+      apply_operation(genesis_eval_state, std::move(auth_op));
+   }
 
    // Initialize cycle licensing:
    {
-      ilog("license issuer name: ${name}", ("name", genesis_state.initial_license_issuing_authority.owner_name));
-      ilog("license authenticator name: ${name}", ("name", genesis_state.initial_license_authentication_authority.owner_name));
-
       account_id_type issuer = get_account_id(genesis_state.initial_license_issuing_authority.owner_name);
       account_id_type authenticator = get_account_id(genesis_state.initial_license_authentication_authority.owner_name);
       // Create license issuing authority:

@@ -88,4 +88,24 @@ namespace graphene { namespace chain {
       void_result do_apply( const committee_member_update_account_registrar_operation& o );
    };
 
+   class committee_member_update_webasset_issuer_evaluator
+      : public evaluator<committee_member_update_webasset_issuer_evaluator>
+   {
+   public:
+      typedef committee_member_update_webasset_issuer_operation operation_type;
+
+      void_result do_evaluate( const operation_type& o );
+      void_result do_apply( const operation_type& o );
+   };
+
+   class committee_member_update_webasset_authenticator_evaluator
+      : public evaluator<committee_member_update_webasset_authenticator_evaluator>
+   {
+   public:
+      typedef committee_member_update_webasset_authenticator_operation operation_type;
+
+      void_result do_evaluate( const operation_type& o );
+      void_result do_apply( const operation_type& o );
+   };
+
 } } // graphene::chain

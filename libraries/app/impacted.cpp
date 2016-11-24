@@ -167,6 +167,16 @@ struct get_impacted_account_visitor
       _impacted.insert( op.registrar );
    }
 
+   void operator()( const committee_member_update_webasset_issuer_operation& op )
+   {
+      _impacted.insert(op.issuer);
+   }
+
+   void operator()( const committee_member_update_webasset_authenticator_operation& op )
+   {
+      _impacted.insert(op.authenticator);
+   }
+
    void operator()( const license_type_create_operation& op ) {}
    void operator()( const license_type_edit_operation& op ) {}
    void operator()( const license_type_delete_operation& op ) {}

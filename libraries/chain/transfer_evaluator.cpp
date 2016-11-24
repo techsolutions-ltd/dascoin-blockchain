@@ -170,12 +170,22 @@ void_result transfer_vault_to_wallet_evaluator::do_evaluate(const transfer_vault
             );
 
    // Check if the cash part of the transfer would breach the cash limit:
-   bool cash_limit_ok = from_balance_obj.spent <= cash_limit;
-   FC_ASSERT( cash_limit_ok );
+   bool cash_limit_ok = from_balance_obj.spent < cash_limit;
+   FC_ASSERT( cash_limit_ok,
+              "Cash limit has been exceeded, ${spent}/${max} on account ${a}",
+              ("a",from_acc_obj.name)
+              ("spent",d.to_pretty_string(asset(from_balance_obj.spent, d.get_web_asset_id())))
+              ("max",d.to_pretty_string(asset(cash_limit, d.get_web_asset_id())))
+            );
 
-   // Check if the reserved part of the transfer would breach the  reserved limit:
-   bool reserved_limit_ok = from_balance_obj.spent_reserved <= reserved_limit;
-   FC_ASSERT( reserved_limit_ok );
+   // Check if the reserved part of the transfer would breach the reserved limit:
+   bool reserved_limit_ok = from_balance_obj.spent_reserved < reserved_limit;
+   FC_ASSERT( reserved_limit_ok,
+              "Reserved limit has been exceeded, ${spent}/${max} on account ${a}",
+              ("a",from_acc_obj.name)
+              ("spent",d.to_pretty_string(asset(from_balance_obj.spent_reserved, d.get_web_asset_id())))
+              ("max",d.to_pretty_string(asset(reserved_limit, d.get_web_asset_id())))
+            );
 
    from_balance_obj_ = &from_balance_obj;
    to_balance_obj_ = &to_balance_obj;
@@ -189,11 +199,13 @@ void_result transfer_vault_to_wallet_evaluator::do_apply(const transfer_vault_to
 
    d.modify(*from_balance_obj_, [&](account_balance_object& from_b){
     from_b.balance -= op.asset_to_transfer.amount;
-    from_b.spent += op.asset_to_transfer.amount;
+    from_b.reserved -= op.reserved_to_transfer;
+    from_b.spent += (op.asset_to_transfer.amount + op.reserved_to_transfer);
    });
 
-   d.modify(*from_balance_obj_, [&](account_balance_object& to_b){
+   d.modify(*to_balance_obj_, [&](account_balance_object& to_b){
     to_b.balance += op.asset_to_transfer.amount;
+    to_b.reserved += op.reserved_to_transfer;
    });
 
    return {};
@@ -258,10 +270,12 @@ void_result transfer_wallet_to_vault_evaluator::do_apply(const transfer_wallet_t
 
    d.modify(*from_balance_obj_, [&](account_balance_object& from_b){
     from_b.balance -= op.asset_to_transfer.amount;
+    from_b.reserved -= op.reserved_to_transfer;
    });
 
-   d.modify(*from_balance_obj_, [&](account_balance_object& to_b){
+   d.modify(*to_balance_obj_, [&](account_balance_object& to_b){
     to_b.balance += op.asset_to_transfer.amount;
+    to_b.reserved += op.reserved_to_transfer;
    });
 
    return {};

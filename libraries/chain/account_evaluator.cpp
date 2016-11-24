@@ -182,6 +182,7 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
          obj.active           = o.active;
          obj.options          = o.options;
          obj.statistics = db().create<account_statistics_object>([&](account_statistics_object& s){s.owner = obj.id;}).id;
+         obj.limits = limits_type(LIMIT_KIND_COUNT, 0);
 
          if( o.extensions.value.owner_special_authority.valid() )
             obj.owner_special_authority = *(o.extensions.value.owner_special_authority);

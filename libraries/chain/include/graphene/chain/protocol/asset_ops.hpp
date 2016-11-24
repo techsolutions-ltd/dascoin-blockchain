@@ -451,10 +451,13 @@ namespace graphene { namespace chain {
 
       account_id_type issuer;
       account_id_type receiver;
-      asset amount;
+      share_type amount;
+      asset_id_type asset_id;
       share_type reserved_amount;
 
       extensions_type extensions;
+
+      asset get_balance() const { return asset(amount, asset_id); }
 
       account_id_type fee_payer() const { return issuer; }
       share_type calculate_fee(const fee_parameters_type& k) const { return 0; }
@@ -595,6 +598,7 @@ FC_REFLECT( graphene::chain::asset_create_issue_request_operation,
             (issuer)
             (receiver)
             (amount)
+            (asset_id)
             (reserved_amount)
             (extensions)
           )

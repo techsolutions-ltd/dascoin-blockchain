@@ -171,7 +171,8 @@ namespace graphene { namespace chain {
          void      set_applied_operation_result( uint32_t op_id, const operation_result& r );
          const vector<optional< operation_history_object > >& get_applied_operations()const;
 
-         string to_pretty_string( const asset& a )const;
+         string to_pretty_string(const asset& a) const;
+         string to_pretty_string(const asset_reserved& a) const;
 
          /**
           *  This signal is emitted after all operations and virtual operation for a

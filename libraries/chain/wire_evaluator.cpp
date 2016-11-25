@@ -63,7 +63,7 @@ namespace graphene { namespace chain {
     // Create the holder object and return its ID:
     return d.create<wire_out_holder_object>([&](wire_out_holder_object& w){
       w.account = op.account;
-      w.asset_to_wire = op.asset_to_wire;
+      w.set_balance(op.asset_to_wire);
     }).id;
 
   } FC_CAPTURE_AND_RETHROW( (op) ) }
@@ -94,7 +94,7 @@ namespace graphene { namespace chain {
     FC_ASSERT( op.wire_out_handler == d.get_chain_authorities().wire_out_handler );
 
     const auto& holder = op.holder_object_id(d);
-    const auto& asset_obj = holder.asset_to_wire.asset_id(d);
+    const auto& asset_obj = holder.asset_id(d);
     const auto& dyn_data_obj = asset_obj.dynamic_asset_data_id(d);
     const auto& balance_obj = d.get_balance_object(holder.account, d.get_web_asset_id());
 
@@ -110,12 +110,12 @@ namespace graphene { namespace chain {
     auto& d = db();
     // Revert to the before state: increase the balance amount.
     d.modify(*balance_obj_, [&](account_balance_object& b){
-     b.balance += holder_->asset_to_wire.amount;
+     b.balance += holder_->amount;
      // TODO: The spending limit should not be restored, it may become negative!
     });
     // Expand the supply:
     d.modify(*asset_dyn_data_, [&]( asset_dynamic_data_object& data){
-      data.current_supply += holder_->asset_to_wire.amount;
+      data.current_supply += holder_->amount;
     });
     // Free the holder object:
     d.remove(*holder_);

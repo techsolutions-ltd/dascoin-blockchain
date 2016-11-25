@@ -36,6 +36,11 @@ using namespace graphene::chain::test;
 
 namespace graphene { namespace chain {
 
+asset database_fixture::web_asset(share_type amount)
+{
+  return asset(amount, get_web_asset_id());
+}
+
 const issue_asset_request_object* database_fixture::issue_webasset(account_id_type receiver_id, share_type cash,
                                                                    share_type reserved)
 { try {
@@ -136,21 +141,11 @@ vector<issue_asset_request_object> database_fixture::get_asset_request_objects(a
 
 } FC_LOG_AND_RETHROW() }
 
-const wire_out_holder_object& database_fixture::wire_out(account_id_type account_id, asset asset_to_wire)
+share_type database_fixture::get_asset_current_supply(asset_id_type asset_id)
 { try {
 
-  wire_out_operation op;
-  op.account = account_id;
-  op.asset_to_wire = asset_to_wire;
-
-  signed_transaction tx;
-  set_expiration(db, tx);
-  tx.operations.push_back(op);
-  tx.validate();
-  processed_transaction ptx = db.push_transaction(tx, ~0);
-  tx.clear();
-
-  return db.get<wire_out_holder_object>(ptx.operation_results[0].get<object_id_type>());
+  auto asset = db.get<asset_object>(asset_id);
+  return asset.dynamic_asset_data_id(db).current_supply;
 
 } FC_LOG_AND_RETHROW() }
 

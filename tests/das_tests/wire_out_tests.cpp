@@ -30,26 +30,57 @@ BOOST_AUTO_TEST_CASE( wire_out_web_asset_test )
   {
     share_type cash, reserved;
     std::tie(cash, reserved) = get_web_asset_amounts(account.id);
-    bool amount_ok = (cash == expected_cash && reserved == expected_reserved);
-    FC_ASSERT( amount_ok, "On account '${n}': balance = (${c}/${r}), expected = (${ec}/${er})",
-              ("n", account.name)("c", cash)("r", reserved)("ec", expected_cash)("er", expected_reserved));
+
+    BOOST_CHECK_EQUAL( cash.value, expected_cash.value );
+    BOOST_CHECK_EQUAL( reserved.value, expected_reserved.value );
   };
 
   // Reject, insuficcient balance:
-  GRAPHENE_REQUIRE_THROW( wire_out(wallet_id, asset(10000, get_web_asset_id())), fc::exception );
+  GRAPHENE_REQUIRE_THROW( wire_out(wallet_id, web_asset(10000)), fc::exception );
 
   issue_webasset(wallet_id, 15000, 15000);
   generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
 
   // Reject, daily limit breached:
-  GRAPHENE_REQUIRE_THROW( wire_out(wallet_id, asset(10000, get_web_asset_id())), fc::exception );
+  GRAPHENE_REQUIRE_THROW( wire_out(wallet_id, web_asset(10000)), fc::exception );
 
-  update_pi_limits(wallet_id, 99, {15000,15000,15000});
-  wire_out(wallet_id, asset(10000, get_web_asset_id()));
+  // Update the limits:
+  update_pi_limits(wallet_id, 99, {20000,20000,20000});
+
+  // Wire out 10K:
+  wire_out(wallet_id, web_asset(10000));
+
+  // Check if the balance has been reduced:
   check_balances(wallet, 5000, 15000);
 
-  // Check if the wire out object exists:
+  // Check if the holder object exists:
+  auto holders = get_wire_out_holders(wallet_id, {get_web_asset_id()});
+  BOOST_CHECK_EQUAL(holders.size(), 1);
 
+  // Wire out 5K:
+  wire_out(wallet_id, web_asset(5000));
+
+  // Check the balances are zero:
+  check_balances(wallet, 0, 15000);
+
+  // There should be two holders now:
+  holders = get_wire_out_holders(wallet_id, {get_web_asset_id()});
+  BOOST_CHECK_EQUAL(holders.size(), 2);
+
+  // Deny the first request:
+  wire_out_reject(holders[0].id);
+
+  // Check if the wire out holder was deleted:
+  BOOST_CHECK_EQUAL( get_wire_out_holders(wallet_id, {get_web_asset_id()}).size(), 1 );
+
+  // 10K should return to the wallet:
+  check_balances(wallet, 10000, 15000);
+
+  // Complete a wire out transaction:
+  wire_out_complete(holders[1].id);
+
+  // Check if the wire out holder object was deleted:
+  BOOST_CHECK_EQUAL( get_wire_out_holders(wallet_id, {get_web_asset_id()}).size(), 0 );
 
 } FC_LOG_AND_RETHROW() }
 

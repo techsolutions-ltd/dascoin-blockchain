@@ -356,6 +356,7 @@ struct database_fixture {
    const account_balance_object& get_account_balance_object(account_id_type account_id, asset_id_type aset_id);
 
    // fix_web_assets.cpp
+   asset web_asset(share_type amount);
    const issue_asset_request_object* issue_webasset(account_id_type receiver_id, share_type cash, share_type reserved);
    void deny_issue_request(issue_asset_request_id_type request_id);
    std::pair<share_type, share_type> get_web_asset_amounts(account_id_type owner_id);
@@ -365,10 +366,18 @@ struct database_fixture {
    void transfer_webasset_wallet_to_vault(account_id_type walelt_id, account_id_type vault_id,
                                           std::pair<share_type, share_type> amounts);
    vector<issue_asset_request_object> get_asset_request_objects(account_id_type account_id);
-   const wire_out_holder_object& wire_out(account_id_type account_id_type, asset amount);
+   share_type get_asset_current_supply(asset_id_type asset_id);
+   share_type get_web_asset_current_supply() { return get_asset_current_supply(get_web_asset_id()); }
 
    // fix_pi_limits.cpp
    void update_pi_limits(account_id_type account_id, uint8_t level, limits_type new_limits);
+
+   // fix_wire_out.cpp
+   vector<wire_out_holder_object> get_wire_out_holders(account_id_type account_id,
+                                                       const flat_set<asset_id_type>& asset_ids) const;
+   const wire_out_holder_object& wire_out(account_id_type account_id_type, asset amount);
+   void wire_out_complete(wire_out_holder_id_type holder_id);
+   void wire_out_reject(wire_out_holder_id_type holder_id);
 
 };
 

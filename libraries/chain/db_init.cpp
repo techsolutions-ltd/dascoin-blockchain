@@ -207,6 +207,7 @@ void database::initialize_evaluators()
    register_evaluator<asset_deny_issue_request_evaluator>();
    register_evaluator<wire_out_evaluator>();
    register_evaluator<wire_out_complete_evaluator>();
+   register_evaluator<wire_out_reject_evaluator>();
    register_evaluator<transfer_vault_to_wallet_evaluator>();
    register_evaluator<transfer_wallet_to_vault_evaluator>();
 }

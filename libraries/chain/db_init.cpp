@@ -195,6 +195,7 @@ void database::initialize_evaluators()
    register_evaluator<committee_member_update_account_registrar_evaluator>();
    register_evaluator<committee_member_update_webasset_issuer_evaluator>();
    register_evaluator<committee_member_update_webasset_authenticator_evaluator>();
+   register_evaluator<committee_member_update_wire_out_handler_evaluator>();
    register_evaluator<license_type_create_evaluator>();
    register_evaluator<license_type_edit_evaluator>();
    register_evaluator<license_type_delete_evaluator>();

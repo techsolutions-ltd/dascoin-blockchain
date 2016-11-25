@@ -108,4 +108,14 @@ namespace graphene { namespace chain {
       void_result do_apply( const operation_type& o );
    };
 
+   class committee_member_update_wire_out_handler_evaluator
+      : public evaluator<committee_member_update_wire_out_handler_evaluator>
+   {
+   public:
+      typedef committee_member_update_wire_out_handler_operation operation_type;
+
+      void_result do_evaluate( const operation_type& o );
+      void_result do_apply( const operation_type& o );
+   };
+
 } } // graphene::chain

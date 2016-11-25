@@ -169,7 +169,7 @@ namespace graphene { namespace chain {
      * @brief Used by commitee members to update web asset issuer.
      * @ingroup operations
      *
-     * This operation allows the committee members to update the web asset authorities in the global properties
+     * This operation allows the committee members to update the web asset issuer in the global properties
      * object on the blockchain. This authority handles issuing of web assets to accounts.
      *
      * This operation may only be used in a proposed transaction, and a proposed transaction which contains this
@@ -193,8 +193,8 @@ namespace graphene { namespace chain {
      * @brief Used by commitee members to update web asset authenticator.
      * @ingroup operations
      *
-     * This operation allows the committee members to update the web asset authorities in the global properties
-     * object on the blockchain. This authority has to veridy asset issue requests that the web asset issuer has
+     * This operation allows the committee members to update the web asset authenticator in the global properties
+     * object on the blockchain. This authority has to verify asset issue requests that the web asset issuer has
      * made.
      *
      * This operation may only be used in a proposed transaction, and a proposed transaction which contains this
@@ -207,6 +207,31 @@ namespace graphene { namespace chain {
       asset fee;
 
       account_id_type authenticator;
+
+      account_id_type committee_member_account;  // The committee member that is proposing the change.
+
+      account_id_type fee_payer()const { return committee_member_account; }
+      void validate()const;
+    };
+
+    /**
+     * @brief Used by commitee members to update the wire out handler.
+     * @ingroup operations
+     *
+     * This operation allows the committee members to update the wire out handler in the global properties
+     * object on the blockchain. This authority has to verify wire out holder objects so that they can be either
+     * processed and removed from the blockchain or returned to the user's balance.
+     *
+     * This operation may only be used in a proposed transaction, and a proposed transaction which contains this
+     * operation must have a review period specified in the current global parameters before it may be accepted.
+     */
+    struct committee_member_update_wire_out_handler_operation : public base_operation
+    {
+      struct fee_parameters_type { uint64_t fee = GRAPHENE_BLOCKCHAIN_PRECISION; };  // TODO: zero the fee?
+
+      asset fee;
+
+      account_id_type wire_out_handler;
 
       account_id_type committee_member_account;  // The committee member that is proposing the change.
 
@@ -250,6 +275,9 @@ FC_REFLECT( graphene::chain::committee_member_update_webasset_authenticator_oper
             (fee)
           )
 
+FC_REFLECT( graphene::chain::committee_member_update_wire_out_handler_operation::fee_parameters_type,
+            (fee)
+          )
 
 FC_REFLECT( graphene::chain::committee_member_create_operation,
             (fee)
@@ -296,5 +324,11 @@ FC_REFLECT( graphene::chain::committee_member_update_webasset_issuer_operation,
 FC_REFLECT( graphene::chain::committee_member_update_webasset_authenticator_operation,
             (fee)
             (authenticator)
+            (committee_member_account)
+          );
+
+FC_REFLECT( graphene::chain::committee_member_update_wire_out_handler_operation,
+            (fee)
+            (wire_out_handler)
             (committee_member_account)
           );

@@ -69,4 +69,9 @@ void committee_member_update_webasset_authenticator_operation::validate() const
   FC_ASSERT( fee.amount >= 0 );
 }
 
+void committee_member_update_wire_out_handler_operation::validate() const
+{
+  FC_ASSERT( fee.amount >= 0 );
+}
+
 } } // graphene::chain

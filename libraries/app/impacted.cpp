@@ -177,6 +177,11 @@ struct get_impacted_account_visitor
       _impacted.insert(op.authenticator);
    }
 
+   void operator()( const committee_member_update_wire_out_handler_operation& op )
+   {
+      _impacted.insert(op.wire_out_handler);
+   }
+
    void operator()( const license_type_create_operation& op ) {}
    void operator()( const license_type_edit_operation& op ) {}
    void operator()( const license_type_delete_operation& op ) {}

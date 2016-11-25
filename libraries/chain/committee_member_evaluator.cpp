@@ -172,4 +172,22 @@ void_result committee_member_update_webasset_authenticator_evaluator::do_apply(c
    return {};
 } FC_CAPTURE_AND_RETHROW( (o) )}
 
+void_result committee_member_update_wire_out_handler_evaluator::do_evaluate(const committee_member_update_wire_out_handler_operation& o)
+{ try {
+
+   FC_ASSERT( db().get(o.wire_out_handler).is_lifetime_member() );
+
+   return {};
+} FC_CAPTURE_AND_RETHROW( (o) )}
+
+void_result committee_member_update_wire_out_handler_evaluator::do_apply(const committee_member_update_wire_out_handler_operation& o)
+{ try {
+
+   db().modify(db().get_global_properties(), [&o](global_property_object& p) {
+      p.authorities.wire_out_handler = o.wire_out_handler;
+   });
+
+   return {};
+} FC_CAPTURE_AND_RETHROW( (o) )}
+
 } } // graphene::chain

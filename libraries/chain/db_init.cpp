@@ -34,6 +34,7 @@
 #include <graphene/chain/chain_property_object.hpp>
 #include <graphene/chain/committee_member_object.hpp>
 #include <graphene/chain/confidential_object.hpp>
+#include <graphene/chain/cycle_objects.hpp>
 #include <graphene/chain/fba_object.hpp>
 #include <graphene/chain/global_property_object.hpp>
 #include <graphene/chain/license_objects.hpp>  // TODO: move!
@@ -145,6 +146,9 @@ const uint8_t issue_asset_request_object::type_id;
 
 const uint8_t wire_out_holder_object::space_id;
 const uint8_t wire_out_holder_object::type_id;
+
+const uint8_t cycle_issue_request_object::space_id;
+const uint8_t cycle_issue_request_object::type_id;
 
 void database::initialize_evaluators()
 {
@@ -265,6 +269,8 @@ void database::initialize_indexes()
    add_index<primary_index<issue_asset_request_index>>();
 
    add_index<primary_index<wire_out_holder_index>>();
+
+   add_index<primary_index<cycle_issue_request_index>>();
 }
 
 void database::init_genesis(const genesis_state_type& genesis_state)

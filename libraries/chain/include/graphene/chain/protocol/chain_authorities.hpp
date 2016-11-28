@@ -16,6 +16,9 @@ namespace graphene { namespace chain {
     // Webasset related:
     account_id_type webasset_issuer;
     account_id_type webasset_authenticator;
+    // Cycle related:
+    account_id_type cycle_issuer;
+    account_id_type cycle_authenticator;
     // Registration of accounts:
     account_id_type registrar;
     // Validation of personal information:
@@ -31,6 +34,8 @@ FC_REFLECT( graphene::chain::chain_authorities,
             (license_authenticator)
             (webasset_issuer)
             (webasset_authenticator)
+            (cycle_issuer)
+            (cycle_authenticator)
             (registrar)
             (pi_validator)
             (wire_out_handler)

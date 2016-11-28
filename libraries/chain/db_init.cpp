@@ -786,6 +786,21 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       create_license_type("president-charter", 25000, 3, CYCLE_POLICY_CHARTER_MASK);
    }
 
+   // Initialize cycle issuing:
+   {
+      account_id_type issuer = get_account_id(genesis_state.initial_cycle_issuing_authority.owner_name);
+      account_id_type authenticator = get_account_id(genesis_state.initial_cycle_authentication_authority.owner_name);
+
+      committee_member_update_cycle_issuer_operation issuer_op;
+      issuer_op.cycle_issuer = issuer;
+      issuer_op.committee_member_account = GRAPHENE_COMMITTEE_ACCOUNT;
+      apply_operation(genesis_eval_state, std::move(issuer_op));
+
+      committee_member_update_cycle_authenticator_operation auth_op;
+      auth_op.cycle_authenticator = authenticator;
+      apply_operation(genesis_eval_state, std::move(auth_op));
+   }
+
    // Initialize account registration:
    {
       ilog("Registrar name: ${name}", ("name", genesis_state.initial_registrar.owner_name));

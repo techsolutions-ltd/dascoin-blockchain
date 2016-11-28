@@ -282,6 +282,14 @@ struct get_impacted_account_visitor
       _impacted.insert( op.to_vault );
    }
 
+   void operator()( const cycle_issue_request_operation& op ) {}
+   void operator()( const cycle_issue_deny_operation& op ) {}
+
+   void operator()( const cycle_issue_complete_operation& op )
+   {
+      _impacted.insert( op.account );
+   }
+
 };
 
 void operation_get_impacted_accounts( const operation& op, flat_set<account_id_type>& result )

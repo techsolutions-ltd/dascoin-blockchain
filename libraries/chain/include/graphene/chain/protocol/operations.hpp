@@ -30,6 +30,7 @@
 #include <graphene/chain/protocol/custom.hpp>
 #include <graphene/chain/protocol/committee_member.hpp>
 #include <graphene/chain/protocol/confidential.hpp>
+#include <graphene/chain/protocol/cycle.hpp>
 #include <graphene/chain/protocol/fba.hpp>
 #include <graphene/chain/protocol/license.hpp>
 #include <graphene/chain/protocol/market.hpp>
@@ -117,7 +118,10 @@ namespace graphene { namespace chain {
             wire_out_complete_operation,
             wire_out_reject_operation,
             transfer_vault_to_wallet_operation,
-            transfer_wallet_to_vault_operation
+            transfer_wallet_to_vault_operation,
+            cycle_issue_request_operation,
+            cycle_issue_deny_operation,
+            cycle_issue_complete_operation  // VIRTUAL
          > operation;
 
    /// @} // operations group

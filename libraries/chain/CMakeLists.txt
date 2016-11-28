@@ -60,6 +60,7 @@ add_library( graphene_chain
              protocol/license.cpp
              protocol/personal_identity.cpp
              protocol/wire.cpp
+             protocol/cycle.cpp
 
              genesis_state.cpp
              get_config.cpp

@@ -117,6 +117,7 @@ void database_fixture::transfer_webasset_wallet_to_vault(account_id_type wallet_
 
 void database_fixture::deny_issue_request(issue_asset_request_id_type request_id)
 { try {
+
   asset_deny_issue_request_operation op;
   op.authenticator = get_webasset_authenticator_id();
   op.request = request_id;

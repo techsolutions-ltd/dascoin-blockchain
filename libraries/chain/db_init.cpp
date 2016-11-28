@@ -57,6 +57,7 @@
 #include <graphene/chain/committee_member_evaluator.hpp>
 #include <graphene/chain/confidential_evaluator.hpp>
 #include <graphene/chain/custom_evaluator.hpp>
+#include <graphene/chain/cycle_evaluator.hpp>
 #include <graphene/chain/license_evaluator.hpp>
 #include <graphene/chain/market_evaluator.hpp>
 #include <graphene/chain/personal_identity_evaluator.hpp>
@@ -215,6 +216,8 @@ void database::initialize_evaluators()
    register_evaluator<wire_out_reject_evaluator>();
    register_evaluator<transfer_vault_to_wallet_evaluator>();
    register_evaluator<transfer_wallet_to_vault_evaluator>();
+   register_evaluator<cycle_issue_request_evaluator>();
+   register_evaluator<cycle_issue_deny_evaluator>();
 }
 
 void database::initialize_indexes()

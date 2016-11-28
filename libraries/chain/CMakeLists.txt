@@ -100,6 +100,7 @@ add_library( graphene_chain
              cycle_objects.cpp
              wire_object.cpp
              wire_evaluator.cpp
+             cycle_evaluator.cpp
 
              ${HEADERS}
              "${CMAKE_CURRENT_BINARY_DIR}/include/graphene/chain/hardfork.hpp"

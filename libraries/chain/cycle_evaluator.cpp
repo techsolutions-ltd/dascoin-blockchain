@@ -23,6 +23,14 @@ void_result cycle_issue_request_evaluator::do_evaluate(const cycle_issue_request
              ("chain_issuer", d.get_chain_authorities().cycle_issuer(d).name)
            );
 
+  // Account must exist:
+  const auto& account_obj = op.account(d);
+
+  // Only vault accounts can receive cycles:
+  FC_ASSERT( account_obj.is_vault(), "Account '${name}' must be a vault account",
+             ("name", account_obj.name)
+           );
+
   return {};
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }

@@ -102,6 +102,8 @@ namespace graphene { namespace chain {
             committee_member_update_webasset_issuer_operation,
             committee_member_update_webasset_authenticator_operation,
             committee_member_update_wire_out_handler_operation,
+            committee_member_update_cycle_issuer_operation,
+            committee_member_update_cycle_authenticator_operation,
             license_type_create_operation,
             license_type_edit_operation,
             license_type_delete_operation,

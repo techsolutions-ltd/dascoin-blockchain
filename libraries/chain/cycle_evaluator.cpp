@@ -37,13 +37,15 @@ void_result cycle_issue_request_evaluator::do_evaluate(const cycle_issue_request
 
 object_id_type cycle_issue_request_evaluator::do_apply(const cycle_issue_request_operation& op)
 { try {
+  auto& d = db();
+  const auto& params = d.get_global_properties().parameters;
 
-  return db().create<cycle_issue_request_object>([&]( cycle_issue_request_object& req )
+  return d.create<cycle_issue_request_object>([&]( cycle_issue_request_object& req )
   {
     req.cycle_issuer = op.cycle_issuer;
     req.account = op.account;
     req.amount = op.amount;
-    req.expiration = db().head_block_time() + fc::hours(24);  // TODO: add this to chain parameters.
+    req.expiration = d.head_block_time() + fc::seconds(params.cycle_request_expiration_time_seconds);
   }).id;
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }

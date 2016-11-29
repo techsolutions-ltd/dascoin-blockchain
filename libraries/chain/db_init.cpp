@@ -34,6 +34,7 @@
 #include <graphene/chain/chain_property_object.hpp>
 #include <graphene/chain/committee_member_object.hpp>
 #include <graphene/chain/confidential_object.hpp>
+#include <graphene/chain/cycle_objects.hpp>
 #include <graphene/chain/fba_object.hpp>
 #include <graphene/chain/global_property_object.hpp>
 #include <graphene/chain/license_objects.hpp>  // TODO: move!
@@ -56,6 +57,7 @@
 #include <graphene/chain/committee_member_evaluator.hpp>
 #include <graphene/chain/confidential_evaluator.hpp>
 #include <graphene/chain/custom_evaluator.hpp>
+#include <graphene/chain/cycle_evaluator.hpp>
 #include <graphene/chain/license_evaluator.hpp>
 #include <graphene/chain/market_evaluator.hpp>
 #include <graphene/chain/personal_identity_evaluator.hpp>
@@ -146,6 +148,9 @@ const uint8_t issue_asset_request_object::type_id;
 const uint8_t wire_out_holder_object::space_id;
 const uint8_t wire_out_holder_object::type_id;
 
+const uint8_t cycle_issue_request_object::space_id;
+const uint8_t cycle_issue_request_object::type_id;
+
 void database::initialize_evaluators()
 {
    _operation_evaluators.resize(255);
@@ -193,6 +198,8 @@ void database::initialize_evaluators()
    register_evaluator<committee_member_update_license_issuer_evaluator>();
    register_evaluator<committee_member_update_license_authenticator_evaluator>();
    register_evaluator<committee_member_update_account_registrar_evaluator>();
+   register_evaluator<committee_member_update_cycle_issuer_evaluator>();
+   register_evaluator<committee_member_update_cycle_authenticator_evaluator>();
    register_evaluator<committee_member_update_webasset_issuer_evaluator>();
    register_evaluator<committee_member_update_webasset_authenticator_evaluator>();
    register_evaluator<committee_member_update_wire_out_handler_evaluator>();
@@ -211,6 +218,8 @@ void database::initialize_evaluators()
    register_evaluator<wire_out_reject_evaluator>();
    register_evaluator<transfer_vault_to_wallet_evaluator>();
    register_evaluator<transfer_wallet_to_vault_evaluator>();
+   register_evaluator<cycle_issue_request_evaluator>();
+   register_evaluator<cycle_issue_deny_evaluator>();
 }
 
 void database::initialize_indexes()
@@ -265,6 +274,8 @@ void database::initialize_indexes()
    add_index<primary_index<issue_asset_request_index>>();
 
    add_index<primary_index<wire_out_holder_index>>();
+
+   add_index<primary_index<cycle_issue_request_index>>();
 }
 
 void database::init_genesis(const genesis_state_type& genesis_state)
@@ -775,6 +786,21 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       create_license_type("pro-charter", 2000, 1, CYCLE_POLICY_CHARTER_MASK);
       create_license_type("executive-charter", 5000, 2, CYCLE_POLICY_CHARTER_MASK);
       create_license_type("president-charter", 25000, 3, CYCLE_POLICY_CHARTER_MASK);
+   }
+
+   // Initialize cycle issuing:
+   {
+      account_id_type issuer = get_account_id(genesis_state.initial_cycle_issuing_authority.owner_name);
+      account_id_type authenticator = get_account_id(genesis_state.initial_cycle_authentication_authority.owner_name);
+
+      committee_member_update_cycle_issuer_operation issuer_op;
+      issuer_op.cycle_issuer = issuer;
+      issuer_op.committee_member_account = GRAPHENE_COMMITTEE_ACCOUNT;
+      apply_operation(genesis_eval_state, std::move(issuer_op));
+
+      committee_member_update_cycle_authenticator_operation auth_op;
+      auth_op.cycle_authenticator = authenticator;
+      apply_operation(genesis_eval_state, std::move(auth_op));
    }
 
    // Initialize account registration:

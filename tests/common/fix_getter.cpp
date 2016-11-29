@@ -61,6 +61,16 @@ account_id_type database_fixture::get_webasset_authenticator_id() const
   return db.get_global_properties().authorities.webasset_authenticator;
 }
 
+account_id_type database_fixture::get_cycle_issuer_id() const
+{
+  return db.get_global_properties().authorities.cycle_issuer;
+}
+
+account_id_type database_fixture::get_cycle_authenticator_id() const
+{
+  return db.get_global_properties().authorities.cycle_authenticator;
+}
+
 account_id_type database_fixture::get_registrar_id() const
 {
   return db.get_global_properties().authorities.registrar;

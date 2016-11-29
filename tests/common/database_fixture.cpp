@@ -115,6 +115,22 @@ void database_fixture::init_genesis_state()
                                                true);
    genesis_state.initial_webasset_authentication_authority = {"sys.webasset-authenticator"};
 
+   // Cycle issuer:
+   auto cycle_issuer_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.cycle-issuer")));
+   genesis_state.initial_accounts.emplace_back("sys.cycle-issuer",
+                                               cycle_issuer_key.get_public_key(),
+                                               cycle_issuer_key.get_public_key(),
+                                               true);
+   genesis_state.initial_cycle_issuing_authority = {"sys.cycle-issuer"};
+
+   // Cycle authenticator:
+   auto cycle_auth_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.cycle-authenticator")));
+   genesis_state.initial_accounts.emplace_back("sys.cycle-authenticator",
+                                               cycle_auth_key.get_public_key(),
+                                               cycle_auth_key.get_public_key(),
+                                               true);
+   genesis_state.initial_cycle_authentication_authority = {"sys.cycle-authenticator"};
+
    // Account registrar:
    auto faucet_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.registrar")));
    genesis_state.initial_accounts.emplace_back("sys.registrar",
@@ -1257,16 +1273,6 @@ const license_request_object* database_fixture::issue_license_to_vault_account(
    trx.operations.clear();
 
    return db.find<license_request_object>( ptx.operation_results[0].get<object_id_type>() );
-}
-
-share_type database_fixture::get_cycle_balance(const account_id_type owner)const
-{
-   return db.get_cycle_balance(owner);
-}
-
-void database_fixture::adjust_cycles(const account_id_type id, const share_type amount)
-{
-   db.adjust_cycle_balance(id, amount, {});
 }
 
 namespace test {

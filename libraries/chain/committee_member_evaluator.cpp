@@ -190,4 +190,40 @@ void_result committee_member_update_wire_out_handler_evaluator::do_apply(const c
    return {};
 } FC_CAPTURE_AND_RETHROW( (o) )}
 
+void_result committee_member_update_cycle_issuer_evaluator::do_evaluate(const committee_member_update_cycle_issuer_operation& o)
+{ try {
+
+   FC_ASSERT( db().get(o.cycle_issuer).is_lifetime_member() );
+
+   return {};
+} FC_CAPTURE_AND_RETHROW( (o) )}
+
+void_result committee_member_update_cycle_issuer_evaluator::do_apply(const committee_member_update_cycle_issuer_operation& o)
+{ try {
+
+   db().modify(db().get_global_properties(), [&o](global_property_object& p) {
+      p.authorities.cycle_issuer = o.cycle_issuer;
+   });
+
+   return {};
+} FC_CAPTURE_AND_RETHROW( (o) )}
+
+void_result committee_member_update_cycle_authenticator_evaluator::do_evaluate(const committee_member_update_cycle_authenticator_operation& o)
+{ try {
+
+   FC_ASSERT( db().get(o.cycle_authenticator).is_lifetime_member() );
+
+   return {};
+} FC_CAPTURE_AND_RETHROW( (o) )}
+
+void_result committee_member_update_cycle_authenticator_evaluator::do_apply(const committee_member_update_cycle_authenticator_operation& o)
+{ try {
+
+   db().modify(db().get_global_properties(), [&o](global_property_object& p) {
+      p.authorities.cycle_authenticator = o.cycle_authenticator;
+   });
+
+   return {};
+} FC_CAPTURE_AND_RETHROW( (o) )}
+
 } } // graphene::chain

@@ -239,6 +239,54 @@ namespace graphene { namespace chain {
       void validate()const;
     };
 
+    /**
+     * @brief Used by commitee members to update the cycle issuer.
+     * @ingroup operations
+     *
+     * This operation allows the committee members to update the cycle issuer in the global properties
+     * object on the blockchain. This authority can create and issue request for cycles for a certain account.
+     *
+     * This operation may only be used in a proposed transaction, and a proposed transaction which contains this
+     * operation must have a review period specified in the current global parameters before it may be accepted.
+     */
+    struct committee_member_update_cycle_issuer_operation : public base_operation
+    {
+      struct fee_parameters_type { uint64_t fee = GRAPHENE_BLOCKCHAIN_PRECISION; };  // TODO: zero the fee?
+
+      asset fee;
+
+      account_id_type cycle_issuer;
+
+      account_id_type committee_member_account;  // The committee member that is proposing the change.
+
+      account_id_type fee_payer()const { return committee_member_account; }
+      void validate()const;
+    };
+
+    /**
+     * @brief Used by commitee members to update the cycle authenticator.
+     * @ingroup operations
+     *
+     * This operation allows the committee members to update the cycle authenticator in the global properties
+     * object on the blockchain. This authority can deny the cycle issue request for a given user.
+     *
+     * This operation may only be used in a proposed transaction, and a proposed transaction which contains this
+     * operation must have a review period specified in the current global parameters before it may be accepted.
+     */
+    struct committee_member_update_cycle_authenticator_operation : public base_operation
+    {
+      struct fee_parameters_type { uint64_t fee = GRAPHENE_BLOCKCHAIN_PRECISION; };  // TODO: zero the fee?
+
+      asset fee;
+
+      account_id_type cycle_authenticator;
+
+      account_id_type committee_member_account;  // The committee member that is proposing the change.
+
+      account_id_type fee_payer()const { return committee_member_account; }
+      void validate()const;
+    };
+
    /// TODO: committee_member_resign_operation : public base_operation
 
 } } // graphene::chain
@@ -276,6 +324,14 @@ FC_REFLECT( graphene::chain::committee_member_update_webasset_authenticator_oper
           )
 
 FC_REFLECT( graphene::chain::committee_member_update_wire_out_handler_operation::fee_parameters_type,
+            (fee)
+          )
+
+FC_REFLECT( graphene::chain::committee_member_update_cycle_issuer_operation::fee_parameters_type,
+            (fee)
+          )
+
+FC_REFLECT( graphene::chain::committee_member_update_cycle_authenticator_operation::fee_parameters_type,
             (fee)
           )
 
@@ -330,5 +386,17 @@ FC_REFLECT( graphene::chain::committee_member_update_webasset_authenticator_oper
 FC_REFLECT( graphene::chain::committee_member_update_wire_out_handler_operation,
             (fee)
             (wire_out_handler)
+            (committee_member_account)
+          );
+
+FC_REFLECT( graphene::chain::committee_member_update_cycle_issuer_operation,
+            (fee)
+            (cycle_issuer)
+            (committee_member_account)
+          );
+
+FC_REFLECT( graphene::chain::committee_member_update_cycle_authenticator_operation,
+            (fee)
+            (cycle_authenticator)
             (committee_member_account)
           );

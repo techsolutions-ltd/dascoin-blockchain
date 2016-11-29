@@ -336,8 +336,12 @@ struct database_fixture {
       const license_type_id_type license_id,
       optional<frequency_type> account_frequency = optional<frequency_type>());
 
-   share_type get_cycle_balance(const account_id_type owner)const;
+   // fix_cyxles.cpp
+   share_type get_cycle_balance(const account_id_type owner) const;
    void adjust_cycles(const account_id_type id, const share_type amount);
+   const cycle_issue_request_object* issue_cycles(account_id_type receiver_id, share_type amount);
+   void deny_issue_cycles(cycle_issue_request_id_type request_id);
+   vector<cycle_issue_request_object> get_cycle_issue_request_objects_by_expiration(account_id_type account_id) const;
 
    // fix_getter.cpp
    const global_property_object& get_global_properties() const;
@@ -346,6 +350,8 @@ struct database_fixture {
    account_id_type get_license_authenticator_id() const;
    account_id_type get_webasset_issuer_id() const;
    account_id_type get_webasset_authenticator_id() const;
+   account_id_type get_cycle_issuer_id() const;
+   account_id_type get_cycle_authenticator_id() const;
    account_id_type get_registrar_id() const;
    account_id_type get_pi_validator_id() const;
    account_id_type get_wire_out_handler_id() const;

@@ -499,7 +499,7 @@ void database::assign_licenses()
 
 void database::distribute_issue_requested_assets()
 { try {
-  transaction_evaluation_state assign_context(this);
+  transaction_evaluation_state distribute_context(this);
   const auto& idx = get_index_type<issue_asset_request_index>().indices().get<by_expiration>();
 
   while (!idx.empty() && idx.begin()->expiration <= head_block_time())
@@ -515,6 +515,26 @@ void database::distribute_issue_requested_assets()
     asset_distribute_completed_request_operation vop;
     vop.issuer = req.issuer;
     vop.receiver = req.receiver;
+    vop.amount = req.amount;
+    push_applied_operation(vop);
+
+    remove(req);
+  }
+} FC_CAPTURE_AND_RETHROW() }
+
+void database::distribute_issue_requested_cycles()
+{ try {
+  transaction_evaluation_state distribute_context(this);
+  const auto& idx = get_index_type<cycle_issue_request_index>().indices().get<by_expiration>();
+
+  while (!idx.empty() && idx.begin()->expiration <= head_block_time())
+  {
+    const auto& req = *idx.begin();
+    adjust_cycle_balance(req.account, req.amount);
+
+    cycle_issue_complete_operation vop;
+    vop.cycle_authenticator = get_chain_authorities().cycle_authenticator;
+    vop.account = req.account;
     vop.amount = req.amount;
     push_applied_operation(vop);
 

@@ -150,6 +150,22 @@ namespace detail {
                                                   true);
       initial_state.initial_webasset_authentication_authority = {"sys.webasset-authenticator"};
 
+      // Cycle issuer:
+      auto cycle_issuer_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.cycle-issuer")));
+      initial_state.initial_accounts.emplace_back("sys.cycle-issuer",
+                                                  cycle_issuer_key.get_public_key(),
+                                                  cycle_issuer_key.get_public_key(),
+                                                  true);
+      initial_state.initial_cycle_issuing_authority = {"sys.cycle-issuer"};
+
+      // Cycle authenticator:
+      auto cycle_auth_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.cycle-authenticator")));
+      initial_state.initial_accounts.emplace_back("sys.cycle-authenticator",
+                                                  cycle_auth_key.get_public_key(),
+                                                  cycle_auth_key.get_public_key(),
+                                                  true);
+      initial_state.initial_cycle_authentication_authority = {"sys.cycle-authenticator"};
+
       // Account registrar:
       auto faucet_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.registrar")));
       initial_state.initial_accounts.emplace_back("sys.registrar",

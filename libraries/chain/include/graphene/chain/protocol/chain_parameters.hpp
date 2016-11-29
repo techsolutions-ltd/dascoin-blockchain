@@ -73,7 +73,11 @@ namespace graphene { namespace chain {
       share_type              minimum_transfer_limit = DASCOIN_DEFAULT_MINIMUM_TRANSFER_LIMIT;
       share_type              maximum_transfer_limit = DASCOIN_DEFAULT_MAXIMUM_TRANSFER_LIMIT;
       uint32_t                limit_interval_elapse_time_seconds = DASCOIN_DEFAULT_LIMIT_INTERVAL_ELAPSE_TIME_SECONDS;
+      uint32_t                license_expiration_time_seconds = DASCOIN_DEFAULT_LICENSE_EXPIRATION_TIME_SECONDS;
+      uint32_t                web_asset_request_expiration_time_seconds = DASCOIN_DEFAULT_WEB_ASSET_REQUEST_EXPIRATION_TIME_SECONDS;
+      uint32_t                cycle_request_expiration_time_seconds = DASCOIN_DEFAULT_CYCLE_REQUEST_EXPIRATION_TIME_SECONDS;
       bool                    enable_cycle_issuing = true;
+
       extensions_type         extensions;
 
       /** defined in fee_schedule.cpp */
@@ -114,6 +118,10 @@ FC_REFLECT( graphene::chain::chain_parameters,
             (cycle_upgrade_maintenance_int_count)
             (minimum_transfer_limit)
             (maximum_transfer_limit)
+            (limit_interval_elapse_time_seconds)
+            (license_expiration_time_seconds)
+            (web_asset_request_expiration_time_seconds)
+            (cycle_request_expiration_time_seconds)
             (enable_cycle_issuing)
             (extensions)
           )

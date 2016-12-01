@@ -125,12 +125,14 @@ void_result license_request_evaluator::do_evaluate(const license_request_operati
 
 object_id_type license_request_evaluator::do_apply(const license_request_operation& op)
 { try {
+  auto& d = db();
+  const auto& params = d.get_global_properties().parameters;
 
-  return db().create<license_request_object>([&] (license_request_object &o) {
+  return d.create<license_request_object>([&] (license_request_object &o) {
     o.license_issuing_account = op.license_issuing_account;
     o.account = op.account;
     o.license = op.license;
-    o.expiration = fc::time_point::now() + fc::minutes(2);  // TODO: Final value here.
+    o.expiration = d.head_block_time() + fc::seconds(params.license_expiration_time_seconds);
   }).id;
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }

@@ -599,13 +599,16 @@ void_result asset_create_issue_request_evaluator::do_evaluate(const asset_create
 
 object_id_type asset_create_issue_request_evaluator::do_apply(const asset_create_issue_request_operation& o)
 { try {
-   return db().create<issue_asset_request_object>([&] (issue_asset_request_object &req) {
+   auto& d = db();
+   const auto& params = d.get_global_properties().parameters;
+
+   return d.create<issue_asset_request_object>([&] (issue_asset_request_object &req) {
      req.issuer = o.issuer;
      req.receiver = o.receiver;
      req.amount = o.amount;
      req.asset_id = o.asset_id;
      req.reserved_amount = o.reserved_amount;
-     req.expiration = db().head_block_time() + fc::hours(24);  // TODO: make this a part of the chain parameters.
+     req.expiration = d.head_block_time() + fc::seconds(params.web_asset_request_expiration_time_seconds);
    }).id;
 
 } FC_CAPTURE_AND_RETHROW((o)) }

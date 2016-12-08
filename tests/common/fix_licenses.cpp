@@ -33,32 +33,41 @@ using namespace graphene::chain::test;
 
 namespace graphene { namespace chain {
 
-const license_type_object& database_fixture::get_license_type(const string& name)const
+const license_type_object& database_fixture::get_license_type(const string& name) const
 { try {
-   const auto& idx = db.get_index_type<license_type_index>().indices().get<by_name>();
-   const auto itr = idx.find(name);
-   FC_ASSERT( itr != idx.end() );
-   return *itr;
+  const auto& idx = db.get_index_type<license_type_index>().indices().get<by_name>();
+  const auto itr = idx.find(name);
+  FC_ASSERT( itr != idx.end() );
+  return *itr;
 
 } FC_LOG_AND_RETHROW() }
 
 const license_request_object* database_fixture::issue_license_to_vault_account(const account_id_type vault_account_id,
    const license_type_id_type license_id, frequency_type frequency)
 { try {
-   license_request_operation op;
-   op.license_issuing_account = get_license_issuer_id();
-   op.account = vault_account_id;
-   op.license = license_id;
-   op.frequency = frequency;
+  license_request_operation op;
+  op.license_issuing_account = get_license_issuer_id();
+  op.account = vault_account_id;
+  op.license = license_id;
+  op.frequency = frequency;
 
-   set_expiration(db, trx);
-   trx.operations.clear();
-   trx.operations.push_back(op);
-   trx.validate();
-   processed_transaction ptx = db.push_transaction(trx, ~0);
+  set_expiration(db, trx);
+  trx.operations.clear();
+  trx.operations.push_back(op);
+  trx.validate();
+  processed_transaction ptx = db.push_transaction(trx, ~0);
 
-   return db.find<license_request_object>( ptx.operation_results[0].get<object_id_type>() );
+  return db.find<license_request_object>( ptx.operation_results[0].get<object_id_type>() );
 
+} FC_LOG_AND_RETHROW() }
+
+vector<license_request_object> database_fixture::get_license_issue_requests_by_expiration(account_id_type account_id) const
+{ try {
+  vector<license_request_object> result;
+  const auto& idx = db.get_index_type<license_request_index>().indices().get<by_expiration>();
+  for ( auto req: idx )
+    result.emplace_back(req);
+  return result;
 } FC_LOG_AND_RETHROW() }
 
 } }  // namespace graphene::chain

@@ -98,6 +98,13 @@ BOOST_AUTO_TEST_CASE( issue_license_test )
   // Issue standard license to our old pal Stan:
   issue(stan, "standard");
 
+  // Wait for time to elapse:
+  // TODO: fetch the time parameter
+  generate_blocks(db.head_block_time() + fc::hours(48));
+
+  // Check if Stan has 100 cycles:
+  BOOST_CHECK_EQUAL( get_cycle_balance(stan_id).value, 100 );
+
 } FC_LOG_AND_RETHROW() }
 
 // BOOST_AUTO_TEST_CASE( upgrade_cycles_test )

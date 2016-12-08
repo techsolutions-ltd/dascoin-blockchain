@@ -84,6 +84,10 @@ void database::fulfill_license_request(const license_request_object& req)
     info.requeue_upgrade += new_license_obj.requeue_upgrade;
     info.return_upgrade += new_license_obj.return_upgrade;
   });
+
+  // For regular licenses, increase the cycle balance for the appropriate amount:
+  if ( new_license_obj.kind == license_kind::regular )
+    adjust_cycle_balance(account_obj.id, new_license_obj.amount);
 }
 
 } }  // namespace graphhene::chain

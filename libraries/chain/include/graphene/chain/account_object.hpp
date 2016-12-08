@@ -23,6 +23,8 @@
  */
 #pragma once
 #include <graphene/chain/protocol/operations.hpp>
+#include <graphene/chain/license_objects.hpp>
+#include <graphene/chain/upgrade_type.hpp>
 #include <graphene/db/generic_index.hpp>
 #include <boost/multi_index/composite_key.hpp>
 
@@ -137,17 +139,11 @@ namespace graphene { namespace chain {
          account_id_type owner;
          share_type balance;
          share_type reserved = 0;
-         uint8_t remaining_upgrades;
+         upgrade_type upgrade;
+         uint8_t remaining_upgrades;  // DEPRECATED!
 
          share_type get_balance()const { return balance; }
          uint8_t get_remaining_upgrades()const { return remaining_upgrades; }
-
-         /**
-          * Adjust the cycle balance of the account.
-          * @param delta The amount by which to change.
-          */
-         void adjust_cycle_balance(const share_type balance_delta);
-         void adjust_upgrades(const uint8_t upgrades);
    };
 
    /**
@@ -277,7 +273,12 @@ namespace graphene { namespace chain {
          /**
           * A cycle license the account holds:
           */
-         optional<license_type_id_type> license;
+         // optional<license_type_id_type> license;
+
+         /**
+          * All information regarding licenses.
+          */
+         license_information license_info;
 
          /**
           * The level of verified persional information assigned to the account.
@@ -288,16 +289,6 @@ namespace graphene { namespace chain {
           * Limit levels defined to different transfer operations in the blockchain.
           */
          limits_type limits;
-
-         /**
-          * This value, if set, overrides the global frequency of the account.
-          */
-         optional<frequency_type> account_frequency;
-
-         /**
-          * Is this a chartered account?
-          */
-         bool is_chartered = false;
 
          /**
           * This flag is set when the top_n logic sets both authorities,
@@ -505,11 +496,9 @@ FC_REFLECT_DERIVED( graphene::chain::account_object, (graphene::db::object),
                     (cashback_vb)
                     (owner_special_authority)
                     (active_special_authority)
-                    (license)
+                    (license_info)
                     (pi_level)
                     (limits)
-                    (account_frequency)
-                    (is_chartered)
                     (top_n_control_flags)
                     (allowed_assets)
                     )
@@ -540,4 +529,5 @@ FC_REFLECT_DERIVED( graphene::chain::account_cycle_balance_object, (graphene::db
                     (balance)
                     (reserved)
                     (remaining_upgrades)
+                    (upgrade)
                   )

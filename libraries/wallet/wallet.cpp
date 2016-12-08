@@ -2463,83 +2463,6 @@ public:
       return *opt;
    }
 
-   // LICENSE CREATION:
-
-   /**
-    * Create a license type, set all policy flags manually.
-    * @param  lic_authenticator MUST be license authenticator account.
-    * @param  name              Name of the license, unique.
-    * @param  amount            Amount of cycles the license grants.
-    * @param  upgrades          Number of upgrades
-    * @param  policy_flags      Policy flags, raw.
-    * @param  broadcast         true broadcast the transaction.
-    * @return                   signed version of the transaction.
-    */
-   signed_transaction create_license_type_with_policy_flags(const string& lic_authenticator,
-                                                            const string& name,
-                                                            share_type amount,
-                                                            uint8_t upgrades,
-                                                            uint32_t policy_flags,
-                                                            bool broadcast /* false */)
-   {
-      auto auth_acc = this->get_account( lic_authenticator );
-
-      FC_ASSERT( upgrades <= GRAPHENE_MAX_LICENSE_UPGRADE_COUNT );
-      FC_ASSERT( !find_license_type(name).valid(), "License with this name already exists!" );
-
-      license_type_create_operation op;
-      op.license_authentication_account = auth_acc.id;
-      op.name = name;
-      op.amount = amount;
-      op.upgrades = upgrades;
-      op.policy_flags = policy_flags;
-
-      signed_transaction tx;
-      tx.operations.push_back(op);
-      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
-
-      return sign_transaction( tx, broadcast );
-   }
-
-   /**
-    * Edit an existing license type.
-    * @param  lic_authenticator MUST be the license authenticator.
-    * @param  name              New name of the license.
-    * @param  amount            New amount.
-    * @param  upgrades          New upgrade count.
-    * @param  policy_flags      New policy flags.
-    * @param  broadcast         true if you wish to broadcast the transaction.
-    * @return                   Signed version of the transaction.
-    */
-   signed_transaction edit_license_type(const string& lic_authenticator,
-                                        const string& name,
-                                        share_type amount,
-                                        uint8_t upgrades,
-                                        uint32_t policy_flags,
-                                        bool broadcast /* false */)
-   {
-      auto auth_acc = this->get_account( lic_authenticator );
-
-      FC_ASSERT( upgrades <= GRAPHENE_MAX_LICENSE_UPGRADE_COUNT );
-      FC_ASSERT( !find_license_type(name).valid(), "License with this name already exists!" );
-
-      // TODO: figure out how to make every setting optional.
-      license_type_edit_operation op;
-      op.license_authentication_account = auth_acc.id;
-      op.name = name;
-      op.amount = amount;
-      op.upgrades = upgrades;
-      op.policy_flags = policy_flags;
-
-      signed_transaction tx;
-      tx.operations.push_back(op);
-      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
-      tx.validate();
-
-      return sign_transaction( tx, broadcast );
-   }
-
    /**
     * Issue a license to an account. This will create the license request that can be denied by the license
     * authentication authority.  Only the license issuing authority can do this.
@@ -2553,7 +2476,7 @@ public:
       const string& issuer,
       const string& account,
       const string& license,
-      optional<frequency_type> account_frequency,
+      frequency_type frequency,
       bool broadcast)
    {
       auto issuer_account = this->get_account( issuer );
@@ -2565,7 +2488,7 @@ public:
       op.license_issuing_account = issuer_account.id;
       op.account = beneficiary.id;
       op.license = new_license.id;
-      op.account_frequency = account_frequency;
+      op.frequency = frequency;
 
       signed_transaction tx;
       tx.operations.push_back(op);
@@ -4470,46 +4393,6 @@ vector<blind_receipt> wallet_api::blind_history( string key_or_account )
 //                              //
 //////////////////////////////////
 
-signed_transaction wallet_api::create_license_type_with_policy_flags(const string& lic_authenticator,
-                                                                     const string& name,
-                                                                     share_type amount,
-                                                                     uint8_t upgrades,
-                                                                     uint32_t policy_flags,
-                                                                     bool broadcast /* false */)
-{
-   return my->create_license_type_with_policy_flags( lic_authenticator, name, amount, upgrades, policy_flags, broadcast );
-}
-
-signed_transaction wallet_api::create_license_type_standard(const string& lic_authenticator,
-                                                            const string& name,
-                                                            share_type amount,
-                                                            uint8_t upgrades,
-                                                            bool broadcast /* false */)
-{
-   auto policy_flags = 0;  // No policy flags are set.
-   return my->create_license_type_with_policy_flags(lic_authenticator,
-                                                    name,
-                                                    amount,
-                                                    upgrades,
-                                                    policy_flags,
-                                                    broadcast);
-}
-
-signed_transaction wallet_api::create_license_type_chartered(const string& lic_authenticator,
-                                                             const string& name,
-                                                             share_type amount,
-                                                             uint8_t upgrades,
-                                                             bool broadcast /* false */)
-{
-   auto policy_flags = CYCLE_POLICY_CHARTER_MASK;
-   return my->create_license_type_with_policy_flags(lic_authenticator,
-                                                    name,
-                                                    amount,
-                                                    upgrades,
-                                                    policy_flags,
-                                                    broadcast);
-}
-
 vector<license_type_object> wallet_api::list_license_types_by_name(const string& lowerbound, uint32_t limit)const
 {
    return my->_remote_db->list_license_types_by_name( lowerbound, limit );
@@ -4521,7 +4404,7 @@ vector<license_type_object> wallet_api::list_license_types_by_amount(const uint3
 }
 
 signed_transaction wallet_api::issue_license( const string& issuer, const string& account, const string& license,
-                                              const optional<frequency_type> account_frequency, bool broadcast )
+                                              frequency_type account_frequency, bool broadcast )
 {
    return my->issue_license( issuer, account, license, account_frequency, broadcast );
 }

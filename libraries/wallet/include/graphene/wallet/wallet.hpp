@@ -1456,94 +1456,13 @@ class wallet_api
       ///////////////////////////////
 
       /**
-       * Create a license type. Only the license authentication authority can do this.
-       *
-       * @param lic_authenticator MUST be the name of the current license authentication authority.
-       * @param name Name of the license.
-       * @param amount Thee amount of cycles the license grants.
-       * @param upgrades Number of cycle upgrades.
-       * @param policy_flags The policy flags for the license, see @ref cycle_policy_flags for more details.
-       *
-       * @return Signed transaction.
-       */
-      signed_transaction create_license_type_with_policy_flags(
-        const string& lic_authenticator,
-        const string& name,
-        share_type amount,
-        uint8_t upgrades,
-        uint32_t policy_flags,
-        bool broadcast /*  = false */
-        );
-
-      /**
-       * Create a standard license type. Only the license authentication authority can do this.
-       * Uses the standard cycle policy.
-       *
-       * @param lic_authenticator MUST be the name of the current license authentication authority.
-       * @param name Name of the license.
-       * @param amount Thee amount of cycles the license grants.
-       * @param upgrades Number of cycle upgrades.
-       * @param broadcast true if you wish to broadcast the transaction.
-       *
-       * @return Signed transaction.
-       */
-      signed_transaction create_license_type_standard(
-        const string& lic_authenticator,
-        const string& name,
-        share_type amount,
-        uint8_t upgrades,
-        bool broadcast /*  = false */
-        );
-
-      /**
-       * Create a chartered license type. Only the license authentication authority can do this.
-       * Uses the chartered cycle policy.
-       *
-       * @param lic_authenticator   MUST be the name of the current license authentication authority.
-       * @param name                Name of the license.
-       * @param amount              The amount of cycles the license grants.
-       * @param upgrades            Number of cycle upgrades.
-       * @param broadcast           true if you wish to broadcast the transaction.
-       *
-       * @return Signed transaction.
-       */
-      signed_transaction create_license_type_chartered(
-        const string& lic_authenticator,
-        const string& name,
-        share_type amount,
-        uint8_t upgrades,
-        bool broadcast /*  = false */
-        );
-
-      /**
-       * Edit an existing license_type. Only the license authentication authority can do this. Note that this operation
-       * is NOT RETROACTIVE!
-       *
-       * @param  lic_authenticator MUST be the license authenticator.
-       * @param  name              New license name.
-       * @param  amount            New amount.
-       * @param  upgrades          New upgrade count.
-       * @param  policy_flags      New policy flags.
-       * @param  broadcast         true if you wish to broadcast the transaction.
-       * @return                   Signed version of the transaction.
-       */
-      signed_transaction edit_license_type(
-        const string& lic_authenticator,
-        const string& name,
-        share_type amount,
-        uint8_t upgrades,
-        uint32_t policy_flags,
-        bool broadcast /* false */
-        );
-
-      /**
        * Issue a license to an account. This will create a license request object that can be denied by the license
        * authentication authority.
        *
        * @param issuer            This MUST be the license issuing chain authority.
        * @param account           The account that will benefit the license.
        * @param license           The id of the license that will be granted to the account.
-       * @param account_frequency Frequency lock for this account.
+       * @param frequency         Frequency lock for this license.
        * @param broadcast         true if you wish to broadcast the transaction.
        * @return                  The signed version of the transaction.
        */
@@ -1551,7 +1470,7 @@ class wallet_api
         const string& issuer,
         const string& account,
         const string& license,
-        fc::optional<frequency_type> account_frequency,
+        frequency_type frequency,
         bool broadcast /* false */
         );
 
@@ -1814,9 +1733,6 @@ FC_API( graphene::wallet::wallet_api,
         (blind_history)
         (receive_blind_transfer)
         // Licenses:
-        (create_license_type_with_policy_flags)
-        (create_license_type_standard)
-        (create_license_type_chartered)
         (issue_license)
         (deny_license_request)
         // Cycles:

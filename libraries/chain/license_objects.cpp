@@ -17,4 +17,27 @@ namespace graphene { namespace chain {
 
   }
 
+  optional<license_type_id_type> license_information::active_license() const
+  {
+    if ( history.empty() )
+      return {};
+    return {history.back().first};
+  }
+
+  optional<frequency_type> license_information::active_frequency_lock() const
+  {
+    if ( history.empty() )
+      return {};
+
+    auto record =  history.back();
+    if ( record.second == 0 )
+      return {};
+    return {record.second};
+  }
+
+  void license_information::add_license(license_type_id_type license_id, frequency_type frequency_lock)
+  {
+    history.emplace_back(license_id, frequency_lock);
+  }
+
 } } // namespace graphene::chain

@@ -5,6 +5,7 @@
 #pragma once
 #include <graphene/chain/protocol/base.hpp>
 #include <graphene/chain/protocol/types.hpp>
+#include <graphene/chain/upgrade_type.hpp>
 #include <graphene/db/generic_index.hpp>
 #include <graphene/db/object.hpp>
 
@@ -12,6 +13,21 @@
 
 namespace graphene { namespace chain {
 
+  class license_information
+  {
+    public:
+      typedef pair<license_type_id_type, frequency_type> license_history_record;
+
+      optional<license_type_id_type> active_license() const;
+      optional<frequency_type> active_frequency_lock() const;
+      void add_license(license_type_id_type license_id, frequency_type frequency_lock = 0);
+
+      vector<license_history_record> history;
+
+      upgrade_type balance_upgrade;
+      upgrade_type requeue_upgrade;
+      upgrade_type return_upgrade;
+  };
 
   ///////////////////////////////
   // OBJECTS:                  //
@@ -34,16 +50,17 @@ namespace graphene { namespace chain {
       string name;                        // Name of the license.
       share_type amount = 0;              // The amount of cycles the license grants.
 
-      // Cycle policy related:
-      // TODO: add more stuff?
-      uint8_t upgrades = 0;               // The number of cycle upgrades the license grants.
-      uint32_t policy_flags = 0;
-      uint8_t priority = 0;
+      // TODO: this is stored here for debug purposes.
+      policy_type policy;  // This is a dynamic map of all variable policy settings on the license type.
+
+      license_kind kind = license_kind::regular;
+
+      // All upgrades in the system:
+      upgrade_type balance_upgrade;
+      upgrade_type requeue_upgrade;
+      upgrade_type return_upgrade;
 
       extensions_type extensions;
-      // All bits must match the chartered pattern exactly.
-      // TODO: this is broken!!!!!!
-      bool is_chartered()const { return (CYCLE_POLICY_CHARTER_MASK == (policy_flags & CYCLE_POLICY_CHARTER_MASK)); }
 
       void validate() const;
   };
@@ -86,7 +103,7 @@ namespace graphene { namespace chain {
       account_id_type account;                  // The account to benefit the license.
       license_type_id_type license;             // The license to be granted to the account.
       time_point_sec expiration;                // Deadline for denial.
-      optional<float> account_frequency;        // Account frequency lock to be applied.
+      frequency_type frequency;                 // Account frequency lock to be applied.
 
       extensions_type extensions;
 
@@ -154,12 +171,20 @@ namespace graphene { namespace chain {
 // REFLECTIONS:              //
 ///////////////////////////////
 
+FC_REFLECT( graphene::chain::license_information,
+            (history)
+            (balance_upgrade)
+            (requeue_upgrade)
+            (return_upgrade)
+          )
+
 FC_REFLECT_DERIVED( graphene::chain::license_type_object, (graphene::db::object),
                     (name)
                     (amount)
-                    (upgrades)
-                    (policy_flags)
-                    (priority)
+                    (kind)
+                    (balance_upgrade)
+                    (requeue_upgrade)
+                    (return_upgrade)
                     (extensions)
                   )
 
@@ -168,6 +193,6 @@ FC_REFLECT_DERIVED( graphene::chain::license_request_object, (graphene::db::obje
                     (account)
                     (license)
                     (expiration)
-                    (account_frequency)
+                    (frequency)
                     (extensions)
                   )

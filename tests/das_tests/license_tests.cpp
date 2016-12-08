@@ -18,38 +18,87 @@ using namespace graphene::chain::test;
 
 BOOST_FIXTURE_TEST_SUITE( dascoin_tests, database_fixture )
 
-// BOOST_AUTO_TEST_CASE( license_types_create_test )
-// { try {
+BOOST_AUTO_TEST_CASE( upgrade_type_test )
+{ try {
 
-//   auto create_test_license = [&](const string& name, share_type amount, uint8_t upgrades, bool is_chartered = false)
-//   {
-//     const auto ret_license = create_license_type( name, amount, upgrades, is_chartered );
-//     FC_ASSERT( ret_license, "License object ${n} does not exist!", ("n",name) );
-//     BOOST_CHECK_EQUAL( ret_license->name, name );
-//     BOOST_CHECK_EQUAL( ret_license->amount.value, amount.value );
-//     BOOST_CHECK_EQUAL( ret_license->upgrades, upgrades );
-//     ilog( "Created license ${n} with value ${v} and ${u} upgrades", ("n",name)("v",amount)("u",upgrades) );
-//     if (is_chartered)
-//       BOOST_CHECK( ret_license->is_chartered() );
+  upgrade_type test_pres_charter_upgrade({1,2,2});
+  share_type x = 1000;
 
-//     get_license_type(name);
-//     return ret_license;
-//   };
+  // 1000 x1 = 1000
+  x = test_pres_charter_upgrade(x);
+  BOOST_CHECK_EQUAL( x.value, 1000 );
 
-//   create_test_license("test-low", 100, 1);
-//   create_test_license("test-medium", 100, 5);
-//   create_test_license("test-high", 1000, 10);
+  // 1000 x2 = 2000
+  x = test_pres_charter_upgrade(x);
+  BOOST_CHECK_EQUAL( x.value, 2000 );
 
-//   create_test_license("test-charter-low", 100, 1, true);
-//   create_test_license("test-charter-medium", 100, 5, true);
-//   create_test_license("test-charter-high", 1000, 10, true);
+  // 2000 x2 = 4000
+  x = test_pres_charter_upgrade(x);
+  BOOST_CHECK_EQUAL( x.value, 4000 );
 
-// } FC_LOG_AND_RETHROW() }
+  // After this it stays the same:
+  x = test_pres_charter_upgrade(x);
+  BOOST_CHECK_EQUAL( x.value, 4000 );
 
-// BOOST_AUTO_TEST_CASE( issue_license_test )
-// { try {
-//   // issue_license_to_vault_account()
-// } FC_LOG_AND_RETHROW() }
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( license_type_integrity_test )
+{ try {
+  // TODO: test for every type of license there is.
+
+  auto lic_obj = get_license_type("standard");
+
+  BOOST_CHECK_EQUAL( lic_obj.name, "standard" );
+  BOOST_CHECK_EQUAL( lic_obj.amount.value, 100 );
+  BOOST_CHECK_EQUAL( lic_obj.kind, license_kind::regular );
+  BOOST_CHECK( lic_obj.balance_upgrade == upgrade_type({2}) );
+  BOOST_CHECK( lic_obj.requeue_upgrade == upgrade_type() );
+  BOOST_CHECK( lic_obj.return_upgrade == upgrade_type() );
+
+  lic_obj = get_license_type("standard-charter");
+
+  BOOST_CHECK_EQUAL( lic_obj.name, "standard-charter" );
+  BOOST_CHECK_EQUAL( lic_obj.amount.value, 100 );
+  BOOST_CHECK_EQUAL( lic_obj.kind, license_kind::chartered );
+  BOOST_CHECK( lic_obj.balance_upgrade == upgrade_type() );
+  BOOST_CHECK( lic_obj.requeue_upgrade == upgrade_type({1}) );
+  BOOST_CHECK( lic_obj.return_upgrade == upgrade_type() );
+
+  lic_obj = get_license_type("standard-promo");
+
+  BOOST_CHECK_EQUAL( lic_obj.name, "standard-promo" );
+  BOOST_CHECK_EQUAL( lic_obj.amount.value, 100 );
+  BOOST_CHECK_EQUAL( lic_obj.kind, license_kind::promo );
+  BOOST_CHECK( lic_obj.balance_upgrade == upgrade_type() );
+  BOOST_CHECK( lic_obj.requeue_upgrade == upgrade_type() );
+  BOOST_CHECK( lic_obj.return_upgrade == upgrade_type({1}) );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( issue_license_test )
+{ try {
+  ACTOR(wallet);
+  generate_block();
+  VAULT_ACTOR(stan);
+  generate_block();
+
+  const auto& issue = [&](const account_object& acc, const string& lic_name, frequency_type f = 0){
+    auto lic = get_license_type(lic_name);
+    auto req = issue_license_to_vault_account(acc.id, lic.id);
+    BOOST_CHECK( req );
+    BOOST_CHECK( req->license_issuing_account == get_license_issuer_id() );
+    BOOST_CHECK( req->account == acc.id );
+    BOOST_CHECK( req->license == lic.id );
+    BOOST_CHECK( req->frequency == f );
+  };
+
+  // Rejected: cannot issue to a vault account.
+  GRAPHENE_REQUIRE_THROW( issue(wallet, "standard"), fc::exception );
+
+  // Issue standard license to our old pal Stan:
+  issue(stan, "standard");
+
+} FC_LOG_AND_RETHROW() }
 
 // BOOST_AUTO_TEST_CASE( upgrade_cycles_test )
 // { try {

@@ -34,7 +34,7 @@ void_result license_type_create_evaluator::do_evaluate(const license_type_create
 object_id_type license_type_create_evaluator::do_apply(const license_type_create_operation& op)
 { try {
 
-  return db().create_license_type( op.name, op.amount, op.upgrades, op.policy_flags );
+  return db().create_license_type(op.name, op.amount, op.policy);
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
@@ -46,7 +46,7 @@ void_result license_type_edit_evaluator::do_evaluate(const license_type_edit_ope
 { try {
 
   assert_license_authenticator(db(), op.license_authentication_account);
-  return void_result();
+  return {};
 
 }  FC_CAPTURE_AND_RETHROW( (op)) }
 
@@ -56,11 +56,9 @@ void_result license_type_edit_evaluator::do_apply(const license_type_edit_operat
   db().modify( db().get(op.license), [&]( license_type_object& lic ) {
     if (op.name.valid()) lic.name = *op.name;
     if (op.amount.valid()) lic.amount = *op.amount;
-    if (op.upgrades.valid()) lic.upgrades = *op.upgrades;
-    if (op.policy_flags.valid()) lic.policy_flags = *op.policy_flags;
+    if (op.policy.valid()) lic.policy = *op.policy;
   });
-
-  return void_result();
+  return {};
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
@@ -91,35 +89,29 @@ void_result license_type_delete_evaluator::do_apply(const license_type_delete_op
 void_result license_request_evaluator::do_evaluate(const license_request_operation& op)
 { try {
 
-  const auto& _db = db();
-  const auto& acc = op.account(_db);
-  const auto& new_lic = op.license(_db);
+  const auto& d = db();
+  const auto& account_obj = op.account(d);
+  const auto& new_license_obj = op.license(d);
 
-  assert_license_issuer( _db, op.license_issuing_account );
+  // First, check that the license issuer matches the current license issuing account:
+  assert_license_issuer( d, op.license_issuing_account );
 
-  if ( acc.license.valid() )
+  // Licenses can only be issued to vault accounts:
+  FC_ASSERT( account_obj.is_vault(), "Account '${n}' is not a vault account", ("n", account_obj.name) );
+
+  // If the account has an active license, then we need to check if we can IMPROVE it:
+  const auto active_lic_id = account_obj.license_info.active_license();
+  if ( active_lic_id.valid() )
   {
-    const auto& cur_lic = (*acc.license)(_db);
-
-    ilog( "Current license for ${a} account: ${n} id = ${id}, flags = ${f}",
-      ("a", acc.name)
-      ("n", cur_lic.name)
-      ("id", cur_lic.id)
-      ("f", cur_lic.policy_flags) );
-
-    if ( acc.is_chartered )
-      FC_ASSERT( !new_lic.is_chartered() );  // A chartered account can only have one license!
-    FC_ASSERT( cur_lic < new_lic );
+    const auto& active_license_obj = (*active_lic_id)(d);
+    FC_ASSERT( active_license_obj < new_license_obj,
+               "Cannot improve license on account ${a}, license ${l_old} is better than the active license ${l_act}",
+               ("a", account_obj.name)
+               ("l_old", active_license_obj.name)
+               ("l_new", new_license_obj.name)
+             );
   }
-
-  ilog( "New license for ${a} account: ${n} id = ${id}, flags = ${f}",
-    ("a", acc.name)
-    ("n", new_lic.name)
-    ("id", new_lic.id)
-    ("f", new_lic.policy_flags) );
-
-  _account_obj = &acc;
-  return void_result();
+  return {};
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
@@ -128,56 +120,13 @@ object_id_type license_request_evaluator::do_apply(const license_request_operati
   auto& d = db();
   const auto& params = d.get_global_properties().parameters;
 
-  return d.create<license_request_object>([&] (license_request_object &o) {
-    o.license_issuing_account = op.license_issuing_account;
-    o.account = op.account;
-    o.license = op.license;
-    o.expiration = d.head_block_time() + fc::seconds(params.license_expiration_time_seconds);
+  return d.create<license_request_object>([&] (license_request_object &req) {
+    req.license_issuing_account = op.license_issuing_account;
+    req.account = op.account;
+    req.license = op.license;
+    req.frequency = op.frequency;
+    req.expiration = d.head_block_time() + fc::seconds(params.license_expiration_time_seconds);
   }).id;
-
-} FC_CAPTURE_AND_RETHROW( (op) ) }
-
-///////////////////////////////
-// License request approval: //
-///////////////////////////////
-
-void_result license_approve_evaluator::do_evaluate(const license_approve_operation& op)
-{ try {
-
-  const auto& _db = db();
-
-  assert_license_authenticator( _db, op.license_authentication_account );
-
-  _request_obj = &op.request(_db);
-  _account_obj = &_request_obj->account(_db);
-  _license_obj = &_request_obj->license(_db);
-
-  return void_result();
-
-} FC_CAPTURE_AND_RETHROW( (op) ) }
-
-void_result license_approve_evaluator::do_apply(const license_approve_operation& op)
-{ try {
-  auto& _db = db();
-
-  _db.modify( *_account_obj, [&](account_object& a) {
-    a.license = _license_obj->id;
-
-    ilog( "Applying license object ${n} for account ${a}", ("n", _license_obj->name)("a", a.name) );
-
-    if ( _license_obj->is_chartered() )
-    {
-      a.is_chartered = true;
-      // Chartered licenses get a account level frequency lock.
-      a.account_frequency = _request_obj->account_frequency;
-    }
-  });
-
-  // Chartered licenses do not receive the cycle balance.
-  if ( !_license_obj->is_chartered() )
-    _db.adjust_cycle_balance( _account_obj->id, _license_obj->amount, { _license_obj->upgrades });
-
-  return void_result();
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
@@ -191,10 +140,8 @@ void_result license_deny_evaluator::do_evaluate(const license_deny_operation& op
   const auto& _db = db();
 
   assert_license_authenticator( _db, op.license_authentication_account );
-
-  _request_obj = &op.request(_db);
-
-  return void_result();
+  request_obj_ = &op.request(_db);
+  return {};
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
@@ -202,9 +149,8 @@ void_result license_deny_evaluator::do_apply(const license_deny_operation& op)
 { try {
 
   // TODO: if additional processing is required, do it in database::deny_license_request().
-  db().remove(*_request_obj);
-
-  return void_result();
+  db().remove(*request_obj_);
+  return {};
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 

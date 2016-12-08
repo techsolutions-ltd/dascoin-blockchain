@@ -63,8 +63,19 @@ const account_balance_object& database::get_balance_object(account_id_type owner
 {
    auto& index = get_index_type<account_balance_index>().indices().get<by_account_asset>();
    auto itr = index.find(boost::make_tuple(owner, asset_id));
-   FC_ASSERT( itr != index.end(), "Account '${n}' has no balance object", ("n", owner(*this).name) );
+   FC_ASSERT( itr != index.end(), "Account '${n}' has no balance object for ${a}",
+              ("n", owner(*this).name)
+              ("a", asset_id(*this).symbol)
+            );
    return *itr;
+}
+
+const account_cycle_balance_object& database::get_cycle_balance_object(account_id_type owner) const
+{
+  auto& index = get_index_type<account_cycle_balance_index>().indices().get<by_account_id>();
+  auto itr = index.find(owner);
+  FC_ASSERT( itr != index.end(), "Account '${n}' has no cycle balance object", ("n", owner(*this).name) );
+  return *itr;
 }
 
 object_id_type database::create_empty_balance(account_id_type owner_id, asset_id_type asset_id)
@@ -74,6 +85,15 @@ object_id_type database::create_empty_balance(account_id_type owner_id, asset_id
       abo.asset_type = asset_id;
       abo.balance = 0;
       abo.reserved = 0;
+   }).id;
+}
+
+object_id_type database::create_empty_cycle_balance(account_id_type owner_id)
+{
+   return create<account_cycle_balance_object>([&](account_cycle_balance_object& acbo) {
+      acbo.owner = owner_id;
+      acbo.balance = 0;
+      acbo.reserved = 0;
    }).id;
 }
 
@@ -149,43 +169,28 @@ void database::adjust_balance(account_id_type account, asset delta, share_type r
 
 } FC_CAPTURE_AND_RETHROW( (account)(delta) ) }
 
-void database::adjust_cycle_balance(account_id_type account, share_type delta, optional<uint8_t> upgrades)
+void database::adjust_cycle_balance(account_id_type account, share_type delta)
 { try {
 
    if( delta == 0 )
       return;
 
-   if ( upgrades.valid() )
-      FC_ASSERT( *upgrades > 0, "Upgrades must be increased by a positive amont: upgrades = ${u} ", ("u",upgrades) );
-
    auto& index = get_index_type<account_cycle_balance_index>().indices().get<by_account_id>();
    auto itr = index.find(account);
-   if(itr == index.end())
-   {
-      FC_ASSERT( delta > 0, "Insufficient Balance: ${a}'s balance of cycles is less than required ${r}",
+
+   FC_ASSERT( itr != index.end(), "Account '${n}' has no cycle balance object", ("n", account(*this).name) );
+
+   if( delta < 0 )
+      FC_ASSERT( itr->get_balance() >= -delta,
+                 "Insufficient Balance: ${a}'s balance of ${b} is less than required ${r}",
                  ("a",account(*this).name)
-                 ("r",to_pretty_string(-delta)));
+                 ("b",to_pretty_string(itr->get_balance()))
+                 ("r",to_pretty_string(-delta))
+               );
 
-      create<account_cycle_balance_object>([account,delta,upgrades](account_cycle_balance_object& b) {
-         b.owner = account;
-         b.balance = delta;
-         if ( upgrades.valid() )
-            b.remaining_upgrades = *upgrades;
-      });
-   } else {
-      if( delta < 0 )
-         FC_ASSERT( itr->get_balance() >= -delta,
-                    "Insufficient Balance: ${a}'s balance of ${b} is less than required ${r}",
-                    ("a",account(*this).name)
-                    ("b",to_pretty_string(itr->get_balance()))
-                    ("r",to_pretty_string(-delta)));
-
-      modify(*itr, [delta,upgrades](account_cycle_balance_object& b) {
-         b.adjust_cycle_balance(delta);
-         if ( upgrades.valid() )
-            b.adjust_upgrades(*upgrades);
-      });
-   }
+   modify(*itr, [delta](account_cycle_balance_object& b) {
+      b.balance += delta;
+   });
 
 } FC_CAPTURE_AND_RETHROW( (account)(delta) ) }
 

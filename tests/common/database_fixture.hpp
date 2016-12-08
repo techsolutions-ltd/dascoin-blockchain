@@ -322,21 +322,12 @@ struct database_fixture {
       const public_key_type& key = public_key_type()
       );
 
-   const license_type_object* create_license_type(
-      const string& name,
-      share_type amount,
-      uint8_t upgrades = 0,
-      bool is_chartered = false);
-
+   // fix_licenses.cpp
    const license_type_object& get_license_type( const string& name )const;
+   const license_request_object* issue_license_to_vault_account(const account_id_type vault_account_id,
+      const license_type_id_type license_id, frequency_type frequency = 0);
 
-   const license_request_object* issue_license_to_vault_account(
-      const account_id_type issuer_id,
-      const account_id_type vault_account_id,
-      const license_type_id_type license_id,
-      optional<frequency_type> account_frequency = optional<frequency_type>());
-
-   // fix_cyxles.cpp
+   // fix_cycles.cpp
    share_type get_cycle_balance(const account_id_type owner) const;
    void adjust_cycles(const account_id_type id, const share_type amount);
    const cycle_issue_request_object* issue_cycles(account_id_type receiver_id, share_type amount);

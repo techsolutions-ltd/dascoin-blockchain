@@ -207,7 +207,6 @@ void database::initialize_evaluators()
    register_evaluator<license_type_edit_evaluator>();
    register_evaluator<license_type_delete_evaluator>();
    register_evaluator<license_request_evaluator>();
-   register_evaluator<license_approve_evaluator>();
    register_evaluator<license_deny_evaluator>();
    register_evaluator<tether_accounts_evaluator>();
    register_evaluator<update_pi_limits_evaluator>();
@@ -775,17 +774,44 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       authenticator_op.committee_member_account = GRAPHENE_COMMITTEE_ACCOUNT;
       apply_operation(genesis_eval_state, std::move(authenticator_op));
 
-      create_license_type("standard", 100, 1, 0);
-      create_license_type("manager", 500, 1, 0);
-      create_license_type("pro", 2000, 1, 0);
-      create_license_type("executive", 5000, 2, 0);
-      create_license_type("president", 25000, 3, 0);
+      const auto create_standard = [&](const string& name, share_type amount, const vector<variant> multipliers){
+        create_license_type(name, amount, {
+          {"kind", "regular"},
+          {"balance_upgrades", multipliers}
+        });
+      };
 
-      create_license_type("standard-charter", 100, 1, CYCLE_POLICY_CHARTER_MASK);
-      create_license_type("manager-charter", 500, 1, CYCLE_POLICY_CHARTER_MASK);
-      create_license_type("pro-charter", 2000, 1, CYCLE_POLICY_CHARTER_MASK);
-      create_license_type("executive-charter", 5000, 2, CYCLE_POLICY_CHARTER_MASK);
-      create_license_type("president-charter", 25000, 3, CYCLE_POLICY_CHARTER_MASK);
+      const auto create_charter = [&](const string& name, share_type amount, const vector<variant> multipliers){
+        create_license_type(name, amount, {
+          {"kind", "chartered"},
+          {"requeue_upgrades", multipliers}
+        });
+      };
+
+      const auto create_promo = [&](const string& name, share_type amount, const vector<variant> multipliers){
+        create_license_type(name, amount, {
+          {"kind", "promo"},
+          {"return_upgrades", multipliers}
+        });
+      };
+
+      create_standard("standard", 100, {2});
+      create_standard("manager", 500, {2});
+      create_standard("pro", 2000, {2});
+      create_standard("executive", 5000, {2,2});
+      create_standard("president", 25000, {2,2,2});
+
+      create_charter("standard-charter", 100, {1});
+      create_charter("manager-charter", 500, {1});
+      create_charter("pro-charter", 2000, {1});
+      create_charter("executive-charter", 5000, {1,2});
+      create_charter("president-charter", 25000, {1,2,4});
+
+      create_promo("standard-promo", 100, {1});
+      create_promo("manager-promo", 500, {1});
+      create_promo("pro-promo", 2000, {1});
+      create_promo("executive-promo", 5000, {1,2});
+      create_promo("president-promo", 5000, {1,2,4});
    }
 
    // Initialize cycle issuing:

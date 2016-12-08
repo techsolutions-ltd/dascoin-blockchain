@@ -85,6 +85,7 @@ add_library( graphene_chain
              personal_identity_evaluator.cpp
              special_authority.cpp
              buyback.cpp
+             upgrade_type.cpp
 
              account_object.cpp
              asset_object.cpp

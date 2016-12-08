@@ -41,7 +41,7 @@ share_type database_fixture::get_cycle_balance(const account_id_type owner) cons
 
 void database_fixture::adjust_cycles(const account_id_type id, const share_type amount)
 {
-  db.adjust_cycle_balance(id, amount, {});
+  db.adjust_cycle_balance(id, amount);
 }
 
 const cycle_issue_request_object* database_fixture::issue_cycles(account_id_type receiver_id, share_type amount)

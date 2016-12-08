@@ -29,11 +29,9 @@ namespace graphene { namespace chain {
      asset fee;
      account_id_type license_authentication_account;  // This MUST be the license authentication authority.
 
-     // License data. NOTE: should match the @ref license_type_object!
      string name;                    // Name of the license.
      share_type amount;              // The amount of cycles the license grants.
-     uint8_t upgrades;               // The number of cycle upgrades the license grants.
-     uint32_t policy_flags = 0;      // Cycle policy flags.
+     policy_type policy;
 
      account_id_type fee_payer() const { return license_authentication_account; }
      void validate() const;
@@ -56,11 +54,9 @@ namespace graphene { namespace chain {
      license_type_id_type license;
      account_id_type license_authentication_account;  // This MUST be the license authentication authority.
 
-     // License data. NOTE: should match the @ref license_type_object
      optional<string> name;                       // Name of the license.
      optional<share_type> amount;                 // The amount of cycles the license grants.
-     optional<uint8_t> upgrades;                  // The number of cycle upgrades the license grants.
-     optional<uint32_t> policy_flags;             // How is the cycle queue handled?
+     optional<policy_type> policy;
 
      account_id_type fee_payer() const { return license_authentication_account; }
      void validate() const;
@@ -107,10 +103,9 @@ namespace graphene { namespace chain {
 
     account_id_type account;                  // The account to benefit the license.
     license_type_id_type license;             // The license to be granted.
+    frequency_type frequency;                 // The frequency lock on this license, zero for none.
 
-    optional<frequency_type> account_frequency;
-
-    extensions_type   extensions;
+    extensions_type extensions;
 
     account_id_type fee_payer() const { return license_issuing_account; }
     void validate() const;
@@ -131,7 +126,8 @@ namespace graphene { namespace chain {
     asset fee;
     account_id_type license_authentication_account;  // This MUST be the license issuing authority.
 
-    license_request_id_type request;  // The license request we are denying.
+    account_id_type account;                  // The account to benefit the license.
+    license_type_id_type license;             // The license to be granted.
 
     extensions_type   extensions;
 
@@ -176,8 +172,7 @@ FC_REFLECT( graphene::chain::license_type_create_operation,
             (license_authentication_account)
             (name)
             (amount)
-            (upgrades)
-            (policy_flags)
+            (policy)
           )
 
 FC_REFLECT( graphene::chain::license_type_edit_operation::fee_parameters_type, )
@@ -187,8 +182,7 @@ FC_REFLECT( graphene::chain::license_type_edit_operation,
             (license_authentication_account)
             (name)
             (amount)
-            (upgrades)
-            (policy_flags)
+            (policy)
           )
 FC_REFLECT( graphene::chain::license_type_delete_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::license_type_delete_operation,
@@ -203,6 +197,7 @@ FC_REFLECT( graphene::chain::license_request_operation,
             (license_issuing_account)
             (account)
             (license)
+            (frequency)
             (extensions)
           )
 
@@ -210,7 +205,8 @@ FC_REFLECT( graphene::chain::license_approve_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::license_approve_operation,
             (fee)
             (license_authentication_account)
-            (request)
+            (account)
+            (license)
             (extensions)
           )
 

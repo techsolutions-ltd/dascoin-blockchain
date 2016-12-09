@@ -23,6 +23,7 @@ namespace graphene { namespace chain {
       void add_license(license_type_id_type license_id, frequency_type frequency_lock = 0);
 
       vector<license_history_record> history;
+      optional<license_type_id_type> pending_license;
 
       upgrade_type balance_upgrade;
       upgrade_type requeue_upgrade;
@@ -173,6 +174,7 @@ namespace graphene { namespace chain {
 
 FC_REFLECT( graphene::chain::license_information,
             (history)
+            (pending_license)
             (balance_upgrade)
             (requeue_upgrade)
             (return_upgrade)

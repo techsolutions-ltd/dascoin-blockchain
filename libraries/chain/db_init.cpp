@@ -811,7 +811,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       create_promo("manager-promo", 500, {1});
       create_promo("pro-promo", 2000, {1});
       create_promo("executive-promo", 5000, {1,2});
-      create_promo("president-promo", 5000, {1,2,4});
+      create_promo("president-promo", 25000, {1,2,4});
    }
 
    // Initialize cycle issuing:

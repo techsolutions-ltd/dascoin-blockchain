@@ -47,6 +47,7 @@ public:
   void_result do_evaluate(const license_request_operation& op);
   object_id_type do_apply(const license_request_operation& op);
 
+  const account_object* account_obj_ = nullptr;
 };
 
 class license_deny_evaluator : public evaluator<license_deny_evaluator>

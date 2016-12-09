@@ -78,7 +78,7 @@ void database_fixture::deny_issue_cycles(cycle_issue_request_id_type request_id)
 
 } FC_LOG_AND_RETHROW() }
 
-vector<cycle_issue_request_object> database_fixture::get_cycle_issue_request_objects_by_expiration(account_id_type account_id) const
+vector<cycle_issue_request_object> database_fixture::get_cycle_issue_request_objects_by_expiration() const
 {
   vector<cycle_issue_request_object> result;
   const auto& idx = db.get_index_type<cycle_issue_request_index>().indices().get<by_expiration>();

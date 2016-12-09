@@ -100,10 +100,10 @@ void_result license_request_evaluator::do_evaluate(const license_request_operati
   FC_ASSERT( account_obj.is_vault(), "Account '${n}' is not a vault account", ("n", account_obj.name) );
 
   // If the account has an active license, then we need to check if we can IMPROVE it:
-  const auto active_lic_id = account_obj.license_info.active_license();
-  if ( active_lic_id.valid() )
+  const auto active_lic_opt = account_obj.license_info.active_license();
+  if ( active_lic_opt.valid() )
   {
-    const auto& active_license_obj = (*active_lic_id)(d);
+    const auto& active_license_obj = (*active_lic_opt)(d);
     FC_ASSERT( active_license_obj < new_license_obj,
                "Cannot improve license on account ${a}, license ${l_old} is better than the active license ${l_act}",
                ("a", account_obj.name)
@@ -111,6 +111,21 @@ void_result license_request_evaluator::do_evaluate(const license_request_operati
                ("l_new", new_license_obj.name)
              );
   }
+
+  // If there is a license request pending, check if the new license is better and replace it with a new license:
+  const auto pending_lic_opt = account_obj.license_info.pending_license;
+  if ( pending_lic_opt.valid())
+  {
+    const auto& pending_license_object = (*pending_lic_opt)(d);
+    FC_ASSERT( pending_license_object < new_license_obj,
+               "Cannot issue request for license '${nln}' on account '${a}', pending license '${pln}' is better",
+               ("a", account_obj.name)
+               ("pln", pending_license_object.name)
+               ("nln", new_license_obj.name)
+             );
+  }
+
+  account_obj_ = &account_obj;
   return {};
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
@@ -120,13 +135,21 @@ object_id_type license_request_evaluator::do_apply(const license_request_operati
   auto& d = db();
   const auto& params = d.get_global_properties().parameters;
 
-  return d.create<license_request_object>([&] (license_request_object &req) {
+  // Update the pending license:
+  d.modify(*account_obj_, [&](account_object& a){
+    a.license_info.pending_license = op.license;
+  });
+
+  // Create the new request object:
+  return d.create<license_request_object>([&](license_request_object &req) {
     req.license_issuing_account = op.license_issuing_account;
     req.account = op.account;
     req.license = op.license;
     req.frequency = op.frequency;
     req.expiration = d.head_block_time() + fc::seconds(params.license_expiration_time_seconds);
   }).id;
+
+  ilog("Pending request for ${n}", ("n", account_obj_->license_info.pending_license));
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 

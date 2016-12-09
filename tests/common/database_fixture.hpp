@@ -326,14 +326,15 @@ struct database_fixture {
    const license_type_object& get_license_type(const string& name) const;
    const license_request_object* issue_license_to_vault_account(const account_id_type vault_account_id,
       const license_type_id_type license_id, frequency_type frequency = 0);
-   vector<license_request_object> get_license_issue_requests_by_expiration(account_id_type account_id) const;
+   vector<license_request_object> get_license_issue_requests_by_expiration() const;
+   vector<license_type_object> get_license_history(account_id_type) const;
 
    // fix_cycles.cpp
    share_type get_cycle_balance(const account_id_type owner) const;
    void adjust_cycles(const account_id_type id, const share_type amount);
    const cycle_issue_request_object* issue_cycles(account_id_type receiver_id, share_type amount);
    void deny_issue_cycles(cycle_issue_request_id_type request_id);
-   vector<cycle_issue_request_object> get_cycle_issue_request_objects_by_expiration(account_id_type account_id) const;
+   vector<cycle_issue_request_object> get_cycle_issue_request_objects_by_expiration() const;
 
    // fix_getter.cpp
    const global_property_object& get_global_properties() const;

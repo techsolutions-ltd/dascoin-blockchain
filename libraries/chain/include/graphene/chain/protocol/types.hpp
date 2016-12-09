@@ -92,6 +92,7 @@ namespace graphene { namespace chain {
       VAULT_KIND_COUNT
    };
 
+   // NOTE: It is important to sort this enum based on the priority of each individual license!
    enum license_kind
    {
       regular = 0,

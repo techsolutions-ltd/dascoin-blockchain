@@ -83,6 +83,8 @@ BOOST_AUTO_TEST_CASE( issue_license_test )
   generate_block();
   VAULT_ACTOR(mccool);
   generate_block();
+  VAULT_ACTOR(allguy);
+  generate_block();
 
   const auto& issue = [&](const account_object& acc, const string& lic_name, frequency_type f = 0){
     auto lic = get_license_type(lic_name);
@@ -98,8 +100,9 @@ BOOST_AUTO_TEST_CASE( issue_license_test )
   // Rejected: cannot issue to a vault account.
   GRAPHENE_REQUIRE_THROW( issue(wallet, "standard"), fc::exception );
 
-  // Issue standard license to our old pal Stan:
+  // Issue standard license to our old pal Stan, and Allguy:
   issue(stan, "standard");
+  issue(allguy, "standard");
 
   // Issue a bunch of licenses to mccool:
   issue(mccool, "manager-charter");
@@ -131,10 +134,36 @@ BOOST_AUTO_TEST_CASE( issue_license_test )
   // 3) upgrade_type({1,2,4}) on return
   BOOST_CHECK_EQUAL( get_cycle_balance(mccool_id).value, 2000 );
 
-  const auto& lic_info = mccool_id(db).license_info;
-  BOOST_CHECK( lic_info.balance_upgrade == upgrade_type() );
-  BOOST_CHECK( lic_info.requeue_upgrade == upgrade_type({1}) );
-  BOOST_CHECK( lic_info.return_upgrade == upgrade_type({1,2,4}) );
+  auto lic_info = mccool_id(db).license_info;
+  BOOST_CHECK( lic_info.balance_upgrade == upgrade_type({2}) );  // From the pro.
+  BOOST_CHECK( lic_info.requeue_upgrade == upgrade_type({1}) );  // From the manager charter.
+  BOOST_CHECK( lic_info.return_upgrade == upgrade_type({1,2,4}) );  // From the president promo.
+
+  // Now we try the Allguy:
+  // Allguy should get all the licenses in order:
+  issue(allguy, "manager");
+  generate_blocks(db.head_block_time() + fc::hours(24));
+  BOOST_CHECK_EQUAL( get_cycle_balance(allguy_id).value, 600 );
+  lic_info = allguy_id(db).license_info;
+  BOOST_CHECK( lic_info.balance_upgrade == upgrade_type({2}) );
+
+  issue(allguy, "pro");
+  generate_blocks(db.head_block_time() + fc::hours(24));
+  BOOST_CHECK_EQUAL( get_cycle_balance(allguy_id).value, 2600 );
+  lic_info = allguy_id(db).license_info;
+  BOOST_CHECK( lic_info.balance_upgrade == upgrade_type({2}) );
+
+  issue(allguy, "executive");
+  generate_blocks(db.head_block_time() + fc::hours(24));
+  BOOST_CHECK_EQUAL( get_cycle_balance(allguy_id).value, 7600 );
+  lic_info = allguy_id(db).license_info;
+  BOOST_CHECK( lic_info.balance_upgrade == upgrade_type({2,2}) );
+
+  issue(allguy, "president");
+  generate_blocks(db.head_block_time() + fc::hours(24));
+  BOOST_CHECK_EQUAL( get_cycle_balance(allguy_id).value, 32600 );
+  lic_info = allguy_id(db).license_info;
+  BOOST_CHECK( lic_info.balance_upgrade == upgrade_type({2,2,2}) );
 
 } FC_LOG_AND_RETHROW() }
 

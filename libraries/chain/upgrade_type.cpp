@@ -17,8 +17,11 @@ namespace graphene { namespace chain {
 
   void upgrade_type::improve(const upgrade_type& new_upgrade)
   {
-    multipliers = new_upgrade.multipliers;
-    max = new_upgrade.multipliers.size();
+    if ( multipliers.size() < new_upgrade.multipliers.size() )
+    {
+      multipliers = new_upgrade.multipliers;
+      max = new_upgrade.multipliers.size();
+    }
   }
 
   bool upgrade_type::based_on(const upgrade_type& base_upgrade) const

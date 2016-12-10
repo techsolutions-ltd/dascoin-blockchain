@@ -83,6 +83,9 @@ void database::fulfill_license_request(const license_request_object& req)
     info.balance_upgrade += new_license_obj.balance_upgrade;
     info.requeue_upgrade += new_license_obj.requeue_upgrade;
     info.return_upgrade += new_license_obj.return_upgrade;
+
+    // The license is no longer pending:
+    info.pending_license.reset();
   });
 
   // For regular licenses, increase the cycle balance for the appropriate amount:

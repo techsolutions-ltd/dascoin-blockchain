@@ -93,7 +93,6 @@ object_id_type database::create_empty_cycle_balance(account_id_type owner_id)
    return create<account_cycle_balance_object>([&](account_cycle_balance_object& acbo) {
       acbo.owner = owner_id;
       acbo.balance = 0;
-      acbo.reserved = 0;
    }).id;
 }
 

@@ -287,16 +287,16 @@ namespace graphene { namespace chain {
    struct upgrade_account_cycles_operation : public base_operation
    {
      struct fee_parameters_type {};
-
      asset fee;
+
      account_id_type account;
-     share_type new_balance;
+     string description;
 
      extensions_type extensions;
 
-     account_id_type fee_payer()const { return account; }
-     void validate()const { FC_ASSERT( false ); }
-     share_type calculate_fee(const fee_parameters_type&)const { return 0; }
+     account_id_type fee_payer() const { return account; }
+     void validate() const { FC_ASSERT( false ); }
+     share_type calculate_fee(const fee_parameters_type&) const { return 0; }
    };
 
 } } // graphene::chain
@@ -358,6 +358,6 @@ FC_REFLECT( graphene::chain::upgrade_account_cycles_operation::fee_parameters_ty
 FC_REFLECT( graphene::chain::upgrade_account_cycles_operation,
             (fee)
             (account)
-            (new_balance)
+            (description)
             (extensions)
           )

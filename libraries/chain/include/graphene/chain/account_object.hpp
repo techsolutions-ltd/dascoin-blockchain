@@ -139,10 +139,8 @@ namespace graphene { namespace chain {
          account_id_type owner;
          share_type balance;
          upgrade_type upgrade;
-         uint8_t remaining_upgrades;  // DEPRECATED!
 
          share_type get_balance()const { return balance; }
-         uint8_t get_remaining_upgrades()const { return remaining_upgrades; }
    };
 
    /**
@@ -526,6 +524,5 @@ FC_REFLECT_DERIVED( graphene::chain::account_balance_object, (graphene::db::obje
 FC_REFLECT_DERIVED( graphene::chain::account_cycle_balance_object, (graphene::db::object),
                     (owner)
                     (balance)
-                    (remaining_upgrades)
                     (upgrade)
                   )

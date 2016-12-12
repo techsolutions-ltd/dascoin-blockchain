@@ -69,7 +69,7 @@ namespace graphene { namespace chain {
       uint16_t                accounts_per_fee_scale              = GRAPHENE_DEFAULT_ACCOUNTS_PER_FEE_SCALE; ///< number of accounts between fee scalings
       uint8_t                 account_fee_scale_bitshifts         = GRAPHENE_DEFAULT_ACCOUNT_FEE_SCALE_BITSHIFTS; ///< number of times to left bitshift account registration fee at each scaling
       uint8_t                 max_authority_depth                 = GRAPHENE_MAX_SIG_CHECK_DEPTH;
-      uint16_t                cycle_upgrade_maintenance_int_count = GRAPHENE_DEFAULT_CYCLE_UPGRADE_MAINT_INT_COUNT;
+      uint16_t                upgrade_event_interval_days = DASCOIN_DEFAULT_UPGRADE_EVENT_INTERVAL_DAYS;
       share_type              minimum_transfer_limit = DASCOIN_DEFAULT_MINIMUM_TRANSFER_LIMIT;
       share_type              maximum_transfer_limit = DASCOIN_DEFAULT_MAXIMUM_TRANSFER_LIMIT;
       uint32_t                limit_interval_elapse_time_seconds = DASCOIN_DEFAULT_LIMIT_INTERVAL_ELAPSE_TIME_SECONDS;
@@ -115,7 +115,7 @@ FC_REFLECT( graphene::chain::chain_parameters,
             (accounts_per_fee_scale)
             (account_fee_scale_bitshifts)
             (max_authority_depth)
-            (cycle_upgrade_maintenance_int_count)
+            (upgrade_event_interval_days)
             (minimum_transfer_limit)
             (maximum_transfer_limit)
             (limit_interval_elapse_time_seconds)

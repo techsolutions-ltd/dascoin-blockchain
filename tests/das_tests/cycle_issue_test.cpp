@@ -17,7 +17,7 @@ using namespace graphene::chain::test;
 
 BOOST_FIXTURE_TEST_SUITE( dascoin_tests, database_fixture )
 
-BOOST_AUTO_TEST_CASE( license_types_create_test )
+BOOST_AUTO_TEST_CASE( issue_cycles_to_accounts_test )
 { try {
   ACTOR(wallet);
   generate_block();

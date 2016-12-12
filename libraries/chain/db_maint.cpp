@@ -716,29 +716,45 @@ void deprecate_annual_members( database& db )
    return;
 }
 
-// TODO: if necessary, turn this into a template method.
-void database::upgrade_cycles()
+void database::perform_upgrades(const account_object& account)
 {
-   auto& idx = get_index_type<account_cycle_balance_index>();
-   auto itr = idx.indices().get<by_account_id>().begin();
-   while( itr != idx.indices().get<by_account_id>().end() )
-   {
-      share_type new_balance = itr->balance * 2;
-      modify( *itr, [&]( account_cycle_balance_object& b ){
-         ilog("Upgrading cycles for account ${a}: before = ${o}, after = ${n}",
-              ("a", b.owner)
-              ("o", b.balance)
-              ("n", new_balance));
-         b.balance = new_balance;
-      });
+   share_type new_balance;
+   share_type requeue_amount;
+   share_type return_amount;
 
-      upgrade_account_cycles_operation vop;
-      vop.account = itr->owner;
-      vop.new_balance = new_balance;
-      push_applied_operation(vop);
+   // NOTE: special accounts are not upgraded!
+   if ( account.kind == account_kind::special )
+      return;
 
-      ++itr;
-   }
+   const auto& cycle_balance_obj = get_cycle_balance_object(account.id);
+
+   // Modify the account object, execute all upgrades and get the new amounts.
+   modify(account, [&](account_object& a){
+      new_balance = a.license_info.balance_upgrade(cycle_balance_obj.balance);
+      // TODO: do the same for remaining upgrades:
+      // requeue_amount = a.license_info.requeue_upgrade();
+      // return_amount = a.license_info.return_upgrade();
+   });
+
+   // ilog( "Performing cycle upgrade on account '${n}': current cycle balance = ${b}, balance after upgrade: ${nb}",
+   //       ("n", account.name)
+   //       ("b", cycle_itr->balance)
+   //       ("nb", new_balance)
+   //     );
+
+   // First, perform the balance_upgrade:
+   modify(cycle_balance_obj, [&](account_cycle_balance_object& acb){
+      acb.balance = new_balance;
+   });
+
+   // Second, perform the requeue upgrades:
+
+   // Third, perform the return upgrades:
+
+   // Last, apply the upgrade operation:
+   upgrade_account_cycles_operation vop;
+   vop.account = account.id;
+   push_applied_operation(vop);
 }
 
 void database::perform_chain_maintenance(const signed_block& next_block, const global_property_object& global_props)
@@ -746,15 +762,11 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
    const auto& gpo = get_global_properties();
    const auto& dgpo = get_dynamic_global_properties();
 
-   auto intervals_until_cycle_upgrade =
-      get<dynamic_global_property_object>(dynamic_global_property_id_type()).intervals_until_cycle_upgrade;
-   auto cycle_upgrade_maintenance_int_count =
-      get<global_property_object>(global_property_id_type()).parameters.cycle_upgrade_maintenance_int_count;
-
    distribute_fba_balances(*this);
    create_buyback_orders(*this);
 
-   struct vote_tally_helper {
+   struct vote_tally_helper
+   {
       database& d;
       const global_property_object& props;
 
@@ -818,19 +830,46 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
          }
       }
    } tally_helper(*this, gpo);
-   struct process_fees_helper {
+
+   struct process_fees_helper
+   {
       database& d;
       const global_property_object& props;
 
-      process_fees_helper(database& d, const global_property_object& gpo)
-         : d(d), props(gpo) {}
+      process_fees_helper(database& d, const global_property_object& gpo) : d(d), props(gpo) {}
 
-      void operator()(const account_object& a) {
-         a.statistics(d).process_fees(a, d);
-      }
+      void operator()(const account_object& a) { a.statistics(d).process_fees(a, d); }
+
    } fee_helper(*this, gpo);
 
-   perform_helpers<account_index, by_name>( std::tie( tally_helper, fee_helper ) );
+   struct perform_upgrades_helper
+   {
+      database& d;
+
+      perform_upgrades_helper(database& d) : d(d) {}
+
+      void operator()(const account_object& a) { d.perform_upgrades(a); }
+
+   } upgrades_helper(*this);
+
+   auto next_upgrade_event = get<dynamic_global_property_object>(dynamic_global_property_id_type()).next_upgrade_event;
+   auto total_upgrade_events = get<dynamic_global_property_object>(dynamic_global_property_id_type()).total_upgrade_events;
+   if ( next_upgrade_event <= head_block_time() )
+   {
+      // Perform upgrades on each account:
+      perform_helpers<account_index, by_name>(std::tie(tally_helper, fee_helper, upgrades_helper));
+      // Set the next upgrade interval:
+      next_upgrade_event = head_block_time() + fc::days(gpo.parameters.upgrade_event_interval_days);
+      total_upgrade_events++;
+
+      ilog( "Head block number on upgrade: '${n}'; head block time: '${h}'; next upgrade event scheduled at: '${t}'",
+            ("n", head_block_num())
+            ("h", head_block_time())
+            ("t", next_upgrade_event)
+          );
+   }
+   else
+      perform_helpers<account_index, by_name>(std::tie(tally_helper, fee_helper));
 
    struct clear_canary {
       clear_canary(vector<uint64_t>& target): target(target){}
@@ -846,8 +885,6 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
    update_active_witnesses();
    update_active_committee_members();
    update_worker_votes();
-   if ( intervals_until_cycle_upgrade == 0 )
-      upgrade_cycles();
 
    modify(gpo, [this](global_property_object& p) {
       // Remove scaling of account registration fee
@@ -868,8 +905,17 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
    if( next_maintenance_time <= next_block.timestamp )
    {
       if( next_block.block_num() == 1 )
+      {
          next_maintenance_time = time_point_sec() +
                (((next_block.timestamp.sec_since_epoch() / maintenance_interval) + 1) * maintenance_interval);
+         next_upgrade_event = head_block_time() + fc::days(gpo.parameters.upgrade_event_interval_days);
+
+         ilog( "Head block number: '${n}'; head block time: '${h}'; first upgrade event scheduled at: '${t}'",
+               ("n", head_block_num())
+               ("h", head_block_time())
+               ("t", next_upgrade_event)
+             );
+      }
       else
       {
          // We want to find the smallest k such that next_maintenance_time + k * maintenance_interval > head_block_time()
@@ -895,11 +941,12 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
    if( (dgpo.next_maintenance_time < HARDFORK_613_TIME) && (next_maintenance_time >= HARDFORK_613_TIME) )
       deprecate_annual_members(*this);
 
-   modify(dgpo,[next_maintenance_time,cycle_upgrade_maintenance_int_count](dynamic_global_property_object& d) {
+   modify(dgpo,
+      [next_maintenance_time, next_upgrade_event, total_upgrade_events](dynamic_global_property_object& d) {
       d.next_maintenance_time = next_maintenance_time;
+      d.next_upgrade_event = next_upgrade_event;
+      d.total_upgrade_events = total_upgrade_events;
       d.accounts_registered_this_interval = 0;
-      if ( --d.intervals_until_cycle_upgrade < 0 )
-         d.intervals_until_cycle_upgrade = cycle_upgrade_maintenance_int_count;
    });
 
    // Reset all BitAsset force settlement volumes to zero

@@ -167,19 +167,70 @@ BOOST_AUTO_TEST_CASE( issue_license_test )
 
 } FC_LOG_AND_RETHROW() }
 
-// BOOST_AUTO_TEST_CASE( upgrade_cycles_test )
-// { try {
-//   VAULT_ACTORS((holder));
-//   INVOKE(license_types_create_test);
-//   auto& lt = get_license_type("test-medium");
+BOOST_AUTO_TEST_CASE( upgrade_cycles_test )
+{ try {
+  VAULT_ACTOR(stan);
+  generate_block();
+  VAULT_ACTOR(richguy);
+  generate_block();
+  ACTOR(wallet);
+  generate_block();
 
-//   issue_license_to_vault_account(get_license_issuer_id(), holder_id, lt.id, {});
-//   generate_blocks(fc::time_point::now() + fc::minutes(10));
-//   BOOST_CHECK(get_cycle_balance(holder_id) == 100);
+  const auto& issue = [&](const account_object& account, const string& license_name){
+    issue_license_to_vault_account(account.id, get_license_type(license_name).id);
+    generate_block();
+  };
 
-//   generate_blocks(fc::time_point::now() + fc::minutes(60));
-//   BOOST_CHECK(get_cycle_balance(holder_id) == 200);
+  issue(stan, "standard");  // 100 cycles.
+  issue(richguy, "president");  // 25000 cycles.
 
-// } FC_LOG_AND_RETHROW() }
+  adjust_cycles(wallet_id, 2000);  // Wallet has no license, but has floating cycles.
+
+  // Wait for time to elapse:
+  // TODO: fetch the time parameter.
+  generate_blocks(db.head_block_time() + fc::hours(24));
+
+  // Check balances on accounts:
+  BOOST_CHECK_EQUAL( get_cycle_balance(stan_id).value, 100 );  // 100
+  BOOST_CHECK_EQUAL( get_cycle_balance(richguy_id).value, 25000 );  // 25000
+  BOOST_CHECK_EQUAL( get_cycle_balance(wallet_id).value, 2000 );  // 2000 (no license)
+
+  // No upgrade happened yet!
+  BOOST_CHECK_EQUAL( db.get_dynamic_global_properties().total_upgrade_events, 0 );
+
+  // Wait for the maintenace interval to trigger:
+  generate_blocks(db.head_block_time() + fc::days(120));
+  generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);  // Just in case, on the maintenance int.
+
+  // One upgrade event has happened:
+  BOOST_CHECK_EQUAL( db.get_dynamic_global_properties().total_upgrade_events, 1 );
+
+  BOOST_CHECK_EQUAL( get_cycle_balance(stan_id).value, 200 );  // 100 -> 200
+  BOOST_CHECK_EQUAL( get_cycle_balance(richguy_id).value, 50000 );  // 25000 -> 50000
+  BOOST_CHECK_EQUAL( get_cycle_balance(wallet_id).value, 2000 );  // Wallet should get no increase.
+
+  // Wait for the maintenace interval to trigger:
+  generate_blocks(db.head_block_time() + fc::days(120));
+  generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
+
+  // Second upgrade event has happened:
+  BOOST_CHECK_EQUAL( db.get_dynamic_global_properties().total_upgrade_events, 2 );
+
+  BOOST_CHECK_EQUAL( get_cycle_balance(stan_id).value, 200 );
+  BOOST_CHECK_EQUAL( get_cycle_balance(richguy_id).value, 100000 );  // 50000 -> 100000
+  BOOST_CHECK_EQUAL( get_cycle_balance(wallet_id).value, 2000 );  // No increase.
+
+  // Wait for the maintenace interval to trigger:
+  generate_blocks(db.head_block_time() + fc::days(120));
+  generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
+
+  // Second upgrade event has happened:
+  BOOST_CHECK_EQUAL( db.get_dynamic_global_properties().total_upgrade_events, 3 );
+
+  BOOST_CHECK_EQUAL( get_cycle_balance(stan_id).value, 200 );
+  BOOST_CHECK_EQUAL( get_cycle_balance(richguy_id).value, 200000 );  //  100000 -> 200000
+  BOOST_CHECK_EQUAL( get_cycle_balance(wallet_id).value, 2000 );  // No increase.
+
+} FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_SUITE_END()

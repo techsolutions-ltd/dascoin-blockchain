@@ -92,6 +92,15 @@ namespace graphene { namespace chain {
       VAULT_KIND_COUNT
    };
 
+   // NOTE: It is important to sort this enum based on the priority of each individual license!
+   enum license_kind
+   {
+      regular = 0,
+      chartered = 1,
+      promo = 2,
+      LICENSE_KIND_COUNT
+   };
+
    enum limit_kind
    {
       vault_to_wallet_webasset = 0,
@@ -320,8 +329,9 @@ namespace graphene { namespace chain {
    typedef fc::ecc::compact_signature                           signature_type;
    typedef safe<int64_t>                                        share_type;
    typedef uint16_t                                             weight_type;
-   typedef float                                                frequency_type;
+   typedef safe<float>                                          frequency_type;
    typedef std::vector<share_type>                              limits_type;
+   typedef std::map<std::string, fc::variant>                   policy_type;
 
    struct public_key_type
    {
@@ -406,6 +416,13 @@ FC_REFLECT_ENUM( graphene::chain::limit_kind,
                  (vault_to_wallet_reserved_webasset)
                  (wallet_out_webasset)
                  (LIMIT_KIND_COUNT)
+               )
+
+FC_REFLECT_ENUM( graphene::chain::license_kind,
+                 (regular)
+                 (chartered)
+                 (promo)
+                 (LICENSE_KIND_COUNT)
                )
 
 FC_REFLECT_ENUM( graphene::chain::account_kind,

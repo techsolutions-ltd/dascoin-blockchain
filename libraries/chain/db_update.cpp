@@ -26,6 +26,7 @@
 #include <graphene/chain/db_with.hpp>
 
 #include <graphene/chain/asset_object.hpp>
+#include <graphene/chain/cycle_objects.hpp>
 #include <graphene/chain/global_property_object.hpp>
 #include <graphene/chain/hardfork.hpp>
 #include <graphene/chain/license_objects.hpp>
@@ -485,15 +486,15 @@ void database::assign_licenses()
     const auto& req = *idx.begin();
     const auto& ca = get_chain_authorities();
 
-    license_approve_operation op;
-    op.license_authentication_account = ca.license_authenticator;
-    op.request = req.id;
+    fulfill_license_request(req);
 
-    assign_context.skip_fee_schedule_check = true;  // TODO: this is set in limit order cancel, determine why!
-    apply_operation( assign_context, op );
+    license_approve_operation vop;
+    vop.license_authentication_account = ca.license_authenticator;
+    vop.account = req.account;
+    vop.license = req.license;
+    push_applied_operation(vop);
 
     remove(req);
-
   }
 } FC_CAPTURE_AND_RETHROW() }
 

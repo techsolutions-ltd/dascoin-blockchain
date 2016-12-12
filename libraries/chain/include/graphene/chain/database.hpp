@@ -295,7 +295,24 @@ namespace graphene { namespace chain {
          /// This is an overloaded method.
          asset get_reserved_balance(const account_object& owner, const asset_object& asset_obj) const;
 
+         /**
+          * Retrieve the balance object for a given asset on an account, This method will throw an exception if the
+          * object does not exist.
+          *
+          * @param  owner    ID of the account that owns the balance.
+          * @param  asset_id ID of the asset the balance tracks.
+          * @return          Const reference to the balance object.
+          */
          const account_balance_object& get_balance_object(account_id_type owner, asset_id_type asset_id) const;
+
+         /**
+          * Retrieve the cycle balance object on an account, This method will throw an exception if the object does not
+          * exist. NOTE: this should NOT happen on regular accounts!
+          *
+          * @param  owner    ID of the account that owns the cycle balance.
+          * @return          Const reference to the cycle balance object.
+          */
+         const account_cycle_balance_object& get_cycle_balance_object(account_id_type owner) const;
 
          pair<asset, share_type> get_balance_and_spent(account_id_type owner, asset_id_type asset_id) const;
 
@@ -321,7 +338,7 @@ namespace graphene { namespace chain {
           * @param account ID of the account whose balance should be adjusted.
           * @param delta   Amount to adjust balance by.
           */
-         void adjust_cycle_balance(account_id_type account, share_type delta, optional<uint8_t> upgrades_delta = {});
+         void adjust_cycle_balance(account_id_type account, share_type delta);
 
          /**
           * @brief Get the set transfer limits for a given account.
@@ -337,12 +354,19 @@ namespace graphene { namespace chain {
          optional<uint8_t> get_account_pi_level(const account_id_type account) const;
 
          /**
-          * @brief Create an empty balance object with optional no limits set.
+          * @brief Create an empty balance object.
           * @param  owner    ID of the owner of the balance.
           * @param  asset_id ID of the asset.
           * @return          ID of the created object.
           */
          object_id_type create_empty_balance(account_id_type owner, asset_id_type asset_id);
+
+         /**
+          * @brief Create an empty cycle balance object.
+          * @param  owner    ID of the owner of the balance.
+          * @return          ID of the created object.
+          */
+         object_id_type create_empty_cycle_balance(account_id_type owner);
 
          /**
           * @brief Helper to make lazy deposit to CDD VBO.
@@ -445,8 +469,8 @@ namespace graphene { namespace chain {
           */
 
          //////////////////// db_license.cpp ////////////////////
-         object_id_type create_license_type(const string& name, const share_type amount, const uint8_t upgrades,
-                                            const uint32_t flags);
+         object_id_type create_license_type(const string& name, share_type amount, const policy_type& policy);
+         void fulfill_license_request(const license_request_object& req);
 
 
    protected:
@@ -507,7 +531,7 @@ namespace graphene { namespace chain {
          void perform_chain_maintenance(const signed_block& next_block, const global_property_object& global_props);
          void update_active_witnesses();
          void update_active_committee_members();
-         void upgrade_cycles();
+         void perform_upgrades(const account_object& account);
          void update_worker_votes();
 
          template<typename IndexType, typename IndexBy, class... HelperTypes>

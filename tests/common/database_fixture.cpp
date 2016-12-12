@@ -1223,58 +1223,6 @@ const account_object& database_fixture::create_new_vault_account(
 
 } FC_CAPTURE_AND_RETHROW() }
 
-const license_type_object* database_fixture::create_license_type(
-   const string& name,
-   share_type amount,
-   uint8_t upgrades,
-   bool is_chartered /* = false */)
-{
-   uint32_t flags = is_chartered ? CYCLE_POLICY_CHARTER_MASK : 0;
-
-   license_type_create_operation op;
-   op.license_authentication_account = get_license_authenticator_id();
-   op.name = name;
-   op.amount = amount;
-   op.upgrades = upgrades;
-   op.policy_flags = flags;
-
-   trx.operations.push_back( op );
-   trx.validate();
-   processed_transaction ptx = db.push_transaction( trx, ~0 );
-   trx.operations.clear();
-
-   return db.find<license_type_object>(ptx.operation_results[0].get<object_id_type>());
-}
-
-const license_type_object& database_fixture::get_license_type( const string& name )const
-{
-   const auto& idx = db.get_index_type<license_type_index>().indices().get<by_name>();
-   const auto itr = idx.find(name);
-   assert( itr != idx.end() );
-   return *itr;
-}
-
-const license_request_object* database_fixture::issue_license_to_vault_account(
-   const account_id_type issuer_id,
-   const account_id_type vault_account_id,
-   const license_type_id_type license_id,
-   optional<frequency_type> account_frequency)
-{
-   license_request_operation op;
-
-   op.license_issuing_account = issuer_id;
-   op.account = vault_account_id;
-   op.license = license_id;
-   op.account_frequency = account_frequency;
-
-   trx.operations.push_back( op );
-   trx.validate();
-   processed_transaction ptx = db.push_transaction( trx, ~0 );
-   trx.operations.clear();
-
-   return db.find<license_request_object>( ptx.operation_results[0].get<object_id_type>() );
-}
-
 namespace test {
 
 void set_expiration( const database& db, transaction& tx )

@@ -108,10 +108,9 @@ namespace graphene { namespace chain {
             license_type_edit_operation,
             license_type_delete_operation,
             license_request_operation,
-            license_approve_operation,
+            license_approve_operation,  // VIRTUAL
             license_deny_operation,
             tether_accounts_operation,
-            upgrade_account_cycles_operation,
             update_pi_limits_operation,
             asset_create_issue_request_operation,
             asset_distribute_completed_request_operation,  // VIRTUAL
@@ -123,7 +122,8 @@ namespace graphene { namespace chain {
             transfer_wallet_to_vault_operation,
             cycle_issue_request_operation,
             cycle_issue_deny_operation,
-            cycle_issue_complete_operation  // VIRTUAL
+            cycle_issue_complete_operation,  // VIRTUAL
+            upgrade_account_cycles_operation  // VIRTUAL
          > operation;
 
    /// @} // operations group

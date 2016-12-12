@@ -17,7 +17,7 @@ using namespace graphene::chain::test;
 
 BOOST_FIXTURE_TEST_SUITE( dascoin_tests, database_fixture )
 
-BOOST_AUTO_TEST_CASE( license_types_create_test )
+BOOST_AUTO_TEST_CASE( issue_cycles_to_accounts_test )
 { try {
   ACTOR(wallet);
   generate_block();
@@ -42,17 +42,17 @@ BOOST_AUTO_TEST_CASE( license_types_create_test )
   issue_cycle_request(vault, 3000);
 
   // There should be three request objects found:
-  BOOST_CHECK_EQUAL( get_cycle_issue_request_objects_by_expiration(vault_id).size(), 3 );
+  BOOST_CHECK_EQUAL( get_cycle_issue_request_objects_by_expiration().size(), 3 );
 
   // Wait some time...
   generate_blocks(db.head_block_time() + fc::seconds(5));
 
   // Deny the first request:
-  auto req = get_cycle_issue_request_objects_by_expiration(vault_id)[0];
+  auto req = get_cycle_issue_request_objects_by_expiration()[0];
   deny_issue_cycles(req.id);
 
   // Check if there are two requests in the queue
-  BOOST_CHECK_EQUAL( get_cycle_issue_request_objects_by_expiration(vault_id).size(), 2 );
+  BOOST_CHECK_EQUAL( get_cycle_issue_request_objects_by_expiration().size(), 2 );
 
   // Wait for time to elapse:
   generate_blocks(db.head_block_time() + fc::hours(24));

@@ -1530,6 +1530,16 @@ class wallet_api
 
       order_book get_order_book( const string& base, const string& quote, unsigned limit = 50);
 
+      ///////////////////////////////
+      /// WIRE:                   ///
+      ///////////////////////////////
+      /**
+       * Wire out some WebAsset.
+       * @param account Account ID.
+       * @param amount  Amount to wire.
+       */
+      signed_transaction wire_out(const string& account, share_type amount, bool broadcast) const;
+
       void dbg_make_uia(string creator, string symbol);
       void dbg_make_mia(string creator, string symbol);
       void dbg_push_blocks( std::string src_filename, uint32_t count );
@@ -1738,4 +1748,5 @@ FC_API( graphene::wallet::wallet_api,
         // Cycles:
         (get_account_cycle_balance)
         (get_order_book)
+        (wire_out)
       )

@@ -185,27 +185,27 @@ class database_api
       /**
        * @brief Retrieve the @ref chain_property_object associated with the chain
        */
-      chain_property_object get_chain_properties()const;
+      chain_property_object get_chain_properties() const;
 
       /**
        * @brief Retrieve the current @ref global_property_object
        */
-      global_property_object get_global_properties()const;
+      global_property_object get_global_properties() const;
 
       /**
        * @brief Retrieve compile-time constants
        */
-      fc::variant_object get_config()const;
+      fc::variant_object get_config() const;
 
       /**
        * @brief Get the chain ID
        */
-      chain_id_type get_chain_id()const;
+      chain_id_type get_chain_id() const;
 
       /**
        * @brief Retrieve the current @ref dynamic_global_property_object
        */
-      dynamic_global_property_object get_dynamic_global_properties()const;
+      dynamic_global_property_object get_dynamic_global_properties() const;
 
       //////////
       // Keys //

@@ -2515,6 +2515,21 @@ public:
       return sign_transaction( tx, broadcast );
    }
 
+   signed_transaction wire_out(const string& account_name, share_type amount, bool broadcast)
+   {
+      auto account = get_account(account_name);
+
+      wire_out_operation op;
+      op.account = account.id;
+      op.asset_to_wire = asset(amount, asset_id_type(DASCOIN_WEB_ASSET_INDEX));
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
+
+      return sign_transaction(tx, broadcast);
+   }
+
    void dbg_make_uia(string creator, string symbol)
    {
       asset_options opts;
@@ -4419,6 +4434,11 @@ share_type wallet_api::get_account_cycle_balance(const string& name_or_id)const
    if( auto real_id = detail::maybe_id<account_id_type>(name_or_id) )
       return my->_remote_db->get_account_cycle_balance(*real_id);
    return my->_remote_db->get_account_cycle_balance(get_account(name_or_id).id);
+}
+
+signed_transaction wallet_api::wire_out(const string& account, share_type amount, bool broadcast) const
+{
+   return my->wire_out(account, amount, broadcast);
 }
 
 order_book wallet_api::get_order_book( const string& base, const string& quote, unsigned limit )

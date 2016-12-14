@@ -99,7 +99,7 @@ namespace graphene { namespace chain {
     struct fee_parameters_type {};  // No fees are paid for this operation.
 
     asset fee;
-    account_id_type license_issuing_account;  // This MUST be the license authentication authority.
+    account_id_type license_issuing_account;  // This MUST be the license issuer authority.
 
     account_id_type account;                  // The account to benefit the license.
     license_type_id_type license;             // The license to be granted.

@@ -112,5 +112,34 @@ uint32_t database::last_non_undoable_block_num() const
    return head_block_num() - _undo_db.size();
 }
 
+account_id_type database::get_account_id(const string& name)
+{
+   const auto& accounts_by_name = get_index_type<account_index>().indices().get<by_name>();
+   auto itr = accounts_by_name.find(name);
+   FC_ASSERT( itr != accounts_by_name.end(),
+              "Unable to find account '${acct}'. Did you forget to add a record for it to initial_accounts?",
+              ("acct", name)
+            );
+   return itr->get_id();
+}
+
+asset_id_type database::get_asset_id(const string& symbol)
+{
+   const auto& assets_by_symbol = get_index_type<asset_index>().indices().get<by_symbol>();
+   auto itr = assets_by_symbol.find(symbol);
+
+   // TODO: This is temporary for handling BTS snapshot
+   if( symbol == "BTS" )
+       itr = assets_by_symbol.find(GRAPHENE_SYMBOL);
+
+   FC_ASSERT( itr != assets_by_symbol.end(),
+              "Unable to find asset '${sym}'. Did you forget to add a record for it to initial_assets?",
+              ("sym", symbol)
+            );
+
+   return itr->get_id();
+}
+
+
 
 } }

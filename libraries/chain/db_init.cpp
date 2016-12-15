@@ -221,6 +221,27 @@ void database::initialize_evaluators()
    register_evaluator<cycle_issue_deny_evaluator>();
 }
 
+void database::initialize_preissued_cycles(const genesis_state_type& genesis_state)
+{
+  for( const auto& handout : genesis_state.initial_issued_cycles )
+  {
+      auto account_id = get_account_id(handout.owner_name);
+      auto cycle_auth_id = get_account_id(genesis_state.initial_cycle_authentication_authority.owner_name);
+
+      // Increase the balance:
+      adjust_cycle_balance(account_id, handout.amount);
+
+      // Execute the virtual operation:
+      cycle_issue_complete_operation vop;
+      vop.cycle_authenticator = cycle_auth_id;
+      vop.account = account_id;
+      vop.amount = handout.amount;
+      push_applied_operation(vop);
+
+     // TODO: increase the global supply of cycles!
+  }
+}
+
 void database::initialize_indexes()
 {
    reset_indexes();
@@ -525,31 +546,6 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       }
    }
 
-   // Helper function to get account ID by name
-   const auto& accounts_by_name = get_index_type<account_index>().indices().get<by_name>();
-   auto get_account_id = [&accounts_by_name](const string& name) {
-      auto itr = accounts_by_name.find(name);
-      FC_ASSERT(itr != accounts_by_name.end(),
-                "Unable to find account '${acct}'. Did you forget to add a record for it to initial_accounts?",
-                ("acct", name));
-      return itr->get_id();
-   };
-
-   // Helper function to get asset ID by symbol
-   const auto& assets_by_symbol = get_index_type<asset_index>().indices().get<by_symbol>();
-   const auto get_asset_id = [&assets_by_symbol](const string& symbol) {
-      auto itr = assets_by_symbol.find(symbol);
-
-      // TODO: This is temporary for handling BTS snapshot
-      if( symbol == "BTS" )
-          itr = assets_by_symbol.find(GRAPHENE_SYMBOL);
-
-      FC_ASSERT(itr != assets_by_symbol.end(),
-                "Unable to find asset '${sym}'. Did you forget to add a record for it to initial_assets?",
-                ("sym", symbol));
-      return itr->get_id();
-   };
-
    map<asset_id_type, share_type> total_supplies;
    map<asset_id_type, share_type> total_debts;
 
@@ -624,7 +620,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    for( const auto& handout : genesis_state.initial_balances )
    {
       const auto asset_id = get_asset_id(handout.asset_symbol);
-      create<balance_object>([&handout,&get_asset_id,total_allocation,asset_id](balance_object& b) {
+      create<balance_object>([&handout,total_allocation,asset_id](balance_object& b) {
          b.balance = asset(handout.amount, asset_id);
          b.owner = handout.owner;
       });
@@ -841,6 +837,9 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       op.committee_member_account = GRAPHENE_COMMITTEE_ACCOUNT;
       apply_operation( genesis_eval_state, std::move(op) );
    }
+
+   // Hand out initial cycles, WebAssets and licenses:
+   initialize_preissued_cycles(genesis_state);
 
    // Set active witnesses
    modify(get_global_properties(), [&](global_property_object& p) {

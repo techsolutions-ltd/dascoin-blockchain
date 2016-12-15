@@ -263,13 +263,27 @@ namespace graphene { namespace chain {
 
          node_property_object& node_properties();
 
-
          uint32_t last_non_undoable_block_num() const;
+
+         account_id_type get_account_id(const string& name);
+         asset_id_type get_asset_id(const string& symbol);
+
          //////////////////// db_init.cpp ////////////////////
 
          void initialize_evaluators();
          /// Reset the object graph in-memory
          void initialize_indexes();
+
+         /**
+          * Distribute the initial cycles to accounts in the genesis_state.
+          */
+         void initialize_preissued_cycles(const genesis_state_type& genesis_state);
+
+         /**
+          * Initialize the starting state of the chain from the provided genesis state.
+          * @param genesis_state genesis.json file, may be embedded in the binary. If no genesis state
+          *                      provided the default one will be used.
+          */
          void init_genesis(const genesis_state_type& genesis_state = genesis_state_type());
 
          template<typename EvaluatorType>
@@ -469,6 +483,7 @@ namespace graphene { namespace chain {
           */
 
          //////////////////// db_license.cpp ////////////////////
+
          object_id_type create_license_type(const string& name, share_type amount, const policy_type& policy);
          void fulfill_license_request(const license_request_object& req);
 
@@ -504,6 +519,7 @@ namespace graphene { namespace chain {
          void create_block_summary(const signed_block& next_block);
 
          //////////////////// db_update.cpp ////////////////////
+
          void update_global_dynamic_data( const signed_block& b );
          void update_signing_witness(const witness_object& signing_witness, const signed_block& new_block);
          void update_last_irreversible_block();

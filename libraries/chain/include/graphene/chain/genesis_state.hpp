@@ -84,6 +84,10 @@ struct genesis_state_type {
       uint32_t vesting_duration_seconds = 0;
       share_type begin_balance;
    };
+   struct initial_issued_cycles_type {
+      string owner_name;
+      share_type amount;
+   };
    struct initial_witness_type {
       /// Must correspond to one of the initial accounts
       string owner_name;
@@ -111,6 +115,7 @@ struct genesis_state_type {
    vector<initial_asset_type>               initial_assets;
    vector<initial_balance_type>             initial_balances;
    vector<initial_vesting_balance_type>     initial_vesting_balances;
+   vector<initial_issued_cycles_type>       initial_issued_cycles;
    uint64_t                                 initial_active_witnesses = GRAPHENE_DEFAULT_MIN_WITNESS_COUNT;
    vector<initial_witness_type>             initial_witness_candidates;
    vector<initial_committee_member_type>    initial_committee_candidates;
@@ -183,6 +188,11 @@ FC_REFLECT( graphene::chain::genesis_state_type::initial_vesting_balance_type,
             (begin_balance)
           )
 
+FC_REFLECT ( graphene::chain::genesis_state_type::initial_issued_cycles_type,
+             (owner_name)
+             (amount)
+           )
+
 FC_REFLECT( graphene::chain::genesis_state_type::initial_witness_type,
             (owner_name)
             (block_signing_key)
@@ -209,6 +219,7 @@ FC_REFLECT( graphene::chain::genesis_state_type,
             (initial_assets)
             (initial_balances)
             (initial_vesting_balances)
+            (initial_issued_cycles)
             (initial_active_witnesses)
             (initial_witness_candidates)
             (initial_committee_candidates)

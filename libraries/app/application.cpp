@@ -80,33 +80,30 @@ namespace detail {
    genesis_state_type create_example_genesis() {
       genesis_state_type initial_state;
 
-      initial_state.initial_parameters.current_fees = fee_schedule::get_default();//->set_all_fees(GRAPHENE_BLOCKCHAIN_PRECISION);
+      const auto make_account = [&](const string& name, bool dump = true) -> fc::ecc::private_key {
+        auto pk = fc::ecc::private_key::regenerate(fc::sha256::hash(name));
+        initial_state.initial_accounts.emplace_back(name,
+                                                    pk.get_public_key(),
+                                                    pk.get_public_key(),
+                                                    true);
+        return pk;
+      };
+
+      // set_all_fees(GRAPHENE_BLOCKCHAIN_PRECISION);
+      initial_state.initial_parameters.current_fees = fee_schedule::get_default();
       initial_state.initial_active_witnesses = GRAPHENE_DEFAULT_MIN_WITNESS_COUNT;
       initial_state.initial_timestamp = time_point_sec(time_point::now().sec_since_epoch() /
             initial_state.initial_parameters.block_interval *
             initial_state.initial_parameters.block_interval);
 
-      auto master_key = fc::ecc::private_key::regenerate(fc::sha256::hash("sys.master"));
-      initial_state.initial_accounts.emplace_back("sys.master",
-                                                  master_key.get_public_key(),
-                                                  master_key.get_public_key(),
-                                                  true);
+      auto master_key = make_account("sys.master");
 
       // Initial witness accounts:
       for( uint64_t i = 0; i < initial_state.initial_active_witnesses; ++i )
       {
-         auto name = "sys.witness"+fc::to_string(i);
-         auto witness_key = fc::ecc::private_key::regenerate(fc::sha256::hash(name));
-         initial_state.initial_accounts.emplace_back(name,
-                                                     witness_key.get_public_key(),
-                                                     witness_key.get_public_key(),
-                                                     true);
-         initial_state.initial_witness_candidates.push_back({name, witness_key.get_public_key()});
-
-         ilog("Initial witness '${n}' keypair: [${pub},${priv}]",
-              ("n", name)
-              ("pub", chain::public_key_type(witness_key.get_public_key()))
-              ("priv", graphene::utilities::key_to_wif(witness_key)));
+        string name = ("sys.witness"+fc::to_string(i));
+        auto pk = make_account(name);
+        initial_state.initial_witness_candidates.push_back({name, pk.get_public_key()});
       }
 
       // Initial board members:
@@ -118,76 +115,31 @@ namespace detail {
                                                 GRAPHENE_MAX_SHARE_SUPPLY});
 
       // Initial chain authorities:
-      // License issuer:
-      auto lic_issuer_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.license-issuer")));
-      initial_state.initial_accounts.emplace_back("sys.license-issuer",
-                                                  lic_issuer_key.get_public_key(),
-                                                  lic_issuer_key.get_public_key(),
-                                                  true);
+      make_account("sys.license-issuer");
       initial_state.initial_license_issuing_authority = {"sys.license-issuer"};
 
-      // License authenticator:
-      auto lic_auth_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.license-authenticator")));
-      initial_state.initial_accounts.emplace_back("sys.license-authenticator",
-                                                  lic_auth_key.get_public_key(),
-                                                  lic_auth_key.get_public_key(),
-                                                  true);
+      make_account("sys.license-authenticator");
       initial_state.initial_license_authentication_authority = {"sys.license-authenticator"};
 
-      // Webasset issuer:
-      auto web_issuer_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.webasset-issuer")));
-      initial_state.initial_accounts.emplace_back("sys.webasset-issuer",
-                                                  web_issuer_key.get_public_key(),
-                                                  web_issuer_key.get_public_key(),
-                                                  true);
+      make_account("sys.webasset-issuer");
       initial_state.initial_webasset_issuing_authority = {"sys.webasset-issuer"};
 
-      // Webasset authenticator:
-      auto web_auth_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.webasset-authenticator")));
-      initial_state.initial_accounts.emplace_back("sys.webasset-authenticator",
-                                                  web_auth_key.get_public_key(),
-                                                  web_auth_key.get_public_key(),
-                                                  true);
+      make_account("sys.webasset-authenticator");
       initial_state.initial_webasset_authentication_authority = {"sys.webasset-authenticator"};
 
-      // Cycle issuer:
-      auto cycle_issuer_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.cycle-issuer")));
-      initial_state.initial_accounts.emplace_back("sys.cycle-issuer",
-                                                  cycle_issuer_key.get_public_key(),
-                                                  cycle_issuer_key.get_public_key(),
-                                                  true);
+      make_account("sys.cycle-issuer");
       initial_state.initial_cycle_issuing_authority = {"sys.cycle-issuer"};
 
-      // Cycle authenticator:
-      auto cycle_auth_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.cycle-authenticator")));
-      initial_state.initial_accounts.emplace_back("sys.cycle-authenticator",
-                                                  cycle_auth_key.get_public_key(),
-                                                  cycle_auth_key.get_public_key(),
-                                                  true);
+      make_account("sys.cycle-authenticator");
       initial_state.initial_cycle_authentication_authority = {"sys.cycle-authenticator"};
 
-      // Account registrar:
-      auto faucet_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.registrar")));
-      initial_state.initial_accounts.emplace_back("sys.registrar",
-                                                  faucet_key.get_public_key(),
-                                                  faucet_key.get_public_key(),
-                                                  true);
+      make_account("sys.registrar");
       initial_state.initial_registrar = {"sys.registrar"};
 
-      // PI validator:
-      auto pi_validator_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.pi-validator")));
-      initial_state.initial_accounts.emplace_back("sys.pi-validator",
-                                                  pi_validator_key.get_public_key(),
-                                                  pi_validator_key.get_public_key(),
-                                                  true);
+      make_account("sys.pi-validator");
       initial_state.initial_personal_identity_validation_authority = {"sys.pi-validator"};
 
-      // Wire out authority:
-      auto wire_out_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.wire-out-handler")));
-      initial_state.initial_accounts.emplace_back("sys.wire-out-handler",
-                                                  wire_out_key.get_public_key(),
-                                                  wire_out_key.get_public_key(),
-                                                  true);
+      make_account("sys.wire-out-handler");
       initial_state.initial_wire_out_handler = {"sys.wire-out-handler"};
 
       initial_state.initial_chain_id = fc::sha256::hash( "BOGUS" );

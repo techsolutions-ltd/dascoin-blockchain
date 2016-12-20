@@ -219,6 +219,7 @@ void database::initialize_evaluators()
    register_evaluator<transfer_wallet_to_vault_evaluator>();
    register_evaluator<cycle_issue_request_evaluator>();
    register_evaluator<cycle_issue_deny_evaluator>();
+   register_evaluator<submit_cycles_evaluator>();
 }
 
 void database::initialize_indexes()

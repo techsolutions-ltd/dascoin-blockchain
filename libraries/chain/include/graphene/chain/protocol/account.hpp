@@ -110,6 +110,13 @@ namespace graphene { namespace chain {
       }
    };
 
+   struct ext_account_update_operation
+   {
+      optional< void_t >            null_ext;
+      optional< special_authority > owner_special_authority;
+      optional< special_authority > active_special_authority;
+   };
+
    /**
     * @ingroup operations
     * @brief Update an existing account
@@ -119,12 +126,7 @@ namespace graphene { namespace chain {
     */
    struct account_update_operation : public base_operation
    {
-      struct ext
-      {
-         optional< void_t >            null_ext;
-         optional< special_authority > owner_special_authority;
-         optional< special_authority > active_special_authority;
-      };
+
 
       struct fee_parameters_type
       {
@@ -143,7 +145,7 @@ namespace graphene { namespace chain {
 
       /// New account options
       optional<account_options> new_options;
-      extension< ext > extensions;
+      extension<ext_account_update_operation> extensions;
 
       account_id_type fee_payer()const { return account; }
       void       validate()const;
@@ -313,7 +315,12 @@ FC_REFLECT_ENUM( graphene::chain::account_whitelist_operation::account_listing,
 /// account_create_operation:
 
 FC_REFLECT( graphene::chain::account_create_operation::fee_parameters_type,  )
-FC_REFLECT(graphene::chain::account_create_operation::ext, (null_ext)(owner_special_authority)(active_special_authority)(buyback_options) )
+FC_REFLECT( graphene::chain::account_create_operation::ext,
+            (null_ext)
+            (owner_special_authority)
+            (active_special_authority)
+            (buyback_options)
+          )
 FC_REFLECT( graphene::chain::account_create_operation,
             (fee)
             (kind)
@@ -327,9 +334,24 @@ FC_REFLECT( graphene::chain::account_create_operation,
             (extensions)
           )
 
-FC_REFLECT(graphene::chain::account_update_operation::ext, (null_ext)(owner_special_authority)(active_special_authority) )
+// account_update_operation:
+
+FC_REFLECT( graphene::chain::account_update_operation::fee_parameters_type,
+            (fee)
+            (price_per_kbyte)
+          )
+FC_REFLECT( graphene::chain::ext_account_update_operation,
+            (null_ext)
+            (owner_special_authority)
+            (active_special_authority)
+          )
 FC_REFLECT( graphene::chain::account_update_operation,
-            (fee)(account)(owner)(active)(new_options)(extensions)
+            (fee)
+            (account)
+            (owner)
+            (active)
+            (new_options)
+            (extensions)
           )
 
 FC_REFLECT( graphene::chain::account_upgrade_operation,
@@ -338,7 +360,6 @@ FC_REFLECT( graphene::chain::account_upgrade_operation,
 FC_REFLECT( graphene::chain::account_whitelist_operation, (fee)(authorizing_account)(account_to_list)(new_listing)(extensions))
 
 FC_REFLECT( graphene::chain::account_whitelist_operation::fee_parameters_type, (fee) )
-FC_REFLECT( graphene::chain::account_update_operation::fee_parameters_type, (fee)(price_per_kbyte) )
 FC_REFLECT( graphene::chain::account_upgrade_operation::fee_parameters_type, (membership_annual_fee)(membership_lifetime_fee) )
 FC_REFLECT( graphene::chain::account_transfer_operation::fee_parameters_type, (fee) )
 

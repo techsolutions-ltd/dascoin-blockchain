@@ -62,3 +62,4 @@ tests/generate_empty_blocks/generate_empty_blocks
 
 programs/cli_wallet/nuke_cli_wallet.sh
 
+.vscode/

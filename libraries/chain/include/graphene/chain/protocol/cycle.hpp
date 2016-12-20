@@ -85,6 +85,28 @@ namespace graphene { namespace chain {
     share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
 
+  /**
+   * @brief Submit cycles to the DasCoin distribution queue.
+   * @ingroup operations
+   *
+   * A user can submit their cycles to the dascoin distribution queue where they await to be minted.
+   */
+  struct submit_cycles_operation : public base_operation
+  {
+    struct fee_parameters_type {};  // No fees are paid for this operation.
+
+    asset fee;
+
+    account_id_type account;
+    share_type amount;
+
+    extensions_type extensions;
+
+    account_id_type fee_payer() const { return account; }
+    void validate() const;
+    share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+  };
+
 } }  // namespace graphene::chain
 
 ///////////////////////////////
@@ -114,5 +136,13 @@ FC_REFLECT( graphene::chain::cycle_issue_deny_operation,
             (fee)
             (cycle_authenticator)
             (request)
+            (extensions)
+          )
+
+FC_REFLECT( graphene::chain::submit_cycles_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::submit_cycles_operation,
+            (fee)
+            (account)
+            (amount)
             (extensions)
           )

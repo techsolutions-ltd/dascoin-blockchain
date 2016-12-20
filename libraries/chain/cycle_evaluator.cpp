@@ -74,4 +74,18 @@ object_id_type cycle_issue_deny_evaluator::do_apply(const cycle_issue_deny_opera
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
+void_result submit_cycles_evaluator::do_evaluate(const submit_cycles_operation& op)
+{ try {
+
+  return {};
+
+} FC_CAPTURE_AND_RETHROW((op)) }
+
+object_id_type submit_cycles_evaluator::do_apply(const submit_cycles_operation& op)
+{ try {
+
+  return {};
+
+} FC_CAPTURE_AND_RETHROW((op)) }
+
 } }  // namespace graphene::chain

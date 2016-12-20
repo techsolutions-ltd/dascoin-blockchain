@@ -21,4 +21,9 @@ void cycle_issue_deny_operation::validate() const
 
 }
 
+void submit_cycles_operation::validate() const
+{
+  FC_ASSERT( amount > 0 );
+}
+
 } } // namespace graphene::chain

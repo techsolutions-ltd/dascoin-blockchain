@@ -45,8 +45,8 @@ namespace graphene { namespace chain {
   class license_type_object : public graphene::db::abstract_object<license_type_object>
   {
     public:
-      static const uint8_t space_id = implementation_ids;
-      static const uint8_t type_id  = impl_license_type_object_type;
+      static const uint8_t space_id = protocol_ids;
+      static const uint8_t type_id  = license_type_object_type;
 
       string name;                        // Name of the license.
       share_type amount = 0;              // The amount of cycles the license grants.

@@ -191,6 +191,7 @@ namespace graphene { namespace chain {
       vesting_balance_object_type,
       worker_object_type,
       balance_object_type,
+      license_type_object_type,
       OBJECT_TYPE_COUNT ///< Sentry value which contains the number of different object types
    };
 
@@ -213,7 +214,6 @@ namespace graphene { namespace chain {
       impl_special_authority_object_type,
       impl_buyback_object_type,
       impl_fba_accumulator_object_type,
-      impl_license_type_object_type,
       impl_license_request_object_type,
       impl_account_cycle_balance_object_type,
       impl_issue_asset_request_object_type,
@@ -238,6 +238,7 @@ namespace graphene { namespace chain {
    class worker_object;
    class balance_object;
    class blinded_balance_object;
+   class license_type_object;
 
    typedef object_id< protocol_ids, account_object_type,            account_object>               account_id_type;
    typedef object_id< protocol_ids, asset_object_type,              asset_object>                 asset_id_type;
@@ -253,6 +254,10 @@ namespace graphene { namespace chain {
    typedef object_id< protocol_ids, vesting_balance_object_type,    vesting_balance_object>       vesting_balance_id_type;
    typedef object_id< protocol_ids, worker_object_type,             worker_object>                worker_id_type;
    typedef object_id< protocol_ids, balance_object_type,            balance_object>               balance_id_type;
+
+   typedef object_id<
+      protocol_ids, license_type_object_type, license_type_object
+   > license_type_id_type;
 
    // implementation types
    class global_property_object;
@@ -270,7 +275,6 @@ namespace graphene { namespace chain {
    class special_authority_object;
    class buyback_object;
    class fba_accumulator_object;
-   class license_type_object;
    class license_request_object;
    class account_cycle_balance_object;
    class issue_asset_request_object;
@@ -296,10 +300,6 @@ namespace graphene { namespace chain {
    typedef object_id< implementation_ids, impl_special_authority_object_type, special_authority_object >                special_authority_id_type;
    typedef object_id< implementation_ids, impl_buyback_object_type, buyback_object >                                    buyback_id_type;
    typedef object_id< implementation_ids, impl_fba_accumulator_object_type, fba_accumulator_object >                    fba_accumulator_id_type;
-
-   typedef object_id<
-      implementation_ids, impl_license_type_object_type, license_type_object
-   > license_type_id_type;
 
    typedef object_id<
       implementation_ids, impl_license_request_object_type, license_request_object
@@ -456,6 +456,7 @@ FC_REFLECT_ENUM( graphene::chain::object_type,
                  (vesting_balance_object_type)
                  (worker_object_type)
                  (balance_object_type)
+                 (license_type_object_type)
                  (OBJECT_TYPE_COUNT)
                )
 FC_REFLECT_ENUM( graphene::chain::impl_object_type,
@@ -476,7 +477,6 @@ FC_REFLECT_ENUM( graphene::chain::impl_object_type,
                  (impl_special_authority_object_type)
                  (impl_buyback_object_type)
                  (impl_fba_accumulator_object_type)
-                 (impl_license_type_object_type)
                  (impl_license_request_object_type)
                  (impl_account_cycle_balance_object_type)
                  (impl_issue_asset_request_object_type)

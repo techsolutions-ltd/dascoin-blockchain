@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 function check_exists {
     if [[ ! -d "$1" ]]; then
@@ -28,6 +28,7 @@ DATE_TIME=`date +"%d-%m-%YT%H-%M-%S"`;
 PROGRAM_DIR="/home/paki/graphene-fork/programs"
 TARGET_DIR="/home/paki/blockchain-builds/$DATE_TIME"
 CLI_WALLET_DIR="$PROGRAM_DIR/cli_wallet"
+JS_SERIALIZER_DIR="$PROGRAM_DIR/js_operation_serializer"
 WITNESS_NODE_DIR="$PROGRAM_DIR/witness_node"
 REMOTE_PATH="repo:/home/repo/shared/blockchain_builds/"
 
@@ -69,10 +70,15 @@ rm -rf  Makefile;
 
 cd ..;
 
+echo "Generating js_operation_serializer coffeescript file"
+"$JS_SERIALIZER_DIR/js_operation_serializer" > operation_serializer.coffee;
+
 # Copy to repo server:
-scp -r "$TARGET_DIR" "$REMOTE_PATH";
+rsync -aPv "$TARGET_DIR" "$REMOTE_PATH";
 
 cd "$CUR_DIR";
+
+echo "All done!";
 
 
 

@@ -120,6 +120,48 @@ share_type database::get_cycle_balance(const account_object& owner) const
    return get_cycle_balance(owner.get_id());
 }
 
+void database::issue_cycles(account_id_type account, share_type amount)
+{ try {
+
+  issue_cycles(get_cycle_balance_object(account), amount);
+
+} FC_CAPTURE_AND_RETHROW( (account)(amount) ) }
+
+void database::issue_cycles(const account_cycle_balance_object& balance, share_type amount)
+{
+  FC_ASSERT( amount > 0, "Attempting to issue ${am} cycles, the value must be greater than zero",
+             ("am", amount)
+           );
+
+  modify(balance, [amount](account_cycle_balance_object& b) {
+     b.balance += amount;
+  });
+
+  // TODO: increment the global amount of cycles in the system.
+  // TODO: increment the total amount of cycles issued on this chain.
+
+}
+
+void database::reserve_cycles(account_id_type account, share_type amount)
+{ try {
+
+  reserve_cycles(get_cycle_balance_object(account), amount);
+
+} FC_CAPTURE_AND_RETHROW( (account)(amount) ) }
+
+void database::reserve_cycles(const account_cycle_balance_object& balance, share_type amount)
+{
+  FC_ASSERT( amount > 0, "Attempting to reserve ${am} cycles, the value must be greater than zero",
+             ("am", amount)
+           );
+
+  modify(balance, [amount](account_cycle_balance_object& b) {
+     b.balance -= amount;
+  });
+
+  // TODO: decrement the global amount of cycles in the system.
+}
+
 void database::adjust_balance(account_id_type account, asset delta, share_type reserved_delta)
 { try {
    if( delta.amount == 0 )

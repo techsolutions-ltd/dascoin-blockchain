@@ -355,6 +355,35 @@ namespace graphene { namespace chain {
          void adjust_cycle_balance(account_id_type account, share_type delta);
 
          /**
+          * Issue new cycles to the account. This will increase the global supply of cycles in the system.
+          * @param account ID of the account to benefit the cycles.
+          * @param amount  Amount of new cycles to be issued.
+          */
+         void issue_cycles(account_id_type account, share_type amount);
+
+         /**
+          * Issue new cycles to the account. This will increase the global supply of cycles in the system.
+          * @param balance The balance object of the account that will benefit the cycles.
+          * @param amount  Amount of new cycles to be issued.
+          */
+         void issue_cycles(const account_cycle_balance_object& balance, share_type amount);
+
+         /**
+          * Remove cycles from an account's balance and from the global supply.
+          * @param account ID of the account to surrender the cycles.
+          * @param amount  Amount of cycles spent.
+          */
+         void reserve_cycles(account_id_type account, share_type amount);
+
+         /**
+          * Remove cycles from an account's balance and from the global supply.
+          * @param balance The balance object of the account to surrender the cycles.
+          * @param amount  Amount of cycles spent.
+          */
+         void reserve_cycles(const account_cycle_balance_object& balance, share_type amount);
+
+
+         /**
           * @brief Get the set transfer limits for a given account.
           * @param account_id_type The ID of the account.
           */

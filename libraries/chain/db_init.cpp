@@ -37,10 +37,11 @@
 #include <graphene/chain/cycle_objects.hpp>
 #include <graphene/chain/fba_object.hpp>
 #include <graphene/chain/global_property_object.hpp>
-#include <graphene/chain/license_objects.hpp>  // TODO: move!
+#include <graphene/chain/license_objects.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/operation_history_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
+#include <graphene/chain/queue_objects.hpp>
 #include <graphene/chain/special_authority_object.hpp>
 #include <graphene/chain/transaction_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
@@ -150,6 +151,9 @@ const uint8_t wire_out_holder_object::type_id;
 
 const uint8_t cycle_issue_request_object::space_id;
 const uint8_t cycle_issue_request_object::type_id;
+
+const uint8_t reward_queue_object::space_id;
+const uint8_t reward_queue_object::type_id;
 
 void database::initialize_evaluators()
 {

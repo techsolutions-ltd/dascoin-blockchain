@@ -7,7 +7,6 @@
 #include <graphene/chain/evaluator.hpp>
 #include <graphene/chain/exceptions.hpp>
 
-
 namespace graphene { namespace chain {
 
   class cycle_issue_request_evaluator : public evaluator<cycle_issue_request_evaluator>
@@ -37,6 +36,9 @@ namespace graphene { namespace chain {
 
     void_result do_evaluate(const operation_type& op);
     object_id_type do_apply(const operation_type& op);
+
+    const account_object* account_obj_ = nullptr;
+    const account_cycle_balance_object* balance_obj_ = nullptr;
   };
 
 } }  // namespace graphene::chain

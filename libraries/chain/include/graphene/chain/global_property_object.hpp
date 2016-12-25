@@ -106,7 +106,7 @@ namespace graphene { namespace chain {
          /**
           * The current global frequency:
           */
-         frequency_type frequency = 0;
+         frequency_type frequency;
 
          /**
           * dynamic_flags specifies chain state properties that can be

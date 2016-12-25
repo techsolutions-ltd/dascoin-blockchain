@@ -24,15 +24,11 @@ namespace graphene { namespace chain {
     return {history.back().first};
   }
 
-  optional<frequency_type> license_information::active_frequency_lock() const
+  frequency_type license_information::active_frequency_lock() const
   {
     if ( history.empty() )
-      return {};
-
-    auto record =  history.back();
-    if ( record.second == 0 )
-      return {};
-    return {record.second};
+      return 0;
+    return history.back().second;
   }
 
   void license_information::add_license(license_type_id_type license_id, frequency_type frequency_lock)

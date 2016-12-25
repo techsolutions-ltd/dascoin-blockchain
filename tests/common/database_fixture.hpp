@@ -378,6 +378,9 @@ struct database_fixture {
    void wire_out_complete(wire_out_holder_id_type holder_id);
    void wire_out_reject(wire_out_holder_id_type holder_id);
 
+   // fix_queue.cpp
+   void submit_cycles(account_id_type account_id, share_type amount);
+
 };
 
 namespace test {

@@ -97,6 +97,7 @@ add_library( graphene_chain
 
              is_authorized_asset.cpp
 
+             queue_objects.cpp
              license_objects.cpp
              cycle_objects.cpp
              wire_object.cpp

@@ -19,7 +19,7 @@ namespace graphene { namespace chain {
       typedef pair<license_type_id_type, frequency_type> license_history_record;
 
       optional<license_type_id_type> active_license() const;
-      optional<frequency_type> active_frequency_lock() const;
+      frequency_type active_frequency_lock() const;
       void add_license(license_type_id_type license_id, frequency_type frequency_lock = 0);
 
       vector<license_history_record> history;

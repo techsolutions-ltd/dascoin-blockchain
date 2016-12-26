@@ -21,8 +21,28 @@ BOOST_AUTO_TEST_CASE( submit_user_cycles_test )
   VAULT_ACTOR(vault);
   generate_block();
 
-  // (2) Attempt to submit from a vault -> reject
-  GRAPHENE_CHECK_THROW( submit_cycles(vault_id, 100) , fc::exception );
+  // (2) Attempt to submit from a wallet -> reject, no balance
+  GRAPHENE_CHECK_THROW( submit_cycles(wallet_id, 100) , fc::exception );
+
+  // (3) Wallet gets some cycles issued to it:
+  issue_cycles(wallet_id, 100);
+
+  // (4) Wait for the issue to process:
+  generate_blocks(db.head_block_time() + fc::hours(24));
+
+  // (5) Submit from the wallet:
+  submit_cycles(wallet_id, 100);
+
+  // (6) Issue license to vault account:
+  issue_license_to_vault_account(vault_id, get_license_type("standard").id);
+
+  // (7) Wait for the license to process:
+  generate_blocks(db.head_block_time() + fc::hours(24));
+
+  // (8) Submit cycles from the license:
+  submit_cycles(vault_id, 100);
+
+  // (9) Check queue size, check element data:
 
 
 

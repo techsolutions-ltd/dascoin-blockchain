@@ -301,31 +301,21 @@ struct database_fixture {
    int64_t get_balance( const account_object& account, const asset_object& a )const;
    vector< operation_history_object > get_operation_history( account_id_type account_id )const;
 
-   const account_object& make_new_account_base(
-      const account_kind kind,
-      const account_id_type registrar,
-      const string& name,
-      const public_key_type& key = public_key_type()
-      );
-
+   // fix_accounts.cpp
+   const account_object& make_new_account_base(const account_kind kind, const account_id_type registrar,
+                                               const string& name, const public_key_type& key = public_key_type());
    // Use this method to create accounts for DAS tests.
-   const account_object& create_new_account(
-      const account_id_type registrar,
-      const string& name,
-      const public_key_type& key = public_key_type()
-      );
-
+   const account_object& create_new_account(const account_id_type registrar, const string& name,
+                                            const public_key_type& key = public_key_type());
    // Use this method to create vault accounts for DAS tests.
-   const account_object& create_new_vault_account(
-      const account_id_type registrar,
-      const string& name,
-      const public_key_type& key = public_key_type()
-      );
+   const account_object& create_new_vault_account(const account_id_type registrar, const string& name,
+                                                  const public_key_type& key = public_key_type());
 
    // fix_licenses.cpp
    const license_type_object& get_license_type(const string& name) const;
    const license_request_object* issue_license_to_vault_account(const account_id_type vault_account_id,
-      const license_type_id_type license_id, frequency_type frequency = 0);
+                                                                const license_type_id_type license_id,
+                                                                frequency_type frequency = 0);
    vector<license_request_object> get_license_issue_requests_by_expiration() const;
    vector<license_type_object> get_license_history(account_id_type) const;
 

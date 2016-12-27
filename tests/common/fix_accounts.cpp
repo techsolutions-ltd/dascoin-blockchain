@@ -69,12 +69,8 @@ const account_object& database_fixture::make_new_account_base(
    trx.operations.push_back(op);
    trx.validate();
    auto r = db.push_transaction(trx, ~0);
-   const auto& result = db.get<account_object>(r.operation_results[0].get<object_id_type>());
-   trx.operations.clear();
-
-   // TODO: generate block here?
-
-   return result;
+   generate_block();
+   return db.get<account_object>(r.operation_results[0].get<object_id_type>());
 
 } FC_CAPTURE_AND_RETHROW() }
 

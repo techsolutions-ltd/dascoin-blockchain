@@ -80,14 +80,11 @@ void_result submit_cycles_evaluator::do_evaluate(const submit_cycles_operation& 
   const auto& account_obj = op.account(d);
   const auto& balance_obj = d.get_cycle_balance_object(op.account);
 
-  // Only wallet accounts are allowed to submit cycles:
-  FC_ASSERT( account_obj.is_wallet(),
-             "Account '${n}' is not a wallet account",
-             ("n", account_obj.name)
-           );
+  // Only vault accounts are allowed to submit cycles:
+  FC_ASSERT( account_obj.is_vault(), "Account '${n}' is not a vault account", ("n", account_obj.name) );
 
   // Assure we have enough funds to submit:
-  FC_ASSERT( balance_obj.balance > op.amount,
+  FC_ASSERT( balance_obj.balance >= op.amount,
              "Cannot submit ${am}, account '${n}' cycle balance is ${b}",
              ("am", op.amount)
              ("n", account_obj.name)

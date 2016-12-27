@@ -80,13 +80,15 @@ BOOST_AUTO_TEST_CASE( issue_license_test )
   ACTOR(wallet);
   generate_block();
   VAULT_ACTOR(stan);
-  generate_block();
   VAULT_ACTOR(mccool);
   generate_block();
   VAULT_ACTOR(allguy);
   generate_block();
+  VAULT_ACTOR(deadguy);
+  generate_block();
 
   const auto& issue = [&](const account_object& acc, const string& lic_name, frequency_type f = 0){
+  try {
     auto lic = get_license_type(lic_name);
     auto req = issue_license_to_vault_account(acc.id, lic.id);
     BOOST_CHECK( req );
@@ -95,9 +97,10 @@ BOOST_AUTO_TEST_CASE( issue_license_test )
     BOOST_CHECK( req->license == lic.id );
     BOOST_CHECK( req->frequency == f );
     generate_block();
-  };
+  } FC_LOG_AND_RETHROW() };
 
   // Rejected: cannot issue to a vault account.
+  // TODO: fixme!
   GRAPHENE_REQUIRE_THROW( issue(wallet, "standard"), fc::exception );
 
   // Issue standard license to our old pal Stan, and Allguy:
@@ -165,6 +168,21 @@ BOOST_AUTO_TEST_CASE( issue_license_test )
   lic_info = allguy_id(db).license_info;
   BOOST_CHECK( lic_info.balance_upgrade == upgrade_type({2,2,2}) );
 
+  issue(deadguy, "standard");
+  issue(deadguy, "manager");
+  issue(deadguy, "pro");
+  issue(deadguy, "executive");
+  issue(deadguy, "president");
+
+  // Pending license should be president:
+  BOOST_CHECK( deadguy.license_info.pending_license == get_license_type("president").id );
+
+  // Wait for time to elapse:
+  // TODO: fetch the time parameter
+  generate_blocks(db.head_block_time() + fc::hours(24));
+
+  BOOST_CHECK_EQUAL( deadguy.license_info.pending_license.valid(), false );
+
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_CASE( upgrade_cycles_test )
@@ -230,6 +248,11 @@ BOOST_AUTO_TEST_CASE( upgrade_cycles_test )
   BOOST_CHECK_EQUAL( get_cycle_balance(stan_id).value, 200 );
   BOOST_CHECK_EQUAL( get_cycle_balance(richguy_id).value, 200000 );  //  100000 -> 200000
   BOOST_CHECK_EQUAL( get_cycle_balance(wallet_id).value, 2000 );  // No increase.
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( mass_license_issue_test )
+{ try {
 
 } FC_LOG_AND_RETHROW() }
 

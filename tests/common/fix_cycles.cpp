@@ -54,6 +54,7 @@ const cycle_issue_request_object* database_fixture::issue_cycles(account_id_type
 
   signed_transaction tx;
   set_expiration(db, tx);
+  tx.clear();
   tx.operations.push_back(op);
   tx.validate();
   processed_transaction ptx = db.push_transaction(tx, ~0);

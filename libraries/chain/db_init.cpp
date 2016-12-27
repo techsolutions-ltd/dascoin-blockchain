@@ -301,6 +301,8 @@ void database::initialize_indexes()
    add_index<primary_index<wire_out_holder_index>>();
 
    add_index<primary_index<cycle_issue_request_index>>();
+
+   add_index<primary_index<reward_queue_index>>();
 }
 
 void database::init_genesis(const genesis_state_type& genesis_state)

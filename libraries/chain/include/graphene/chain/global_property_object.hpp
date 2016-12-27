@@ -104,6 +104,16 @@ namespace graphene { namespace chain {
          fc::uint128_t recent_slots_filled;
 
          /**
+          * Current supply of cycles in all balances.
+          */
+         share_type cycle_supply = 0;
+
+         /**
+          * Total amount of cycles issued since genesis.
+          */
+         share_type total_cycles_issued = 0;
+
+         /**
           * The current global frequency:
           */
          frequency_type frequency;
@@ -161,6 +171,8 @@ FC_REFLECT_DERIVED( graphene::chain::dynamic_global_property_object, (graphene::
                     (recently_missed_count)
                     (current_aslot)
                     (recent_slots_filled)
+                    (cycle_supply)
+                    (total_cycles_issued)
                     (frequency)
                     (dynamic_flags)
                     (last_irreversible_block_num)

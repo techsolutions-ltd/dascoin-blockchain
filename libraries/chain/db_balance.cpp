@@ -129,16 +129,16 @@ void database::issue_cycles(account_id_type account, share_type amount)
 
 void database::issue_cycles(const account_cycle_balance_object& balance, share_type amount)
 {
-  FC_ASSERT( amount > 0, "Attempting to issue ${am} cycles, the value must be greater than zero",
-             ("am", amount)
-           );
+  FC_ASSERT( amount > 0, "Attempting to issue ${am} cycles, the value must be greater than zero", ("am", amount) );
 
   modify(balance, [amount](account_cycle_balance_object& b) {
      b.balance += amount;
   });
 
-  // TODO: increment the global amount of cycles in the system.
-  // TODO: increment the total amount of cycles issued on this chain.
+  modify(get_dynamic_global_properties(), [amount](dynamic_global_property_object& dgpo){
+    dgpo.cycle_supply += amount;
+    dgpo.total_cycles_issued += amount;
+  });
 
 }
 
@@ -151,15 +151,15 @@ void database::reserve_cycles(account_id_type account, share_type amount)
 
 void database::reserve_cycles(const account_cycle_balance_object& balance, share_type amount)
 {
-  FC_ASSERT( amount > 0, "Attempting to reserve ${am} cycles, the value must be greater than zero",
-             ("am", amount)
-           );
+  FC_ASSERT( amount > 0, "Attempting to reserve ${am} cycles, the value must be greater than zero", ("am", amount) );
 
   modify(balance, [amount](account_cycle_balance_object& b) {
      b.balance -= amount;
   });
 
-  // TODO: decrement the global amount of cycles in the system.
+  modify(get_dynamic_global_properties(), [amount](dynamic_global_property_object& dgpo){
+    dgpo.cycle_supply -= amount;
+  });
 }
 
 void database::adjust_balance(account_id_type account, asset delta, share_type reserved_delta)

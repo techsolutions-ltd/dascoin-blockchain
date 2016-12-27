@@ -94,7 +94,7 @@ void_result license_request_evaluator::do_evaluate(const license_request_operati
   const auto& new_license_obj = op.license(d);
 
   // First, check that the license issuer matches the current license issuing account:
-  assert_license_issuer( d, op.license_issuing_account );
+  assert_license_issuer(d, op.license_issuing_account);
 
   // Licenses can only be issued to vault accounts:
   FC_ASSERT( account_obj.is_vault(), "Account '${n}' is not a vault account", ("n", account_obj.name) );
@@ -112,7 +112,7 @@ void_result license_request_evaluator::do_evaluate(const license_request_operati
              );
   }
 
-  // If there is a license request pending, check if the new license is better and replace it with a new license:
+  // If there is a license request pending, check if the requested license is better:
   const auto pending_lic_opt = account_obj.license_info.pending_license;
   if ( pending_lic_opt.valid())
   {
@@ -148,8 +148,6 @@ object_id_type license_request_evaluator::do_apply(const license_request_operati
     req.frequency = op.frequency;
     req.expiration = d.head_block_time() + fc::seconds(params.license_expiration_time_seconds);
   }).id;
-
-  ilog("Pending request for ${n}", ("n", account_obj_->license_info.pending_license));
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 

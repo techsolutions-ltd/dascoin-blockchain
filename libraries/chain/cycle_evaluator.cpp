@@ -104,10 +104,8 @@ object_id_type submit_cycles_evaluator::do_apply(const submit_cycles_operation& 
 { try {
   auto& d = db();
 
-  // Decrease the cycle balance:
-  d.modify(*balance_obj_, [&](account_cycle_balance_object& acbo){
-    acbo.balance -= op.amount;
-  });
+  // Spend cycles, decrease balance and supply:
+  d.reserve_cycles(op.account, op.amount);
 
   // Detrmine the frequency. If the frequency lock is 0 on the license, then the frequency is the current chain
   // frequency:

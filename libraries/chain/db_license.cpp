@@ -91,6 +91,19 @@ void database::fulfill_license_request(const license_request_object& req)
   // For regular licenses, increase the cycle balance for the appropriate amount:
   if ( new_license_obj.kind == license_kind::regular )
     issue_cycles(account_obj.id, new_license_obj.amount);
+
+  // For auto submit licenses, submit a new license request with frequency locked:
+  else if ( new_license_obj.kind == license_kind::charter && new_license_obj.kind == license_kind::promo )
+  {
+    transaction_evaluation_state submit_context(this);
+
+    submit_cycles_operation op;
+    op.account = req.account;
+    op.amount = new_license_obj.amount;
+
+    apply_operation(submit_context, op);
+  }
+
 }
 
 } }  // namespace graphhene::chain

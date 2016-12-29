@@ -39,6 +39,7 @@
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/operation_history_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
+#include <graphene/chain/queue_objects.hpp>
 #include <graphene/chain/worker_object.hpp>
 #include <graphene/chain/witness_object.hpp>
 
@@ -644,11 +645,21 @@ class database_api
       optional<limits_type> get_account_limits(const account_id_type id)const;
 
       /**
-       * @brtief Get the verified PI level for the account with the given ID.
+       * @brief Get the verified PI level for the account with the given ID.
        * @param  account_id ID if the account to check.
        * @return            Verified PI level of the account.
        */
       optional<uint8_t> get_account_pi_level(const account_id_type id) const;
+
+      //////////////////////////
+      // QUEUE:               //
+      //////////////////////////
+
+      /**
+       * @brief Get the size of the DASCoin reward queue.
+       * @return Number of elements in the DASCoin queue.
+       */
+      uint32_t get_reward_queue_size() const;
 
    private:
       std::shared_ptr< database_api_impl > my;

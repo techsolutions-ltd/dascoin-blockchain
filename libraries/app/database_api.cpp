@@ -146,6 +146,9 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       // Cycles:
       share_type get_account_cycle_balance(const account_id_type account_id)const;
 
+      // Queue:
+      uint32_t get_reward_queue_size() const;
+
       template<typename T>
       void subscribe_to_item( const T& i )const
       {
@@ -1941,6 +1944,22 @@ optional<limits_type> database_api::get_account_limits(const account_id_type id)
 optional<uint8_t> database_api::get_account_pi_level(const account_id_type id) const
 {
    return my->_db.get_account_pi_level(id);
+}
+
+//////////////////////////////////////////////////////////////////////
+//                                                                  //
+// QUEUE:                                                           //
+//                                                                  //
+//////////////////////////////////////////////////////////////////////
+
+uint32_t database_api::get_reward_queue_size() const
+{
+   return my->get_reward_queue_size();
+}
+
+uint32_t database_api_impl::get_reward_queue_size() const
+{
+   return _db.get_index_type<reward_queue_index>().indices().size();
 }
 
 //////////////////////////////////////////////////////////////////////

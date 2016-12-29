@@ -364,7 +364,7 @@ struct database_fixture {
    // fix_wire_out.cpp
    vector<wire_out_holder_object> get_wire_out_holders(account_id_type account_id,
                                                        const flat_set<asset_id_type>& asset_ids) const;
-   const wire_out_holder_object& wire_out(account_id_type account_id_type, asset amount);
+   const wire_out_holder_object& wire_out(account_id_type account_id_type, asset amount, const string& memo = "");
    void wire_out_complete(wire_out_holder_id_type holder_id);
    void wire_out_reject(wire_out_holder_id_type holder_id);
 

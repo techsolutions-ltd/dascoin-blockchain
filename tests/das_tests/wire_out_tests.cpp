@@ -48,14 +48,15 @@ BOOST_AUTO_TEST_CASE( wire_out_web_asset_test )
   update_pi_limits(wallet_id, 99, {20000,20000,20000});
 
   // Wire out 10K:
-  wire_out(wallet_id, web_asset(10000));
+  wire_out(wallet_id, web_asset(10000), "debit");
 
   // Check if the balance has been reduced:
   check_balances(wallet, 5000, 15000);
 
   // Check if the holder object exists:
   auto holders = get_wire_out_holders(wallet_id, {get_web_asset_id()});
-  BOOST_CHECK_EQUAL(holders.size(), 1);
+  BOOST_CHECK_EQUAL( holders.size(), 1 );
+  BOOST_CHECK_EQUAL( holders[0].memo, "debit" );
 
   // Wire out 5K:
   wire_out(wallet_id, web_asset(5000));

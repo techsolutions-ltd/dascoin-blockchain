@@ -64,6 +64,7 @@ namespace graphene { namespace chain {
     return d.create<wire_out_holder_object>([&](wire_out_holder_object& w){
       w.account = op.account;
       w.set_balance(op.asset_to_wire);
+      w.memo = op.memo;
     }).id;
 
   } FC_CAPTURE_AND_RETHROW( (op) ) }

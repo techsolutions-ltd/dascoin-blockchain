@@ -21,6 +21,7 @@ namespace graphene { namespace chain {
       account_id_type account;
       share_type amount;
       asset_id_type asset_id;
+      string memo;
 
       extensions_type extensions;
 
@@ -61,5 +62,6 @@ FC_REFLECT_DERIVED( graphene::chain::wire_out_holder_object, (graphene::db::obje
                     (account)
                     (amount)
                     (asset_id)
+                    (memo)
                     (extensions)
                   )

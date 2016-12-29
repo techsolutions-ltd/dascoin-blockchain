@@ -29,12 +29,14 @@ using namespace graphene::chain::test;
 
 namespace graphene { namespace chain {
 
-const wire_out_holder_object& database_fixture::wire_out(account_id_type account_id, asset asset_to_wire)
+const wire_out_holder_object& database_fixture::wire_out(account_id_type account_id, asset asset_to_wire,
+                                                         const string& memo)
 { try {
 
   wire_out_operation op;
   op.account = account_id;
   op.asset_to_wire = asset_to_wire;
+  op.memo = memo;
 
   signed_transaction tx;
   set_expiration(db, tx);

@@ -13,6 +13,7 @@ namespace graphene { namespace chain {
 
     account_id_type account;
     asset asset_to_wire;
+    string memo;
     extensions_type extensions;
 
     account_id_type fee_payer() const { return account; }
@@ -58,6 +59,7 @@ FC_REFLECT( graphene::chain::wire_out_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::wire_out_operation,
             (account)
             (asset_to_wire)
+            (memo)
             (extensions)
           )
 

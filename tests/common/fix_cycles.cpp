@@ -88,5 +88,4 @@ vector<cycle_issue_request_object> database_fixture::get_cycle_issue_request_obj
   return result;
 }
 
-
 } }  // namespace graphene::chain

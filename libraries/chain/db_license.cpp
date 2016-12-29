@@ -5,6 +5,7 @@
 #include <graphene/chain/database.hpp>
 
 #include <graphene/chain/license_objects.hpp>
+#include <graphene/chain/queue_objects.hpp>
 #include <graphene/chain/license_evaluator.hpp>
 
 namespace graphene { namespace chain {
@@ -93,15 +94,22 @@ void database::fulfill_license_request(const license_request_object& req)
     issue_cycles(account_obj.id, new_license_obj.amount);
 
   // For auto submit licenses, submit a new license request with frequency locked:
-  else if ( new_license_obj.kind == license_kind::charter && new_license_obj.kind == license_kind::promo )
+  else if ( new_license_obj.kind == license_kind::chartered || new_license_obj.kind == license_kind::promo )
   {
-    transaction_evaluation_state submit_context(this);
+    // Create a new element in the reward queue:
+    create<reward_queue_object>([&](reward_queue_object& rqo){
+      rqo.account = req.account;
+      rqo.amount = new_license_obj.amount;
+      rqo.frequency = req.frequency;
+      rqo.time = head_block_time();
+    });
 
-    submit_cycles_operation op;
-    op.account = req.account;
-    op.amount = new_license_obj.amount;
+    // Submit a virtual operation for the submission of the license cycles:
+    submit_cycles_operation vop;
+    vop.account = req.account;
+    vop.amount = new_license_obj.amount;
 
-    apply_operation(submit_context, op);
+    push_applied_operation(vop);
   }
 
 }

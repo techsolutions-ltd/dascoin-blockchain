@@ -21,9 +21,6 @@ namespace graphene { namespace chain {
     // Get the limit:
     share_type wire_limit = acc_obj.get_max_from_limit(limit_kind::wallet_out_webasset);
 
-    // Check if there is enough asset in the supply to wire out:
-    FC_ASSERT( (dyn_data_obj.current_supply - op.asset_to_wire.amount) >= 0 );
-
     // Check if we have enough balance in the account:
     const auto& from_balance_obj = d.get_balance_object(op.account, d.get_web_asset_id());
     FC_ASSERT( from_balance_obj.balance >= op.asset_to_wire.amount,
@@ -31,6 +28,13 @@ namespace graphene { namespace chain {
                ("a", acc_obj.name)
                ("total",d.to_pretty_string(op.asset_to_wire))
                ("balance",d.to_pretty_string(d.get_balance(op.account, op.asset_to_wire.asset_id)))
+             );
+
+    // Check if there is enough asset in the supply to wire out:
+    FC_ASSERT( (dyn_data_obj.current_supply - op.asset_to_wire.amount) >= 0,
+               "Current supply of ${s} is insufficient to wire out ${a}",
+               ("s", d.to_pretty_string(asset(dyn_data_obj.current_supply, d.get_web_asset_id())))
+               ("a", d.to_pretty_string(op.asset_to_wire))
              );
 
     // Check if the wire out would breach the limit:

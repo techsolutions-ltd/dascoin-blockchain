@@ -449,15 +449,14 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    assert( get_balance(account_id_type(), asset_id_type()) == asset(core_dyn_asset.current_supply) );
 
    // Create web assets:
-   const asset_dynamic_data_object& web_dyn_asset =
-      create<asset_dynamic_data_object>([&](asset_dynamic_data_object& a) {
+   const auto& web_dyn_asset = create<asset_dynamic_data_object>([&](asset_dynamic_data_object& a){
          a.current_supply = 0;  // Web starts with 0 initial supply.
       });
    const asset_object& web_asset =
      create<asset_object>( [&]( asset_object& a ) {
          a.symbol = DASCOIN_WEBASSET_SYMBOL;
          a.options.max_supply = genesis_state.max_core_supply;  // TODO: this should remain 10 trillion?
-         a.precision = GRAPHENE_BLOCKCHAIN_PRECISION_DIGITS;
+         a.precision = DASCOIN_DEFAULT_ASSET_PRECISION_DIGITS;
          a.options.flags = WEB_ASSET_INITIAL_FLAGS;
          a.options.issuer_permissions = WEB_ASSET_ISSUER_PERMISSION_MASK;  // TODO: set the appropriate issuer permissions.
          a.issuer = GRAPHENE_NULL_ACCOUNT;
@@ -472,6 +471,24 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    FC_ASSERT( asset_id_type(web_asset.id) == get_web_asset_id() );
 
    // Create dascoin asset:
+   const auto& dascoin_dyn_asset = create<asset_dynamic_data_object>([&](asset_dynamic_data_object& adao){
+      adao.current_supply = 0;
+   });
+   const auto& dascoin_asset = create<asset_object>([&](asset_object& ao){
+      ao.symbol = DASCOIN_DASCOIN_SYMBOL;
+      ao.options.max_supply = genesis_state.max_dascoin_supply;
+      ao.precision = DASCOIN_DEFAULT_ASSET_PRECISION_DIGITS;
+      ao.options.flags = DASCOIN_ASSET_INITIAL_FLAGS;
+      ao.options.issuer_permissions = 0;  // No issuer, no permissions, no problem.
+      ao.issuer = GRAPHENE_NULL_ACCOUNT;
+      ao.authenticator = GRAPHENE_NULL_ACCOUNT;
+      // TODO: the base conversion rates are ignored.
+      ao.options.core_exchange_rate.base.amount = 1;
+      ao.options.core_exchange_rate.base.asset_id = asset_id_type(0);
+      ao.options.core_exchange_rate.quote.amount = 1;
+      ao.options.core_exchange_rate.quote.asset_id = asset_id_type(0);
+      ao.dynamic_asset_data_id = dascoin_dyn_asset.id;
+   });
 
    // Create more special assets
    while( true )

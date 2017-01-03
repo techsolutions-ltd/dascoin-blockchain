@@ -149,6 +149,8 @@ namespace graphene { namespace chain {
       | transfer_restricted
       | disable_confidential;
 
+   const static uint32_t DASCOIN_ASSET_INITIAL_FLAGS = dual_auth_issue_asset;  // TODO: this is temporary.
+
    enum reserved_spaces
    {
       relative_protocol_ids = 0,

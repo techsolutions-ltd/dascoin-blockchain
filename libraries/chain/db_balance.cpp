@@ -162,6 +162,32 @@ void database::reserve_cycles(const account_cycle_balance_object& balance, share
   });
 }
 
+void database::issue_asset(account_id_type account_id, asset delta, share_type reserved_delta)
+{ try {
+
+   issue_asset(get_balance_object(account_id, delta.asset_id), delta.amount, reserved_delta);
+
+} FC_CAPTURE_AND_RETHROW((account_id)(delta)(reserved_delta)) }
+
+void database::issue_asset(const account_balance_object& balance_obj, share_type cash, share_type reserved)
+{ try {
+
+   if ( cash == 0 || reserved == 0 )
+     return;
+
+   modify(balance_obj, [cash, reserved](account_balance_object& b) {
+      b.balance += cash;
+      b.reserved += reserved;
+   });
+
+   const auto& asset_obj = balance_obj.asset_type(*this);
+   modify(asset_obj.dynamic_asset_data_id(*this), [&](asset_dynamic_data_object& data){
+        // TODO: reserved part factors in here as well.
+        data.current_supply += (cash + reserved);
+   });
+
+} FC_CAPTURE_AND_RETHROW((cash)(reserved)) }
+
 void database::adjust_balance(account_id_type account, asset delta, share_type reserved_delta)
 { try {
    if( delta.amount == 0 )

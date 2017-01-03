@@ -384,6 +384,21 @@ namespace graphene { namespace chain {
           */
          void reserve_cycles(const account_cycle_balance_object& balance, share_type amount);
 
+         /**
+          * Issue new asset to an account balance. This method assumes that the balance object for the asset exists.
+          * @param balance  The balance object to modify.
+          * @param cash     Amount of cash to issue.
+          * @param reserved Amount of reserved funds to issue.
+          */
+         void issue_asset(const account_balance_object& balance, share_type cash, share_type reserved);
+
+         /**
+          * Issue new asset to an account. This method will throw an exception if the asset balance object does not exist.
+          * @param account_id ID of the account to get the balance of.
+          * @param delta      Asset (cash part) to issue.
+          * @param reserved   Amount of reserved to issue.
+          */
+         void issue_asset(account_id_type account_id, asset delta, share_type reserved_delta);
 
          /**
           * @brief Get the set transfer limits for a given account.

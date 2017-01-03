@@ -471,6 +471,8 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       });
    FC_ASSERT( asset_id_type(web_asset.id) == get_web_asset_id() );
 
+   // Create dascoin asset:
+
    // Create more special assets
    while( true )
    {

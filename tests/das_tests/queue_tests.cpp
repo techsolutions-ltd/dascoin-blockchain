@@ -94,4 +94,9 @@ BOOST_AUTO_TEST_CASE( submit_user_cycles_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( queue_test )
+{ try {
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_SUITE_END()

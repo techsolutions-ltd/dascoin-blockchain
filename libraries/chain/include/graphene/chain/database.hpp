@@ -563,6 +563,7 @@ namespace graphene { namespace chain {
          void distribute_issue_requested_cycles();
          void distribute_issue_requested_assets();
          void deny_license_request(const license_request_object& req);
+         void mint_dascoin_rewards();
          void reset_spending_limits();
 
          ///Steps performed only at maintenance intervals

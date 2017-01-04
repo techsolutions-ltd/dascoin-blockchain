@@ -575,20 +575,25 @@ void database::mint_dascoin_rewards()
     {
       const auto& el = *queue.begin();
       share_type dascoin_amount = (el.amount * DASCOIN_DEFAULT_ASSET_PRECISION_DIGITS) / el.frequency;
-      if ( dascoin_amount >= to_distribute )
+      if ( to_distribute >= dascoin_amount )
       {
+        issue_asset(el.account, dascoin_amount, get_dascoin_asset_id(), 0);
         to_distribute -= dascoin_amount;
         remove(el);
       }
       else
       {
+        issue_asset(el.account, to_distribute, get_dascoin_asset_id(), 0);
         share_type cycles = (to_distribute * el.frequency) / DASCOIN_DEFAULT_ASSET_PRECISION_DIGITS;
         modify(el, [cycles](reward_queue_object& rqo){
           rqo.amount -= cycles;
         });
       }
-      // Issue the calculated dascoin amount to cash balance:
-      issue_asset(el.account, dascoin_amount, get_dascoin_asset_id(), 0);
+      // Emit a virtual op:
+      distribute_dascoin_operation vop;
+      vop.account = el.account;
+      vop.amount = dascoin_amount;
+      push_applied_operation(vop);
     }
 
     modify(dgpo, [&](dynamic_global_property_object& dgpo){

@@ -71,9 +71,6 @@ BOOST_AUTO_TEST_CASE( submit_user_cycles_test )
   // Wait for the issue to process:
   generate_blocks(db.head_block_time() + fc::hours(24));
 
-  // Wait for the issue to process:
-  generate_blocks(db.head_block_time() + fc::hours(24));
-
   // Check if the second and third requests have been fulfilled:
   BOOST_CHECK_EQUAL( get_cycle_balance(vault_id).value, 500 );
 
@@ -94,8 +91,33 @@ BOOST_AUTO_TEST_CASE( submit_user_cycles_test )
 
 } FC_LOG_AND_RETHROW() }
 
-BOOST_AUTO_TEST_CASE( queue_test )
+BOOST_AUTO_TEST_CASE( basic_queue_test )
 { try {
+  VAULT_ACTORS((first)(second)(third)(fourth))
+
+  adjust_dascoin_reward(500);
+  adjust_frequency(200);  // Precision is 100 so this is 2.0.
+
+  adjust_cycles(first_id, 200);
+  adjust_cycles(second_id, 400);
+  adjust_cycles(third_id, 200);
+  adjust_cycles(fourth_id, 600);
+
+  submit_cycles(first_id, 200);
+  submit_cycles(second_id, 400);
+  submit_cycles(third_id, 200);
+  submit_cycles(fourth_id, 600);
+
+  // Queue looks like this:
+  // 200 --> 400 --> 200 --> 600
+
+  // Wait for the cycles to be distributed:
+  generate_blocks(db.head_block_time() + fc::minutes(20));
+
+  // Dascoin amounts shoud be:
+  // 100, 200, 100, 100
+
+  // BOOST_CHECK_EQUAL( get_balance(first_id, get_dascoin_asset_id()), 100 );
 
 } FC_LOG_AND_RETHROW() }
 

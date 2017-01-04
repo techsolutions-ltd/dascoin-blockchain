@@ -27,6 +27,20 @@ using namespace graphene::chain::test;
 
 namespace graphene { namespace chain {
 
+  void database_fixture::adjust_frequency(frequency_type f)
+  {
+    db.modify(get_dynamic_global_properties(), [f](dynamic_global_property_object& dgpo){
+      dgpo.frequency = f;
+    });
+  }
+
+  void database_fixture::adjust_dascoin_reward(uint32_t amount)
+  {
+    db.modify(get_global_properties(), [amount](global_property_object& gpo){
+      gpo.parameters.dascoin_reward_amount = amount;
+    });
+  }
+
   void database_fixture::submit_cycles(account_id_type account_id, share_type amount)
   { try {
 

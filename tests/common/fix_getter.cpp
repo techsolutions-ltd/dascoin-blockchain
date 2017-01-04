@@ -36,6 +36,11 @@ const global_property_object& database_fixture::get_global_properties() const
   return db.get_global_properties();
 }
 
+const dynamic_global_property_object& database_fixture::get_dynamic_global_properties() const
+{
+  return db.get_dynamic_global_properties();
+}
+
 const chain_parameters& database_fixture::get_chain_parameters() const
 {
   return db.get_global_properties().parameters;
@@ -89,6 +94,11 @@ account_id_type database_fixture::get_wire_out_handler_id() const
 asset_id_type database_fixture::get_web_asset_id() const
 {
   return db.get_web_asset_id();
+}
+
+asset_id_type database_fixture::get_dascoin_asset_id() const
+{
+  return db.get_dascoin_asset_id();
 }
 
 } }  // namespace graphene::chain

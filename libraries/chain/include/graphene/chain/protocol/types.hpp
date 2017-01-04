@@ -337,7 +337,7 @@ namespace graphene { namespace chain {
    typedef fc::ecc::compact_signature                           signature_type;
    typedef safe<int64_t>                                        share_type;
    typedef uint16_t                                             weight_type;
-   typedef safe<uint64_t>                                       frequency_type;
+   typedef safe<int64_t>                                        frequency_type;
    typedef std::vector<share_type>                              limits_type;
    typedef std::map<std::string, fc::variant>                   policy_type;
 

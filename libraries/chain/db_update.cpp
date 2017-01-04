@@ -32,6 +32,7 @@
 #include <graphene/chain/license_objects.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
+#include <graphene/chain/queue_objects.hpp>
 #include <graphene/chain/transaction_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
 #include <graphene/chain/witness_object.hpp>
@@ -567,8 +568,28 @@ void database::mint_dascoin_rewards()
 
   if ( dgpo.next_spend_limit_reset >= head_block_time() )
   {
+    share_type to_distribute = get_global_properties().parameters.dascoin_reward_amount;
+    const auto& queue = get_index_type<reward_queue_index>().indices().get<by_time>();
 
-    // TODO: mint dascoin!
+    while ( to_distribute > 0 && !queue.empty() )
+    {
+      const auto& el = *queue.begin();
+      share_type dascoin_amount = (el.amount * DASCOIN_DEFAULT_ASSET_PRECISION_DIGITS) / el.frequency;
+      if ( dascoin_amount >= to_distribute )
+      {
+        to_distribute -= dascoin_amount;
+        remove(el);
+      }
+      else
+      {
+        share_type cycles = (to_distribute * el.frequency) / DASCOIN_DEFAULT_ASSET_PRECISION_DIGITS;
+        modify(el, [cycles](reward_queue_object& rqo){
+          rqo.amount -= cycles;
+        });
+      }
+      // Issue the calculated dascoin amount to cash balance:
+      issue_asset(el.account, dascoin_amount, get_dascoin_asset_id(), 0);
+    }
 
     modify(dgpo, [&](dynamic_global_property_object& dgpo){
       dgpo.next_dascoin_reward_time = head_block_time() + params.reward_interval_time_seconds;

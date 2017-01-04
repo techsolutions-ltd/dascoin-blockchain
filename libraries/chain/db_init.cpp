@@ -456,7 +456,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
      create<asset_object>( [&]( asset_object& a ) {
          a.symbol = DASCOIN_WEBASSET_SYMBOL;
          a.options.max_supply = genesis_state.max_core_supply;  // TODO: this should remain 10 trillion?
-         a.precision = DASCOIN_DEFAULT_ASSET_PRECISION_DIGITS;
+         a.precision = DASCOIN_DEFAULT_ASSET_PRECISION;
          a.options.flags = WEB_ASSET_INITIAL_FLAGS;
          a.options.issuer_permissions = WEB_ASSET_ISSUER_PERMISSION_MASK;  // TODO: set the appropriate issuer permissions.
          a.issuer = GRAPHENE_NULL_ACCOUNT;
@@ -477,7 +477,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    const auto& dascoin_asset = create<asset_object>([&](asset_object& ao){
       ao.symbol = DASCOIN_DASCOIN_SYMBOL;
       ao.options.max_supply = genesis_state.max_dascoin_supply;
-      ao.precision = DASCOIN_DEFAULT_ASSET_PRECISION_DIGITS;
+      ao.precision = DASCOIN_DEFAULT_ASSET_PRECISION;
       ao.options.flags = DASCOIN_ASSET_INITIAL_FLAGS;
       ao.options.issuer_permissions = 0;  // No issuer, no permissions, no problem.
       ao.issuer = GRAPHENE_NULL_ACCOUNT;

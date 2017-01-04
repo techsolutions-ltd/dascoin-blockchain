@@ -503,6 +503,24 @@ namespace graphene { namespace chain {
       void validate() const;
    };
 
+   /**
+    * @brief Virtual operation, a record of dascoin distrubution in the blockchain.
+    */
+   struct distribute_dascoin_operation : public base_operation
+   {
+     struct fee_parameters_type {};  // No fees are paid for this operation.
+     asset fee;
+
+     account_id_type account;
+     share_type amount;
+
+     extensions_type extensions;
+
+     account_id_type fee_payer() const { return account; }
+     share_type calculate_fee(const fee_parameters_type& k) const { return 0; }
+     void validate() const { FC_ASSERT(false); }
+   };
+
 } } // graphene::chain
 
 ////////////////////////////////
@@ -620,5 +638,13 @@ FC_REFLECT( graphene::chain::asset_deny_issue_request_operation,
             (fee)
             (authenticator)
             (request)
+            (extensions)
+          )
+
+FC_REFLECT( graphene::chain::distribute_dascoin_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::distribute_dascoin_operation,
+            (fee)
+            (account)
+            (amount)
             (extensions)
           )

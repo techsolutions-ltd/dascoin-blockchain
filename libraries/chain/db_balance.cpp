@@ -162,12 +162,12 @@ void database::reserve_cycles(const account_cycle_balance_object& balance, share
   });
 }
 
-void database::issue_asset(account_id_type account_id, asset delta, share_type reserved_delta)
+void database::issue_asset(account_id_type account_id, share_type cash, asset_id_type asset_id, share_type reserved)
 { try {
 
-   issue_asset(get_balance_object(account_id, delta.asset_id), delta.amount, reserved_delta);
+   issue_asset(get_balance_object(account_id, asset_id), cash, reserved);
 
-} FC_CAPTURE_AND_RETHROW((account_id)(delta)(reserved_delta)) }
+} FC_CAPTURE_AND_RETHROW((account_id)(asset_id)(cash)(reserved)) }
 
 void database::issue_asset(const account_balance_object& balance_obj, share_type cash, share_type reserved)
 { try {

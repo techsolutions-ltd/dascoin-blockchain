@@ -506,12 +506,8 @@ void database::distribute_issue_requested_assets()
   while (!idx.empty() && idx.begin()->expiration <= head_block_time())
   {
     const auto& req = *idx.begin();
-    const auto& asset_obj = req.asset_id(*this);
-    adjust_balance(req.receiver, req.get_balance(), req.reserved_amount);
-    modify(asset_obj.dynamic_asset_data_id(*this), [&](asset_dynamic_data_object& data){
-         // TODO: reserved part factors in here as well.
-         data.current_supply += req.amount;
-    });
+
+    issue_asset(req.receiver, req.amount, req.asset_id, req.reserved_amount);
 
     asset_distribute_completed_request_operation vop;
     vop.issuer = req.issuer;

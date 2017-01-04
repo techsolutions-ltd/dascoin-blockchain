@@ -395,10 +395,11 @@ namespace graphene { namespace chain {
          /**
           * Issue new asset to an account. This method will throw an exception if the asset balance object does not exist.
           * @param account_id ID of the account to get the balance of.
-          * @param delta      Asset (cash part) to issue.
+          * @param asset_id   ID of the asset that is being issued.
+          * @param cash       Amount of cash to issue.
           * @param reserved   Amount of reserved to issue.
           */
-         void issue_asset(account_id_type account_id, asset delta, share_type reserved_delta);
+         void issue_asset(account_id_type account_id, share_type cash, asset_id_type asset_id, share_type reserved);
 
          /**
           * @brief Get the set transfer limits for a given account.

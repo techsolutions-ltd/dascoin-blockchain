@@ -97,6 +97,7 @@ namespace graphene { namespace chain {
          bool is_transfer_restricted()const { return options.flags & transfer_restricted; }
          bool can_override()const { return options.flags & override_authority; }
          bool allow_confidential()const { return !(options.flags & asset_issuer_permission_flags::disable_confidential); }
+         bool is_dual_auth_issue() const { return options.flags & dual_auth_issue_asset; }
 
          /// Helper function to get an asset object with the given amount in this asset's type
          asset amount(share_type a)const { return asset(a, id); }
@@ -114,6 +115,12 @@ namespace graphene { namespace chain {
          /// Convert an asset to a textual representation with symbol, i.e. "123.45 USD"
          string amount_to_pretty_string(const asset &amount)const
          { FC_ASSERT(amount.asset_id == id); return amount_to_pretty_string(amount.amount); }
+         /// Convert amount with reserved to a textual representation with symbol, i.e."123.45/789.99 USD"
+         string amount_to_pretty_string(const asset_reserved &a) const
+         {
+            FC_ASSERT(a.asset_id == id);
+            return amount_to_string(a.balance) + "/" + amount_to_string(a.reserved) + " " + symbol;
+         }
 
          /// Ticker symbol for this asset, i.e. "USD"
          string symbol;
@@ -121,6 +128,8 @@ namespace graphene { namespace chain {
          uint8_t precision = 0;
          /// ID of the account which issued this asset.
          account_id_type issuer;
+         /// ID of the account that authenticates issuing requests. May not be set.
+         optional<account_id_type> authenticator;
 
          asset_options options;
 
@@ -153,7 +162,7 @@ namespace graphene { namespace chain {
          { return db.get(dynamic_asset_data_id); }
 
          /**
-          *  The total amount of an asset that is reserved for future issuance. 
+          *  The total amount of an asset that is reserved for future issuance.
           */
          template<class DB>
          share_type reserved( const DB& db )const
@@ -218,6 +227,33 @@ namespace graphene { namespace chain {
          void update_median_feeds(time_point_sec current_time);
    };
 
+   /**
+    * @brief Represent a request to issue asset that can be denied by the authenticator.
+    *
+    * @ingroup object
+    * @ingroup implementation
+    */
+   class issue_asset_request_object : public abstract_object<issue_asset_request_object>
+   {
+   public:
+      static const uint8_t space_id = implementation_ids;
+      static const uint8_t type_id  = impl_issue_asset_request_object_type;
+
+      account_id_type issuer;
+      account_id_type receiver;
+      share_type amount;
+      asset_id_type asset_id;
+      share_type reserved_amount;
+      fc::time_point_sec expiration;
+
+      extensions_type extensions;
+
+      void set_asset_amount(asset a) { amount = a.amount; asset_id = a.asset_id; }
+      asset get_balance() const { return asset(amount, asset_id); }
+
+      void validate() const;
+   };
+
    struct by_feed_expiration;
    typedef multi_index_container<
       asset_bitasset_data_object,
@@ -247,6 +283,36 @@ namespace graphene { namespace chain {
    > asset_object_multi_index_type;
    typedef generic_index<asset_object, asset_object_multi_index_type> asset_index;
 
+   struct by_account_asset;
+   struct by_issuer;
+   struct by_expiration;
+   typedef multi_index_container<
+      issue_asset_request_object,
+      indexed_by<
+         ordered_unique< tag<by_id>,
+           member< object, object_id_type, &object::id >
+         >,
+         ordered_unique< tag<by_account_asset>,
+            composite_key<
+               issue_asset_request_object,
+               member< issue_asset_request_object, account_id_type, &issue_asset_request_object::receiver >,
+               member< issue_asset_request_object, asset_id_type, &issue_asset_request_object::asset_id >,
+               member< object, object_id_type, &object::id >
+            >
+         >,
+         ordered_non_unique< tag<by_issuer>,
+           member< issue_asset_request_object, account_id_type, &issue_asset_request_object::issuer >
+         >,
+         ordered_unique< tag<by_expiration>,
+           composite_key< issue_asset_request_object,
+             member< issue_asset_request_object, time_point_sec, &issue_asset_request_object::expiration >,
+             member< object, object_id_type, &object::id>
+           >
+         >
+      >
+   > issue_asset_request_multi_index_type;
+   typedef generic_index<issue_asset_request_object, issue_asset_request_multi_index_type> issue_asset_request_index;
+
 } } // graphene::chain
 
 FC_REFLECT_DERIVED( graphene::chain::asset_dynamic_data_object, (graphene::db::object),
@@ -267,8 +333,19 @@ FC_REFLECT_DERIVED( graphene::chain::asset_object, (graphene::db::object),
                     (symbol)
                     (precision)
                     (issuer)
+                    (authenticator)
                     (options)
                     (dynamic_asset_data_id)
                     (bitasset_data_id)
                     (buyback_account)
+                  )
+
+FC_REFLECT_DERIVED( graphene::chain::issue_asset_request_object, (graphene::db::object),
+                    (issuer)
+                    (receiver)
+                    (amount)
+                    (asset_id)
+                    (reserved_amount)
+                    (expiration)
+                    (extensions)
                   )

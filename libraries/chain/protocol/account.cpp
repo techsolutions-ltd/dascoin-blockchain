@@ -159,24 +159,10 @@ void account_options::validate() const
               "May not specify fewer witnesses or committee members than the number voted for.");
 }
 
-share_type account_create_operation::calculate_fee( const fee_parameters_type& k )const
-{
-   auto core_fee_required = k.basic_fee;
-
-   if( !is_cheap_name(name) )
-      core_fee_required = k.premium_fee;
-
-   // Authorities and vote lists can be arbitrarily large, so charge a data fee for big ones
-   auto data_fee =  calculate_data_fee( fc::raw::pack_size(*this), k.price_per_kbyte ); 
-   core_fee_required += data_fee;
-
-   return core_fee_required;
-}
-
-
 void account_create_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );
+   FC_ASSERT( kind < static_cast<uint8_t>(account_kind::VAULT_KIND_COUNT) );
    FC_ASSERT( is_valid_name( name ) );
    FC_ASSERT( referrer_percent <= GRAPHENE_100_PERCENT );
    FC_ASSERT( owner.num_auths() != 0 );
@@ -210,7 +196,7 @@ void account_create_operation::validate()const
 
 share_type account_update_operation::calculate_fee( const fee_parameters_type& k )const
 {
-   auto core_fee_required = k.fee;  
+   auto core_fee_required = k.fee;
    if( new_options )
       core_fee_required += calculate_data_fee( fc::raw::pack_size(*this), k.price_per_kbyte );
    return core_fee_required;
@@ -271,5 +257,9 @@ void account_transfer_operation::validate()const
    FC_ASSERT( fee.amount >= 0 );
 }
 
+void tether_accounts_operation::validate()const
+{
+   FC_ASSERT( fee.amount >= 0 );
+}
 
 } } // graphene::chain

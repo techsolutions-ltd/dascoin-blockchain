@@ -25,7 +25,7 @@
 #include <graphene/chain/protocol/base.hpp>
 #include <graphene/chain/protocol/memo.hpp>
 
-namespace graphene { namespace chain { 
+namespace graphene { namespace chain {
 
    bool is_valid_symbol( const string& symbol );
 
@@ -118,12 +118,7 @@ namespace graphene { namespace chain {
     */
    struct asset_create_operation : public base_operation
    {
-      struct fee_parameters_type { 
-         uint64_t symbol3        = 500000 * GRAPHENE_BLOCKCHAIN_PRECISION;
-         uint64_t symbol4        = 300000 * GRAPHENE_BLOCKCHAIN_PRECISION;
-         uint64_t long_symbol    = 5000   * GRAPHENE_BLOCKCHAIN_PRECISION;
-         uint32_t price_per_kbyte = 10; /// only required for large memos.
-      };
+      struct fee_parameters_type { };
 
       asset                   fee;
       /// This account must sign and pay the fee for this operation. Later, this account may update the asset
@@ -148,7 +143,7 @@ namespace graphene { namespace chain {
 
       account_id_type fee_payer()const { return issuer; }
       void            validate()const;
-      share_type      calculate_fee( const fee_parameters_type& k )const;
+      share_type      calculate_fee( const fee_parameters_type& k )const { return 0; }
    };
 
    /**
@@ -190,9 +185,9 @@ namespace graphene { namespace chain {
     */
    struct asset_settle_operation : public base_operation
    {
-      struct fee_parameters_type { 
+      struct fee_parameters_type {
          /** this fee should be high to encourage small settlement requests to
-          * be performed on the market rather than via forced settlement. 
+          * be performed on the market rather than via forced settlement.
           *
           * Note that in the event of a black swan or prediction market close out
           * everyone will have to pay this fee.
@@ -270,7 +265,7 @@ namespace graphene { namespace chain {
     */
    struct asset_update_operation : public base_operation
    {
-      struct fee_parameters_type { 
+      struct fee_parameters_type {
          uint64_t fee            = 500 * GRAPHENE_BLOCKCHAIN_PRECISION;
          uint32_t price_per_kbyte = 10;
       };
@@ -385,8 +380,8 @@ namespace graphene { namespace chain {
     */
    struct asset_issue_operation : public base_operation
    {
-      struct fee_parameters_type { 
-         uint64_t fee = 20 * GRAPHENE_BLOCKCHAIN_PRECISION; 
+      struct fee_parameters_type {
+         uint64_t fee = 20 * GRAPHENE_BLOCKCHAIN_PRECISION;
          uint32_t price_per_kbyte = GRAPHENE_BLOCKCHAIN_PRECISION;
       };
 
@@ -426,6 +421,7 @@ namespace graphene { namespace chain {
 
    /**
     * @brief used to transfer accumulated fees back to the issuer's balance.
+    * @ingroup operations
     */
    struct asset_claim_fees_operation : public base_operation
    {
@@ -442,8 +438,94 @@ namespace graphene { namespace chain {
       void            validate()const;
    };
 
+   /**
+    * @brief For dual authority issued assets, create an asset issue request that can be denied by the asset
+    * authenticator.
+    * @ingroup operations
+    * @note You cannot use this operation on single issuer assets.
+    */
+   struct asset_create_issue_request_operation : public base_operation
+   {
+      struct fee_parameters_type {};
+      asset fee;
+
+      account_id_type issuer;
+      account_id_type receiver;
+      share_type amount;
+      asset_id_type asset_id;
+      share_type reserved_amount;
+
+      extensions_type extensions;
+
+      asset get_balance() const { return asset(amount, asset_id); }
+
+      account_id_type fee_payer() const { return issuer; }
+      share_type calculate_fee(const fee_parameters_type& k) const { return 0; }
+      void validate() const;
+   };
+
+   /**
+    * @brief Record the asset distribution when a dual authority asset issue request elapses.
+    * @ingroup operations
+    */
+   struct asset_distribute_completed_request_operation : public base_operation
+   {
+      struct fee_parameters_type {};
+      asset fee;
+
+      account_id_type issuer;
+      account_id_type receiver;
+      asset amount;
+      share_type reserved_amount;
+
+      extensions_type extensions;
+
+      account_id_type fee_payer() const { return issuer; }
+      share_type calculate_fee(const fee_parameters_type& k) const { return 0; }
+      void validate() const { FC_ASSERT(false); }
+   };
+
+   /**
+    * @brief As the asset authenticator on a dual authentication issuing asset, deny an asset issue request.
+    */
+   struct asset_deny_issue_request_operation : public base_operation
+   {
+      struct fee_parameters_type {};
+      asset fee;
+
+      account_id_type authenticator;
+      issue_asset_request_id_type request;
+
+      extensions_type extensions;
+
+      account_id_type fee_payer() const { return authenticator; }
+      share_type calculate_fee(const fee_parameters_type& k) const { return 0; }
+      void validate() const;
+   };
+
+   /**
+    * @brief Virtual operation, a record of dascoin distrubution in the blockchain.
+    */
+   struct distribute_dascoin_operation : public base_operation
+   {
+     struct fee_parameters_type {};  // No fees are paid for this operation.
+     asset fee;
+
+     account_id_type account;
+     share_type amount;
+
+     extensions_type extensions;
+
+     account_id_type fee_payer() const { return account; }
+     share_type calculate_fee(const fee_parameters_type& k) const { return 0; }
+     void validate() const { FC_ASSERT(false); }
+   };
 
 } } // graphene::chain
+
+////////////////////////////////
+// REFLECTIONS:               //
+////////////////////////////////
 
 FC_REFLECT( graphene::chain::asset_claim_fees_operation, (fee)(issuer)(amount_to_claim)(extensions) )
 FC_REFLECT( graphene::chain::asset_claim_fees_operation::fee_parameters_type, (fee) )
@@ -473,7 +555,6 @@ FC_REFLECT( graphene::chain::bitasset_options,
           )
 
 
-FC_REFLECT( graphene::chain::asset_create_operation::fee_parameters_type, (symbol3)(symbol4)(long_symbol)(price_per_kbyte) )
 FC_REFLECT( graphene::chain::asset_global_settle_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::asset_settle_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::asset_settle_cancel_operation::fee_parameters_type, )
@@ -485,7 +566,8 @@ FC_REFLECT( graphene::chain::asset_publish_feed_operation::fee_parameters_type, 
 FC_REFLECT( graphene::chain::asset_issue_operation::fee_parameters_type, (fee)(price_per_kbyte) )
 FC_REFLECT( graphene::chain::asset_reserve_operation::fee_parameters_type, (fee) )
 
-
+// Asset create operation:
+FC_REFLECT( graphene::chain::asset_create_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::asset_create_operation,
             (fee)
             (issuer)
@@ -496,6 +578,7 @@ FC_REFLECT( graphene::chain::asset_create_operation,
             (is_prediction_market)
             (extensions)
           )
+
 FC_REFLECT( graphene::chain::asset_update_operation,
             (fee)
             (issuer)
@@ -525,3 +608,43 @@ FC_REFLECT( graphene::chain::asset_reserve_operation,
             (fee)(payer)(amount_to_reserve)(extensions) )
 
 FC_REFLECT( graphene::chain::asset_fund_fee_pool_operation, (fee)(from_account)(asset_id)(amount)(extensions) );
+
+// asset_create_issue_request_operation:
+FC_REFLECT( graphene::chain::asset_create_issue_request_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::asset_create_issue_request_operation,
+            (fee)
+            (issuer)
+            (receiver)
+            (amount)
+            (asset_id)
+            (reserved_amount)
+            (extensions)
+          )
+
+// asset_distribute_completed_request_operation:
+FC_REFLECT( graphene::chain::asset_distribute_completed_request_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::asset_distribute_completed_request_operation,
+            (fee)
+            (issuer)
+            (receiver)
+            (amount)
+            (reserved_amount)
+            (extensions)
+          )
+
+// asset_deny_issue_request_operation:
+FC_REFLECT( graphene::chain::asset_deny_issue_request_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::asset_deny_issue_request_operation,
+            (fee)
+            (authenticator)
+            (request)
+            (extensions)
+          )
+
+FC_REFLECT( graphene::chain::distribute_dascoin_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::distribute_dascoin_operation,
+            (fee)
+            (account)
+            (amount)
+            (extensions)
+          )

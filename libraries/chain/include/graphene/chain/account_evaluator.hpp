@@ -63,10 +63,22 @@ class account_whitelist_evaluator : public evaluator<account_whitelist_evaluator
 public:
    typedef account_whitelist_operation operation_type;
 
-   void_result do_evaluate( const account_whitelist_operation& o);
-   void_result do_apply( const account_whitelist_operation& o);
+   void_result do_evaluate( const account_whitelist_operation& o );
+   void_result do_apply( const account_whitelist_operation& o );
 
    const account_object* listed_account;
+};
+
+class tether_accounts_evaluator : public evaluator<tether_accounts_evaluator>
+{
+public:
+   typedef tether_accounts_operation operation_type;
+
+   void_result do_evaluate( const operation_type& o );
+   void_result do_apply( const operation_type& o );
+
+   const account_object* wallet_account;
+   const account_object* vault_account;
 };
 
 } } // graphene::chain

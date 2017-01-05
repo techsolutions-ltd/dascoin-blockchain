@@ -26,10 +26,13 @@
 #include <graphene/chain/db_with.hpp>
 
 #include <graphene/chain/asset_object.hpp>
+#include <graphene/chain/cycle_objects.hpp>
 #include <graphene/chain/global_property_object.hpp>
 #include <graphene/chain/hardfork.hpp>
+#include <graphene/chain/license_objects.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
+#include <graphene/chain/queue_objects.hpp>
 #include <graphene/chain/transaction_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
 #include <graphene/chain/witness_object.hpp>
@@ -60,7 +63,7 @@ void database::update_global_dynamic_data( const signed_block& b )
          modify( witness_missed, [&]( witness_object& w ) {
            w.total_missed++;
          });
-      } 
+      }
    }
 
    // dynamic global properties updating
@@ -190,7 +193,7 @@ void database::clear_expired_proposals()
 
 /**
  *  let HB = the highest bid for the collateral  (aka who will pay the most DEBT for the least collateral)
- *  let SP = current median feed's Settlement Price 
+ *  let SP = current median feed's Settlement Price
  *  let LC = the least collateralized call order's swan price (debt/collateral)
  *
  *  If there is no valid price feed or no bids then there is no black swan.
@@ -236,7 +239,7 @@ bool database::check_for_blackswan( const asset_object& mia, bool enable_black_s
     }
 
     auto least_collateral = call_itr->collateralization();
-    if( ~least_collateral >= highest  ) 
+    if( ~least_collateral >= highest  )
     {
        elog( "Black Swan detected: \n"
              "   Least collateralized call: ${lc}  ${~lc}\n"
@@ -250,7 +253,7 @@ bool database::check_for_blackswan( const asset_object& mia, bool enable_black_s
        FC_ASSERT( enable_black_swan, "Black swan was detected during a margin update which is not allowed to trigger a blackswan" );
        globally_settle_asset(mia, ~least_collateral );
        return true;
-    } 
+    }
     return false;
 }
 
@@ -407,8 +410,8 @@ void database::clear_expired_orders()
             }
             try {
                settled += match(*itr, order, settlement_price, max_settlement);
-            } 
-            catch ( const black_swan_exception& e ) { 
+            }
+            catch ( const black_swan_exception& e ) {
                wlog( "black swan detected: ${e}", ("e", e.to_detail_string() ) );
                cancel_order( order );
                break;
@@ -474,4 +477,134 @@ void database::update_withdraw_permissions()
       remove(*permit_index.begin());
 }
 
-} }
+void database::assign_licenses()
+{ try {
+  transaction_evaluation_state assign_context(this);
+  const auto& idx = get_index_type<license_request_index>().indices().get<by_expiration>();
+
+  while ( !idx.empty() && idx.begin()->expiration <= head_block_time() )
+  {
+    const auto& req = *idx.begin();
+    const auto& ca = get_chain_authorities();
+
+    fulfill_license_request(req);
+
+    license_approve_operation vop;
+    vop.license_authentication_account = ca.license_authenticator;
+    vop.account = req.account;
+    vop.license = req.license;
+    push_applied_operation(vop);
+
+    remove(req);
+  }
+} FC_CAPTURE_AND_RETHROW() }
+
+void database::distribute_issue_requested_assets()
+{ try {
+  transaction_evaluation_state distribute_context(this);
+  const auto& idx = get_index_type<issue_asset_request_index>().indices().get<by_expiration>();
+
+  while (!idx.empty() && idx.begin()->expiration <= head_block_time())
+  {
+    const auto& req = *idx.begin();
+
+    issue_asset(req.receiver, req.amount, req.asset_id, req.reserved_amount);
+
+    asset_distribute_completed_request_operation vop;
+    vop.issuer = req.issuer;
+    vop.receiver = req.receiver;
+    vop.amount = req.amount;
+    push_applied_operation(vop);
+
+    remove(req);
+  }
+} FC_CAPTURE_AND_RETHROW() }
+
+void database::distribute_issue_requested_cycles()
+{ try {
+  transaction_evaluation_state distribute_context(this);
+  const auto& idx = get_index_type<cycle_issue_request_index>().indices().get<by_expiration>();
+
+  while (!idx.empty() && idx.begin()->expiration <= head_block_time())
+  {
+    const auto& req = *idx.begin();
+    adjust_cycle_balance(req.account, req.amount);
+
+    cycle_issue_complete_operation vop;
+    vop.cycle_authenticator = get_chain_authorities().cycle_authenticator;
+    vop.account = req.account;
+    vop.amount = req.amount;
+    push_applied_operation(vop);
+
+    remove(req);
+  }
+} FC_CAPTURE_AND_RETHROW() }
+
+void database::deny_license_request(const license_request_object& req)
+{ try {
+
+  remove(req);
+
+} FC_CAPTURE_AND_RETHROW() }
+
+void database::reset_spending_limits()
+{ try {
+  const auto& params = get_global_properties().parameters;
+  const auto& dgpo = get_dynamic_global_properties();
+
+  if ( dgpo.next_spend_limit_reset >= head_block_time() )
+  {
+    modify(dgpo, [&](dynamic_global_property_object& dgpo){
+      dgpo.next_spend_limit_reset = head_block_time() + params.limit_interval_elapse_time_seconds;
+    });
+  }
+
+} FC_CAPTURE_AND_RETHROW() }
+
+void database::mint_dascoin_rewards()
+{ try {
+  const auto& params = get_global_properties().parameters;
+  const auto& dgpo = get_dynamic_global_properties();
+
+  if ( dgpo.next_dascoin_reward_time <= head_block_time() )
+  {
+    share_type to_distribute = get_global_properties().parameters.dascoin_reward_amount;
+    const auto& queue = get_index_type<reward_queue_index>().indices().get<by_time>();
+
+    while ( to_distribute > 0 && !queue.empty() )
+    {
+      const auto& distribute = [this](account_id_type account_id, share_type amount){
+        issue_asset(account_id, amount, get_dascoin_asset_id(), 0);
+        // Emit a virtual op:
+        distribute_dascoin_operation vop;
+        vop.account = account_id;
+        vop.amount = amount;
+        push_applied_operation(vop);
+      };
+
+      const auto& el = *queue.begin();
+      account_id_type el_receiver_id = el.account;
+      share_type el_dascoin_amount = (el.amount * DASCOIN_DEFAULT_ASSET_PRECISION) / el.frequency;
+      if ( to_distribute >= el_dascoin_amount )
+        remove(el);
+      else
+      {
+        el_dascoin_amount = to_distribute;
+        share_type cycles = (to_distribute * el.frequency) / DASCOIN_DEFAULT_ASSET_PRECISION;
+        modify(el, [cycles](reward_queue_object& rqo){
+          rqo.amount -= cycles;
+        });
+      }
+      distribute(el_receiver_id, el_dascoin_amount);
+      to_distribute -= el_dascoin_amount;
+    }
+
+    modify(dgpo, [&](dynamic_global_property_object& dgpo){
+      dgpo.next_dascoin_reward_time = head_block_time() + params.reward_interval_time_seconds;
+    });
+  }
+
+
+} FC_CAPTURE_AND_RETHROW() }
+
+} }  // namespace database::chain

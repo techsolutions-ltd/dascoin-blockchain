@@ -33,6 +33,7 @@
 #include <graphene/chain/asset_object.hpp>
 #include <graphene/chain/committee_member_object.hpp>
 #include <graphene/chain/fba_object.hpp>
+#include <graphene/chain/license_objects.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
 #include <graphene/chain/witness_object.hpp>
@@ -57,6 +58,106 @@ namespace graphene { namespace chain {
 using std::cout;
 using std::cerr;
 
+void database_fixture::init_genesis_state()
+{
+   genesis_state.initial_timestamp = time_point_sec( GRAPHENE_TESTING_GENESIS_TIMESTAMP );
+
+   // Master account:
+   auto master_key = fc::ecc::private_key::regenerate(fc::sha256::hash("sys.master"));
+   genesis_state.initial_accounts.emplace_back("sys.master",
+                                               master_key.get_public_key(),
+                                               master_key.get_public_key(),
+                                               true);
+
+   // Initial witness accounts:
+   genesis_state.initial_active_witnesses = 10;
+   for( size_t i = 0; i < genesis_state.initial_active_witnesses; ++i )
+   {
+      auto name = "init_witness"+fc::to_string(i);
+      genesis_state.initial_accounts.emplace_back(name,
+                                                  init_account_priv_key.get_public_key(),
+                                                  init_account_priv_key.get_public_key(),
+                                                  true);
+      genesis_state.initial_committee_candidates.push_back({name});
+      genesis_state.initial_witness_candidates.push_back({name, init_account_priv_key.get_public_key()});
+   }
+
+   // Initial chain authorities:
+   // License issuer:
+   auto lic_issuer_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.license-issuer")));
+   genesis_state.initial_accounts.emplace_back("sys.license-issuer",
+                                               lic_issuer_key.get_public_key(),
+                                               lic_issuer_key.get_public_key(),
+                                               true);
+   genesis_state.initial_license_issuing_authority = {"sys.license-issuer"};
+
+   // License authenticator:
+   auto lic_auth_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.license-authenticator")));
+   genesis_state.initial_accounts.emplace_back("sys.license-authenticator",
+                                               lic_auth_key.get_public_key(),
+                                               lic_auth_key.get_public_key(),
+                                               true);
+   genesis_state.initial_license_authentication_authority = {"sys.license-authenticator"};
+
+   // Webasset issuer:
+   auto web_issuer_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.webasset-issuer")));
+   genesis_state.initial_accounts.emplace_back("sys.webasset-issuer",
+                                               web_issuer_key.get_public_key(),
+                                               web_issuer_key.get_public_key(),
+                                               true);
+   genesis_state.initial_webasset_issuing_authority = {"sys.webasset-issuer"};
+
+   // Webasset authenticator:
+   auto web_auth_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.webasset-authenticator")));
+   genesis_state.initial_accounts.emplace_back("sys.webasset-authenticator",
+                                               web_auth_key.get_public_key(),
+                                               web_auth_key.get_public_key(),
+                                               true);
+   genesis_state.initial_webasset_authentication_authority = {"sys.webasset-authenticator"};
+
+   // Cycle issuer:
+   auto cycle_issuer_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.cycle-issuer")));
+   genesis_state.initial_accounts.emplace_back("sys.cycle-issuer",
+                                               cycle_issuer_key.get_public_key(),
+                                               cycle_issuer_key.get_public_key(),
+                                               true);
+   genesis_state.initial_cycle_issuing_authority = {"sys.cycle-issuer"};
+
+   // Cycle authenticator:
+   auto cycle_auth_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.cycle-authenticator")));
+   genesis_state.initial_accounts.emplace_back("sys.cycle-authenticator",
+                                               cycle_auth_key.get_public_key(),
+                                               cycle_auth_key.get_public_key(),
+                                               true);
+   genesis_state.initial_cycle_authentication_authority = {"sys.cycle-authenticator"};
+
+   // Account registrar:
+   auto faucet_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.registrar")));
+   genesis_state.initial_accounts.emplace_back("sys.registrar",
+                                               faucet_key.get_public_key(),
+                                               faucet_key.get_public_key(),
+                                               true);
+   genesis_state.initial_registrar = {"sys.registrar"};
+
+   // PI validator:
+   auto pi_validator_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.pi-validator")));
+   genesis_state.initial_accounts.emplace_back("sys.pi-validator",
+                                               pi_validator_key.get_public_key(),
+                                               pi_validator_key.get_public_key(),
+                                               true);
+   genesis_state.initial_personal_identity_validation_authority = {"sys.pi-validator"};
+
+   // Wire out authority:
+   auto wire_out_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.wire-out-handler")));
+   genesis_state.initial_accounts.emplace_back("sys.wire-out-handler",
+                                               wire_out_key.get_public_key(),
+                                               wire_out_key.get_public_key(),
+                                               true);
+   genesis_state.initial_wire_out_handler = {"sys.wire-out-handler"};
+
+   genesis_state.initial_parameters.current_fees->zero_all_fees();
+}
+
 database_fixture::database_fixture()
    : app(), db( *app.chain_database() )
 {
@@ -75,12 +176,14 @@ database_fixture::database_fixture()
    auto mhplugin = app.register_plugin<graphene::market_history::market_history_plugin>();
    init_account_pub_key = init_account_priv_key.get_public_key();
 
+   init_genesis_state();
+
    boost::program_options::variables_map options;
 
    genesis_state.initial_timestamp = time_point_sec( GRAPHENE_TESTING_GENESIS_TIMESTAMP );
 
    genesis_state.initial_active_witnesses = 10;
-   for( int i = 0; i < genesis_state.initial_active_witnesses; ++i )
+   for( size_t i = 0; i < genesis_state.initial_active_witnesses; ++i )
    {
       auto name = "init"+fc::to_string(i);
       genesis_state.initial_accounts.emplace_back(name,
@@ -337,14 +440,17 @@ void database_fixture::generate_blocks(fc::time_point_sec timestamp, bool miss_i
 }
 
 account_create_operation database_fixture::make_account(
+   const account_kind kind,
+   const account_id_type registrar,
    const std::string& name /* = "nathan" */,
    public_key_type key /* = key_id_type() */
    )
 { try {
    account_create_operation create_account;
-   create_account.registrar = account_id_type();
 
+   create_account.kind = static_cast<uint8_t>(kind);
    create_account.name = name;
+   create_account.registrar = registrar;
    create_account.owner = authority(123, key, 123);
    create_account.active = authority(321, key, 321);
    create_account.options.memo_key = key;
@@ -379,6 +485,7 @@ account_create_operation database_fixture::make_account(
    {
       account_create_operation          create_account;
 
+      create_account.kind = static_cast<uint8_t>(account_kind::wallet);
       create_account.registrar          = registrar.id;
       create_account.referrer           = referrer.id;
       create_account.referrer_percent   = referrer_percent;
@@ -567,11 +674,12 @@ void database_fixture::change_fees(
 }
 
 const account_object& database_fixture::create_account(
+   const account_id_type registrar,
    const string& name,
    const public_key_type& key /* = public_key_type() */
    )
 {
-   trx.operations.push_back(make_account(name, key));
+   trx.operations.push_back(make_account( account_kind::wallet, registrar, name, key ));
    trx.validate();
    processed_transaction ptx = db.push_transaction(trx, ~0);
    auto& result = db.get<account_object>(ptx.operation_results[0].get<object_id_type>());

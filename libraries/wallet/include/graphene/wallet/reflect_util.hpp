@@ -69,7 +69,7 @@ struct static_variant_map_visitor
    }
 
    static_variant_map m;
-   int which;
+   uint32_t which;
 };
 
 template< typename StaticVariant >

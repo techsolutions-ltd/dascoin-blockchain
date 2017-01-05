@@ -25,6 +25,7 @@
 #include <fc/uint128.hpp>
 
 #include <graphene/chain/protocol/chain_parameters.hpp>
+#include <graphene/chain/protocol/chain_authorities.hpp>
 #include <graphene/chain/protocol/types.hpp>
 #include <graphene/chain/database.hpp>
 #include <graphene/db/object.hpp>
@@ -47,6 +48,8 @@ namespace graphene { namespace chain {
 
          chain_parameters           parameters;
          optional<chain_parameters> pending_parameters;
+
+         chain_authorities          authorities;
 
          uint32_t                           next_available_vote_id = 0;
          vector<committee_member_id_type>   active_committee_members; // updated once per maintenance interval
@@ -101,12 +104,48 @@ namespace graphene { namespace chain {
          fc::uint128_t recent_slots_filled;
 
          /**
+          * Current supply of cycles in all balances.
+          */
+         share_type cycle_supply = 0;
+
+         /**
+          * Total amount of cycles issued since genesis.
+          */
+         share_type total_cycles_issued = 0;
+
+         /**
+          * The current global frequency:
+          */
+         frequency_type frequency;
+
+         /**
           * dynamic_flags specifies chain state properties that can be
           * expressed in one bit.
           */
          uint32_t dynamic_flags = 0;
 
          uint32_t last_irreversible_block_num = 0;
+
+         /**
+          * The next time Dascoin will be minted and distributed.
+          */
+         time_point_sec next_dascoin_reward_time = fc::time_point_sec();
+
+         /**
+          * The time point the spend limit will be reset for all balances.
+          * NOTE: the value is set to maximum at the beginning to trigger a reset on the first block.
+          */
+         time_point_sec next_spend_limit_reset = fc::time_point_sec::maximum();
+
+         /**
+          * The time of the next upgrade interval. Measured in days, the event will happen on the interval on that day.
+          */
+         time_point_sec next_upgrade_event = fc::time_point_sec::maximum();
+
+         /**
+          * The number of upgrade events that happened on this chain.
+          */
+         uint32_t total_upgrade_events = 0;
 
          enum dynamic_flag_bits
          {
@@ -119,7 +158,8 @@ namespace graphene { namespace chain {
              * This flag answers the question, "Was maintenance
              * performed in the last call to apply_block()?"
              */
-            maintenance_flag = 0x01
+            maintenance_flag = 0x01,
+            upgrade_flag = 0x02,
          };
    };
 }}
@@ -136,8 +176,15 @@ FC_REFLECT_DERIVED( graphene::chain::dynamic_global_property_object, (graphene::
                     (recently_missed_count)
                     (current_aslot)
                     (recent_slots_filled)
+                    (cycle_supply)
+                    (total_cycles_issued)
+                    (frequency)
                     (dynamic_flags)
                     (last_irreversible_block_num)
+                    (next_dascoin_reward_time)
+                    (next_spend_limit_reset)
+                    (next_upgrade_event)
+                    (total_upgrade_events)
                   )
 
 FC_REFLECT_DERIVED( graphene::chain::global_property_object, (graphene::db::object),
@@ -145,5 +192,6 @@ FC_REFLECT_DERIVED( graphene::chain::global_property_object, (graphene::db::obje
                     (pending_parameters)
                     (next_available_vote_id)
                     (active_committee_members)
+                    (authorities)
                     (active_witnesses)
                   )

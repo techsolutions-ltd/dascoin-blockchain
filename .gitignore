@@ -25,6 +25,7 @@ tests/chain_bench
 tests/chain_test
 tests/intense_test
 tests/performance_test
+tests/das_test
 
 doxygen
 
@@ -54,8 +55,10 @@ programs/genesis_util/get_dev_key
 programs/size_checker/size_checker
 programs/witness_node/clear.sh
 programs/witness_node/config.ini
-programs/witness_node/genesis.def
-programs/witness_node/genesis.json
+programs/witness_node/*genesis*.json
 
 tests/generate_empty_blocks/generate_empty_blocks
 
+programs/cli_wallet/nuke_cli_wallet.sh
+
+.vscode/

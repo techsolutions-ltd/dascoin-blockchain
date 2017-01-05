@@ -171,7 +171,8 @@ namespace graphene { namespace chain {
          void      set_applied_operation_result( uint32_t op_id, const operation_result& r );
          const vector<optional< operation_history_object > >& get_applied_operations()const;
 
-         string to_pretty_string( const asset& a )const;
+         string to_pretty_string(const asset& a) const;
+         string to_pretty_string(const asset_reserved& a) const;
 
          /**
           *  This signal is emitted after all operations and virtual operation for a
@@ -244,8 +245,13 @@ namespace graphene { namespace chain {
 
          const chain_id_type&                   get_chain_id()const;
          const asset_object&                    get_core_asset()const;
+         const asset_object&                    get_web_asset()const;
+         asset_id_type                          get_web_asset_id() const;
+         const asset_object&                    get_dascoin_asset() const;
+         asset_id_type                          get_dascoin_asset_id() const;
          const chain_property_object&           get_chain_properties()const;
          const global_property_object&          get_global_properties()const;
+         const chain_authorities&               get_chain_authorities()const;
          const dynamic_global_property_object&  get_dynamic_global_properties()const;
          const node_property_object&            get_node_properties()const;
          const fee_schedule&                    current_fee_schedule()const;
@@ -259,13 +265,27 @@ namespace graphene { namespace chain {
 
          node_property_object& node_properties();
 
-
          uint32_t last_non_undoable_block_num() const;
+
+         account_id_type get_account_id(const string& name);
+         asset_id_type get_asset_id(const string& symbol);
+
          //////////////////// db_init.cpp ////////////////////
 
          void initialize_evaluators();
          /// Reset the object graph in-memory
          void initialize_indexes();
+
+         /**
+          * Distribute the initial cycles to accounts in the genesis_state.
+          */
+         void initialize_preissued_cycles(const genesis_state_type& genesis_state);
+
+         /**
+          * Initialize the starting state of the chain from the provided genesis state.
+          * @param genesis_state genesis.json file, may be embedded in the binary. If no genesis state
+          *                      provided the default one will be used.
+          */
          void init_genesis(const genesis_state_type& genesis_state = genesis_state_type());
 
          template<typename EvaluatorType>
@@ -287,12 +307,127 @@ namespace graphene { namespace chain {
          /// This is an overloaded method.
          asset get_balance(const account_object& owner, const asset_object& asset_obj)const;
 
+         asset get_reserved_balance(account_id_type owner, asset_id_type asset_id) const;
+         /// This is an overloaded method.
+         asset get_reserved_balance(const account_object& owner, const asset_object& asset_obj) const;
+
+         /**
+          * Retrieve the balance object for a given asset on an account, This method will throw an exception if the
+          * object does not exist.
+          *
+          * @param  owner    ID of the account that owns the balance.
+          * @param  asset_id ID of the asset the balance tracks.
+          * @return          Const reference to the balance object.
+          */
+         const account_balance_object& get_balance_object(account_id_type owner, asset_id_type asset_id) const;
+
+         /**
+          * Retrieve the cycle balance object on an account, This method will throw an exception if the object does not
+          * exist. NOTE: this should NOT happen on regular accounts!
+          *
+          * @param  owner    ID of the account that owns the cycle balance.
+          * @return          Const reference to the cycle balance object.
+          */
+         const account_cycle_balance_object& get_cycle_balance_object(account_id_type owner) const;
+
+         pair<asset, share_type> get_balance_and_spent(account_id_type owner, asset_id_type asset_id) const;
+
+         /**
+          * @brief Retrieve a particular account's cycle balance.
+          * @param  owner Account IF whose cycle balance should be retrieved.
+          * @return       Balance of cycles.
+          */
+         share_type get_cycle_balance(account_id_type owner)const;
+         /// This is an overloaded method.
+         share_type get_cycle_balance(const account_object& owner)const;
+
          /**
           * @brief Adjust a particular account's balance in a given asset by a delta
           * @param account ID of account whose balance should be adjusted
           * @param delta Asset ID and amount to adjust balance by
+          * @param enforce_limits Check and update the limits on the balance.
           */
-         void adjust_balance(account_id_type account, asset delta);
+         void adjust_balance(account_id_type account, asset delta, share_type reserved_delta = 0);
+
+         /**
+          * @brief Adjsut a particular account's cycle balance by a delta.
+          * @param account ID of the account whose balance should be adjusted.
+          * @param delta   Amount to adjust balance by.
+          */
+         void adjust_cycle_balance(account_id_type account, share_type delta);
+
+         /**
+          * Issue new cycles to the account. This will increase the global supply of cycles in the system.
+          * @param account ID of the account to benefit the cycles.
+          * @param amount  Amount of new cycles to be issued.
+          */
+         void issue_cycles(account_id_type account, share_type amount);
+
+         /**
+          * Issue new cycles to the account. This will increase the global supply of cycles in the system.
+          * @param balance The balance object of the account that will benefit the cycles.
+          * @param amount  Amount of new cycles to be issued.
+          */
+         void issue_cycles(const account_cycle_balance_object& balance, share_type amount);
+
+         /**
+          * Remove cycles from an account's balance and from the global supply.
+          * @param account ID of the account to surrender the cycles.
+          * @param amount  Amount of cycles spent.
+          */
+         void reserve_cycles(account_id_type account, share_type amount);
+
+         /**
+          * Remove cycles from an account's balance and from the global supply.
+          * @param balance The balance object of the account to surrender the cycles.
+          * @param amount  Amount of cycles spent.
+          */
+         void reserve_cycles(const account_cycle_balance_object& balance, share_type amount);
+
+         /**
+          * Issue new asset to an account balance. This method assumes that the balance object for the asset exists.
+          * @param balance  The balance object to modify.
+          * @param cash     Amount of cash to issue.
+          * @param reserved Amount of reserved funds to issue.
+          */
+         void issue_asset(const account_balance_object& balance, share_type cash, share_type reserved);
+
+         /**
+          * Issue new asset to an account. This method will throw an exception if the asset balance object does not exist.
+          * @param account_id ID of the account to get the balance of.
+          * @param asset_id   ID of the asset that is being issued.
+          * @param cash       Amount of cash to issue.
+          * @param reserved   Amount of reserved to issue.
+          */
+         void issue_asset(account_id_type account_id, share_type cash, asset_id_type asset_id, share_type reserved);
+
+         /**
+          * @brief Get the set transfer limits for a given account.
+          * @param account_id_type The ID of the account.
+          */
+         optional<limits_type> get_account_limits(const account_id_type account)const;
+
+         /**
+          * @brief Get the accounts verified personal information level.
+          * @param  account The ID of the account we are checking.
+          * @return         Level of the verified PI.
+          */
+         optional<uint8_t> get_account_pi_level(const account_id_type account) const;
+
+         /**
+          * @brief Create an empty balance object.
+          * @param  owner    ID of the owner of the balance.
+          * @param  asset_id ID of the asset.
+          * @return          ID of the created object.
+          */
+         object_id_type create_empty_balance(account_id_type owner, asset_id_type asset_id);
+
+         /**
+          * @brief Create an empty cycle balance object.
+          * @param  owner    ID of the owner of the balance.
+          * @return          ID of the created object.
+          */
+         object_id_type create_empty_cycle_balance(account_id_type owner);
 
          /**
           * @brief Helper to make lazy deposit to CDD VBO.
@@ -304,7 +439,7 @@ namespace graphene { namespace chain {
           * to newly created VBID and return it.
           *
           * Otherwise, credit amount to ovbid.
-          * 
+          *
           * @return ID of newly created VBO, but only if VBO was created.
           */
          optional< vesting_balance_id_type > deposit_lazy_vesting(
@@ -386,7 +521,6 @@ namespace graphene { namespace chain {
           */
          processed_transaction validate_transaction( const signed_transaction& trx );
 
-
          /** when popping a block, the transactions that were removed get cached here so they
           * can be reapplied at the proper time */
          std::deque< signed_transaction >       _popped_tx;
@@ -394,6 +528,13 @@ namespace graphene { namespace chain {
          /**
           * @}
           */
+
+         //////////////////// db_license.cpp ////////////////////
+
+         object_id_type create_license_type(const string& name, share_type amount, const policy_type& policy);
+         void fulfill_license_request(const license_request_object& req);
+
+
    protected:
          //Mark pop_undo() as protected -- we do not want outside calling pop_undo(); it should call pop_block() instead
          void pop_undo() { object_database::pop_undo(); }
@@ -425,6 +566,7 @@ namespace graphene { namespace chain {
          void create_block_summary(const signed_block& next_block);
 
          //////////////////// db_update.cpp ////////////////////
+
          void update_global_dynamic_data( const signed_block& b );
          void update_signing_witness(const witness_object& signing_witness, const signed_block& new_block);
          void update_last_irreversible_block();
@@ -435,6 +577,12 @@ namespace graphene { namespace chain {
          void update_maintenance_flag( bool new_maintenance_flag );
          void update_withdraw_permissions();
          bool check_for_blackswan( const asset_object& mia, bool enable_black_swan = true );
+         void assign_licenses();
+         void distribute_issue_requested_cycles();
+         void distribute_issue_requested_assets();
+         void deny_license_request(const license_request_object& req);
+         void mint_dascoin_rewards();
+         void reset_spending_limits();
 
          ///Steps performed only at maintenance intervals
          ///@{
@@ -447,10 +595,11 @@ namespace graphene { namespace chain {
          void perform_chain_maintenance(const signed_block& next_block, const global_property_object& global_props);
          void update_active_witnesses();
          void update_active_committee_members();
+         void perform_upgrades(const account_object& account);
          void update_worker_votes();
 
-         template<class... Types>
-         void perform_account_maintenance(std::tuple<Types...> helpers);
+         template<typename IndexType, typename IndexBy, class... HelperTypes>
+         void perform_helpers(std::tuple<HelperTypes...> helpers);
          ///@}
          ///@}
 

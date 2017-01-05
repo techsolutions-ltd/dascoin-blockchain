@@ -30,11 +30,15 @@
 #include <graphene/chain/protocol/custom.hpp>
 #include <graphene/chain/protocol/committee_member.hpp>
 #include <graphene/chain/protocol/confidential.hpp>
+#include <graphene/chain/protocol/cycle.hpp>
 #include <graphene/chain/protocol/fba.hpp>
+#include <graphene/chain/protocol/license.hpp>
 #include <graphene/chain/protocol/market.hpp>
+#include <graphene/chain/protocol/personal_identity.hpp>
 #include <graphene/chain/protocol/proposal.hpp>
 #include <graphene/chain/protocol/transfer.hpp>
 #include <graphene/chain/protocol/vesting.hpp>
+#include <graphene/chain/protocol/wire.hpp>
 #include <graphene/chain/protocol/withdraw_permission.hpp>
 #include <graphene/chain/protocol/witness.hpp>
 #include <graphene/chain/protocol/worker.hpp>
@@ -91,18 +95,48 @@ namespace graphene { namespace chain {
             transfer_from_blind_operation,
             asset_settle_cancel_operation,  // VIRTUAL
             asset_claim_fees_operation,
-            fba_distribute_operation        // VIRTUAL
+            fba_distribute_operation,  // VIRTUAL
+            committee_member_update_license_issuer_operation,
+            committee_member_update_license_authenticator_operation,
+            committee_member_update_account_registrar_operation,
+            committee_member_update_webasset_issuer_operation,
+            committee_member_update_webasset_authenticator_operation,
+            committee_member_update_wire_out_handler_operation,
+            committee_member_update_cycle_issuer_operation,
+            committee_member_update_cycle_authenticator_operation,
+            license_type_create_operation,
+            license_type_edit_operation,
+            license_type_delete_operation,
+            license_request_operation,
+            license_approve_operation,  // VIRTUAL
+            license_deny_operation,
+            tether_accounts_operation,
+            update_pi_limits_operation,
+            asset_create_issue_request_operation,
+            asset_distribute_completed_request_operation,  // VIRTUAL
+            asset_deny_issue_request_operation,
+            wire_out_operation,
+            wire_out_complete_operation,
+            wire_out_reject_operation,
+            transfer_vault_to_wallet_operation,
+            transfer_wallet_to_vault_operation,
+            cycle_issue_request_operation,
+            cycle_issue_deny_operation,
+            cycle_issue_complete_operation,  // VIRTUAL
+            upgrade_account_cycles_operation,  // VIRTUAL
+            submit_cycles_operation,
+            distribute_dascoin_operation  // VIRTUAL
          > operation;
 
    /// @} // operations group
 
    /**
     *  Appends required authorites to the result vector.  The authorities appended are not the
-    *  same as those returned by get_required_auth 
+    *  same as those returned by get_required_auth
     *
     *  @return a set of required authorities for @ref op
     */
-   void operation_get_required_authorities( const operation& op, 
+   void operation_get_required_authorities( const operation& op,
                                             flat_set<account_id_type>& active,
                                             flat_set<account_id_type>& owner,
                                             vector<authority>&  other );
@@ -122,4 +156,7 @@ namespace graphene { namespace chain {
 } } // graphene::chain
 
 FC_REFLECT_TYPENAME( graphene::chain::operation )
-FC_REFLECT( graphene::chain::op_wrapper, (op) )
+
+FC_REFLECT( graphene::chain::op_wrapper,
+            (op)
+          )

@@ -130,7 +130,7 @@ extern uint32_t GRAPHENE_TESTING_GENESIS_TIMESTAMP;
 
 #define ACTOR(name) \
    PREP_ACTOR(name) \
-   const auto& name = create_account(BOOST_PP_STRINGIZE(name), name ## _public_key); \
+   const auto& name = create_new_account(get_registrar_id(), BOOST_PP_STRINGIZE(name), name ## _public_key); \
    account_id_type name ## _id = name.id; (void)name ## _id;
 
 #define GET_ACTOR(name) \
@@ -141,6 +141,14 @@ extern uint32_t GRAPHENE_TESTING_GENESIS_TIMESTAMP;
 
 #define ACTORS_IMPL(r, data, elem) ACTOR(elem)
 #define ACTORS(names) BOOST_PP_SEQ_FOR_EACH(ACTORS_IMPL, ~, names)
+
+#define VAULT_ACTOR(name) \
+   PREP_ACTOR(name) \
+   const auto& name = create_new_vault_account(get_registrar_id(), BOOST_PP_STRINGIZE(name), name ## _public_key); \
+   account_id_type name ## _id = name.id; (void)name ## _id;
+
+#define VAULT_ACTORS_IMPL(r, data, elem) VAULT_ACTOR(elem)
+#define VAULT_ACTORS(names) BOOST_PP_SEQ_FOR_EACH(VAULT_ACTORS_IMPL, ~, names)
 
 namespace graphene { namespace chain {
 
@@ -164,6 +172,8 @@ struct database_fixture {
    database_fixture();
    ~database_fixture();
 
+   void init_genesis_state();
+
    static fc::ecc::private_key generate_private_key(string seed);
    string generate_anon_acct_name();
    static void verify_asset_supplies( const database& db );
@@ -186,6 +196,8 @@ struct database_fixture {
    void generate_blocks(fc::time_point_sec timestamp, bool miss_intermediate_blocks = true, uint32_t skip = ~0);
 
    account_create_operation make_account(
+      const account_kind kind,
+      const account_id_type registrar,
       const std::string& name = "nathan",
       public_key_type = public_key_type()
       );
@@ -233,6 +245,7 @@ struct database_fixture {
    void issue_uia( account_id_type recipient_id, asset amount );
 
    const account_object& create_account(
+      const account_id_type registrar,
       const string& name,
       const public_key_type& key = public_key_type()
       );
@@ -251,6 +264,12 @@ struct database_fixture {
       const account_id_type& registrar_id = account_id_type(),
       const account_id_type& referrer_id = account_id_type(),
       uint8_t referrer_percent = 100
+      );
+
+   const account_object& create_vault_account(
+      const account_id_type registrar,
+      const string& name,
+      const public_key_type& key = public_key_type()
       );
 
    const committee_member_object& create_committee_member( const account_object& owner );
@@ -281,6 +300,84 @@ struct database_fixture {
    int64_t get_balance( account_id_type account, asset_id_type a )const;
    int64_t get_balance( const account_object& account, const asset_object& a )const;
    vector< operation_history_object > get_operation_history( account_id_type account_id )const;
+
+   // fix_accounts.cpp
+   const account_object& make_new_account_base(const account_kind kind, const account_id_type registrar,
+                                               const string& name, const public_key_type& key = public_key_type());
+   // Use this method to create accounts for DAS tests.
+   const account_object& create_new_account(const account_id_type registrar, const string& name,
+                                            const public_key_type& key = public_key_type());
+   // Use this method to create vault accounts for DAS tests.
+   const account_object& create_new_vault_account(const account_id_type registrar, const string& name,
+                                                  const public_key_type& key = public_key_type());
+
+   // fix_licenses.cpp
+   const license_type_object& get_license_type(const string& name) const;
+   const license_request_object* issue_license_to_vault_account(const account_id_type vault_account_id,
+                                                                const license_type_id_type license_id,
+                                                                frequency_type frequency = 0);
+   vector<license_request_object> get_license_issue_requests_by_expiration() const;
+   vector<license_type_object> get_license_history(account_id_type) const;
+
+   // fix_cycles.cpp
+   share_type get_cycle_balance(const account_id_type owner) const;
+   void adjust_cycles(const account_id_type id, const share_type amount);
+   const cycle_issue_request_object* issue_cycles(account_id_type receiver_id, share_type amount);
+   void deny_issue_cycles(cycle_issue_request_id_type request_id);
+   vector<cycle_issue_request_object> get_cycle_issue_request_objects_by_expiration() const;
+
+   // fix_getter.cpp
+   const global_property_object& get_global_properties() const;
+   const dynamic_global_property_object& get_dynamic_global_properties() const;
+   const chain_parameters& get_chain_parameters() const;
+   account_id_type get_license_issuer_id() const;
+   account_id_type get_license_authenticator_id() const;
+   account_id_type get_webasset_issuer_id() const;
+   account_id_type get_webasset_authenticator_id() const;
+   account_id_type get_cycle_issuer_id() const;
+   account_id_type get_cycle_authenticator_id() const;
+   account_id_type get_registrar_id() const;
+   account_id_type get_pi_validator_id() const;
+   account_id_type get_wire_out_handler_id() const;
+   asset_id_type get_web_asset_id() const;
+   asset_id_type get_dascoin_asset_id() const;
+
+   // fix_accounts.cpp
+   void tether_accounts(account_id_type wallet, account_id_type vault);
+   const account_balance_object& get_account_balance_object(account_id_type account_id, asset_id_type aset_id);
+
+   // fix_web_assets.cpp
+   asset web_asset(share_type amount);
+   const issue_asset_request_object* issue_webasset(account_id_type receiver_id, share_type cash, share_type reserved);
+   void deny_issue_request(issue_asset_request_id_type request_id);
+   std::pair<share_type, share_type> get_web_asset_amounts(account_id_type owner_id);
+   std::pair<asset, asset> get_web_asset_balances(account_id_type owner_id);
+   void transfer_webasset_vault_to_wallet(account_id_type vault_id, account_id_type wallet_id,
+                                          std::pair<share_type, share_type> amounts);
+   void transfer_webasset_wallet_to_vault(account_id_type walelt_id, account_id_type vault_id,
+                                          std::pair<share_type, share_type> amounts);
+   vector<issue_asset_request_object> get_asset_request_objects(account_id_type account_id);
+   share_type get_asset_current_supply(asset_id_type asset_id);
+   share_type get_web_asset_current_supply() { return get_asset_current_supply(get_web_asset_id()); }
+
+   // fix_pi_limits.cpp
+   void update_pi_limits(account_id_type account_id, uint8_t level, limits_type new_limits);
+
+   // fix_wire_out.cpp
+   vector<wire_out_holder_object> get_wire_out_holders(account_id_type account_id,
+                                                       const flat_set<asset_id_type>& asset_ids) const;
+   const wire_out_holder_object& wire_out(account_id_type account_id_type, asset amount, const string& memo = "");
+   void wire_out_complete(wire_out_holder_id_type holder_id);
+   void wire_out_reject(wire_out_holder_id_type holder_id);
+
+   // fix_queue.cpp
+   void adjust_frequency(frequency_type f);
+   void adjust_dascoin_reward(uint32_t amount);
+   void submit_cycles(account_id_type account_id, share_type amount);
+   vector<reward_queue_object> get_reward_queue_objects_by_time();
+   vector<reward_queue_object> get_reward_queue_objects_by_account(account_id_type account_id);
+   void toggle_reward_queue(bool state);
+
 };
 
 namespace test {

@@ -36,7 +36,7 @@ namespace fc {
 
 namespace graphene { namespace chain {
 
-   typedef static_variant<>  parameter_extension; 
+   typedef static_variant<>  parameter_extension;
    struct chain_parameters
    {
       /** using a smart ref breaks the circular dependency created between operations and the fee schedule */
@@ -69,6 +69,18 @@ namespace graphene { namespace chain {
       uint16_t                accounts_per_fee_scale              = GRAPHENE_DEFAULT_ACCOUNTS_PER_FEE_SCALE; ///< number of accounts between fee scalings
       uint8_t                 account_fee_scale_bitshifts         = GRAPHENE_DEFAULT_ACCOUNT_FEE_SCALE_BITSHIFTS; ///< number of times to left bitshift account registration fee at each scaling
       uint8_t                 max_authority_depth                 = GRAPHENE_MAX_SIG_CHECK_DEPTH;
+      uint16_t                upgrade_event_interval_days = DASCOIN_DEFAULT_UPGRADE_EVENT_INTERVAL_DAYS;
+      share_type              minimum_transfer_limit = DASCOIN_DEFAULT_MINIMUM_TRANSFER_LIMIT;
+      share_type              maximum_transfer_limit = DASCOIN_DEFAULT_MAXIMUM_TRANSFER_LIMIT;
+      uint32_t                limit_interval_elapse_time_seconds = DASCOIN_DEFAULT_LIMIT_INTERVAL_ELAPSE_TIME_SECONDS;
+      uint32_t                license_expiration_time_seconds = DASCOIN_DEFAULT_LICENSE_EXPIRATION_TIME_SECONDS;
+      uint32_t                web_asset_request_expiration_time_seconds = DASCOIN_DEFAULT_WEB_ASSET_REQUEST_EXPIRATION_TIME_SECONDS;
+      uint32_t                cycle_request_expiration_time_seconds = DASCOIN_DEFAULT_CYCLE_REQUEST_EXPIRATION_TIME_SECONDS;
+      uint32_t                reward_interval_time_seconds = DASCOIN_DEFAULT_REWARD_INTERVAL_TIME_SECONDS;
+      uint32_t                dascoin_reward_amount = DASCOIN_DEFAULT_DASCOIN_REWARD_AMOUNT;
+      bool                    enable_cycle_issuing = true;
+      bool                    enable_dascoin_queue = false;
+
       extensions_type         extensions;
 
       /** defined in fee_schedule.cpp */
@@ -106,5 +118,16 @@ FC_REFLECT( graphene::chain::chain_parameters,
             (accounts_per_fee_scale)
             (account_fee_scale_bitshifts)
             (max_authority_depth)
+            (upgrade_event_interval_days)
+            (minimum_transfer_limit)
+            (maximum_transfer_limit)
+            (limit_interval_elapse_time_seconds)
+            (license_expiration_time_seconds)
+            (web_asset_request_expiration_time_seconds)
+            (cycle_request_expiration_time_seconds)
+            (reward_interval_time_seconds)
+            (dascoin_reward_amount)
+            (enable_cycle_issuing)
+            (enable_dascoin_queue)
             (extensions)
           )

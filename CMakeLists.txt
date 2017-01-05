@@ -154,7 +154,6 @@ add_subdirectory( libraries )
 add_subdirectory( programs )
 add_subdirectory( tests )
 
-
 if (ENABLE_INSTALLER)
 
 set(VERSION_MAJOR 0)
@@ -203,3 +202,5 @@ endif(LINUX)
 
  include(CPack)
 endif(ENABLE_INSTALLER)
+
+set(GRAPHENE_DISABLE_UNITY_BUILD 1)

@@ -42,6 +42,12 @@ share_type cut_fee(share_type a, uint16_t p)
    return r.to_uint64();
 }
 
+share_type account_object::get_max_from_limit(const limit_kind kind) const
+{
+   // TODO: assert that this type of limit is set.
+   return limits.at(kind);
+}
+
 void account_balance_object::adjust_balance(const asset& delta)
 {
    assert(delta.asset_id == asset_type);

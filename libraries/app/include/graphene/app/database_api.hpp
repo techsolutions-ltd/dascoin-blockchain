@@ -35,10 +35,14 @@
 #include <graphene/chain/chain_property_object.hpp>
 #include <graphene/chain/committee_member_object.hpp>
 #include <graphene/chain/confidential_object.hpp>
+#include <graphene/chain/cycle_objects.hpp>
+#include <graphene/chain/license_objects.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/operation_history_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
+#include <graphene/chain/queue_objects.hpp>
 #include <graphene/chain/worker_object.hpp>
+#include <graphene/chain/wire_object.hpp>
 #include <graphene/chain/witness_object.hpp>
 
 #include <graphene/market_history/market_history_plugin.hpp>
@@ -184,27 +188,27 @@ class database_api
       /**
        * @brief Retrieve the @ref chain_property_object associated with the chain
        */
-      chain_property_object get_chain_properties()const;
+      chain_property_object get_chain_properties() const;
 
       /**
        * @brief Retrieve the current @ref global_property_object
        */
-      global_property_object get_global_properties()const;
+      global_property_object get_global_properties() const;
 
       /**
        * @brief Retrieve compile-time constants
        */
-      fc::variant_object get_config()const;
+      fc::variant_object get_config() const;
 
       /**
        * @brief Get the chain ID
        */
-      chain_id_type get_chain_id()const;
+      chain_id_type get_chain_id() const;
 
       /**
        * @brief Retrieve the current @ref dynamic_global_property_object
        */
-      dynamic_global_property_object get_dynamic_global_properties()const;
+      dynamic_global_property_object get_dynamic_global_properties() const;
 
       //////////
       // Keys //
@@ -555,6 +559,138 @@ class database_api
        */
       vector<blinded_balance_object> get_blinded_balances( const flat_set<commitment_type>& commitments )const;
 
+      //////////////////////////
+      //                      //
+      //  LICENSES:           //
+      //                      //
+      //////////////////////////
+
+      /**
+       * @brief Get a list of license types based on id's.
+       * @param license_type_ids Id's of the license types to retrieve.
+       * @return The license types corresponding to the provided id's.
+       *
+       * This function has semantics identical to @ref get_objects.
+       */
+      vector<optional<license_type_object>> get_license_types(const vector<license_type_id_type>& license_type_ids)const;
+
+      /**
+       * @brief Get a list of license requests sorted by id.
+       * @param license_req_ids Id's of the requests to receive.
+       * @return The requests corresponding to the provided id's.
+       *
+       * This function has semantics identical to @ref get_objects.
+       */
+      vector<optional<license_request_object>> get_license_requests(const vector<license_request_id_type>& license_req_ids)const;
+
+      /**
+       * @brief Get license types active on the blockchain by name.
+       * @param lower_bound_symbol Lower bound of license type names to retrieve
+       * @param limit Maximum number of license types to fetch (must not exceed 100)
+       * @return The license types found
+       */
+      vector<license_type_object> list_license_types_by_name(const string& lower_bound_name, uint32_t limit)const;
+
+      /**
+       * @brief Get license types active on the blockchain by amount.
+       * @param lower_bound_symbol Lower bound of license type names to retrieve.
+       * @param limit Maximum number of license types to fetch (must not exceed 100).
+       *
+       * @return The license types found.
+       */
+      vector<license_type_object> list_license_types_by_amount(const uint32_t lower_bound_amount, uint32_t limit)const;
+
+      /**
+       * @brief Get a list of license types by names
+       * @param asset_symbols Symbols or stringified IDs of the assets to retrieve
+       * @return The assets corresponding to the provided symbols or IDs
+       *
+       * This function has semantics identical to @ref get_objects
+       */
+      vector<optional<license_type_object>> lookup_license_type_names(const vector<string>& names_or_ids)const;
+
+      /**
+       * @brief Get all license request objects on the blockchain by type.
+       * @param limit Maximum number of objects to fetch.
+       * @return The objects found.
+       */
+      vector<license_request_object> list_license_requests_by_type(uint32_t limit)const;
+
+      /**
+       * @brief Get all license request objects on the blockchain by expiration time.
+       * @param limit Maximum number of objects to fetch.
+       * @return The objects found.
+       */
+      vector<license_request_object> list_license_requests_by_expiration(uint32_t limit)const;
+
+      /////////////
+      // CYCLES: //
+      /////////////
+
+      /**
+       * @brief Get the amount of cycles in an acount with the given ID. If the account has no cycle balance object,
+       * the method will return 0.
+       * @param  account_id ID of the account to check.
+       * @return            Amount of cycles attached to the account.
+       */
+      share_type get_account_cycle_balance(const account_id_type account_id)const;
+
+      //////////////////////////
+      // PI:                  //
+      //////////////////////////
+
+      /**
+       * @brief Get the vector of transfer limits for the account with the given ID.
+       * @param  account_id ID of the account to check.
+       * @return            Vector of transfer limits.
+       */
+      optional<limits_type> get_account_limits(const account_id_type id)const;
+
+      /**
+       * @brief Get the verified PI level for the account with the given ID.
+       * @param  account_id ID if the account to check.
+       * @return            Verified PI level of the account.
+       */
+      optional<uint8_t> get_account_pi_level(const account_id_type id) const;
+
+      //////////////////////////
+      // QUEUE:               //
+      //////////////////////////
+
+      /**
+       * @brief Get the size of the DASCoin reward queue.
+       * @return Number of elements in the DASCoin queue.
+       */
+      uint32_t get_reward_queue_size() const;
+
+      //////////////////////////
+      // REQUESTS:            //
+      //////////////////////////
+
+      /**
+       * @brief Get all license request objects, sorted by expiration.
+       * @return Vector of license request objects.
+       */
+      vector<license_request_object> get_all_license_requests() const;
+
+      /**
+       * @brief Get all webasset issue request objects, sorted by expiration.
+       * @return Vector of webasset issue request objects.
+       */
+      vector<issue_asset_request_object> get_all_webasset_issue_requests() const;
+
+      /**
+       * @brief Get all cycle issue requests, sorted by expiration.
+       * @return Vector of cycle issue request objects.
+       */
+      vector<cycle_issue_request_object> get_all_cycle_issue_requests() const;
+
+      /**
+       * @brief Get all wire out holder objects.
+       * @return Vector of wire out holder objects.
+       */
+      vector <wire_out_holder_object> get_all_wire_out_holders() const;
+
    private:
       std::shared_ptr< database_api_impl > my;
 };
@@ -657,4 +793,20 @@ FC_API(graphene::app::database_api,
 
    // Blinded balances
    (get_blinded_balances)
+
+   // Licenses
+   (get_license_types)
+   (get_license_requests)
+   (list_license_types_by_name)
+   (list_license_types_by_amount)
+   (lookup_license_type_names)
+   (list_license_requests_by_type)
+   (list_license_requests_by_expiration)
+
+   // Cycles
+   (get_account_cycle_balance)
+
+   // PI
+   (get_account_limits)
+   (get_account_pi_level)
 )

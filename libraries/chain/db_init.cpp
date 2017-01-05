@@ -34,14 +34,18 @@
 #include <graphene/chain/chain_property_object.hpp>
 #include <graphene/chain/committee_member_object.hpp>
 #include <graphene/chain/confidential_object.hpp>
+#include <graphene/chain/cycle_objects.hpp>
 #include <graphene/chain/fba_object.hpp>
 #include <graphene/chain/global_property_object.hpp>
+#include <graphene/chain/license_objects.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/operation_history_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
+#include <graphene/chain/queue_objects.hpp>
 #include <graphene/chain/special_authority_object.hpp>
 #include <graphene/chain/transaction_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
+#include <graphene/chain/wire_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
 #include <graphene/chain/witness_object.hpp>
 #include <graphene/chain/witness_schedule_object.hpp>
@@ -54,10 +58,14 @@
 #include <graphene/chain/committee_member_evaluator.hpp>
 #include <graphene/chain/confidential_evaluator.hpp>
 #include <graphene/chain/custom_evaluator.hpp>
+#include <graphene/chain/cycle_evaluator.hpp>
+#include <graphene/chain/license_evaluator.hpp>
 #include <graphene/chain/market_evaluator.hpp>
+#include <graphene/chain/personal_identity_evaluator.hpp>
 #include <graphene/chain/proposal_evaluator.hpp>
 #include <graphene/chain/transfer_evaluator.hpp>
 #include <graphene/chain/vesting_balance_evaluator.hpp>
+#include <graphene/chain/wire_evaluator.hpp>
 #include <graphene/chain/withdraw_permission_evaluator.hpp>
 #include <graphene/chain/witness_evaluator.hpp>
 #include <graphene/chain/worker_evaluator.hpp>
@@ -126,6 +134,26 @@ const uint8_t witness_object::type_id;
 const uint8_t worker_object::space_id;
 const uint8_t worker_object::type_id;
 
+const uint8_t license_type_object::space_id;
+const uint8_t license_type_object::type_id;
+
+const uint8_t license_request_object::space_id;
+const uint8_t license_request_object::type_id;
+
+const uint8_t account_cycle_balance_object::space_id;
+const uint8_t account_cycle_balance_object::type_id;
+
+const uint8_t issue_asset_request_object::space_id;
+const uint8_t issue_asset_request_object::type_id;
+
+const uint8_t wire_out_holder_object::space_id;
+const uint8_t wire_out_holder_object::type_id;
+
+const uint8_t cycle_issue_request_object::space_id;
+const uint8_t cycle_issue_request_object::type_id;
+
+const uint8_t reward_queue_object::space_id;
+const uint8_t reward_queue_object::type_id;
 
 void database::initialize_evaluators()
 {
@@ -171,6 +199,52 @@ void database::initialize_evaluators()
    register_evaluator<transfer_from_blind_evaluator>();
    register_evaluator<blind_transfer_evaluator>();
    register_evaluator<asset_claim_fees_evaluator>();
+   register_evaluator<committee_member_update_license_issuer_evaluator>();
+   register_evaluator<committee_member_update_license_authenticator_evaluator>();
+   register_evaluator<committee_member_update_account_registrar_evaluator>();
+   register_evaluator<committee_member_update_cycle_issuer_evaluator>();
+   register_evaluator<committee_member_update_cycle_authenticator_evaluator>();
+   register_evaluator<committee_member_update_webasset_issuer_evaluator>();
+   register_evaluator<committee_member_update_webasset_authenticator_evaluator>();
+   register_evaluator<committee_member_update_wire_out_handler_evaluator>();
+   register_evaluator<license_type_create_evaluator>();
+   register_evaluator<license_type_edit_evaluator>();
+   register_evaluator<license_type_delete_evaluator>();
+   register_evaluator<license_request_evaluator>();
+   register_evaluator<license_deny_evaluator>();
+   register_evaluator<tether_accounts_evaluator>();
+   register_evaluator<update_pi_limits_evaluator>();
+   register_evaluator<asset_create_issue_request_evaluator>();
+   register_evaluator<asset_deny_issue_request_evaluator>();
+   register_evaluator<wire_out_evaluator>();
+   register_evaluator<wire_out_complete_evaluator>();
+   register_evaluator<wire_out_reject_evaluator>();
+   register_evaluator<transfer_vault_to_wallet_evaluator>();
+   register_evaluator<transfer_wallet_to_vault_evaluator>();
+   register_evaluator<cycle_issue_request_evaluator>();
+   register_evaluator<cycle_issue_deny_evaluator>();
+   register_evaluator<submit_cycles_evaluator>();
+}
+
+void database::initialize_preissued_cycles(const genesis_state_type& genesis_state)
+{
+  for( const auto& handout : genesis_state.initial_issued_cycles )
+  {
+      auto account_id = get_account_id(handout.owner_name);
+      auto cycle_auth_id = get_account_id(genesis_state.initial_cycle_authentication_authority.owner_name);
+
+      // Increase the balance:
+      adjust_cycle_balance(account_id, handout.amount);
+
+      // Execute the virtual operation:
+      cycle_issue_complete_operation vop;
+      vop.cycle_authenticator = cycle_auth_id;
+      vop.account = account_id;
+      vop.amount = handout.amount;
+      push_applied_operation(vop);
+
+     // TODO: increase the global supply of cycles!
+  }
 }
 
 void database::initialize_indexes()
@@ -216,6 +290,19 @@ void database::initialize_indexes()
    add_index< primary_index< buyback_index                                > >();
 
    add_index< primary_index< simple_index< fba_accumulator_object       > > >();
+
+   add_index<primary_index<license_type_index>>();
+   add_index<primary_index<license_request_index>>();
+
+   add_index<primary_index<account_cycle_balance_index>>();
+
+   add_index<primary_index<issue_asset_request_index>>();
+
+   add_index<primary_index<wire_out_holder_index>>();
+
+   add_index<primary_index<cycle_issue_request_index>>();
+
+   add_index<primary_index<reward_queue_index>>();
 }
 
 void database::init_genesis(const genesis_state_type& genesis_state)
@@ -240,6 +327,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    } inhibitor(*this);
 
    transaction_evaluation_state genesis_eval_state(this);
+   genesis_eval_state.skip_chain_authority_check = true;
 
    flat_index<block_summary_object>& bsi = get_mutable_index_type< flat_index<block_summary_object> >();
    bsi.resize(0xffff+1);
@@ -251,6 +339,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    });
    const account_object& committee_account =
       create<account_object>( [&](account_object& n) {
+         n.kind = account_kind::special;
          n.membership_expiration_date = time_point_sec::maximum();
          n.network_fee_percentage = GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
          n.lifetime_referrer_fee_percentage = GRAPHENE_100_PERCENT - GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
@@ -261,6 +350,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       });
    FC_ASSERT(committee_account.get_id() == GRAPHENE_COMMITTEE_ACCOUNT);
    FC_ASSERT(create<account_object>([this](account_object& a) {
+       a.kind = account_kind::special;
        a.name = "witness-account";
        a.statistics = create<account_statistics_object>([&](account_statistics_object& s){s.owner = a.id;}).id;
        a.owner.weight_threshold = 1;
@@ -271,6 +361,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
        a.lifetime_referrer_fee_percentage = GRAPHENE_100_PERCENT - GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
    }).get_id() == GRAPHENE_WITNESS_ACCOUNT);
    FC_ASSERT(create<account_object>([this](account_object& a) {
+       a.kind = account_kind::special;
        a.name = "relaxed-committee-account";
        a.statistics = create<account_statistics_object>([&](account_statistics_object& s){s.owner = a.id;}).id;
        a.owner.weight_threshold = 1;
@@ -281,6 +372,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
        a.lifetime_referrer_fee_percentage = GRAPHENE_100_PERCENT - GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
    }).get_id() == GRAPHENE_RELAXED_COMMITTEE_ACCOUNT);
    FC_ASSERT(create<account_object>([this](account_object& a) {
+       a.kind = account_kind::special;
        a.name = "null-account";
        a.statistics = create<account_statistics_object>([&](account_statistics_object& s){s.owner = a.id;}).id;
        a.owner.weight_threshold = 1;
@@ -291,6 +383,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
        a.lifetime_referrer_fee_percentage = GRAPHENE_100_PERCENT;
    }).get_id() == GRAPHENE_NULL_ACCOUNT);
    FC_ASSERT(create<account_object>([this](account_object& a) {
+       a.kind = account_kind::special;
        a.name = "temp-account";
        a.statistics = create<account_statistics_object>([&](account_statistics_object& s){s.owner = a.id;}).id;
        a.owner.weight_threshold = 0;
@@ -301,6 +394,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
        a.lifetime_referrer_fee_percentage = GRAPHENE_100_PERCENT - GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
    }).get_id() == GRAPHENE_TEMP_ACCOUNT);
    FC_ASSERT(create<account_object>([this](account_object& a) {
+       a.kind = account_kind::special;
        a.name = "proxy-to-self";
        a.statistics = create<account_statistics_object>([&](account_statistics_object& s){s.owner = a.id;}).id;
        a.owner.weight_threshold = 1;
@@ -318,6 +412,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       if( id >= genesis_state.immutable_parameters.num_special_accounts )
          break;
       const account_object& acct = create<account_object>([&](account_object& a) {
+          a.kind = account_kind::special;
           a.name = "special-account-" + std::to_string(id);
           a.statistics = create<account_statistics_object>([&](account_statistics_object& s){s.owner = a.id;}).id;
           a.owner.weight_threshold = 1;
@@ -331,8 +426,8 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       remove( acct );
    }
 
-   // Create core asset
-   const asset_dynamic_data_object& dyn_asset =
+   // Create core asset;
+   const asset_dynamic_data_object& core_dyn_asset =
       create<asset_dynamic_data_object>([&](asset_dynamic_data_object& a) {
          a.current_supply = GRAPHENE_MAX_SHARE_SUPPLY;
       });
@@ -348,10 +443,53 @@ void database::init_genesis(const genesis_state_type& genesis_state)
          a.options.core_exchange_rate.base.asset_id = asset_id_type(0);
          a.options.core_exchange_rate.quote.amount = 1;
          a.options.core_exchange_rate.quote.asset_id = asset_id_type(0);
-         a.dynamic_asset_data_id = dyn_asset.id;
+         a.dynamic_asset_data_id = core_dyn_asset.id;
       });
    assert( asset_id_type(core_asset.id) == asset().asset_id );
-   assert( get_balance(account_id_type(), asset_id_type()) == asset(dyn_asset.current_supply) );
+   assert( get_balance(account_id_type(), asset_id_type()) == asset(core_dyn_asset.current_supply) );
+
+   // Create web assets:
+   const auto& web_dyn_asset = create<asset_dynamic_data_object>([&](asset_dynamic_data_object& a){
+         a.current_supply = 0;  // Web starts with 0 initial supply.
+      });
+   const asset_object& web_asset =
+     create<asset_object>( [&]( asset_object& a ) {
+         a.symbol = DASCOIN_WEBASSET_SYMBOL;
+         a.options.max_supply = genesis_state.max_core_supply;  // TODO: this should remain 10 trillion?
+         a.precision = DASCOIN_DEFAULT_ASSET_PRECISION;
+         a.options.flags = WEB_ASSET_INITIAL_FLAGS;
+         a.options.issuer_permissions = WEB_ASSET_ISSUER_PERMISSION_MASK;  // TODO: set the appropriate issuer permissions.
+         a.issuer = GRAPHENE_NULL_ACCOUNT;
+         a.authenticator = GRAPHENE_NULL_ACCOUNT;
+         // TODO: figure out the base conversion rates.
+         a.options.core_exchange_rate.base.amount = 1;
+         a.options.core_exchange_rate.base.asset_id = asset_id_type(0);
+         a.options.core_exchange_rate.quote.amount = 1;
+         a.options.core_exchange_rate.quote.asset_id = asset_id_type(0);
+         a.dynamic_asset_data_id = web_dyn_asset.id;
+      });
+   FC_ASSERT( asset_id_type(web_asset.id) == get_web_asset_id() );
+
+   // Create dascoin asset:
+   const auto& dascoin_dyn_asset = create<asset_dynamic_data_object>([&](asset_dynamic_data_object& adao){
+      adao.current_supply = 0;
+   });
+   const auto& dascoin_asset = create<asset_object>([&](asset_object& ao){
+      ao.symbol = DASCOIN_DASCOIN_SYMBOL;
+      ao.options.max_supply = genesis_state.max_dascoin_supply;
+      ao.precision = DASCOIN_DEFAULT_ASSET_PRECISION;
+      ao.options.flags = DASCOIN_ASSET_INITIAL_FLAGS;
+      ao.options.issuer_permissions = 0;  // No issuer, no permissions, no problem.
+      ao.issuer = GRAPHENE_NULL_ACCOUNT;
+      ao.authenticator = GRAPHENE_NULL_ACCOUNT;
+      // TODO: the base conversion rates are ignored.
+      ao.options.core_exchange_rate.base.amount = 1;
+      ao.options.core_exchange_rate.base.asset_id = asset_id_type(0);
+      ao.options.core_exchange_rate.quote.amount = 1;
+      ao.options.core_exchange_rate.quote.asset_id = asset_id_type(0);
+      ao.dynamic_asset_data_id = dascoin_dyn_asset.id;
+   });
+
    // Create more special assets
    while( true )
    {
@@ -434,31 +572,6 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       }
    }
 
-   // Helper function to get account ID by name
-   const auto& accounts_by_name = get_index_type<account_index>().indices().get<by_name>();
-   auto get_account_id = [&accounts_by_name](const string& name) {
-      auto itr = accounts_by_name.find(name);
-      FC_ASSERT(itr != accounts_by_name.end(),
-                "Unable to find account '${acct}'. Did you forget to add a record for it to initial_accounts?",
-                ("acct", name));
-      return itr->get_id();
-   };
-
-   // Helper function to get asset ID by symbol
-   const auto& assets_by_symbol = get_index_type<asset_index>().indices().get<by_symbol>();
-   const auto get_asset_id = [&assets_by_symbol](const string& symbol) {
-      auto itr = assets_by_symbol.find(symbol);
-
-      // TODO: This is temporary for handling BTS snapshot
-      if( symbol == "BTS" )
-          itr = assets_by_symbol.find(GRAPHENE_SYMBOL);
-
-      FC_ASSERT(itr != assets_by_symbol.end(),
-                "Unable to find asset '${sym}'. Did you forget to add a record for it to initial_assets?",
-                ("sym", symbol));
-      return itr->get_id();
-   };
-
    map<asset_id_type, share_type> total_supplies;
    map<asset_id_type, share_type> total_debts;
 
@@ -533,7 +646,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    for( const auto& handout : genesis_state.initial_balances )
    {
       const auto asset_id = get_asset_id(handout.asset_symbol);
-      create<balance_object>([&handout,&get_asset_id,total_allocation,asset_id](balance_object& b) {
+      create<balance_object>([&handout,total_allocation,asset_id](balance_object& b) {
          b.balance = asset(handout.amount, asset_id);
          b.owner = handout.owner;
       });
@@ -646,6 +759,113 @@ void database::init_genesis(const genesis_state_type& genesis_state)
 
        apply_operation(genesis_eval_state, std::move(op));
    });
+
+   {
+      // Modify the WEB asset and set the initial accounts:
+      account_id_type web_issuer_id = get_account_id(genesis_state.initial_webasset_issuing_authority.owner_name);
+      account_id_type web_auth_id = get_account_id(genesis_state.initial_webasset_authentication_authority.owner_name);
+      modify(web_asset, [&](asset_object& a){
+         a.issuer = web_issuer_id;
+         a.authenticator = web_auth_id;
+      });
+
+      committee_member_update_webasset_issuer_operation issuer_op;
+      issuer_op.issuer = web_issuer_id;
+      issuer_op.committee_member_account = GRAPHENE_COMMITTEE_ACCOUNT;
+      apply_operation(genesis_eval_state, std::move(issuer_op));
+
+      committee_member_update_webasset_authenticator_operation auth_op;
+      auth_op.authenticator = web_auth_id;
+      auth_op.committee_member_account = GRAPHENE_COMMITTEE_ACCOUNT;
+      apply_operation(genesis_eval_state, std::move(auth_op));
+   }
+
+   // Initialize cycle licensing:
+   {
+      account_id_type issuer = get_account_id(genesis_state.initial_license_issuing_authority.owner_name);
+      account_id_type authenticator = get_account_id(genesis_state.initial_license_authentication_authority.owner_name);
+      // Create license issuing authority:
+      committee_member_update_license_issuer_operation issuer_op;
+      issuer_op.license_issuer = issuer;
+      issuer_op.committee_member_account = GRAPHENE_COMMITTEE_ACCOUNT;
+      apply_operation(genesis_eval_state, std::move(issuer_op));
+
+      // Create license authentication authority:
+      committee_member_update_license_authenticator_operation authenticator_op;
+      authenticator_op.license_authenticator = authenticator;
+      authenticator_op.committee_member_account = GRAPHENE_COMMITTEE_ACCOUNT;
+      apply_operation(genesis_eval_state, std::move(authenticator_op));
+
+      const auto create_standard = [&](const string& name, share_type amount, const vector<variant> multipliers){
+        create_license_type(name, amount, {
+          {"kind", "regular"},
+          {"balance_upgrades", multipliers}
+        });
+      };
+
+      const auto create_charter = [&](const string& name, share_type amount, const vector<variant> multipliers){
+        create_license_type(name, amount, {
+          {"kind", "chartered"},
+          {"requeue_upgrades", multipliers}
+        });
+      };
+
+      const auto create_promo = [&](const string& name, share_type amount, const vector<variant> multipliers){
+        create_license_type(name, amount, {
+          {"kind", "promo"},
+          {"return_upgrades", multipliers}
+        });
+      };
+
+      create_standard("standard", 100, {2});
+      create_standard("manager", 500, {2});
+      create_standard("pro", 2000, {2});
+      create_standard("executive", 5000, {2,2});
+      create_standard("president", 25000, {2,2,2});
+
+      create_charter("standard-charter", 100, {1});
+      create_charter("manager-charter", 500, {1});
+      create_charter("pro-charter", 2000, {1});
+      create_charter("executive-charter", 5000, {1,2});
+      create_charter("president-charter", 25000, {1,2,4});
+
+      create_promo("standard-promo", 100, {1});
+      create_promo("manager-promo", 500, {1});
+      create_promo("pro-promo", 2000, {1});
+      create_promo("executive-promo", 5000, {1,2});
+      create_promo("president-promo", 25000, {1,2,4});
+   }
+
+   // Initialize cycle issuing:
+   {
+      account_id_type issuer = get_account_id(genesis_state.initial_cycle_issuing_authority.owner_name);
+      account_id_type authenticator = get_account_id(genesis_state.initial_cycle_authentication_authority.owner_name);
+
+      committee_member_update_cycle_issuer_operation issuer_op;
+      issuer_op.cycle_issuer = issuer;
+      issuer_op.committee_member_account = GRAPHENE_COMMITTEE_ACCOUNT;
+      apply_operation(genesis_eval_state, std::move(issuer_op));
+
+      committee_member_update_cycle_authenticator_operation auth_op;
+      auth_op.cycle_authenticator = authenticator;
+      apply_operation(genesis_eval_state, std::move(auth_op));
+   }
+
+   // Initialize account registration:
+   {
+      ilog("Registrar name: ${name}", ("name", genesis_state.initial_registrar.owner_name));
+
+      account_id_type registrar = get_account_id(genesis_state.initial_registrar.owner_name);
+
+      // Create account registrar authority:
+      committee_member_update_account_registrar_operation op;
+      op.registrar = registrar;
+      op.committee_member_account = GRAPHENE_COMMITTEE_ACCOUNT;
+      apply_operation( genesis_eval_state, std::move(op) );
+   }
+
+   // Hand out initial cycles, WebAssets and licenses:
+   initialize_preissued_cycles(genesis_state);
 
    // Set active witnesses
    modify(get_global_properties(), [&](global_property_object& p) {

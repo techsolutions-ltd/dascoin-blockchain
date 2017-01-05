@@ -29,11 +29,14 @@
 #include <graphene/chain/balance_object.hpp>
 #include <graphene/chain/committee_member_object.hpp>
 #include <graphene/chain/confidential_object.hpp>
+#include <graphene/chain/cycle_objects.hpp>
 #include <graphene/chain/fba_object.hpp>
+#include <graphene/chain/license_objects.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
+#include <graphene/chain/wire_object.hpp>
 #include <graphene/chain/witness_object.hpp>
 #include <graphene/chain/worker_object.hpp>
 
@@ -241,7 +244,7 @@ struct serializer<std::vector<T>,false>
 template<typename T>
 struct serializer<fc::smart_ref<T>,false>
 {
-   static void init() { 
+   static void init() {
       serializer<T>::init(); }
    static void generate() {}
 };

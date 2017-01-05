@@ -23,6 +23,8 @@
  */
 #pragma once
 #include <graphene/chain/protocol/operations.hpp>
+#include <graphene/chain/license_objects.hpp>
+#include <graphene/chain/upgrade_type.hpp>
 #include <graphene/db/generic_index.hpp>
 #include <boost/multi_index/composite_key.hpp>
 
@@ -86,6 +88,16 @@ namespace graphene { namespace chain {
           * Core fees are paid into the account_statistics_object by this method
           */
          void pay_fee( share_type core_fee, share_type cashback_vesting_threshold );
+
+         /**
+          * Do all operations on a regular db maintenance cycle.
+          * @param db A reference to the object database.
+          * @param license_type A reference to the license type object.
+          * @param dgpo A reference to the dynamic global properties object.
+          */
+         void process_db_maintenance(database& db,
+                                     const optional<license_type_id_type> license_type,
+                                     const dynamic_global_property_object& dgpo);
    };
 
    /**
@@ -104,11 +116,32 @@ namespace graphene { namespace chain {
          account_id_type   owner;
          asset_id_type     asset_type;
          share_type        balance;
+         share_type reserved = 0;
+         share_type spent = 0;  // Balance spent in limit interval.
+         share_type spent_reserved = 0;  // Reserved balance spent in limit interval.
 
          asset get_balance()const { return asset(balance, asset_type); }
+         asset get_reserved_balance() const { return asset(reserved, asset_type); }
          void  adjust_balance(const asset& delta);
    };
 
+   /**
+    * @brief Tracks the cycle balance of a single account and connects it to a license.
+    * @ingroup object
+    *
+    */
+   class account_cycle_balance_object : public abstract_object<account_cycle_balance_object>
+   {
+      public:
+         static const uint8_t space_id = implementation_ids;
+         static const uint8_t type_id  = impl_account_cycle_balance_object_type;
+
+         account_id_type owner;
+         share_type balance;
+         upgrade_type upgrade;
+
+         share_type get_balance()const { return balance; }
+   };
 
    /**
     * @brief This class represents an account on the object graph
@@ -123,6 +156,31 @@ namespace graphene { namespace chain {
       public:
          static const uint8_t space_id = protocol_ids;
          static const uint8_t type_id  = account_object_type;
+
+         /**
+          * What kind of account is this: wallet, vault, system or other?
+          */
+         account_kind kind;
+
+         /**
+          * How deep in the hierarchy is this account? For now the depth is:
+          * 0 - wallet or vault without thethering
+          * 1 - vault tethered to a wallet
+          * Greater values should not be allowed.
+          */
+         uint8_t hierarchy_depth = 0;
+
+         /**
+          * This set contains all vault accounts tethered to this wallet account. For all other account kinds it must be
+          * empty.
+          */
+         flat_set<account_id_type> vault;
+
+         /**
+          * This set contains all wallet parents for a certain vault account. For all other account kinds it must be
+          * enory.
+          */
+         flat_set<account_id_type> parents;
 
          /**
           * The time at which this account's membership expires.
@@ -210,6 +268,26 @@ namespace graphene { namespace chain {
          special_authority active_special_authority = no_special_authority();
 
          /**
+          * A cycle license the account holds:
+          */
+         // optional<license_type_id_type> license;
+
+         /**
+          * All information regarding licenses.
+          */
+         license_information license_info;
+
+         /**
+          * The level of verified persional information assigned to the account.
+          */
+         uint8_t pi_level;
+
+         /**
+          * Limit levels defined to different transfer operations in the blockchain.
+          */
+         limits_type limits;
+
+         /**
           * This flag is set when the top_n logic sets both authorities,
           * and gets reset when authority or special_authority is set.
           */
@@ -258,8 +336,30 @@ namespace graphene { namespace chain {
          {
             return !is_basic_account(now);
          }
+         /// @return true if the account is a wallet account.
+         bool is_wallet()const
+         {
+            return kind == account_kind::wallet;
+         }
+         /// @return true if the account is a vault account.
+         bool is_vault()const
+         {
+            return kind == account_kind::vault;
+         }
+         /// @return true if the account is in this accounts parent list
+         bool has_in_parents(account_id_type account)const
+         {
+            return parents.find(account) != parents.end();
+         }
+         /// @return true if the account is in this accounts vault
+         bool has_in_vault(account_id_type account)const
+         {
+            return vault.find(account) != vault.end();
+         }
 
          account_id_type get_id()const { return id; }
+
+         share_type get_max_from_limit(const limit_kind kind) const;
    };
 
    /**
@@ -364,31 +464,67 @@ namespace graphene { namespace chain {
     */
    typedef generic_index<account_object, account_multi_index_type> account_index;
 
-}}
+   struct by_account_id;
+   typedef multi_index_container<
+      account_cycle_balance_object,
+      indexed_by<
+         ordered_unique< tag<by_id>,
+            member< object, object_id_type, &object::id >
+         >,
+         ordered_non_unique< tag<by_account_id>,
+            member< account_cycle_balance_object, account_id_type, &account_cycle_balance_object::owner>
+         >
+      >
+   > account_cycle_balance_multi_index_type;
 
-FC_REFLECT_DERIVED( graphene::chain::account_object,
-                    (graphene::db::object),
+   typedef generic_index<
+      account_cycle_balance_object, account_cycle_balance_multi_index_type
+   > account_cycle_balance_index;
+
+} }  // namsepace graphene::chain
+
+FC_REFLECT_DERIVED( graphene::chain::account_object, (graphene::db::object),
+                    (kind)
+                    (hierarchy_depth)
+                    (parents)
+                    (vault)
                     (membership_expiration_date)(registrar)(referrer)(lifetime_referrer)
                     (network_fee_percentage)(lifetime_referrer_fee_percentage)(referrer_rewards_percentage)
                     (name)(owner)(active)(options)(statistics)(whitelisting_accounts)(blacklisting_accounts)
                     (whitelisted_accounts)(blacklisted_accounts)
                     (cashback_vb)
-                    (owner_special_authority)(active_special_authority)
+                    (owner_special_authority)
+                    (active_special_authority)
+                    (license_info)
+                    (pi_level)
+                    (limits)
                     (top_n_control_flags)
                     (allowed_assets)
                     )
 
-FC_REFLECT_DERIVED( graphene::chain::account_balance_object,
-                    (graphene::db::object),
-                    (owner)(asset_type)(balance) )
-
-FC_REFLECT_DERIVED( graphene::chain::account_statistics_object,
-                    (graphene::chain::object),
+FC_REFLECT_DERIVED( graphene::chain::account_statistics_object, (graphene::chain::object),
                     (owner)
                     (most_recent_op)
                     (total_ops)
                     (total_core_in_orders)
                     (lifetime_fees_paid)
-                    (pending_fees)(pending_vested_fees)
+                    (pending_fees)
+                    (pending_vested_fees)
                   )
 
+FC_REFLECT_DERIVED( graphene::chain::account_balance_object, (graphene::db::object),
+                    (owner)
+                    (asset_type)
+                    (balance)
+                    (reserved)
+                    (spent)
+                    (spent_reserved)
+                  )
+
+
+
+FC_REFLECT_DERIVED( graphene::chain::account_cycle_balance_object, (graphene::db::object),
+                    (owner)
+                    (balance)
+                    (upgrade)
+                  )

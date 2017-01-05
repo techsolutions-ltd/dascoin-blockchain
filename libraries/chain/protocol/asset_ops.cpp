@@ -71,25 +71,6 @@ share_type asset_issue_operation::calculate_fee(const fee_parameters_type& k)con
    return k.fee + calculate_data_fee( fc::raw::pack_size(memo), k.price_per_kbyte );
 }
 
-share_type asset_create_operation::calculate_fee(const asset_create_operation::fee_parameters_type& param)const
-{
-   auto core_fee_required = param.long_symbol; 
-
-   switch(symbol.size()) {
-      case 3: core_fee_required = param.symbol3;
-          break;
-      case 4: core_fee_required = param.symbol4;
-          break;
-      default:
-          break;
-   }
-
-   // common_options contains several lists and a string. Charge fees for its size
-   core_fee_required += calculate_data_fee( fc::raw::pack_size(*this), param.price_per_kbyte );
-
-   return core_fee_required;
-}
-
 void  asset_create_operation::validate()const
 {
    FC_ASSERT( fee.amount >= 0 );
@@ -226,9 +207,21 @@ void asset_options::validate()const
    }
 }
 
-void asset_claim_fees_operation::validate()const {
+void asset_claim_fees_operation::validate()const
+{
    FC_ASSERT( fee.amount >= 0 );
    FC_ASSERT( amount_to_claim.amount > 0 );
+}
+
+void asset_create_issue_request_operation::validate() const
+{
+   FC_ASSERT( fee.amount >= 0 );
+   FC_ASSERT( amount > 0 );
+}
+
+void asset_deny_issue_request_operation::validate() const
+{
+
 }
 
 } } // namespace graphene::chain

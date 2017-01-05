@@ -19,6 +19,7 @@ if( GRAPHENE_DISABLE_UNITY_BUILD )
         db_market.cpp
         db_update.cpp
         db_witness_schedule.cpp
+        db_license.cpp
       )
    message( STATUS "Graphene database unity build disabled" )
 else( GRAPHENE_DISABLE_UNITY_BUILD )
@@ -56,6 +57,10 @@ add_library( graphene_chain
              protocol/fee_schedule.cpp
              protocol/confidential.cpp
              protocol/vote.cpp
+             protocol/license.cpp
+             protocol/personal_identity.cpp
+             protocol/wire.cpp
+             protocol/cycle.cpp
 
              genesis_state.cpp
              get_config.cpp
@@ -76,8 +81,11 @@ add_library( graphene_chain
              withdraw_permission_evaluator.cpp
              worker_evaluator.cpp
              confidential_evaluator.cpp
+             license_evaluator.cpp
+             personal_identity_evaluator.cpp
              special_authority.cpp
              buyback.cpp
+             upgrade_type.cpp
 
              account_object.cpp
              asset_object.cpp
@@ -88,6 +96,13 @@ add_library( graphene_chain
              block_database.cpp
 
              is_authorized_asset.cpp
+
+             queue_objects.cpp
+             license_objects.cpp
+             cycle_objects.cpp
+             wire_object.cpp
+             wire_evaluator.cpp
+             cycle_evaluator.cpp
 
              ${HEADERS}
              "${CMAKE_CURRENT_BINARY_DIR}/include/graphene/chain/hardfork.hpp"

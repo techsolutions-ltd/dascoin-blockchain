@@ -152,6 +152,52 @@ struct get_impacted_account_visitor
       _impacted.insert( op.committee_member_account );
    }
    void operator()( const committee_member_update_global_parameters_operation& op ) {}
+   void operator()( const committee_member_update_license_issuer_operation& op)
+   {
+      _impacted.insert( op.license_issuer );
+   }
+
+   void operator()( const committee_member_update_license_authenticator_operation& op )
+   {
+      _impacted.insert( op.license_authenticator );
+   }
+
+   void operator()( const committee_member_update_account_registrar_operation& op )
+   {
+      _impacted.insert( op.registrar );
+   }
+
+   void operator()( const committee_member_update_webasset_issuer_operation& op )
+   {
+      _impacted.insert(op.issuer);
+   }
+
+   void operator()( const committee_member_update_webasset_authenticator_operation& op )
+   {
+      _impacted.insert(op.authenticator);
+   }
+
+   void operator()( const committee_member_update_cycle_issuer_operation& op )
+   {
+      _impacted.insert(op.cycle_issuer);
+   }
+
+   void operator()( const committee_member_update_cycle_authenticator_operation& op )
+   {
+      _impacted.insert(op.cycle_authenticator);
+   }
+
+   void operator()( const committee_member_update_wire_out_handler_operation& op )
+   {
+      _impacted.insert(op.wire_out_handler);
+   }
+
+   void operator()( const license_type_create_operation& op ) {}
+   void operator()( const license_type_edit_operation& op ) {}
+   void operator()( const license_type_delete_operation& op ) {}
+   void operator()( const license_request_operation& op ) {}
+   void operator()( const license_approve_operation& op ) {}  // TODO: check if this should be impacting an account.
+   void operator()( const license_deny_operation& op ) {}
 
    void operator()( const vesting_balance_create_operation& op )
    {
@@ -202,6 +248,64 @@ struct get_impacted_account_visitor
    {
       _impacted.insert( op.account_id );
    }
+
+   void operator()( const tether_accounts_operation& op )
+   {
+      _impacted.insert( op.wallet_account );
+      _impacted.insert( op.vault_account );
+   }
+
+   void operator()( const upgrade_account_cycles_operation& op )
+   {
+      _impacted.insert( op.account );
+   }
+
+   void operator()( const update_pi_limits_operation& op )
+   {
+      _impacted.insert( op.pi_validator );
+   }
+
+   void operator()( const asset_create_issue_request_operation& op ) {}
+
+   void operator()( const asset_distribute_completed_request_operation& op )
+   {
+      _impacted.insert(op.receiver);
+   }
+
+   void operator()( const asset_deny_issue_request_operation& op ) {}
+
+   void operator()( const wire_out_operation& op )
+   {
+      _impacted.insert(op.account);
+   }
+
+   void operator()( const wire_out_complete_operation& op ) {}
+   void operator()( const wire_out_reject_operation& op ) {}
+
+   void operator()( const transfer_vault_to_wallet_operation& op )
+   {
+      _impacted.insert( op.to_wallet );
+   }
+
+   void operator()( const transfer_wallet_to_vault_operation& op )
+   {
+      _impacted.insert( op.to_vault );
+   }
+
+   void operator()( const cycle_issue_request_operation& op ) {}
+   void operator()( const cycle_issue_deny_operation& op ) {}
+
+   void operator()( const cycle_issue_complete_operation& op )
+   {
+      _impacted.insert( op.account );
+   }
+
+   void operator()( const submit_cycles_operation& op )
+   {
+      _impacted.insert( op.account );
+   }
+
+   void operator()( const distribute_dascoin_operation& op ) {}
 
 };
 

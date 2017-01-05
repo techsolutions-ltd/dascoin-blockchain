@@ -35,12 +35,14 @@
 #include <graphene/chain/chain_property_object.hpp>
 #include <graphene/chain/committee_member_object.hpp>
 #include <graphene/chain/confidential_object.hpp>
+#include <graphene/chain/cycle_objects.hpp>
 #include <graphene/chain/license_objects.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/operation_history_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
 #include <graphene/chain/queue_objects.hpp>
 #include <graphene/chain/worker_object.hpp>
+#include <graphene/chain/wire_object.hpp>
 #include <graphene/chain/witness_object.hpp>
 
 #include <graphene/market_history/market_history_plugin.hpp>
@@ -660,6 +662,34 @@ class database_api
        * @return Number of elements in the DASCoin queue.
        */
       uint32_t get_reward_queue_size() const;
+
+      //////////////////////////
+      // REQUESTS:            //
+      //////////////////////////
+
+      /**
+       * @brief Get all license request objects, sorted by expiration.
+       * @return Vector of license request objects.
+       */
+      vector<license_request_object> get_all_license_requests() const;
+
+      /**
+       * @brief Get all webasset issue request objects, sorted by expiration.
+       * @return Vector of webasset issue request objects.
+       */
+      vector<issue_asset_request_object> get_all_webasset_issue_requests() const;
+
+      /**
+       * @brief Get all cycle issue requests, sorted by expiration.
+       * @return Vector of cycle issue request objects.
+       */
+      vector<cycle_issue_request_object> get_all_cycle_issue_requests() const;
+
+      /**
+       * @brief Get all wire out holder objects.
+       * @return Vector of wire out holder objects.
+       */
+      vector <wire_out_holder_object> get_all_wire_out_holders() const;
 
    private:
       std::shared_ptr< database_api_impl > my;

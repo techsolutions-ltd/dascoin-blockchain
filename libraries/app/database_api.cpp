@@ -249,6 +249,19 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
          return result;
       }
 
+      template<typename IndexType, typename IndexBy>
+      vector<typename IndexType::object_type> list_all_objects() const
+      {
+         const auto& idx = _db.get_index_type<IndexType>().indices().get<IndexBy>();
+         auto itr = idx.begin();
+         vector<typename IndexType::object_type> result;
+
+         while( itr != idx.end() )
+            result.emplace_back(*itr++);
+
+         return result;
+      }
+
       void broadcast_updates( const vector<variant>& updates );
 
       /** called every time a block is applied to report the objects that were changed */
@@ -1960,6 +1973,32 @@ uint32_t database_api::get_reward_queue_size() const
 uint32_t database_api_impl::get_reward_queue_size() const
 {
    return _db.get_index_type<reward_queue_index>().indices().size();
+}
+
+//////////////////////////////////////////////////////////////////////
+//                                                                  //
+// REQUESTS:                                                        //
+//                                                                  //
+//////////////////////////////////////////////////////////////////////
+
+vector<license_request_object> database_api::get_all_license_requests() const
+{
+   return my->list_all_objects<license_request_index, by_expiration>();
+}
+
+vector<issue_asset_request_object> database_api::get_all_webasset_issue_requests() const
+{
+   return my->list_all_objects<issue_asset_request_index, by_expiration>();
+}
+
+vector<cycle_issue_request_object> database_api::get_all_cycle_issue_requests() const
+{
+   return my->list_all_objects<cycle_issue_request_index, by_expiration>();
+}
+
+vector<wire_out_holder_object> database_api::get_all_wire_out_holders() const
+{
+   return my->list_all_objects<wire_out_holder_index, by_id>();
 }
 
 //////////////////////////////////////////////////////////////////////

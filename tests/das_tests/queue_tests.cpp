@@ -123,6 +123,11 @@ BOOST_AUTO_TEST_CASE( basic_queue_test )
   BOOST_CHECK_EQUAL( get_balance(third_id, get_dascoin_asset_id()), 100 );
   BOOST_CHECK_EQUAL( get_balance(fourth_id, get_dascoin_asset_id()), 100 );
 
+  // Wait for the cycles to be distributed:
+  generate_blocks(db.head_block_time() + fc::seconds(get_chain_parameters().reward_interval_time_seconds));
+
+  BOOST_CHECK_EQUAL( get_balance(fourth_id, get_dascoin_asset_id()), 300 );
+
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_SUITE_END()

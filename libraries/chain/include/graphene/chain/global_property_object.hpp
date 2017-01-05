@@ -129,7 +129,7 @@ namespace graphene { namespace chain {
          /**
           * The next time Dascoin will be minted and distributed.
           */
-         time_point_sec next_dascoin_reward_time = fc::time_point_sec::maximum();
+         time_point_sec next_dascoin_reward_time = fc::time_point_sec();
 
          /**
           * The time point the spend limit will be reset for all balances.

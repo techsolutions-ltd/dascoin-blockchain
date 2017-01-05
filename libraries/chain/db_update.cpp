@@ -566,7 +566,7 @@ void database::mint_dascoin_rewards()
   const auto& params = get_global_properties().parameters;
   const auto& dgpo = get_dynamic_global_properties();
 
-  if ( dgpo.next_spend_limit_reset >= head_block_time() )
+  if ( dgpo.next_dascoin_reward_time <= head_block_time() )
   {
     share_type to_distribute = get_global_properties().parameters.dascoin_reward_amount;
     const auto& queue = get_index_type<reward_queue_index>().indices().get<by_time>();
@@ -583,21 +583,20 @@ void database::mint_dascoin_rewards()
       };
 
       const auto& el = *queue.begin();
-      share_type dascoin_amount = (el.amount * DASCOIN_DEFAULT_ASSET_PRECISION) / el.frequency;
-      if ( to_distribute >= dascoin_amount )
-      {
-        distribute(el.account, dascoin_amount);
-        to_distribute -= dascoin_amount;
+      account_id_type el_receiver_id = el.account;
+      share_type el_dascoin_amount = (el.amount * DASCOIN_DEFAULT_ASSET_PRECISION) / el.frequency;
+      if ( to_distribute >= el_dascoin_amount )
         remove(el);
-      }
       else
       {
-        distribute(el.account, to_distribute);
+        el_dascoin_amount = to_distribute;
         share_type cycles = (to_distribute * el.frequency) / DASCOIN_DEFAULT_ASSET_PRECISION;
         modify(el, [cycles](reward_queue_object& rqo){
           rqo.amount -= cycles;
         });
       }
+      distribute(el_receiver_id, el_dascoin_amount);
+      to_distribute -= el_dascoin_amount;
     }
 
     modify(dgpo, [&](dynamic_global_property_object& dgpo){

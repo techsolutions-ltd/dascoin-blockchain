@@ -221,6 +221,7 @@ FC_REFLECT( graphene::chain::genesis_state_type,
             (initial_accounts)
             (initial_assets)
             (initial_balances)
+            (initial_frequency)
             (initial_vesting_balances)
             (initial_issued_cycles)
             (initial_active_witnesses)

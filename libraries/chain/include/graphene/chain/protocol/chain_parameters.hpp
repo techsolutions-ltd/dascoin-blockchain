@@ -76,7 +76,10 @@ namespace graphene { namespace chain {
       uint32_t                license_expiration_time_seconds = DASCOIN_DEFAULT_LICENSE_EXPIRATION_TIME_SECONDS;
       uint32_t                web_asset_request_expiration_time_seconds = DASCOIN_DEFAULT_WEB_ASSET_REQUEST_EXPIRATION_TIME_SECONDS;
       uint32_t                cycle_request_expiration_time_seconds = DASCOIN_DEFAULT_CYCLE_REQUEST_EXPIRATION_TIME_SECONDS;
+      uint32_t                reward_interval_time_seconds = DASCOIN_DEFAULT_REWARD_INTERVAL_TIME_SECONDS;
+      uint32_t                dascoin_reward_amount = DASCOIN_DEFAULT_DASCOIN_REWARD_AMOUNT;
       bool                    enable_cycle_issuing = true;
+      bool                    enable_dascoin_queue = false;
 
       extensions_type         extensions;
 
@@ -122,6 +125,9 @@ FC_REFLECT( graphene::chain::chain_parameters,
             (license_expiration_time_seconds)
             (web_asset_request_expiration_time_seconds)
             (cycle_request_expiration_time_seconds)
+            (reward_interval_time_seconds)
+            (dascoin_reward_amount)
             (enable_cycle_issuing)
+            (enable_dascoin_queue)
             (extensions)
           )

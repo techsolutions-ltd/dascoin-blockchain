@@ -149,6 +149,8 @@ namespace graphene { namespace chain {
       | transfer_restricted
       | disable_confidential;
 
+   const static uint32_t DASCOIN_ASSET_INITIAL_FLAGS = dual_auth_issue_asset;  // TODO: this is temporary.
+
    enum reserved_spaces
    {
       relative_protocol_ids = 0,
@@ -335,7 +337,7 @@ namespace graphene { namespace chain {
    typedef fc::ecc::compact_signature                           signature_type;
    typedef safe<int64_t>                                        share_type;
    typedef uint16_t                                             weight_type;
-   typedef safe<uint64_t>                                       frequency_type;
+   typedef safe<int64_t>                                        frequency_type;
    typedef std::vector<share_type>                              limits_type;
    typedef std::map<std::string, fc::variant>                   policy_type;
 

@@ -127,6 +127,11 @@ namespace graphene { namespace chain {
          uint32_t last_irreversible_block_num = 0;
 
          /**
+          * The next time Dascoin will be minted and distributed.
+          */
+         time_point_sec next_dascoin_reward_time = fc::time_point_sec();
+
+         /**
           * The time point the spend limit will be reset for all balances.
           * NOTE: the value is set to maximum at the beginning to trigger a reset on the first block.
           */
@@ -176,6 +181,7 @@ FC_REFLECT_DERIVED( graphene::chain::dynamic_global_property_object, (graphene::
                     (frequency)
                     (dynamic_flags)
                     (last_irreversible_block_num)
+                    (next_dascoin_reward_time)
                     (next_spend_limit_reset)
                     (next_upgrade_event)
                     (total_upgrade_events)

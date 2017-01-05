@@ -247,6 +247,8 @@ namespace graphene { namespace chain {
          const asset_object&                    get_core_asset()const;
          const asset_object&                    get_web_asset()const;
          asset_id_type                          get_web_asset_id() const;
+         const asset_object&                    get_dascoin_asset() const;
+         asset_id_type                          get_dascoin_asset_id() const;
          const chain_property_object&           get_chain_properties()const;
          const global_property_object&          get_global_properties()const;
          const chain_authorities&               get_chain_authorities()const;
@@ -382,6 +384,22 @@ namespace graphene { namespace chain {
           */
          void reserve_cycles(const account_cycle_balance_object& balance, share_type amount);
 
+         /**
+          * Issue new asset to an account balance. This method assumes that the balance object for the asset exists.
+          * @param balance  The balance object to modify.
+          * @param cash     Amount of cash to issue.
+          * @param reserved Amount of reserved funds to issue.
+          */
+         void issue_asset(const account_balance_object& balance, share_type cash, share_type reserved);
+
+         /**
+          * Issue new asset to an account. This method will throw an exception if the asset balance object does not exist.
+          * @param account_id ID of the account to get the balance of.
+          * @param asset_id   ID of the asset that is being issued.
+          * @param cash       Amount of cash to issue.
+          * @param reserved   Amount of reserved to issue.
+          */
+         void issue_asset(account_id_type account_id, share_type cash, asset_id_type asset_id, share_type reserved);
 
          /**
           * @brief Get the set transfer limits for a given account.
@@ -563,6 +581,7 @@ namespace graphene { namespace chain {
          void distribute_issue_requested_cycles();
          void distribute_issue_requested_assets();
          void deny_license_request(const license_request_object& req);
+         void mint_dascoin_rewards();
          void reset_spending_limits();
 
          ///Steps performed only at maintenance intervals

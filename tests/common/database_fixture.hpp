@@ -328,6 +328,7 @@ struct database_fixture {
 
    // fix_getter.cpp
    const global_property_object& get_global_properties() const;
+   const dynamic_global_property_object& get_dynamic_global_properties() const;
    const chain_parameters& get_chain_parameters() const;
    account_id_type get_license_issuer_id() const;
    account_id_type get_license_authenticator_id() const;
@@ -339,6 +340,7 @@ struct database_fixture {
    account_id_type get_pi_validator_id() const;
    account_id_type get_wire_out_handler_id() const;
    asset_id_type get_web_asset_id() const;
+   asset_id_type get_dascoin_asset_id() const;
 
    // fix_accounts.cpp
    void tether_accounts(account_id_type wallet, account_id_type vault);
@@ -369,9 +371,12 @@ struct database_fixture {
    void wire_out_reject(wire_out_holder_id_type holder_id);
 
    // fix_queue.cpp
+   void adjust_frequency(frequency_type f);
+   void adjust_dascoin_reward(uint32_t amount);
    void submit_cycles(account_id_type account_id, share_type amount);
    vector<reward_queue_object> get_reward_queue_objects_by_time();
    vector<reward_queue_object> get_reward_queue_objects_by_account(account_id_type account_id);
+   void toggle_reward_queue(bool state);
 
 };
 

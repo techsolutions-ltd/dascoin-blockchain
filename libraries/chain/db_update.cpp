@@ -32,6 +32,7 @@
 #include <graphene/chain/license_objects.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
+#include <graphene/chain/queue_objects.hpp>
 #include <graphene/chain/transaction_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
 #include <graphene/chain/witness_object.hpp>
@@ -506,12 +507,8 @@ void database::distribute_issue_requested_assets()
   while (!idx.empty() && idx.begin()->expiration <= head_block_time())
   {
     const auto& req = *idx.begin();
-    const auto& asset_obj = req.asset_id(*this);
-    adjust_balance(req.receiver, req.get_balance(), req.reserved_amount);
-    modify(asset_obj.dynamic_asset_data_id(*this), [&](asset_dynamic_data_object& data){
-         // TODO: reserved part factors in here as well.
-         data.current_supply += req.amount;
-    });
+
+    issue_asset(req.receiver, req.amount, req.asset_id, req.reserved_amount);
 
     asset_distribute_completed_request_operation vop;
     vop.issuer = req.issuer;
@@ -557,12 +554,56 @@ void database::reset_spending_limits()
 
   if ( dgpo.next_spend_limit_reset >= head_block_time() )
   {
-    // Set the new point in time to reset the spending limit.
-    // fc::time_point_sec interval_len = fc::seconds(params.limit_interval_elapse_time_seconds);
-    modify(dgpo, [&](dynamic_global_property_object& o){
-      o.next_spend_limit_reset = head_block_time() + params.limit_interval_elapse_time_seconds;
+    modify(dgpo, [&](dynamic_global_property_object& dgpo){
+      dgpo.next_spend_limit_reset = head_block_time() + params.limit_interval_elapse_time_seconds;
     });
   }
+
+} FC_CAPTURE_AND_RETHROW() }
+
+void database::mint_dascoin_rewards()
+{ try {
+  const auto& params = get_global_properties().parameters;
+  const auto& dgpo = get_dynamic_global_properties();
+
+  if ( dgpo.next_dascoin_reward_time <= head_block_time() )
+  {
+    share_type to_distribute = get_global_properties().parameters.dascoin_reward_amount;
+    const auto& queue = get_index_type<reward_queue_index>().indices().get<by_time>();
+
+    while ( to_distribute > 0 && !queue.empty() )
+    {
+      const auto& distribute = [this](account_id_type account_id, share_type amount){
+        issue_asset(account_id, amount, get_dascoin_asset_id(), 0);
+        // Emit a virtual op:
+        distribute_dascoin_operation vop;
+        vop.account = account_id;
+        vop.amount = amount;
+        push_applied_operation(vop);
+      };
+
+      const auto& el = *queue.begin();
+      account_id_type el_receiver_id = el.account;
+      share_type el_dascoin_amount = (el.amount * DASCOIN_DEFAULT_ASSET_PRECISION) / el.frequency;
+      if ( to_distribute >= el_dascoin_amount )
+        remove(el);
+      else
+      {
+        el_dascoin_amount = to_distribute;
+        share_type cycles = (to_distribute * el.frequency) / DASCOIN_DEFAULT_ASSET_PRECISION;
+        modify(el, [cycles](reward_queue_object& rqo){
+          rqo.amount -= cycles;
+        });
+      }
+      distribute(el_receiver_id, el_dascoin_amount);
+      to_distribute -= el_dascoin_amount;
+    }
+
+    modify(dgpo, [&](dynamic_global_property_object& dgpo){
+      dgpo.next_dascoin_reward_time = head_block_time() + params.reward_interval_time_seconds;
+    });
+  }
+
 
 } FC_CAPTURE_AND_RETHROW() }
 

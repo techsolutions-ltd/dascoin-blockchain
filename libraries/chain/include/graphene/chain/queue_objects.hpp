@@ -22,7 +22,7 @@ namespace graphene { namespace chain {
    *
    * Contains an amount of cycles submitted to the reward queue by an account.
    */
-  class reward_queue_object : public graphene::db::abstract_object<license_type_object>
+  class reward_queue_object : public graphene::db::abstract_object<reward_queue_object>
   {
     public:
       static const uint8_t space_id = implementation_ids;

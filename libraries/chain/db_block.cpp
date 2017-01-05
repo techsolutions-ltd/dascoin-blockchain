@@ -537,6 +537,9 @@ void database::_apply_block( const signed_block& next_block )
 
    // Handle completed license requests:
    assign_licenses();
+   // Mint dascoin:
+   if ( global_props.parameters.enable_dascoin_queue )
+    mint_dascoin_rewards();
    // Complete any issue request objects:
    distribute_issue_requested_assets();
    distribute_issue_requested_cycles();

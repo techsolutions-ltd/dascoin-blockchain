@@ -109,6 +109,8 @@ struct genesis_state_type {
 
    time_point_sec                           initial_timestamp;
    share_type                               max_core_supply = GRAPHENE_MAX_SHARE_SUPPLY;
+   share_type                               max_dascoin_supply = DASCOIN_MAX_DASCOIN_SUPPLY;
+   frequency_type                           initial_frequency = DASCOIN_INITIAL_FREQUENCY;
    chain_parameters                         initial_parameters;
    immutable_chain_parameters               immutable_parameters;
    vector<initial_account_type>             initial_accounts;
@@ -214,6 +216,7 @@ FC_REFLECT( graphene::chain::genesis_state_type::initial_chain_authority_type,
 FC_REFLECT( graphene::chain::genesis_state_type,
             (initial_timestamp)
             (max_core_supply)
+            (max_dascoin_supply)
             (initial_parameters)
             (initial_accounts)
             (initial_assets)

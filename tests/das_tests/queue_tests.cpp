@@ -97,6 +97,7 @@ BOOST_AUTO_TEST_CASE( basic_queue_test )
 
   adjust_dascoin_reward(500);
   adjust_frequency(200);  // Precision is 100 so this is 2.0.
+  toggle_reward_queue(true);
 
   adjust_cycles(first_id, 200);
   adjust_cycles(second_id, 400);
@@ -112,12 +113,15 @@ BOOST_AUTO_TEST_CASE( basic_queue_test )
   // 200 --> 400 --> 200 --> 600
 
   // Wait for the cycles to be distributed:
-  generate_blocks(db.head_block_time() + fc::minutes(20));
+  generate_blocks(db.head_block_time() + fc::seconds(get_chain_parameters().reward_interval_time_seconds));
 
   // Dascoin amounts shoud be:
   // 100, 200, 100, 100
 
-  // BOOST_CHECK_EQUAL( get_balance(first_id, get_dascoin_asset_id()), 100 );
+  BOOST_CHECK_EQUAL( get_balance(first_id, get_dascoin_asset_id()), 100 );
+  BOOST_CHECK_EQUAL( get_balance(second_id, get_dascoin_asset_id()), 200 );
+  BOOST_CHECK_EQUAL( get_balance(third_id, get_dascoin_asset_id()), 100 );
+  BOOST_CHECK_EQUAL( get_balance(fourth_id, get_dascoin_asset_id()), 100 );
 
 } FC_LOG_AND_RETHROW() }
 

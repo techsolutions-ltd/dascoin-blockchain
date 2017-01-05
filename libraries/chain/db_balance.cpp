@@ -172,7 +172,7 @@ void database::issue_asset(account_id_type account_id, share_type cash, asset_id
 void database::issue_asset(const account_balance_object& balance_obj, share_type cash, share_type reserved)
 { try {
 
-   if ( cash == 0 || reserved == 0 )
+   if ( cash == 0 )
      return;
 
    modify(balance_obj, [cash, reserved](account_balance_object& b) {

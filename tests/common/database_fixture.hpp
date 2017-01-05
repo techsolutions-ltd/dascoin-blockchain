@@ -376,6 +376,7 @@ struct database_fixture {
    void submit_cycles(account_id_type account_id, share_type amount);
    vector<reward_queue_object> get_reward_queue_objects_by_time();
    vector<reward_queue_object> get_reward_queue_objects_by_account(account_id_type account_id);
+   void toggle_reward_queue(bool state);
 
 };
 

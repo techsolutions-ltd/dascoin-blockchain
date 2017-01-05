@@ -78,4 +78,13 @@ namespace graphene { namespace chain {
 
   } FC_LOG_AND_RETHROW() };
 
+  void database_fixture::toggle_reward_queue(bool state)
+  { try {
+
+    db.modify(get_global_properties(), [state](global_property_object& gpo){
+      gpo.parameters.enable_dascoin_queue = state;
+    });
+
+  } FC_LOG_AND_RETHROW() };
+
 } }  // graphene::chain

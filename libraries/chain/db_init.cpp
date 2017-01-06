@@ -532,6 +532,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       p.dynamic_flags = 0;
       p.witness_budget = 0;
       p.recent_slots_filled = fc::uint128::max_value();
+      p.frequency = genesis_state.initial_frequency;
    });
 
    FC_ASSERT( (genesis_state.immutable_parameters.min_witness_count & 1) == 1, "min_witness_count must be odd" );

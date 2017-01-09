@@ -22,6 +22,7 @@ namespace graphene { namespace chain {
       share_type amount;
       asset_id_type asset_id;
       string memo;
+      time_point_sec timestamp;
 
       extensions_type extensions;
 
@@ -63,5 +64,6 @@ FC_REFLECT_DERIVED( graphene::chain::wire_out_holder_object, (graphene::db::obje
                     (amount)
                     (asset_id)
                     (memo)
+                    (timestamp)
                     (extensions)
                   )

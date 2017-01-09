@@ -78,17 +78,11 @@ BOOST_AUTO_TEST_CASE( license_type_integrity_test )
 BOOST_AUTO_TEST_CASE( issue_license_test )
 { try {
   ACTOR(wallet);
-  generate_block();
   VAULT_ACTOR(stan);
-  VAULT_ACTOR(mccool);
-  generate_block();
   VAULT_ACTOR(allguy);
-  generate_block();
-  VAULT_ACTOR(deadguy);
-  generate_block();
 
-  const auto& issue = [&](const account_object& acc, const string& lic_name, frequency_type f = 0){
-  try {
+  const auto& issue = [&](const account_object& acc, const string& lic_name, frequency_type f = 0)
+  { try {
     auto lic = get_license_type(lic_name);
     auto req = issue_license_to_vault_account(acc.id, lic.id);
     BOOST_CHECK( req );
@@ -99,89 +93,63 @@ BOOST_AUTO_TEST_CASE( issue_license_test )
     generate_block();
   } FC_LOG_AND_RETHROW() };
 
+  const auto& check_pending = [&](const account_object& acc, const string& lic_name)
+  {
+    auto lic = get_license_type(lic_name);
+    auto pending = *(acc.license_info.pending);
+    BOOST_CHECK( lic.id == pending.license );
+  };
+
+  const auto& generate_blocks_until_license_approved = [&]()
+  {
+    // Wait for license time to elapse:
+    generate_blocks(db.head_block_time() + fc::seconds(get_chain_parameters().license_expiration_time_seconds));
+  };
+
   // Rejected: cannot issue to a vault account.
-  // TODO: fixme!
   GRAPHENE_REQUIRE_THROW( issue(wallet, "standard"), fc::exception );
 
   // Issue standard license to our old pal Stan, and Allguy:
   issue(stan, "standard");
+  check_pending(stan, "standard");
+
   issue(allguy, "standard");
+  check_pending(allguy, "standard");
 
-  // Issue a bunch of licenses to mccool:
-  issue(mccool, "manager-charter");
-  GRAPHENE_REQUIRE_THROW( issue(mccool, "standard"), fc::exception );
-  issue(mccool, "pro");
-  GRAPHENE_REQUIRE_THROW( issue(mccool, "pro-charter"), fc::exception );
-  issue(mccool, "president-promo");
-  GRAPHENE_REQUIRE_THROW( issue(mccool, "president"), fc::exception );
-  // Mccool should get the president-promo license.
+  // Try and issue another license to stan:
+  GRAPHENE_REQUIRE_THROW( issue(stan, "manager-charter"), fc::exception );
 
-  // Wait for time to elapse:
-  // TODO: fetch the time parameter
-  generate_blocks(db.head_block_time() + fc::hours(24));
+  generate_blocks_until_license_approved();
 
   // Check if Stan has 100 cycles:
   BOOST_CHECK_EQUAL( get_cycle_balance(stan_id).value, 100 );
-  // Check the license history:
-  auto history_vec = get_license_history(mccool_id);
-  BOOST_CHECK_EQUAL(history_vec.size(), 3);
-  BOOST_CHECK_EQUAL(history_vec[0].name, "manager-charter");
-  BOOST_CHECK_EQUAL(history_vec[1].name, "pro");
-  BOOST_CHECK_EQUAL(history_vec[2].name, "president-promo");
-
-  // Mccool should have the following history:
-  // manager charter license -> regular pro -> president promo
-  // As such his account should have:
-  // 1) 2000 cycles in the cycle balance from the promo
-  // 2) upgrade_type({1}) on requeue
-  // 3) upgrade_type({1,2,4}) on return
-  BOOST_CHECK_EQUAL( get_cycle_balance(mccool_id).value, 2000 );
-
-  auto lic_info = mccool_id(db).license_info;
-  BOOST_CHECK( lic_info.balance_upgrade == upgrade_type({2}) );  // From the pro.
-  BOOST_CHECK( lic_info.requeue_upgrade == upgrade_type({1}) );  // From the manager charter.
-  BOOST_CHECK( lic_info.return_upgrade == upgrade_type({1,2,4}) );  // From the president promo.
 
   // Now we try the Allguy:
   // Allguy should get all the licenses in order:
+  license_information lic_info;
   issue(allguy, "manager");
-  generate_blocks(db.head_block_time() + fc::hours(24));
+  generate_blocks_until_license_approved();
   BOOST_CHECK_EQUAL( get_cycle_balance(allguy_id).value, 600 );
   lic_info = allguy_id(db).license_info;
   BOOST_CHECK( lic_info.balance_upgrade == upgrade_type({2}) );
 
   issue(allguy, "pro");
-  generate_blocks(db.head_block_time() + fc::hours(24));
+  generate_blocks_until_license_approved();
   BOOST_CHECK_EQUAL( get_cycle_balance(allguy_id).value, 2600 );
   lic_info = allguy_id(db).license_info;
   BOOST_CHECK( lic_info.balance_upgrade == upgrade_type({2}) );
 
   issue(allguy, "executive");
-  generate_blocks(db.head_block_time() + fc::hours(24));
+  generate_blocks_until_license_approved();
   BOOST_CHECK_EQUAL( get_cycle_balance(allguy_id).value, 7600 );
   lic_info = allguy_id(db).license_info;
   BOOST_CHECK( lic_info.balance_upgrade == upgrade_type({2,2}) );
 
   issue(allguy, "president");
-  generate_blocks(db.head_block_time() + fc::hours(24));
+  generate_blocks_until_license_approved();
   BOOST_CHECK_EQUAL( get_cycle_balance(allguy_id).value, 32600 );
   lic_info = allguy_id(db).license_info;
   BOOST_CHECK( lic_info.balance_upgrade == upgrade_type({2,2,2}) );
-
-  issue(deadguy, "standard");
-  issue(deadguy, "manager");
-  issue(deadguy, "pro");
-  issue(deadguy, "executive");
-  issue(deadguy, "president");
-
-  // Pending license should be president:
-  BOOST_CHECK( deadguy.license_info.pending_license == get_license_type("president").id );
-
-  // Wait for time to elapse:
-  // TODO: fetch the time parameter
-  generate_blocks(db.head_block_time() + fc::hours(24));
-
-  BOOST_CHECK_EQUAL( deadguy.license_info.pending_license.valid(), false );
 
 } FC_LOG_AND_RETHROW() }
 

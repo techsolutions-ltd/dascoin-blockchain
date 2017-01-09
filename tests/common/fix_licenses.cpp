@@ -80,7 +80,7 @@ vector<license_type_object> database_fixture::get_license_history(account_id_typ
 
   std::transform(history.begin(), history.end(), result.begin(),
     [this](license_information::license_history_record rec) -> license_type_object {
-      return rec.first(db);
+      return rec.license(db);
     });
 
   return result;

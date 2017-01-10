@@ -268,14 +268,14 @@ namespace graphene { namespace chain {
          special_authority active_special_authority = no_special_authority();
 
          /**
-          * A cycle license the account holds:
-          */
-         // optional<license_type_id_type> license;
-
-         /**
           * All information regarding licenses.
           */
          license_information license_info;
+
+         /**
+          * Time the active license was set up on this account.
+          */
+         time_point_sec active_license_issued_time;
 
          /**
           * The level of verified persional information assigned to the account.
@@ -446,16 +446,23 @@ namespace graphene { namespace chain {
     */
    typedef generic_index<account_balance_object, account_balance_object_multi_index_type> account_balance_index;
 
-   struct by_name{};
-
-   /**
-    * @ingroup object_index
-    */
+   struct by_name;
+   struct by_active_license_issued_time;
    typedef multi_index_container<
       account_object,
       indexed_by<
-         ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
-         ordered_unique< tag<by_name>, member<account_object, string, &account_object::name> >
+         ordered_unique< tag<by_id>,
+            member< object, object_id_type, &object::id >
+         >,
+         ordered_unique< tag<by_name>,
+            member<account_object, string, &account_object::name>
+         >,
+         ordered_unique< tag<by_active_license_issued_time>,
+            composite_key< account_object,
+               member< account_object, time_point_sec, &account_object::active_license_issued_time >,
+               member< object, object_id_type, &object::id >
+            >
+         >
       >
    > account_multi_index_type;
 
@@ -496,6 +503,7 @@ FC_REFLECT_DERIVED( graphene::chain::account_object, (graphene::db::object),
                     (owner_special_authority)
                     (active_special_authority)
                     (license_info)
+                    (active_license_issued_time)
                     (pi_level)
                     (limits)
                     (top_n_control_flags)

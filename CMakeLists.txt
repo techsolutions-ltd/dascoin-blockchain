@@ -11,7 +11,7 @@ set( INSTALLER_APP_ID "68ad7005-8eee-49c9-95ce-9eed97e5b347" )
 
 # Versioning:
 set( VERSION_MAJOR 0 )
-set( VERSION_MINOR 0 )
+set( VERSION_MINOR 1 )
 
 # http://stackoverflow.com/a/18369825
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")

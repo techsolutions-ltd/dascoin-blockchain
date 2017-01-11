@@ -65,10 +65,11 @@ namespace graphene { namespace chain {
       data.current_supply -= op.asset_to_wire.amount;
     });
     // Create the holder object and return its ID:
-    return d.create<wire_out_holder_object>([&](wire_out_holder_object& w){
-      w.account = op.account;
-      w.set_balance(op.asset_to_wire);
-      w.memo = op.memo;
+    return d.create<wire_out_holder_object>([&](wire_out_holder_object& woho){
+      woho.account = op.account;
+      woho.set_balance(op.asset_to_wire);
+      woho.memo = op.memo;
+      woho.timestamp = d.head_block_time();
     }).id;
 
   } FC_CAPTURE_AND_RETHROW( (op) ) }

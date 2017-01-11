@@ -4436,9 +4436,39 @@ share_type wallet_api::get_account_cycle_balance(const string& name_or_id)const
    return my->_remote_db->get_account_cycle_balance(get_account(name_or_id).id);
 }
 
+uint32_t wallet_api::get_reward_queue_size() const
+{
+   return my->_remote_db->get_reward_queue_size();
+}
+
 signed_transaction wallet_api::wire_out(const string& account, share_type amount, bool broadcast) const
 {
    return my->wire_out(account, amount, broadcast);
+}
+
+vector<license_request_object> wallet_api::get_all_license_requests() const
+{
+   return my->_remote_db->get_all_license_requests();
+}
+
+vector<issue_asset_request_object> wallet_api::get_all_webasset_issue_requests() const
+{
+   return my->_remote_db->get_all_webasset_issue_requests();
+}
+
+vector<cycle_issue_request_object> wallet_api::get_all_cycle_issue_requests() const
+{
+   return my->_remote_db->get_all_cycle_issue_requests();
+}
+
+vector<wire_out_holder_object> wallet_api::get_all_wire_out_holders() const
+{
+   return my->_remote_db->get_all_wire_out_holders();
+}
+
+vector<reward_queue_object> wallet_api::get_reward_queue() const
+{
+   return my->_remote_db->get_reward_queue();
 }
 
 order_book wallet_api::get_order_book( const string& base, const string& quote, unsigned limit )

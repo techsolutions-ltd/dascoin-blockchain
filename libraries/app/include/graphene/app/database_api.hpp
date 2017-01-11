@@ -689,7 +689,13 @@ class database_api
        * @brief Get all wire out holder objects.
        * @return Vector of wire out holder objects.
        */
-      vector <wire_out_holder_object> get_all_wire_out_holders() const;
+      vector<wire_out_holder_object> get_all_wire_out_holders() const;
+
+      /**
+       * @brief Return the entire reward queue.
+       * @return Vector of all reward queue objects.
+       */
+      vector<reward_queue_object> get_reward_queue() const;
 
    private:
       std::shared_ptr< database_api_impl > my;
@@ -809,4 +815,12 @@ FC_API(graphene::app::database_api,
    // PI
    (get_account_limits)
    (get_account_pi_level)
+
+   // Requests
+   (get_all_license_requests)
+   (get_all_webasset_issue_requests)
+   (get_all_cycle_issue_requests)
+   (get_all_wire_out_holders)
+   (get_reward_queue)
+   (get_reward_queue_size)
 )

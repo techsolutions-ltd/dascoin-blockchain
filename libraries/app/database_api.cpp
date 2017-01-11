@@ -2001,6 +2001,11 @@ vector<wire_out_holder_object> database_api::get_all_wire_out_holders() const
    return my->list_all_objects<wire_out_holder_index, by_id>();
 }
 
+vector<reward_queue_object> database_api::get_reward_queue() const
+{
+   return my->list_all_objects<reward_queue_index, by_time>();
+}
+
 //////////////////////////////////////////////////////////////////////
 //                                                                  //
 // Private methods                                                  //

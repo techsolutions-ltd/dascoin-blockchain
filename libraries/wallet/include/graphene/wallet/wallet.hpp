@@ -1540,6 +1540,46 @@ class wallet_api
        */
       signed_transaction wire_out(const string& account, share_type amount, bool broadcast) const;
 
+      //////////////////////////
+      // REQUESTS:            //
+      //////////////////////////
+
+      /**
+       * @brief Get the size of the DASCoin reward queue.
+       * @return Number of elements in the DASCoin queue.
+       */
+      uint32_t get_reward_queue_size() const;
+
+      /**
+       * @brief Get all license request objects, sorted by expiration.
+       * @return Vector of license request objects.
+       */
+      vector<license_request_object> get_all_license_requests() const;
+
+      /**
+       * @brief Get all webasset issue request objects, sorted by expiration.
+       * @return Vector of webasset issue request objects.
+       */
+      vector<issue_asset_request_object> get_all_webasset_issue_requests() const;
+
+      /**
+       * @brief Get all cycle issue requests, sorted by expiration.
+       * @return Vector of cycle issue request objects.
+       */
+      vector<cycle_issue_request_object> get_all_cycle_issue_requests() const;
+
+      /**
+       * @brief Get all wire out holder objects.
+       * @return Vector of wire out holder objects.
+       */
+      vector<wire_out_holder_object> get_all_wire_out_holders() const;
+
+      /**
+       * @brief Return the entire reward queue.
+       * @return Vector of all reward queue objects.
+       */
+      vector<reward_queue_object> get_reward_queue() const;
+
       void dbg_make_uia(string creator, string symbol);
       void dbg_make_mia(string creator, string symbol);
       void dbg_push_blocks( std::string src_filename, uint32_t count );
@@ -1749,4 +1789,11 @@ FC_API( graphene::wallet::wallet_api,
         (get_account_cycle_balance)
         (get_order_book)
         (wire_out)
+        // Requests:
+        (get_all_license_requests)
+        (get_all_webasset_issue_requests)
+        (get_all_cycle_issue_requests)
+        (get_all_wire_out_holders)
+        (get_reward_queue)
+        (get_reward_queue_size)
       )

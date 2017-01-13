@@ -74,7 +74,7 @@ echo "Generating js_operation_serializer coffeescript file"
 "$JS_SERIALIZER_DIR/js_operation_serializer" > operation_serializer.coffee;
 
 # Copy to repo server:
-rsync -aPv "$TARGET_DIR" "$REMOTE_PATH";
+# rsync -aPv "$TARGET_DIR" "$REMOTE_PATH";
 
 cd "$CUR_DIR";
 

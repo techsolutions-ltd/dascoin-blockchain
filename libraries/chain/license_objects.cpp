@@ -21,19 +21,19 @@ namespace graphene { namespace chain {
   {
     if ( history.empty() )
       return {};
-    return {history.back().first};
+    return {history.back().license};
   }
 
   frequency_type license_information::active_frequency_lock() const
   {
     if ( history.empty() )
       return 0;
-    return history.back().second;
+    return history.back().frequency_lock;
   }
 
   void license_information::add_license(license_type_id_type license_id, frequency_type frequency_lock)
   {
-    history.emplace_back(license_id, frequency_lock);
+    history.emplace_back();
   }
 
 } } // namespace graphene::chain

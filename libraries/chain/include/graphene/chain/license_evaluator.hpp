@@ -47,6 +47,7 @@ public:
   void_result do_evaluate(const license_request_operation& op);
   object_id_type do_apply(const license_request_operation& op);
 
+private:
   const account_object* account_obj_ = nullptr;
 };
 
@@ -59,6 +60,7 @@ public:
   void_result do_apply(const license_deny_operation& op);
 
 private:
+  const account_object* account_obj_ = nullptr;
   const license_request_object* request_obj_ = nullptr;
 };
 

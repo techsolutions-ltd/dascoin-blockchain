@@ -72,6 +72,10 @@ void database::fulfill_license_request(const license_request_object& req)
 {
   const auto& account_obj = req.account(*this);
   const auto& new_license_obj = req.license(*this);
+  const auto& pending = *account_obj.license_info.pending;
+
+  FC_ASSERT( pending.request == req.id );
+  FC_ASSERT( pending.license == req.license );
 
   // We need to modify the account in order to change the license info.
   modify(account_obj, [&](account_object& a) {
@@ -86,7 +90,7 @@ void database::fulfill_license_request(const license_request_object& req)
     info.return_upgrade += new_license_obj.return_upgrade;
 
     // The license is no longer pending:
-    info.pending_license.reset();
+    info.clear_pending();
   });
 
   // For regular licenses, increase the cycle balance for the appropriate amount:

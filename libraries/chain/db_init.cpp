@@ -854,13 +854,22 @@ void database::init_genesis(const genesis_state_type& genesis_state)
 
    // Initialize account registration:
    {
-      ilog("Registrar name: ${name}", ("name", genesis_state.initial_registrar.owner_name));
-
       account_id_type registrar = get_account_id(genesis_state.initial_registrar.owner_name);
 
       // Create account registrar authority:
       committee_member_update_account_registrar_operation op;
       op.registrar = registrar;
+      op.committee_member_account = GRAPHENE_COMMITTEE_ACCOUNT;
+      apply_operation( genesis_eval_state, std::move(op) );
+   }
+
+   // Initialize wire out:
+   {
+      account_id_type wire_out_handler = get_account_id(genesis_state.initial_wire_out_handler.owner_name);
+
+      // Create wire out authority:
+      committee_member_update_wire_out_handler_operation op;
+      op.wire_out_handler = wire_out_handler;
       op.committee_member_account = GRAPHENE_COMMITTEE_ACCOUNT;
       apply_operation( genesis_eval_state, std::move(op) );
    }

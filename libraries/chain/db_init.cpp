@@ -213,7 +213,7 @@ void database::initialize_evaluators()
    register_evaluator<license_request_evaluator>();
    register_evaluator<license_deny_evaluator>();
    register_evaluator<tether_accounts_evaluator>();
-   register_evaluator<update_pi_limits_evaluator>();
+   // register_evaluator<update_pi_limits_evaluator>();
    register_evaluator<asset_create_issue_request_evaluator>();
    register_evaluator<asset_deny_issue_request_evaluator>();
    register_evaluator<wire_out_evaluator>();

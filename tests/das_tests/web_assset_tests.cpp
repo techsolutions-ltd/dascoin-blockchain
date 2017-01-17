@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE( web_asset_test )
   GRAPHENE_REQUIRE_THROW( transfer_webasset_wallet_to_vault(wallet_id, vault_id, {1000,1100}), fc::exception );
 
   // Update the limits to allow vault -> wallet transfer:
-  update_pi_limits(vault_id, 99, {100,100,100});
+  // update_pi_limits(vault_id, 99, {100,100,100});
 
   // Reject, arguments reversed:
   GRAPHENE_REQUIRE_THROW( transfer_webasset_wallet_to_vault(wallet_id, vault_id, {100,100}), fc::exception );

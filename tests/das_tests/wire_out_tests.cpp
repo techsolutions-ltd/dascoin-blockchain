@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE( wire_out_web_asset_test )
   generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
 
   // Update the limits:
-  update_pi_limits(wallet_id, 99, {20000,20000,20000});
+  // update_pi_limits(wallet_id, 99, {20000,20000,20000});
 
   // Wire out 10K:
   wire_out(wallet_id, web_asset(10000), "debit");

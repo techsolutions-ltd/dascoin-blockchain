@@ -35,19 +35,19 @@ using namespace graphene::chain::test;
 
 namespace graphene { namespace chain {
 
-void database_fixture::update_pi_limits(account_id_type account_id, uint8_t level, limits_type new_limits)
-{
-  update_pi_limits_operation op;
-  op.pi_validator = get_pi_validator_id();
-  op.account = account_id;
-  op.level = level;
-  op.new_limits = new_limits;
+// void database_fixture::update_pi_limits(account_id_type account_id, uint8_t level, limits_type new_limits)
+// {
+//   update_pi_limits_operation op;
+//   op.pi_validator = get_pi_validator_id();
+//   op.account = account_id;
+//   op.level = level;
+//   op.new_limits = new_limits;
 
-  set_expiration(db, trx);
-  trx.operations.clear();
-  trx.operations.push_back(op);
-  trx.validate();
-  db.push_transaction(trx, ~0);
-}
+//   set_expiration(db, trx);
+//   trx.operations.clear();
+//   trx.operations.push_back(op);
+//   trx.validate();
+//   db.push_transaction(trx, ~0);
+// }
 
 } }  // namespace graphene::chain

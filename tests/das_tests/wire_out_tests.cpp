@@ -41,9 +41,6 @@ BOOST_AUTO_TEST_CASE( wire_out_web_asset_test )
   issue_webasset(wallet_id, 15000, 15000);
   generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
 
-  // Reject, daily limit breached:
-  GRAPHENE_REQUIRE_THROW( wire_out(wallet_id, web_asset(10000)), fc::exception );
-
   // Update the limits:
   update_pi_limits(wallet_id, 99, {20000,20000,20000});
 

@@ -16,14 +16,39 @@ namespace graphene { namespace chain {
   class license_information
   {
     public:
-      typedef pair<license_type_id_type, frequency_type> license_history_record;
+      struct license_history_record
+      {
+        license_type_id_type license;
+        frequency_type frequency_lock;
+
+        license_history_record() = default;
+        license_history_record(license_type_id_type l, frequency_type f) : license(l), frequency_lock(f) {}
+      };
+
+      struct pending_license_record
+      {
+        license_type_id_type license;
+        license_request_id_type request;
+
+        pending_license_record() = default;
+        pending_license_record(license_type_id_type l, license_request_id_type r) : license(l), request(r) {}
+      };
 
       optional<license_type_id_type> active_license() const;
       frequency_type active_frequency_lock() const;
       void add_license(license_type_id_type license_id, frequency_type frequency_lock = 0);
 
+      void set_pending(license_type_id_type license_id, license_request_id_type req)
+      {
+        pending = pending_license_record(license_id, req);
+      }
+      void clear_pending()
+      {
+        pending.reset();
+      }
+
       vector<license_history_record> history;
-      optional<license_type_id_type> pending_license;
+      optional<pending_license_record> pending;
 
       upgrade_type balance_upgrade;
       upgrade_type requeue_upgrade;
@@ -172,9 +197,17 @@ namespace graphene { namespace chain {
 // REFLECTIONS:              //
 ///////////////////////////////
 
+FC_REFLECT( graphene::chain::license_information::license_history_record,
+            (license)
+            (frequency_lock)
+          )
+FC_REFLECT( graphene::chain::license_information::pending_license_record,
+            (license)
+            (request)
+          )
 FC_REFLECT( graphene::chain::license_information,
             (history)
-            (pending_license)
+            (pending)
             (balance_upgrade)
             (requeue_upgrade)
             (return_upgrade)

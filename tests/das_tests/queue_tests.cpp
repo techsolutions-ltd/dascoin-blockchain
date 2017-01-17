@@ -86,8 +86,8 @@ BOOST_AUTO_TEST_CASE( submit_user_cycles_test )
   // Submit cycles from the license:
   submit_cycles(stan_id, 100);
 
-  check(get_reward_queue_objects_by_account(vault_id)[0], vault, 500, 0);
-  check(get_reward_queue_objects_by_account(stan_id)[0], stan, 100, 0);
+  check(get_reward_queue_objects_by_account(vault_id)[0], vault, 500, get_global_frequency());
+  check(get_reward_queue_objects_by_account(stan_id)[0], stan, 100, get_global_frequency());
 
 } FC_LOG_AND_RETHROW() }
 

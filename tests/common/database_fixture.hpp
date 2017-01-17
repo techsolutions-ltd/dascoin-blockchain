@@ -341,6 +341,7 @@ struct database_fixture {
    account_id_type get_wire_out_handler_id() const;
    asset_id_type get_web_asset_id() const;
    asset_id_type get_dascoin_asset_id() const;
+   frequency_type get_global_frequency() const;
 
    // fix_accounts.cpp
    void tether_accounts(account_id_type wallet, account_id_type vault);

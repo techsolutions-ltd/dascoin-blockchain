@@ -456,7 +456,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
      create<asset_object>( [&]( asset_object& a ) {
          a.symbol = DASCOIN_WEBASSET_SYMBOL;
          a.options.max_supply = genesis_state.max_core_supply;  // TODO: this should remain 10 trillion?
-         a.precision = DASCOIN_DEFAULT_ASSET_PRECISION;
+         a.precision = DASCOIN_DEFAULT_ASSET_PRECISION_DIGITS;
          a.options.flags = WEB_ASSET_INITIAL_FLAGS;
          a.options.issuer_permissions = WEB_ASSET_ISSUER_PERMISSION_MASK;  // TODO: set the appropriate issuer permissions.
          a.issuer = GRAPHENE_NULL_ACCOUNT;
@@ -477,7 +477,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    const auto& dascoin_asset = create<asset_object>([&](asset_object& ao){
       ao.symbol = DASCOIN_DASCOIN_SYMBOL;
       ao.options.max_supply = genesis_state.max_dascoin_supply;
-      ao.precision = DASCOIN_DEFAULT_ASSET_PRECISION;
+      ao.precision = DASCOIN_DEFAULT_ASSET_PRECISION_DIGITS;
       ao.options.flags = DASCOIN_ASSET_INITIAL_FLAGS;
       ao.options.issuer_permissions = 0;  // No issuer, no permissions, no problem.
       ao.issuer = GRAPHENE_NULL_ACCOUNT;
@@ -854,13 +854,22 @@ void database::init_genesis(const genesis_state_type& genesis_state)
 
    // Initialize account registration:
    {
-      ilog("Registrar name: ${name}", ("name", genesis_state.initial_registrar.owner_name));
-
       account_id_type registrar = get_account_id(genesis_state.initial_registrar.owner_name);
 
       // Create account registrar authority:
       committee_member_update_account_registrar_operation op;
       op.registrar = registrar;
+      op.committee_member_account = GRAPHENE_COMMITTEE_ACCOUNT;
+      apply_operation( genesis_eval_state, std::move(op) );
+   }
+
+   // Initialize wire out:
+   {
+      account_id_type wire_out_handler = get_account_id(genesis_state.initial_wire_out_handler.owner_name);
+
+      // Create wire out authority:
+      committee_member_update_wire_out_handler_operation op;
+      op.wire_out_handler = wire_out_handler;
       op.committee_member_account = GRAPHENE_COMMITTEE_ACCOUNT;
       apply_operation( genesis_eval_state, std::move(op) );
    }

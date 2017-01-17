@@ -85,16 +85,8 @@ BOOST_AUTO_TEST_CASE( web_asset_test )
   // Reject, not enough balance:
   GRAPHENE_REQUIRE_THROW( transfer_webasset_wallet_to_vault(wallet_id, vault_id, {1000,1100}), fc::exception );
 
-  // Reject, limits do not exist:
-  GRAPHENE_REQUIRE_THROW( transfer_webasset_vault_to_wallet(vault_id, wallet_id, {50,50}), fc::exception );
-
-  // Reject, bad limits vector:
-  // TODO: this is a validation failure, handle it somehow.
-  // GRAPHENE_REQUIRE_THROW( update_pi_limits(vault_id, 99, {50,50,50,50,50,50,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}), fc::exception );
-
   // Update the limits to allow vault -> wallet transfer:
   update_pi_limits(vault_id, 99, {100,100,100});
-  ilog( "Vault account limits ${l}", ("l", vault_id(db).limits) );
 
   // Reject, arguments reversed:
   GRAPHENE_REQUIRE_THROW( transfer_webasset_wallet_to_vault(wallet_id, vault_id, {100,100}), fc::exception );

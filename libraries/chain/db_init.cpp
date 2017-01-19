@@ -298,7 +298,7 @@ void database::initialize_indexes()
    add_index<primary_index<reward_queue_index>>();
 }
 
-void database::initialize_chain_authority(chain_authority_kind kind, const string& name)
+account_id_type database::initialize_chain_authority(chain_authority_kind kind, const string& name)
 { try {
 
    // Since this is the database initialization, skip checking signatures:
@@ -312,6 +312,7 @@ void database::initialize_chain_authority(chain_authority_kind kind, const strin
    op.account = account_id;
    op.committee_member_account = GRAPHENE_COMMITTEE_ACCOUNT;
    apply_operation(genesis_eval_state, std::move(op));
+   return account_id;
 
 } FC_CAPTURE_AND_RETHROW((kind)(name)) }
 
@@ -773,14 +774,21 @@ void database::init_genesis(const genesis_state_type& genesis_state)
 
    initialize_chain_authority(chain_authority_kind::license_issuer, genesis_state.initial_license_issuing_authority.owner_name);
    initialize_chain_authority(chain_authority_kind::license_authenticator, genesis_state.initial_license_authentication_authority.owner_name);
-   initialize_chain_authority(chain_authority_kind::webasset_issuer, genesis_state.initial_webasset_issuing_authority.owner_name);
-   initialize_chain_authority(chain_authority_kind::webasset_authenticator, genesis_state.initial_webasset_authentication_authority.owner_name);
+   auto webasset_issuer_id = initialize_chain_authority(chain_authority_kind::webasset_issuer, genesis_state.initial_webasset_issuing_authority.owner_name);
+   auto webasset_authenticator_id = initialize_chain_authority(chain_authority_kind::webasset_authenticator, genesis_state.initial_webasset_authentication_authority.owner_name);
    initialize_chain_authority(chain_authority_kind::cycle_issuer, genesis_state.initial_cycle_issuing_authority.owner_name);
    initialize_chain_authority(chain_authority_kind::cycle_authenticator, genesis_state.initial_cycle_authentication_authority.owner_name);
    initialize_chain_authority(chain_authority_kind::registrar, genesis_state.initial_registrar.owner_name);
    // TODO: implement in genesis state
    // initialize_chain_authority(chain_authority_kind::pi_validator, genesis_state.initial_pi_validator.owner_name);
    initialize_chain_authority(chain_authority_kind::wire_out_handler, genesis_state.initial_wire_out_handler.owner_name);
+
+   // Set up web asset issuer and authenticator:
+   // TODO: refactor this to be handled all at once.
+   modify(web_asset, [&](asset_object& a){
+      a.issuer = webasset_issuer_id;
+      a.authenticator = webasset_authenticator_id;
+   });
 
    // Initialize licenses:
    {

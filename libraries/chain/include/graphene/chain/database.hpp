@@ -281,7 +281,7 @@ namespace graphene { namespace chain {
           * @param kind The kind of authority to initialize. See @ref chain_authority_kind
           * @param name The account name in the genesis state.
           */
-         void initialize_chain_authority(chain_authority_kind kind, const string& name);
+         account_id_type initialize_chain_authority(chain_authority_kind kind, const string& name);
 
          /**
           * Distribute the initial cycles to accounts in the genesis_state.

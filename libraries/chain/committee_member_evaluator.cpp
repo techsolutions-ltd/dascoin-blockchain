@@ -35,195 +35,90 @@ namespace graphene { namespace chain {
 
 void_result committee_member_create_evaluator::do_evaluate( const committee_member_create_operation& op )
 { try {
-   FC_ASSERT(db().get(op.committee_member_account).is_lifetime_member());
-   return void_result();
-} FC_CAPTURE_AND_RETHROW( (op) ) }
+
+  FC_ASSERT(db().get(op.committee_member_account).is_lifetime_member());
+  return {};
+
+} FC_CAPTURE_AND_RETHROW((op)) }
 
 object_id_type committee_member_create_evaluator::do_apply( const committee_member_create_operation& op )
 { try {
-   vote_id_type vote_id;
-   db().modify(db().get_global_properties(), [&vote_id](global_property_object& p) {
-      vote_id = get_next_vote_id(p, vote_id_type::committee);
-   });
+  auto& d = db();
+  vote_id_type vote_id;
 
-   const auto& new_del_object = db().create<committee_member_object>( [&]( committee_member_object& obj ){
-         obj.committee_member_account   = op.committee_member_account;
-         obj.vote_id            = vote_id;
-         obj.url                = op.url;
-   });
-   return new_del_object.id;
-} FC_CAPTURE_AND_RETHROW( (op) ) }
+  d.modify(d.get_global_properties(), [&vote_id](global_property_object& p) {
+    vote_id = get_next_vote_id(p, vote_id_type::committee);
+  });
+
+  return d.create<committee_member_object>( [&]( committee_member_object& obj ){
+       obj.committee_member_account   = op.committee_member_account;
+       obj.vote_id            = vote_id;
+       obj.url                = op.url;
+  }).id;
+
+} FC_CAPTURE_AND_RETHROW((op)) }
 
 void_result committee_member_update_evaluator::do_evaluate( const committee_member_update_operation& op )
 { try {
-   FC_ASSERT(db().get(op.committee_member).committee_member_account == op.committee_member_account);
-   return void_result();
-} FC_CAPTURE_AND_RETHROW( (op) ) }
+
+  FC_ASSERT(db().get(op.committee_member).committee_member_account == op.committee_member_account);
+  return {};
+
+} FC_CAPTURE_AND_RETHROW((op)) }
 
 void_result committee_member_update_evaluator::do_apply( const committee_member_update_operation& op )
 { try {
-   database& _db = db();
-   _db.modify(
-      _db.get(op.committee_member),
-      [&]( committee_member_object& com )
-      {
-         if( op.new_url.valid() )
-            com.url = *op.new_url;
-      });
-   return void_result();
-} FC_CAPTURE_AND_RETHROW( (op) ) }
+  database& d = db();
+
+  d.modify(op.committee_member(d), [&](committee_member_object& cmo) {
+    if( op.new_url.valid() )
+      cmo.url = *op.new_url;
+  });
+  return {};
+
+} FC_CAPTURE_AND_RETHROW((op)) }
 
 void_result committee_member_update_global_parameters_evaluator::do_evaluate(const committee_member_update_global_parameters_operation& o)
 { try {
-   FC_ASSERT(trx_state->_is_proposed_trx);
 
-   return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
+  FC_ASSERT(trx_state->_is_proposed_trx);
+  return {};
+
+} FC_CAPTURE_AND_RETHROW((o)) }
 
 void_result committee_member_update_global_parameters_evaluator::do_apply(const committee_member_update_global_parameters_operation& o)
 { try {
-   db().modify(db().get_global_properties(), [&o](global_property_object& p) {
-      p.pending_parameters = o.new_parameters;
-   });
+  auto& d = db();
 
-   return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) ) }
+  d.modify(d.get_global_properties(), [&o](global_property_object& gpo) {
+    gpo.pending_parameters = o.new_parameters;
+  });
 
-void_result committee_member_update_license_issuer_evaluator::do_evaluate(const committee_member_update_license_issuer_operation& o)
+  return {};
+} FC_CAPTURE_AND_RETHROW((o)) }
+
+void_result board_update_chain_authority_evaluator::do_evaluate(const board_update_chain_authority_operation& op)
 { try {
-   // Check if the license issuer is a lifetime member.
-   FC_ASSERT( db().get(o.license_issuer).is_lifetime_member() );
-   return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) )}
+  const auto& d = db();
+  const auto& account_obj = op.account(d);
 
-void_result committee_member_update_license_issuer_evaluator::do_apply(const committee_member_update_license_issuer_operation& o)
+  FC_ASSERT( account_obj.is_lifetime_member(), "Account ${n} must be a lifetime member.", ("n", account_obj.name));
+
+  return {};
+
+} FC_CAPTURE_AND_RETHROW((op))}
+
+void_result board_update_chain_authority_evaluator::do_apply(const board_update_chain_authority_operation& op)
 { try {
-   // Modifiy the global properties object and set the new license issuing authority.
-   db().modify(db().get_global_properties(), [&o](global_property_object& p) {
-      p.authorities.license_issuer = o.license_issuer;
-   });
-   return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) )}
+   auto& d = db();
+   auto kind = static_cast<chain_authority_kind>(op.kind);
 
-void_result committee_member_update_license_authenticator_evaluator::do_evaluate(const committee_member_update_license_authenticator_operation& o)
-{ try {
-   // Check if the license authenticator is a lifetime member.
-   FC_ASSERT( db().get(o.license_authenticator).is_lifetime_member() );
-   return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) )}
-
-void_result committee_member_update_license_authenticator_evaluator::do_apply(const committee_member_update_license_authenticator_operation& o)
-{ try {
-   // Modifiy the global properties object and set the new license authentication authority.
-   db().modify(db().get_global_properties(), [&o](global_property_object& p) {
-      p.authorities.license_authenticator = o.license_authenticator;
-   });
-   return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) )}
-
-void_result committee_member_update_account_registrar_evaluator::do_evaluate(const committee_member_update_account_registrar_operation& o)
-{ try {
-   FC_ASSERT( db().get(o.registrar).is_lifetime_member() );
-   return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) )}
-
-void_result committee_member_update_account_registrar_evaluator::do_apply(const committee_member_update_account_registrar_operation& o)
-{ try {
-   // Modifiy the global properties object and set the new license authentication authority.
-   db().modify(db().get_global_properties(), [&o](global_property_object& p) {
-      p.authorities.registrar = o.registrar;
-   });
-   return void_result();
-} FC_CAPTURE_AND_RETHROW( (o) )}
-
-void_result committee_member_update_webasset_issuer_evaluator::do_evaluate(const committee_member_update_webasset_issuer_operation& o)
-{ try {
-
-   FC_ASSERT( db().get(o.issuer).is_lifetime_member() );
-
-   return {};
-} FC_CAPTURE_AND_RETHROW( (o) )}
-
-void_result committee_member_update_webasset_issuer_evaluator::do_apply(const committee_member_update_webasset_issuer_operation& o)
-{ try {
-
-   db().modify(db().get_global_properties(), [&o](global_property_object& p) {
-      p.authorities.webasset_issuer = o.issuer;
+   d.modify(d.get_global_properties(), [&](global_property_object& gpo){
+      gpo.authorities.set(kind, op.account);
    });
 
    return {};
-} FC_CAPTURE_AND_RETHROW( (o) )}
 
-void_result committee_member_update_webasset_authenticator_evaluator::do_evaluate(const committee_member_update_webasset_authenticator_operation& o)
-{ try {
-
-   FC_ASSERT( db().get(o.authenticator).is_lifetime_member() );
-
-   return {};
-} FC_CAPTURE_AND_RETHROW( (o) )}
-
-void_result committee_member_update_webasset_authenticator_evaluator::do_apply(const committee_member_update_webasset_authenticator_operation& o)
-{ try {
-
-   db().modify(db().get_global_properties(), [&o](global_property_object& p) {
-      p.authorities.webasset_authenticator = o.authenticator;
-   });
-
-   return {};
-} FC_CAPTURE_AND_RETHROW( (o) )}
-
-void_result committee_member_update_wire_out_handler_evaluator::do_evaluate(const committee_member_update_wire_out_handler_operation& o)
-{ try {
-
-   FC_ASSERT( db().get(o.wire_out_handler).is_lifetime_member() );
-
-   return {};
-} FC_CAPTURE_AND_RETHROW( (o) )}
-
-void_result committee_member_update_wire_out_handler_evaluator::do_apply(const committee_member_update_wire_out_handler_operation& o)
-{ try {
-
-   db().modify(db().get_global_properties(), [&o](global_property_object& p) {
-      p.authorities.wire_out_handler = o.wire_out_handler;
-   });
-
-   return {};
-} FC_CAPTURE_AND_RETHROW( (o) )}
-
-void_result committee_member_update_cycle_issuer_evaluator::do_evaluate(const committee_member_update_cycle_issuer_operation& o)
-{ try {
-
-   FC_ASSERT( db().get(o.cycle_issuer).is_lifetime_member() );
-
-   return {};
-} FC_CAPTURE_AND_RETHROW( (o) )}
-
-void_result committee_member_update_cycle_issuer_evaluator::do_apply(const committee_member_update_cycle_issuer_operation& o)
-{ try {
-
-   db().modify(db().get_global_properties(), [&o](global_property_object& p) {
-      p.authorities.cycle_issuer = o.cycle_issuer;
-   });
-
-   return {};
-} FC_CAPTURE_AND_RETHROW( (o) )}
-
-void_result committee_member_update_cycle_authenticator_evaluator::do_evaluate(const committee_member_update_cycle_authenticator_operation& o)
-{ try {
-
-   FC_ASSERT( db().get(o.cycle_authenticator).is_lifetime_member() );
-
-   return {};
-} FC_CAPTURE_AND_RETHROW( (o) )}
-
-void_result committee_member_update_cycle_authenticator_evaluator::do_apply(const committee_member_update_cycle_authenticator_operation& o)
-{ try {
-
-   db().modify(db().get_global_properties(), [&o](global_property_object& p) {
-      p.authorities.cycle_authenticator = o.cycle_authenticator;
-   });
-
-   return {};
-} FC_CAPTURE_AND_RETHROW( (o) )}
+} FC_CAPTURE_AND_RETHROW((op))}
 
 } } // graphene::chain

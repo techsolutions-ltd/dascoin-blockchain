@@ -109,6 +109,21 @@ namespace graphene { namespace chain {
       LIMIT_KIND_COUNT
    };
 
+   enum chain_authority_kind
+   {
+      no_authority = 0,
+      license_issuer = 1,
+      license_authenticator = 2,
+      webasset_issuer = 3,
+      webasset_authenticator = 4,
+      cycle_issuer = 5,
+      cycle_authenticator = 6,
+      registrar = 7,
+      pi_validator = 8,
+      wire_out_handler = 9,
+      CHAIN_AUTHORITY_KIND_COUNT
+   };
+
    enum asset_issuer_permission_flags
    {
       charge_market_fee     = 0x01, /**< an issuer-specified percentage of all market trades in this asset is paid to the issuer */
@@ -438,6 +453,20 @@ FC_REFLECT_ENUM( graphene::chain::account_kind,
                  (vault)
                  (special)
                  (VAULT_KIND_COUNT)
+               )
+
+FC_REFLECT_ENUM( graphene::chain::chain_authority_kind,
+                 (no_authority)
+                 (license_issuer)
+                 (license_authenticator)
+                 (webasset_issuer)
+                 (webasset_authenticator)
+                 (cycle_issuer)
+                 (cycle_authenticator)
+                 (registrar)
+                 (pi_validator)
+                 (wire_out_handler)
+                 (CHAIN_AUTHORITY_KIND_COUNT)
                )
 
 FC_REFLECT( graphene::chain::public_key_type, (key_data) )

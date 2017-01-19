@@ -199,14 +199,7 @@ void database::initialize_evaluators()
    register_evaluator<transfer_from_blind_evaluator>();
    register_evaluator<blind_transfer_evaluator>();
    register_evaluator<asset_claim_fees_evaluator>();
-   register_evaluator<committee_member_update_license_issuer_evaluator>();
-   register_evaluator<committee_member_update_license_authenticator_evaluator>();
-   register_evaluator<committee_member_update_account_registrar_evaluator>();
-   register_evaluator<committee_member_update_cycle_issuer_evaluator>();
-   register_evaluator<committee_member_update_cycle_authenticator_evaluator>();
-   register_evaluator<committee_member_update_webasset_issuer_evaluator>();
-   register_evaluator<committee_member_update_webasset_authenticator_evaluator>();
-   register_evaluator<committee_member_update_wire_out_handler_evaluator>();
+   register_evaluator<board_update_chain_authority_evaluator>();
    register_evaluator<license_type_create_evaluator>();
    register_evaluator<license_type_edit_evaluator>();
    register_evaluator<license_type_delete_evaluator>();
@@ -304,6 +297,23 @@ void database::initialize_indexes()
 
    add_index<primary_index<reward_queue_index>>();
 }
+
+void database::initialize_chain_authority(chain_authority_kind kind, const string& name)
+{ try {
+
+   // Since this is the database initialization, skip checking signatures:
+   transaction_evaluation_state genesis_eval_state(this);
+   genesis_eval_state.skip_chain_authority_check = true;
+
+   account_id_type account_id = get_account_id(name);
+
+   board_update_chain_authority_operation op;
+   op.kind = kind;
+   op.account = account_id;
+   op.committee_member_account = GRAPHENE_COMMITTEE_ACCOUNT;
+   apply_operation(genesis_eval_state, std::move(op));
+
+} FC_CAPTURE_AND_RETHROW((kind)(name)) }
 
 void database::init_genesis(const genesis_state_type& genesis_state)
 { try {
@@ -761,42 +771,19 @@ void database::init_genesis(const genesis_state_type& genesis_state)
        apply_operation(genesis_eval_state, std::move(op));
    });
 
+   initialize_chain_authority(chain_authority_kind::license_issuer, genesis_state.initial_license_issuing_authority.owner_name);
+   initialize_chain_authority(chain_authority_kind::license_authenticator, genesis_state.initial_license_authentication_authority.owner_name);
+   initialize_chain_authority(chain_authority_kind::webasset_issuer, genesis_state.initial_webasset_issuing_authority.owner_name);
+   initialize_chain_authority(chain_authority_kind::webasset_authenticator, genesis_state.initial_webasset_authentication_authority.owner_name);
+   initialize_chain_authority(chain_authority_kind::cycle_issuer, genesis_state.initial_cycle_issuing_authority.owner_name);
+   initialize_chain_authority(chain_authority_kind::cycle_authenticator, genesis_state.initial_cycle_authentication_authority.owner_name);
+   initialize_chain_authority(chain_authority_kind::registrar, genesis_state.initial_registrar.owner_name);
+   // TODO: implement in genesis state
+   // initialize_chain_authority(chain_authority_kind::pi_validator, genesis_state.initial_pi_validator.owner_name);
+   initialize_chain_authority(chain_authority_kind::wire_out_handler, genesis_state.initial_wire_out_handler.owner_name);
+
+   // Initialize licenses:
    {
-      // Modify the WEB asset and set the initial accounts:
-      account_id_type web_issuer_id = get_account_id(genesis_state.initial_webasset_issuing_authority.owner_name);
-      account_id_type web_auth_id = get_account_id(genesis_state.initial_webasset_authentication_authority.owner_name);
-      modify(web_asset, [&](asset_object& a){
-         a.issuer = web_issuer_id;
-         a.authenticator = web_auth_id;
-      });
-
-      committee_member_update_webasset_issuer_operation issuer_op;
-      issuer_op.issuer = web_issuer_id;
-      issuer_op.committee_member_account = GRAPHENE_COMMITTEE_ACCOUNT;
-      apply_operation(genesis_eval_state, std::move(issuer_op));
-
-      committee_member_update_webasset_authenticator_operation auth_op;
-      auth_op.authenticator = web_auth_id;
-      auth_op.committee_member_account = GRAPHENE_COMMITTEE_ACCOUNT;
-      apply_operation(genesis_eval_state, std::move(auth_op));
-   }
-
-   // Initialize cycle licensing:
-   {
-      account_id_type issuer = get_account_id(genesis_state.initial_license_issuing_authority.owner_name);
-      account_id_type authenticator = get_account_id(genesis_state.initial_license_authentication_authority.owner_name);
-      // Create license issuing authority:
-      committee_member_update_license_issuer_operation issuer_op;
-      issuer_op.license_issuer = issuer;
-      issuer_op.committee_member_account = GRAPHENE_COMMITTEE_ACCOUNT;
-      apply_operation(genesis_eval_state, std::move(issuer_op));
-
-      // Create license authentication authority:
-      committee_member_update_license_authenticator_operation authenticator_op;
-      authenticator_op.license_authenticator = authenticator;
-      authenticator_op.committee_member_account = GRAPHENE_COMMITTEE_ACCOUNT;
-      apply_operation(genesis_eval_state, std::move(authenticator_op));
-
       const auto create_standard = [&](const string& name, share_type amount, const vector<variant> multipliers){
         create_license_type(name, amount, {
           {"kind", "regular"},
@@ -835,43 +822,6 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       create_promo("pro-promo", 2000, {1});
       create_promo("executive-promo", 5000, {1,2});
       create_promo("president-promo", 25000, {1,2,4});
-   }
-
-   // Initialize cycle issuing:
-   {
-      account_id_type issuer = get_account_id(genesis_state.initial_cycle_issuing_authority.owner_name);
-      account_id_type authenticator = get_account_id(genesis_state.initial_cycle_authentication_authority.owner_name);
-
-      committee_member_update_cycle_issuer_operation issuer_op;
-      issuer_op.cycle_issuer = issuer;
-      issuer_op.committee_member_account = GRAPHENE_COMMITTEE_ACCOUNT;
-      apply_operation(genesis_eval_state, std::move(issuer_op));
-
-      committee_member_update_cycle_authenticator_operation auth_op;
-      auth_op.cycle_authenticator = authenticator;
-      apply_operation(genesis_eval_state, std::move(auth_op));
-   }
-
-   // Initialize account registration:
-   {
-      account_id_type registrar = get_account_id(genesis_state.initial_registrar.owner_name);
-
-      // Create account registrar authority:
-      committee_member_update_account_registrar_operation op;
-      op.registrar = registrar;
-      op.committee_member_account = GRAPHENE_COMMITTEE_ACCOUNT;
-      apply_operation( genesis_eval_state, std::move(op) );
-   }
-
-   // Initialize wire out:
-   {
-      account_id_type wire_out_handler = get_account_id(genesis_state.initial_wire_out_handler.owner_name);
-
-      // Create wire out authority:
-      committee_member_update_wire_out_handler_operation op;
-      op.wire_out_handler = wire_out_handler;
-      op.committee_member_account = GRAPHENE_COMMITTEE_ACCOUNT;
-      apply_operation( genesis_eval_state, std::move(op) );
    }
 
    // Hand out initial cycles, WebAssets and licenses:

@@ -277,6 +277,13 @@ namespace graphene { namespace chain {
          void initialize_indexes();
 
          /**
+          * Initialize the chain authority from the genesis state.
+          * @param kind The kind of authority to initialize. See @ref chain_authority_kind
+          * @param name The account name in the genesis state.
+          */
+         void initialize_chain_authority(chain_authority_kind kind, const string& name);
+
+         /**
           * Distribute the initial cycles to accounts in the genesis_state.
           */
          void initialize_preissued_cycles(const genesis_state_type& genesis_state);

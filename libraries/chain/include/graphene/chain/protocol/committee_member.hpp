@@ -107,7 +107,7 @@ namespace graphene { namespace chain {
 
       asset fee;
 
-      uint16_t kind;
+      string kind;
       account_id_type account;
       account_id_type committee_member_account;
 

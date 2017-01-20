@@ -45,8 +45,9 @@ void committee_member_update_global_parameters_operation::validate() const
 }
 
 void board_update_chain_authority_operation::validate() const
-{
-  FC_ASSERT( kind < license_kind::LICENSE_KIND_COUNT );
-}
+{ try {
+  using namespace graphene::chain::util;
+  convert_enum<chain_authority_kind>::from_fc_string(kind);  // Throws fc::bad_enum_cast exception.
+} FC_CAPTURE_AND_RETHROW() }
 
 } } // graphene::chain

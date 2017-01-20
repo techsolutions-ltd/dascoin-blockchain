@@ -110,9 +110,10 @@ void_result board_update_chain_authority_evaluator::do_evaluate(const board_upda
 
 void_result board_update_chain_authority_evaluator::do_apply(const board_update_chain_authority_operation& op)
 { try {
+   using namespace graphene::chain::util;
    auto& d = db();
-   auto kind = static_cast<chain_authority_kind>(op.kind);
 
+   auto kind = convert_enum<chain_authority_kind>::from_fc_string(op.kind);
    d.modify(d.get_global_properties(), [&](global_property_object& gpo){
       gpo.authorities.set(kind, op.account);
    });

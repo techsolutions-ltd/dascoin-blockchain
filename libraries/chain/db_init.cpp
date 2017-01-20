@@ -155,6 +155,13 @@ const uint8_t cycle_issue_request_object::type_id;
 const uint8_t reward_queue_object::space_id;
 const uint8_t reward_queue_object::type_id;
 
+void database::initialize_genesis_transaction_state()
+{
+  // Since this is the database initialization, skip checking signatures:
+  _genesis_eval_state = transaction_evaluation_state(this);
+  _genesis_eval_state.skip_chain_authority_check = true;
+}
+
 void database::initialize_evaluators()
 {
    _operation_evaluators.resize(255);
@@ -298,26 +305,23 @@ void database::initialize_indexes()
    add_index<primary_index<reward_queue_index>>();
 }
 
-account_id_type database::initialize_chain_authority(chain_authority_kind kind, const string& name)
+account_id_type database::initialize_chain_authority(const string& kind_name, const string& acc_name)
 { try {
-
-   // Since this is the database initialization, skip checking signatures:
-   transaction_evaluation_state genesis_eval_state(this);
-   genesis_eval_state.skip_chain_authority_check = true;
-
-   account_id_type account_id = get_account_id(name);
+   using namespace graphene::chain::util;
+   account_id_type account_id = get_account_id(acc_name);
 
    board_update_chain_authority_operation op;
-   op.kind = kind;
+   op.kind = kind_name;
    op.account = account_id;
    op.committee_member_account = GRAPHENE_COMMITTEE_ACCOUNT;
-   apply_operation(genesis_eval_state, std::move(op));
+   apply_operation(_genesis_eval_state, std::move(op));
    return account_id;
 
-} FC_CAPTURE_AND_RETHROW((kind)(name)) }
+} FC_CAPTURE_AND_RETHROW((kind_name)(acc_name)) }
 
 void database::init_genesis(const genesis_state_type& genesis_state)
 { try {
+
    FC_ASSERT( genesis_state.initial_timestamp != time_point_sec(), "Must initialize genesis timestamp." );
    FC_ASSERT( genesis_state.initial_timestamp.sec_since_epoch() % GRAPHENE_DEFAULT_BLOCK_INTERVAL == 0,
               "Genesis timestamp must be divisible by GRAPHENE_DEFAULT_BLOCK_INTERVAL." );
@@ -336,9 +340,6 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       database& db;
       uint32_t old_flags;
    } inhibitor(*this);
-
-   transaction_evaluation_state genesis_eval_state(this);
-   genesis_eval_state.skip_chain_authority_check = true;
 
    flat_index<block_summary_object>& bsi = get_mutable_index_type< flat_index<block_summary_object> >();
    bsi.resize(0xffff+1);
@@ -573,14 +574,14 @@ void database::init_genesis(const genesis_state_type& genesis_state)
          cop.active = authority(1, account.active_key, 1);
          cop.options.memo_key = account.active_key;
       }
-      account_id_type account_id(apply_operation(genesis_eval_state, cop).get<object_id_type>());
+      account_id_type account_id(apply_operation(_genesis_eval_state, cop).get<object_id_type>());
 
       if( account.is_lifetime_member )
       {
           account_upgrade_operation op;
           op.account_to_upgrade = account_id;
           op.upgrade_to_lifetime_member = true;
-          apply_operation(genesis_eval_state, op);
+          apply_operation(_genesis_eval_state, op);
       }
    }
 
@@ -607,7 +608,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
             cop.registrar = GRAPHENE_TEMP_ACCOUNT;
             cop.owner = authority(1, collateral_rec.owner, 1);
             cop.active = cop.owner;
-            account_id_type owner_account_id = apply_operation(genesis_eval_state, cop).get<object_id_type>();
+            account_id_type owner_account_id = apply_operation(_genesis_eval_state, cop).get<object_id_type>();
 
             modify( owner_account_id(*this).statistics(*this), [&]( account_statistics_object& o ) {
                     o.total_core_in_orders = collateral_rec.collateral;
@@ -746,7 +747,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       witness_create_operation op;
       op.witness_account = get_account_id(witness.owner_name);
       op.block_signing_key = witness.block_signing_key;
-      apply_operation(genesis_eval_state, op);
+      apply_operation(_genesis_eval_state, op);
    });
 
    // Create initial committee members
@@ -754,7 +755,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
                  [&](const genesis_state_type::initial_committee_member_type& member) {
       committee_member_create_operation op;
       op.committee_member_account = get_account_id(member.owner_name);
-      apply_operation(genesis_eval_state, op);
+      apply_operation(_genesis_eval_state, op);
    });
 
    // Create initial workers
@@ -769,25 +770,26 @@ void database::init_genesis(const genesis_state_type& genesis_state)
        op.name = "Genesis-Worker-" + worker.owner_name;
        op.initializer = vesting_balance_worker_initializer{uint16_t(0)};
 
-       apply_operation(genesis_eval_state, std::move(op));
+       apply_operation(_genesis_eval_state, std::move(op));
    });
 
-   initialize_chain_authority(chain_authority_kind::license_issuer, genesis_state.initial_license_issuing_authority.owner_name);
-   initialize_chain_authority(chain_authority_kind::license_authenticator, genesis_state.initial_license_authentication_authority.owner_name);
-   auto webasset_issuer_id = initialize_chain_authority(chain_authority_kind::webasset_issuer, genesis_state.initial_webasset_issuing_authority.owner_name);
-   auto webasset_authenticator_id = initialize_chain_authority(chain_authority_kind::webasset_authenticator, genesis_state.initial_webasset_authentication_authority.owner_name);
-   initialize_chain_authority(chain_authority_kind::cycle_issuer, genesis_state.initial_cycle_issuing_authority.owner_name);
-   initialize_chain_authority(chain_authority_kind::cycle_authenticator, genesis_state.initial_cycle_authentication_authority.owner_name);
-   initialize_chain_authority(chain_authority_kind::registrar, genesis_state.initial_registrar.owner_name);
+   initialize_chain_authority("license_issuer", genesis_state.initial_license_issuing_authority.owner_name);
+   initialize_chain_authority("license_authenticator", genesis_state.initial_license_authentication_authority.owner_name);
+   initialize_chain_authority("webasset_issuer", genesis_state.initial_webasset_issuing_authority.owner_name);
+   initialize_chain_authority("webasset_authenticator", genesis_state.initial_webasset_authentication_authority.owner_name);
+   initialize_chain_authority("cycle_issuer", genesis_state.initial_cycle_issuing_authority.owner_name);
+   initialize_chain_authority("cycle_authenticator", genesis_state.initial_cycle_authentication_authority.owner_name);
+   initialize_chain_authority("registrar", genesis_state.initial_registrar.owner_name);
    // TODO: implement in genesis state
    // initialize_chain_authority(chain_authority_kind::pi_validator, genesis_state.initial_pi_validator.owner_name);
-   initialize_chain_authority(chain_authority_kind::wire_out_handler, genesis_state.initial_wire_out_handler.owner_name);
+   initialize_chain_authority("wire_out_handler", genesis_state.initial_wire_out_handler.owner_name);
 
    // Set up web asset issuer and authenticator:
    // TODO: refactor this to be handled all at once.
    modify(web_asset, [&](asset_object& a){
-      a.issuer = webasset_issuer_id;
-      a.authenticator = webasset_authenticator_id;
+      auto& ca = get_chain_authorities();
+      a.issuer = ca.webasset_issuer;
+      a.authenticator = ca.webasset_authenticator;
    });
 
    // Initialize licenses:

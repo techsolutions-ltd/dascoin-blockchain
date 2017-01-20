@@ -45,6 +45,7 @@
 #include <graphene/chain/protocol/address.hpp>
 #include <graphene/db/object_id.hpp>
 #include <graphene/chain/protocol/config.hpp>
+#include <graphene/chain/protocol/enum_reflect.hpp>
 
 namespace graphene { namespace chain {
    using namespace graphene::db;
@@ -434,40 +435,40 @@ namespace fc
     void from_variant( const fc::variant& var, graphene::chain::extended_private_key_type& vo );
 }
 
-FC_REFLECT_ENUM( graphene::chain::limit_kind,
-                 (vault_to_wallet_webasset)
-                 (vault_to_wallet_reserved_webasset)
-                 (wallet_out_webasset)
-                 (LIMIT_KIND_COUNT)
-               )
+REFLECT_ENUM_CHECK( graphene::chain::limit_kind,
+                    (vault_to_wallet_webasset)
+                    (vault_to_wallet_reserved_webasset)
+                    (wallet_out_webasset)
+                    (LIMIT_KIND_COUNT)
+                  )
 
-FC_REFLECT_ENUM( graphene::chain::license_kind,
-                 (regular)
-                 (chartered)
-                 (promo)
-                 (LICENSE_KIND_COUNT)
-               )
+REFLECT_ENUM_CHECK( graphene::chain::license_kind,
+                    (regular)
+                    (chartered)
+                    (promo)
+                    (LICENSE_KIND_COUNT)
+                  )
 
-FC_REFLECT_ENUM( graphene::chain::account_kind,
-                 (wallet)
-                 (vault)
-                 (special)
-                 (VAULT_KIND_COUNT)
-               )
+REFLECT_ENUM_CHECK( graphene::chain::account_kind,
+                    (wallet)
+                    (vault)
+                    (special)
+                    (VAULT_KIND_COUNT)
+                  )
 
-FC_REFLECT_ENUM( graphene::chain::chain_authority_kind,
-                 (no_authority)
-                 (license_issuer)
-                 (license_authenticator)
-                 (webasset_issuer)
-                 (webasset_authenticator)
-                 (cycle_issuer)
-                 (cycle_authenticator)
-                 (registrar)
-                 (pi_validator)
-                 (wire_out_handler)
-                 (CHAIN_AUTHORITY_KIND_COUNT)
-               )
+REFLECT_ENUM_CHECK( graphene::chain::chain_authority_kind,
+                    (no_authority)
+                    (license_issuer)
+                    (license_authenticator)
+                    (webasset_issuer)
+                    (webasset_authenticator)
+                    (cycle_issuer)
+                    (cycle_authenticator)
+                    (registrar)
+                    (pi_validator)
+                    (wire_out_handler)
+                    (CHAIN_AUTHORITY_KIND_COUNT)
+                  )
 
 FC_REFLECT( graphene::chain::public_key_type, (key_data) )
 FC_REFLECT( graphene::chain::public_key_type::binary_key, (data)(check) )

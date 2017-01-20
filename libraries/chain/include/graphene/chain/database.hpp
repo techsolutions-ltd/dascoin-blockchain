@@ -277,6 +277,19 @@ namespace graphene { namespace chain {
          void initialize_indexes();
 
          /**
+          * Initialize the genesis tranasction state. During the initialization of the starting state of the chain, the
+          * transactions will applied with this state.
+          */
+         void initialize_genesis_transaction_state();
+
+         /**
+          * Initialize the chain authority from the genesis state.
+          * @param kind The kind of authority to initialize. See @ref chain_authority_kind
+          * @param name The account name in the genesis state.
+          */
+         account_id_type initialize_chain_authority(const string& kind, const string& name);
+
+         /**
           * Distribute the initial cycles to accounts in the genesis_state.
           */
          void initialize_preissued_cycles(const genesis_state_type& genesis_state);
@@ -638,6 +651,8 @@ namespace graphene { namespace chain {
          flat_map<uint32_t,block_id_type>  _checkpoints;
 
          node_property_object              _node_property_object;
+
+         transaction_evaluation_state      _genesis_eval_state;
    };
 
    namespace detail

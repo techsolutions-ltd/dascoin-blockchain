@@ -144,7 +144,7 @@ namespace graphene { namespace chain {
          account_id_type owner;
          share_type balance;
 
-         share_type get_balance()const { return balance; }
+         share_type get_balance() const { return balance; }
    };
 
    /**

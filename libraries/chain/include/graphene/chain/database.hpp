@@ -173,6 +173,8 @@ namespace graphene { namespace chain {
 
          string to_pretty_string(const asset& a) const;
          string to_pretty_string(const asset_reserved& a) const;
+         string to_pretty_string(const account_balance_object& abo) const;
+
 
          /**
           *  This signal is emitted after all operations and virtual operation for a
@@ -320,10 +322,6 @@ namespace graphene { namespace chain {
          /// This is an overloaded method.
          asset get_balance(const account_object& owner, const asset_object& asset_obj)const;
 
-         asset get_reserved_balance(account_id_type owner, asset_id_type asset_id) const;
-         /// This is an overloaded method.
-         asset get_reserved_balance(const account_object& owner, const asset_object& asset_obj) const;
-
          /**
           * Retrieve the balance object for a given asset on an account, This method will throw an exception if the
           * object does not exist.
@@ -342,8 +340,6 @@ namespace graphene { namespace chain {
           * @return          Const reference to the cycle balance object.
           */
          const account_cycle_balance_object& get_cycle_balance_object(account_id_type owner) const;
-
-         pair<asset, share_type> get_balance_and_spent(account_id_type owner, asset_id_type asset_id) const;
 
          /**
           * @brief Retrieve a particular account's cycle balance.

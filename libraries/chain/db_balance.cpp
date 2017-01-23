@@ -240,10 +240,10 @@ void database::adjust_cycle_balance(account_id_type account, share_type delta)
 
    if( delta < 0 )
       FC_ASSERT( itr->get_balance() >= -delta,
-                 "Insufficient Balance: ${a}'s balance of ${b} is less than required ${r}",
+                 "Insufficient Cycle Balance: ${a}'s balance of ${b} is less than required ${r}",
                  ("a",account(*this).name)
-                 ("b",to_pretty_string(itr->get_balance()))
-                 ("r",to_pretty_string(-delta))
+                 ("b", itr->get_balance())
+                 ("r", -delta)
                );
 
    modify(*itr, [delta](account_cycle_balance_object& b) {

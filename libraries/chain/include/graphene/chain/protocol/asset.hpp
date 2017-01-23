@@ -98,7 +98,7 @@ namespace graphene { namespace chain {
 
    struct asset_reserved
    {
-      asset_reserved(share_type b, share_type r, asset_id_type id = asset_id_type())
+      asset_reserved(share_type b = 0, share_type r = 0, asset_id_type id = asset_id_type())
       : balance(b), asset_id(id), reserved(r) {}
       asset_reserved(const asset& a) : balance(a.amount), asset_id(a.asset_id), reserved(0) {}
 

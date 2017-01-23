@@ -143,7 +143,6 @@ namespace graphene { namespace chain {
 
          account_id_type owner;
          share_type balance;
-         upgrade_type upgrade;
 
          share_type get_balance()const { return balance; }
    };
@@ -534,10 +533,7 @@ FC_REFLECT_DERIVED( graphene::chain::account_balance_object, (graphene::db::obje
                     (spent_reserved)
                   )
 
-
-
 FC_REFLECT_DERIVED( graphene::chain::account_cycle_balance_object, (graphene::db::object),
                     (owner)
                     (balance)
-                    (upgrade)
                   )

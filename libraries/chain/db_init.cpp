@@ -486,7 +486,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    const auto& dascoin_dyn_asset = create<asset_dynamic_data_object>([&](asset_dynamic_data_object& adao){
       adao.current_supply = 0;
    });
-   const auto& dascoin_asset = create<asset_object>([&](asset_object& ao){
+   create<asset_object>([&](asset_object& ao){
       ao.symbol = DASCOIN_DASCOIN_SYMBOL;
       ao.options.max_supply = genesis_state.max_dascoin_supply;
       ao.precision = DASCOIN_DEFAULT_ASSET_PRECISION_DIGITS;

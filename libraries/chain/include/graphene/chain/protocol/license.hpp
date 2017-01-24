@@ -29,9 +29,9 @@ namespace graphene { namespace chain {
      asset fee;
      account_id_type license_authentication_account;  // This MUST be the license authentication authority.
 
-     string name;                    // Name of the license.
-     share_type amount;              // The amount of cycles the license grants.
-     policy_type policy;
+     string name;
+     share_type amount;
+     string kind;             
 
      account_id_type fee_payer() const { return license_authentication_account; }
      void validate() const;
@@ -54,9 +54,8 @@ namespace graphene { namespace chain {
      license_type_id_type license;
      account_id_type license_authentication_account;  // This MUST be the license authentication authority.
 
-     optional<string> name;                       // Name of the license.
-     optional<share_type> amount;                 // The amount of cycles the license grants.
-     optional<policy_type> policy;
+     optional<string> name;
+     optional<share_type> amount;
 
      account_id_type fee_payer() const { return license_authentication_account; }
      void validate() const;
@@ -172,7 +171,7 @@ FC_REFLECT( graphene::chain::license_type_create_operation,
             (license_authentication_account)
             (name)
             (amount)
-            (policy)
+            (kind)
           )
 
 FC_REFLECT( graphene::chain::license_type_edit_operation::fee_parameters_type, )
@@ -182,7 +181,6 @@ FC_REFLECT( graphene::chain::license_type_edit_operation,
             (license_authentication_account)
             (name)
             (amount)
-            (policy)
           )
 FC_REFLECT( graphene::chain::license_type_delete_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::license_type_delete_operation,

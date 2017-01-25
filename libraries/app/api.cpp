@@ -224,6 +224,7 @@ namespace graphene { namespace app {
     }
 
     // TODO: fill this for ALL object types.
+    // TODO: figure out how to properly fill this out for each object type.
     vector<account_id_type> get_relevant_accounts( const object* obj )
     {
        vector<account_id_type> result;
@@ -302,7 +303,8 @@ namespace graphene { namespace app {
                assert( aobj != nullptr );
                result.push_back( aobj->worker_account );
                break;
-            } case balance_object_type:{
+            } case balance_object_type:
+              case license_type_object_type:{
                /** these are free from any accounts */
                break;
             }
@@ -326,6 +328,12 @@ namespace graphene { namespace app {
                   const auto& aobj = dynamic_cast<const account_balance_object*>(obj);
                   assert( aobj != nullptr );
                   result.push_back( aobj->owner );
+                  break;
+                 }
+               case impl_account_cycle_balance_object_type:{
+                  const auto& acobj = dynamic_cast<const account_cycle_balance_object*>(obj);
+                  assert( acobj != nullptr );
+                  result.push_back(acobj->owner);
                   break;
                } case impl_account_statistics_object_type:{
                   const auto& aobj = dynamic_cast<const account_statistics_object*>(obj);
@@ -362,6 +370,16 @@ namespace graphene { namespace app {
                  case impl_buyback_object_type:
                   break;
                  case impl_fba_accumulator_object_type:
+                  break;              
+                 case impl_license_request_object_type:
+                  break;
+                 case impl_issue_asset_request_object_type:
+                  break;
+                 case impl_wire_out_holder_object_type:
+                  break;
+                 case impl_cycle_issue_request_object_type:
+                  break;
+                 case impl_reward_queue_object_type:
                   break;
           }
        }

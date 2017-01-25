@@ -34,18 +34,10 @@ void_result license_type_create_evaluator::do_evaluate(const license_type_create
 object_id_type license_type_create_evaluator::do_apply(const license_type_create_operation& op)
 { try {
   using namespace graphene::chain::util;
-  auto& d = db();
   auto kind = convert_enum<license_kind>::from_string(op.kind);
 
-  return d.create<license_type_object>([&](license_type_object& lto){
-    lto.name = op.name;
-    lto.amount = op.amount;
-    lto.kind = kind;
-    // TODO: set the upgrades.
-  }).id;
-
-  // Deprecated, no longer using dynamic policy of license creation.
-  // return db().create_license_type(op.name, op.amount, op.policy);
+  return db().create_license_type(kind, op.name, op.amount, op.balance_multipliers, op.requeue_multipliers, 
+                                  op.return_multipliers);
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 

@@ -31,7 +31,12 @@ namespace graphene { namespace chain {
 
      string name;
      share_type amount;
-     string kind;             
+     string kind;
+
+     // Upgrade multipliers:
+     upgrade_multiplier_type balance_multipliers;
+     upgrade_multiplier_type requeue_multipliers;
+     upgrade_multiplier_type return_multipliers;
 
      account_id_type fee_payer() const { return license_authentication_account; }
      void validate() const;
@@ -172,6 +177,9 @@ FC_REFLECT( graphene::chain::license_type_create_operation,
             (name)
             (amount)
             (kind)
+            (balance_multipliers)
+            (requeue_multipliers)
+            (return_multipliers)
           )
 
 FC_REFLECT( graphene::chain::license_type_edit_operation::fee_parameters_type, )

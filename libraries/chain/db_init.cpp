@@ -794,44 +794,23 @@ void database::init_genesis(const genesis_state_type& genesis_state)
 
    // Initialize licenses:
    {
-      const auto create_standard = [&](const string& name, share_type amount, const vector<variant> multipliers){
-        create_license_type(name, amount, {
-          {"kind", "regular"},
-          {"balance_upgrades", multipliers}
-        });
-      };
+      create_license_type(license_kind::regular, "standard", 100, {2}, {}, {});
+      create_license_type(license_kind::regular, "manager", 500, {2}, {}, {});
+      create_license_type(license_kind::regular, "pro", 2000, {2}, {}, {});
+      create_license_type(license_kind::regular, "executive", 5000, {2,2}, {}, {});
+      create_license_type(license_kind::regular, "president", 25000, {2,2,2}, {}, {});
 
-      const auto create_charter = [&](const string& name, share_type amount, const vector<variant> multipliers){
-        create_license_type(name, amount, {
-          {"kind", "chartered"},
-          {"requeue_upgrades", multipliers}
-        });
-      };
+      create_license_type(license_kind::chartered, "standard-charter", 100, {}, {1}, {});
+      create_license_type(license_kind::chartered, "manager-charter", 500, {}, {1}, {});
+      create_license_type(license_kind::chartered, "pro-charter", 2000, {}, {1}, {});
+      create_license_type(license_kind::chartered, "executive-charter", 5000, {}, {1,2}, {});
+      create_license_type(license_kind::chartered, "president-charter", 25000, {}, {1,2,4}, {});
 
-      const auto create_promo = [&](const string& name, share_type amount, const vector<variant> multipliers){
-        create_license_type(name, amount, {
-          {"kind", "promo"},
-          {"return_upgrades", multipliers}
-        });
-      };
-
-      create_standard("standard", 100, {2});
-      create_standard("manager", 500, {2});
-      create_standard("pro", 2000, {2});
-      create_standard("executive", 5000, {2,2});
-      create_standard("president", 25000, {2,2,2});
-
-      create_charter("standard-charter", 100, {1});
-      create_charter("manager-charter", 500, {1});
-      create_charter("pro-charter", 2000, {1});
-      create_charter("executive-charter", 5000, {1,2});
-      create_charter("president-charter", 25000, {1,2,4});
-
-      create_promo("standard-promo", 100, {1});
-      create_promo("manager-promo", 500, {1});
-      create_promo("pro-promo", 2000, {1});
-      create_promo("executive-promo", 5000, {1,2});
-      create_promo("president-promo", 25000, {1,2,4});
+      create_license_type(license_kind::promo, "standard-promo", 100, {}, {}, {1});
+      create_license_type(license_kind::promo, "manager-promo", 500, {}, {}, {1});
+      create_license_type(license_kind::promo, "pro-promo", 2000, {}, {}, {1});
+      create_license_type(license_kind::promo, "executive-promo", 5000, {}, {}, {1,2});
+      create_license_type(license_kind::promo, "president-promo", 25000, {}, {}, {1,2,4});
    }
 
    // Hand out initial cycles, WebAssets and licenses:

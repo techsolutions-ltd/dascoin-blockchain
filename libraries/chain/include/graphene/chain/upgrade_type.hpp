@@ -10,7 +10,7 @@ namespace graphene { namespace chain {
   class upgrade_type
   {
   public:
-    typedef std::vector<uint8_t> array_type;
+    typedef upgrade_multiplier_type array_type;
 
     upgrade_type() {}
     upgrade_type(const array_type& mul) : multipliers(mul) { max = mul.size(); }

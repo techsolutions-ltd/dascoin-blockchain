@@ -1120,7 +1120,7 @@ market_ticker database_api_impl::get_ticker( const string& base, const string& q
    result.lowest_ask = 0;
    result.highest_bid = 0;
 
-   auto price_to_real = [&]( const share_type a, int p ) { return double( a.value ) / pow( 10, p ); };
+   // auto price_to_real = [&]( const share_type a, int p ) { return double( a.value ) / pow( 10, p ); };
 
    try {
       if( base_id > quote_id ) std::swap(base_id, quote_id);

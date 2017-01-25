@@ -33,8 +33,11 @@ void_result license_type_create_evaluator::do_evaluate(const license_type_create
 
 object_id_type license_type_create_evaluator::do_apply(const license_type_create_operation& op)
 { try {
+  using namespace graphene::chain::util;
+  auto kind = convert_enum<license_kind>::from_string(op.kind);
 
-  return db().create_license_type(op.name, op.amount, op.policy);
+  return db().create_license_type(kind, op.name, op.amount, op.balance_multipliers, op.requeue_multipliers, 
+                                  op.return_multipliers);
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
@@ -56,7 +59,6 @@ void_result license_type_edit_evaluator::do_apply(const license_type_edit_operat
   db().modify( db().get(op.license), [&]( license_type_object& lic ) {
     if (op.name.valid()) lic.name = *op.name;
     if (op.amount.valid()) lic.amount = *op.amount;
-    if (op.policy.valid()) lic.policy = *op.policy;
   });
   return {};
 

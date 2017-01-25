@@ -355,7 +355,7 @@ namespace graphene { namespace chain {
    typedef uint16_t                                             weight_type;
    typedef safe<int64_t>                                        frequency_type;
    typedef std::vector<share_type>                              limits_type;
-   typedef std::map<std::string, fc::variant>                   policy_type;
+   typedef std::vector<uint8_t>                                 upgrade_multiplier_type;
 
    struct public_key_type
    {
@@ -559,6 +559,7 @@ FC_REFLECT_TYPENAME( graphene::chain::issue_asset_request_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::wire_out_holder_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::cycle_issue_request_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::reward_queue_id_type )
+FC_REFLECT_TYPENAME( graphene::chain::upgrade_multiplier_type )
 
 FC_REFLECT( graphene::chain::void_t, )
 

@@ -540,7 +540,10 @@ namespace graphene { namespace chain {
 
          //////////////////// db_license.cpp ////////////////////
 
-         object_id_type create_license_type(const string& name, share_type amount, const policy_type& policy);
+         object_id_type create_license_type(license_kind kind, const string& name, share_type amount, 
+                                            upgrade_multiplier_type balance_multipliers,
+                                            upgrade_multiplier_type requeue_multipliers,
+                                            upgrade_multiplier_type return_multipliers);
          void fulfill_license_request(const license_request_object& req);
 
 

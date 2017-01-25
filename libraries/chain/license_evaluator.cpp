@@ -51,18 +51,16 @@ void_result license_type_edit_evaluator::do_evaluate(const license_type_edit_ope
   assert_license_authenticator(db(), op.license_authentication_account);
   return {};
 
-}  FC_CAPTURE_AND_RETHROW( (op)) }
+}  FC_CAPTURE_AND_RETHROW((op)) }
 
 void_result license_type_edit_evaluator::do_apply(const license_type_edit_operation& op)
 { try {
 
-  db().modify( db().get(op.license), [&]( license_type_object& lic ) {
-    if (op.name.valid()) lic.name = *op.name;
-    if (op.amount.valid()) lic.amount = *op.amount;
-  });
+  db().edit_license_type(op.license, op.name, op.amount, op.balance_multipliers, op.requeue_multipliers, 
+                         op.return_multipliers);
   return {};
 
-} FC_CAPTURE_AND_RETHROW( (op) ) }
+} FC_CAPTURE_AND_RETHROW((op)) }
 
 ////////////////////////////
 // License type deletion: //

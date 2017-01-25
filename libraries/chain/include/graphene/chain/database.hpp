@@ -34,6 +34,7 @@
 #include <graphene/db/object_database.hpp>
 #include <graphene/db/object.hpp>
 #include <graphene/db/simple_index.hpp>
+#include <fc/optional.hpp>
 #include <fc/signals.hpp>
 
 #include <graphene/chain/protocol/protocol.hpp>
@@ -544,6 +545,10 @@ namespace graphene { namespace chain {
                                             upgrade_multiplier_type balance_multipliers,
                                             upgrade_multiplier_type requeue_multipliers,
                                             upgrade_multiplier_type return_multipliers);
+         void edit_license_type(license_type_id_type license_id, optional<string> name, optional<share_type> amount,
+                                optional<upgrade_multiplier_type> balance_multipliers,
+                                optional<upgrade_multiplier_type> requeue_multipliers,
+                                optional<upgrade_multiplier_type> return_multipliers);
          void fulfill_license_request(const license_request_object& req);
 
 

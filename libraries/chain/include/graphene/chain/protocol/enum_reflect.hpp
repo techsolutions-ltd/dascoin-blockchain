@@ -7,8 +7,15 @@
 namespace graphene { namespace chain { namespace util {
 
 template <typename T>
-struct convert_enum{
+struct convert_enum
+{
   static T from_string(const char* s) = delete;
+};
+
+template <typename T>
+struct linkable_struct
+{
+  typedef T val_t;
 };
 
 } } }  // namespace graphene::chain::util
@@ -28,4 +35,35 @@ struct convert_enum{
           } \
        }; \
     }}}  \
+
+
+#define UTIL_LINK_ENUM_GET_F( R, ENUM_TYPE, FIELD ) case ENUM_TYPE::FIELD: return FIELD;
+#define UTIL_LINK_ENUM_SET_F( R, ENUM_TYPE, FIELD ) case ENUM_TYPE::FIELD: FIELD = val; break;
+
+#define LINK_ENUM_TO_FIELDS( ENUM, FIELDS ) \
+  val_t get(ENUM kind) const \
+  { \
+      switch(kind) \
+      { \
+          BOOST_PP_SEQ_FOR_EACH( UTIL_LINK_ENUM_GET_F, ENUM, FIELDS ) \
+          default: \
+              FC_THROW_EXCEPTION( fc::invalid_arg_exception, \
+                                 "Class does not have field '${a}'", \
+                                 ("a", fc::reflector<ENUM>::to_fc_string(kind)) \
+                                ); \
+      } \
+      return val_t(); \
+  } \
+  void set(ENUM kind, val_t val) \
+  { \
+      switch(kind) \
+      { \
+          BOOST_PP_SEQ_FOR_EACH( UTIL_LINK_ENUM_SET_F, ENUM, FIELDS ) \
+          default: \
+             FC_THROW_EXCEPTION( fc::invalid_arg_exception, \
+                                 "Class does not have field '${a}'", \
+                                 ("a", fc::reflector<ENUM>::to_fc_string(kind)) \
+                               ); \
+      } \
+  } \
 

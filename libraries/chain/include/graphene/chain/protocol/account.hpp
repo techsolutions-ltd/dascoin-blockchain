@@ -331,7 +331,6 @@ FC_REFLECT( graphene::chain::account_create_operation,
             (owner)
             (active)
             (options)
-            (extensions)
           )
 
 // account_update_operation:
@@ -351,7 +350,6 @@ FC_REFLECT( graphene::chain::account_update_operation,
             (owner)
             (active)
             (new_options)
-            (extensions)
           )
 
 FC_REFLECT( graphene::chain::account_upgrade_operation,

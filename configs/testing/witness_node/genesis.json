@@ -1,13 +1,13 @@
 {
-  "initial_timestamp": "2017-01-05T15:56:10",
+  "initial_timestamp": "2017-01-30T11:47:55",
   "max_core_supply": "1000000000000000",
   "max_dascoin_supply": "8800000000",
   "initial_parameters": {
     "current_fees": {
       "parameters": [[
           0,{
-            "fee": 0,
-            "price_per_kbyte": 0
+            "fee": 2000000,
+            "price_per_kbyte": 1000000
           }
         ],[
           1,{
@@ -185,37 +185,21 @@
         ],[
           44,{}
         ],[
-          45,{
-            "fee": 100000
-          }
+          45,{}
         ],[
-          46,{
-            "fee": 100000
-          }
+          46,{}
         ],[
-          47,{
-            "fee": 100000
-          }
+          47,{}
         ],[
-          48,{
-            "fee": 100000
-          }
+          48,{}
         ],[
-          49,{
-            "fee": 100000
-          }
+          49,{}
         ],[
-          50,{
-            "fee": 100000
-          }
+          50,{}
         ],[
-          51,{
-            "fee": 100000
-          }
+          51,{}
         ],[
-          52,{
-            "fee": 100000
-          }
+          52,{}
         ],[
           53,{}
         ],[
@@ -244,22 +228,6 @@
           65,{}
         ],[
           66,{}
-        ],[
-          67,{}
-        ],[
-          68,{}
-        ],[
-          69,{}
-        ],[
-          70,{}
-        ],[
-          71,{}
-        ],[
-          72,{}
-        ],[
-          73,{}
-        ],[
-          74,{}
         ]
       ],
       "scale": 10000
@@ -294,12 +262,12 @@
     "upgrade_event_interval_days": 120,
     "minimum_transfer_limit": 0,
     "maximum_transfer_limit": 100000,
-    "limit_interval_elapse_time_seconds": 100,
-    "license_expiration_time_seconds": 100,
-    "web_asset_request_expiration_time_seconds": 100,
-    "cycle_request_expiration_time_seconds": 100,
-    "reward_interval_time_seconds": 60,
-    "dascoin_reward_amount": 1000,
+    "limit_interval_elapse_time_seconds": 15,
+    "license_expiration_time_seconds": 15,
+    "web_asset_request_expiration_time_seconds": 15,
+    "cycle_request_expiration_time_seconds": 15,
+    "reward_interval_time_seconds": 30,
+    "dascoin_reward_amount": 2000,
     "enable_cycle_issuing": true,
     "enable_dascoin_queue": true,
     "extensions": []

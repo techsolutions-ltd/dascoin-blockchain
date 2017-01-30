@@ -3,7 +3,7 @@
 function check_exists {
     if [[ ! -d "$1" ]]; then
         echo "ERROR: Could not locate $1";
-        return 1;
+        exit 1;
     fi
 }
 
@@ -26,7 +26,8 @@ function copy_dir {
 
 DATE_TIME=`date +"%d-%m-%YT%H-%M-%S"`;
 PROGRAM_DIR="/home/paki/graphene-fork/programs"
-TARGET_DIR="/home/paki/blockchain-builds/$DATE_TIME"
+CONFIGS_DIR="/home/paki/graphene-fork/configs/$1"
+TARGET_DIR="/home/paki/blockchain-builds/$1_$DATE_TIME"
 CLI_WALLET_DIR="$PROGRAM_DIR/cli_wallet"
 JS_SERIALIZER_DIR="$PROGRAM_DIR/js_operation_serializer"
 WITNESS_NODE_DIR="$PROGRAM_DIR/witness_node"
@@ -34,47 +35,39 @@ REMOTE_PATH="repo:/home/repo/shared/blockchain_builds/"
 
 CUR_DIR=`pwd`;
 
+if [[ $# == 0 ]]; then
+    echo "ERROR: Missing config directory name";
+    exit 1;
+fi
+echo "Checking if config $1 exists:";
+check_exists "$CONFIGS_DIR";
+
 echo "Preparing to deploy blochain witness node and cli wallet for $DATE_TIME"
 
 check_exists "$CLI_WALLET_DIR";
 check_exists "$WITNESS_NODE_DIR";
+check_exists "$JS_SERIALIZER_DIR";
 
-echo "Creating directory $TARGET_DIR";
+echo "Creating directory $TARGET_DIR:";
 make_dir "$TARGET_DIR"
 cd "$TARGET_DIR"
 
-echo "Creating directory for cli_wallet";
-copy_dir "$CLI_WALLET_DIR";
-cd "cli_wallet";
-echo "Removing external files from $PWD";
-# Clean up cli_wallet:
-# Remove backup wallet files:
-rm -rf *.wallet;
-rm -rf  CMake*;
-rm -rf  *.cmake;
-rm -rf  *.cpp;
-rm -rf  Makefile;
-rm -rf  nuke_cli_wallet.sh;
+echo "Generating serializers js file:";
+/"$JS_SERIALIZER_DIR"/js_operation_serializer | decaffeinate > serializers.js;
 
-cd ..;
+echo "Copyining configuration files:"
+rsync -qaP "$CONFIGS_DIR"/ .;
 
-echo "Creating directory for witness node";
-copy_dir $WITNESS_NODE_DIR;
-cd "witness_node";
-echo "Removing external files from $PWD";
-#Clean up witness_node
-rm -rf  CMake*;
-rm -rf  *.cmake;
-rm -rf  *.cpp;
-rm -rf  Makefile;
+echo "Preparing cli_wallet:";
+rsync -qaP /"$CLI_WALLET_DIR"/cli_wallet cli_wallet/;
 
-cd ..;
+echo "Preparing witness node:";
+rsync -qaP "$WITNESS_NODE_DIR"/witness_node witness_node/;
 
-echo "Generating js_operation_serializer coffeescript file"
-"$JS_SERIALIZER_DIR/js_operation_serializer" > operation_serializer.coffee;
+echo "Copyinig chain_id"
 
-# Copy to repo server:
-# rsync -aPv "$TARGET_DIR" "$REMOTE_PATH";
+# # Copy to repo server:
+# # rsync -aPv "$TARGET_DIR" "$REMOTE_PATH";
 
 cd "$CUR_DIR";
 

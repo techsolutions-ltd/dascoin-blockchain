@@ -1,5 +1,5 @@
 {
-  "initial_timestamp": "2017-01-30T11:47:55",
+  "initial_timestamp": "2017-01-31T15:14:40",
   "max_core_supply": "1000000000000000",
   "max_dascoin_supply": "8800000000",
   "initial_parameters": {
@@ -283,6 +283,11 @@
       "active_key": "GPH6KXx5gnuZxumkBfHQhZQFPMaca2yAVtjMMhRTLMo4aaiyiKchp",
       "is_lifetime_member": true
     },{
+      "name": "sys.license-administrator",
+      "owner_key": "GPH73Xui8UFc2NWCtEnRDketQCpxMH6oacPnAdU4ojk1Eam6UwaGb",
+      "active_key": "GPH73Xui8UFc2NWCtEnRDketQCpxMH6oacPnAdU4ojk1Eam6UwaGb",
+      "is_lifetime_member": true
+    },{
       "name": "sys.license-issuer",
       "owner_key": "GPH7JGV4izcCXjaF6D6B7zi5MYavA1qfPjriidxCBu4wVHbGPRddK",
       "active_key": "GPH7JGV4izcCXjaF6D6B7zi5MYavA1qfPjriidxCBu4wVHbGPRddK",
@@ -350,6 +355,9 @@
     }
   ],
   "initial_worker_candidates": [],
+  "initial_license_administration_authority": {
+    "owner_name": "sys.license-administrator"
+  },
   "initial_license_issuing_authority": {
     "owner_name": "sys.license-issuer"
   },

@@ -20,25 +20,24 @@ namespace graphene { namespace chain {
    * @brief create a license type object
    * @ingroup operations
    *
-   * An authorized license authentication authority may define licenses to be distributed to users.
+   * An authorized license administration authority may define licenses to be distributed to users.
    */
   struct license_type_create_operation : public base_operation
   {
      struct fee_parameters_type {};  // No fees are paid for this operation.
 
      asset fee;
-     account_id_type license_authentication_account;  // This MUST be the license authentication authority.
+     account_id_type admin;
 
      string name;
      share_type amount;
      string kind;
 
-     // Upgrade multipliers:
      upgrade_multiplier_type balance_multipliers;
      upgrade_multiplier_type requeue_multipliers;
      upgrade_multiplier_type return_multipliers;
 
-     account_id_type fee_payer() const { return license_authentication_account; }
+     account_id_type fee_payer() const { return admin; }
      void validate() const;
      share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
@@ -178,7 +177,7 @@ namespace graphene { namespace chain {
 FC_REFLECT( graphene::chain::license_type_create_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::license_type_create_operation,
             (fee)
-            (license_authentication_account)
+            (admin)
             (name)
             (amount)
             (kind)

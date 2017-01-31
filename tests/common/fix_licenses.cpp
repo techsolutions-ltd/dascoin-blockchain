@@ -94,7 +94,7 @@ const license_type_object& database_fixture::create_license_type(const string& k
                                                                  upgrade_multiplier_type return_multipliers)
 { try {
   license_type_create_operation op;
-  op.license_authentication_account = get_license_authenticator_id();
+  op.admin = get_license_administrator_id();
   op.name = name;
   op.amount = amount;
   op.kind = kind;

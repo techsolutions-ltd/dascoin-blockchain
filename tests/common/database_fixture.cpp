@@ -62,97 +62,59 @@ void database_fixture::init_genesis_state()
 {
    genesis_state.initial_timestamp = time_point_sec( GRAPHENE_TESTING_GENESIS_TIMESTAMP );
 
+   const auto make_account = [&](const string& name, bool dump = true) -> fc::ecc::private_key {
+      auto pk = fc::ecc::private_key::regenerate(fc::sha256::hash(name));
+      genesis_state.initial_accounts.emplace_back(name,
+                                                  pk.get_public_key(),
+                                                  pk.get_public_key(),
+                                                  true);
+      return pk;
+   };
+
    // Master account:
-   auto master_key = fc::ecc::private_key::regenerate(fc::sha256::hash("sys.master"));
-   genesis_state.initial_accounts.emplace_back("sys.master",
-                                               master_key.get_public_key(),
-                                               master_key.get_public_key(),
-                                               true);
+   auto master_key = make_account("sys.master");
+
+   genesis_state.initial_committee_candidates.push_back({"sys.master"});
 
    // Initial witness accounts:
    genesis_state.initial_active_witnesses = 10;
    for( size_t i = 0; i < genesis_state.initial_active_witnesses; ++i )
    {
-      auto name = "init_witness"+fc::to_string(i);
-      genesis_state.initial_accounts.emplace_back(name,
-                                                  init_account_priv_key.get_public_key(),
-                                                  init_account_priv_key.get_public_key(),
-                                                  true);
+      string name = ("sys.witness" + fc::to_string(i));
+      auto pk = make_account(name);
+      genesis_state.initial_witness_candidates.push_back({name, pk.get_public_key()});
       genesis_state.initial_committee_candidates.push_back({name});
-      genesis_state.initial_witness_candidates.push_back({name, init_account_priv_key.get_public_key()});
    }
 
    // Initial chain authorities:
-   // License issuer:
-   auto lic_issuer_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.license-issuer")));
-   genesis_state.initial_accounts.emplace_back("sys.license-issuer",
-                                               lic_issuer_key.get_public_key(),
-                                               lic_issuer_key.get_public_key(),
-                                               true);
+   make_account("sys.license-administrator");
+   genesis_state.initial_license_administration_authority = {"sys.license-administrator"};
+
+   make_account("sys.license-issuer");
    genesis_state.initial_license_issuing_authority = {"sys.license-issuer"};
 
-   // License authenticator:
-   auto lic_auth_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.license-authenticator")));
-   genesis_state.initial_accounts.emplace_back("sys.license-authenticator",
-                                               lic_auth_key.get_public_key(),
-                                               lic_auth_key.get_public_key(),
-                                               true);
+   make_account("sys.license-authenticator");
    genesis_state.initial_license_authentication_authority = {"sys.license-authenticator"};
 
-   // Webasset issuer:
-   auto web_issuer_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.webasset-issuer")));
-   genesis_state.initial_accounts.emplace_back("sys.webasset-issuer",
-                                               web_issuer_key.get_public_key(),
-                                               web_issuer_key.get_public_key(),
-                                               true);
+   make_account("sys.webasset-issuer");
    genesis_state.initial_webasset_issuing_authority = {"sys.webasset-issuer"};
 
-   // Webasset authenticator:
-   auto web_auth_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.webasset-authenticator")));
-   genesis_state.initial_accounts.emplace_back("sys.webasset-authenticator",
-                                               web_auth_key.get_public_key(),
-                                               web_auth_key.get_public_key(),
-                                               true);
+   make_account("sys.webasset-authenticator");
    genesis_state.initial_webasset_authentication_authority = {"sys.webasset-authenticator"};
 
-   // Cycle issuer:
-   auto cycle_issuer_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.cycle-issuer")));
-   genesis_state.initial_accounts.emplace_back("sys.cycle-issuer",
-                                               cycle_issuer_key.get_public_key(),
-                                               cycle_issuer_key.get_public_key(),
-                                               true);
+   make_account("sys.cycle-issuer");
    genesis_state.initial_cycle_issuing_authority = {"sys.cycle-issuer"};
 
-   // Cycle authenticator:
-   auto cycle_auth_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.cycle-authenticator")));
-   genesis_state.initial_accounts.emplace_back("sys.cycle-authenticator",
-                                               cycle_auth_key.get_public_key(),
-                                               cycle_auth_key.get_public_key(),
-                                               true);
+   make_account("sys.cycle-authenticator");
    genesis_state.initial_cycle_authentication_authority = {"sys.cycle-authenticator"};
 
-   // Account registrar:
-   auto faucet_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.registrar")));
-   genesis_state.initial_accounts.emplace_back("sys.registrar",
-                                               faucet_key.get_public_key(),
-                                               faucet_key.get_public_key(),
-                                               true);
+   make_account("sys.registrar");
    genesis_state.initial_registrar = {"sys.registrar"};
 
-   // PI validator:
-   auto pi_validator_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.pi-validator")));
-   genesis_state.initial_accounts.emplace_back("sys.pi-validator",
-                                               pi_validator_key.get_public_key(),
-                                               pi_validator_key.get_public_key(),
-                                               true);
+   make_account("sys.pi-validator");
    genesis_state.initial_personal_identity_validation_authority = {"sys.pi-validator"};
 
-   // Wire out authority:
-   auto wire_out_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("sys.wire-out-handler")));
-   genesis_state.initial_accounts.emplace_back("sys.wire-out-handler",
-                                               wire_out_key.get_public_key(),
-                                               wire_out_key.get_public_key(),
-                                               true);
+   make_account("sys.wire-out-handler");
    genesis_state.initial_wire_out_handler = {"sys.wire-out-handler"};
 
    genesis_state.initial_parameters.current_fees->zero_all_fees();

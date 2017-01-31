@@ -25,9 +25,17 @@ void assert_license_issuer(const database& db, account_id_type account)
 
 void_result license_type_create_evaluator::do_evaluate(const license_type_create_operation& op)
 { try {
+  const auto& d = db();
+  const auto license_admin_id = d.get_global_properties().authorities.license_administrator;
+  const auto& op_admin_obj = op.admin(d);
 
-  assert_license_authenticator(db(), op.license_authentication_account);
-  return void_result();
+  FC_ASSERT( license_admin_id == op.admin, 
+             "Operation must be signed by license administration authority '{$la}', signed by '{$a}' instead",
+             ("la", license_admin_id(d).name)
+             ("a", op_admin_obj.name)
+           );
+
+  return {};
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 

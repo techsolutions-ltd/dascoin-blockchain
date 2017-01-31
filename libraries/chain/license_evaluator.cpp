@@ -5,20 +5,6 @@
 
 namespace graphene { namespace chain {
 
-//////////////////////
-// Private methods: //
-//////////////////////
-
-void assert_license_authenticator(const database& db, account_id_type account)
-{
-	FC_ASSERT( account == db.get_global_properties().authorities.license_authenticator );
-}
-
-void assert_license_issuer(const database& db, account_id_type account)
-{
-  FC_ASSERT( account == db.get_global_properties().authorities.license_issuer );
-}
-
 ////////////////////////////
 // License type creation: //
 ////////////////////////////
@@ -30,7 +16,7 @@ void_result license_type_create_evaluator::do_evaluate(const license_type_create
   const auto& op_admin_obj = op.admin(d);
 
   FC_ASSERT( license_admin_id == op.admin, 
-             "Operation must be signed by license administration authority '{$la}', signed by '{$a}' instead",
+             "Operation must be signed by license administration authority '${la}', signed by '${a}' instead",
              ("la", license_admin_id(d).name)
              ("a", op_admin_obj.name)
            );
@@ -60,7 +46,7 @@ void_result license_type_edit_evaluator::do_evaluate(const license_type_edit_ope
   const auto& op_admin_obj = op.admin(d);
 
   FC_ASSERT( license_admin_id == op.admin,
-             "Operation must be signed by license administration authority '{$la}', signed by '{$a}' instead",
+             "Operation must be signed by license administration authority '${la}', signed by '${a}' instead",
              ("la", license_admin_id(d).name)
              ("a", op_admin_obj.name)
            );
@@ -85,7 +71,7 @@ void_result license_type_edit_evaluator::do_apply(const license_type_edit_operat
 void_result license_type_delete_evaluator::do_evaluate(const license_type_delete_operation& op)
 { try {
 
-  assert_license_authenticator( db(), op.license_authentication_account );
+  // assert_license_authenticator( db(), op.license_authentication_account );
   return void_result();
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
@@ -106,17 +92,24 @@ void_result license_request_evaluator::do_evaluate(const license_request_operati
 { try {
 
   const auto& d = db();
-  const auto& account_obj = op.account(d);
-  const auto& new_license_obj = op.license(d);
-  const auto& info = account_obj.license_info;
+  const auto issuer_id = d.get_chain_authorities().license_issuer;
+  const auto op_issuer_obj = op.license_issuing_account(d);
 
   // First, check that the license issuer matches the current license issuing account:
-  assert_license_issuer(d, op.license_issuing_account);
+  FC_ASSERT( issuer_id == op.license_issuing_account,
+             "Operation must be signed by the license issuing authority '${li}', signed by '${a}' instead",
+             ("li", issuer_id(d).name)
+             ("a", op_issuer_obj.name)
+           );
+
+  const auto& account_obj = op.account(d);
+  const auto& new_license_obj = op.license(d);
 
   // Licenses can only be issued to vault accounts:
   FC_ASSERT( account_obj.is_vault(), "Account '${n}' is not a vault account", ("n", account_obj.name) );
 
   // Make sure that there is no pending license:
+  const auto& info = account_obj.license_info;
   FC_ASSERT( !info.pending.valid(),
              "Cannot issue license ${l_n} on account ${a}, license ${l_p} is pending",
              ("l_n", new_license_obj.name)
@@ -172,8 +165,14 @@ object_id_type license_request_evaluator::do_apply(const license_request_operati
 void_result license_deny_evaluator::do_evaluate(const license_deny_operation& op)
 { try {
   const auto& d = db();
+  const auto auth_id = d.get_chain_authorities().license_authenticator;
+  const auto& op_auth_obj = op.license_authentication_account(d);
 
-  assert_license_authenticator(d, op.license_authentication_account);
+  FC_ASSERT( auth_id == op.license_authentication_account,
+             "Operation must be signed by license authentication account '${la}', signed by '${a}' instead",
+             ("la", auth_id(d).name)
+             ("a", op_auth_obj.name)
+           );
 
   const auto& request_obj = op.request(d);
   const auto& account_obj = request_obj.account(d);

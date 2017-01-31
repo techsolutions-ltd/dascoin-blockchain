@@ -16,15 +16,11 @@ void_result cycle_issue_request_evaluator::do_evaluate(const cycle_issue_request
   // Make sure that we are allowed to issue cycles to accounts:
   FC_ASSERT( d.get_global_properties().parameters.enable_cycle_issuing, "Non-license cycle issuing is disabled" );
 
-  const auto& issuer_obj = op.cycle_issuer(d);
+  const auto& op_issuer_obj = op.cycle_issuer(d);
   const auto cycle_issuer_id = d.get_chain_authorities().cycle_issuer;
 
   // Make sure that this is the current license issuer:
-  FC_ASSERT( op.cycle_issuer == cycle_issuer_id,
-             "Issue request operation improperly signed by issuer '${a}'; current cycle issuer is '${ci}'",
-             ("a", issuer_obj.name)
-             ("ci", cycle_issuer_id(d).name)
-           );
+  d.perform_chain_authority_check("cycle issuing", cycle_issuer_id, op_issuer_obj);
 
   // Account must exist:
   const auto& account_obj = op.account(d);
@@ -57,14 +53,9 @@ void_result cycle_issue_deny_evaluator::do_evaluate(const cycle_issue_deny_opera
 { try {
   const auto& d = db();
   const auto cycle_auth_id = d.get_chain_authorities().cycle_authenticator;
-  const auto& auth_obj = op.cycle_authenticator(d);
+  const auto& op_auth_obj = op.cycle_authenticator(d);
 
-  // Make sure that this is the current license issuer:
-  FC_ASSERT( cycle_auth_id == op.cycle_authenticator,
-             "Issue deny request operation improperly signed by authenticator '${a}'; current cycle authenticator is '${ca}'",
-             ("a", op.cycle_authenticator(d).name)
-             ("ca", d.get_chain_authorities().cycle_authenticator(d).name)
-           );
+  d.perform_chain_authority_check("cycle authentication", cycle_auth_id, op_auth_obj);
 
   request_ = &op.request(d);
   return {};

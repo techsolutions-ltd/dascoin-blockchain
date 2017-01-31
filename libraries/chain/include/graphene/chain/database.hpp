@@ -91,9 +91,7 @@ namespace graphene { namespace chain {
           * @param data_dir Path to open or create database in
           * @param genesis_loader A callable object which returns the genesis state to initialize new databases on
           */
-          void open(
-             const fc::path& data_dir,
-             std::function<genesis_state_type()> genesis_loader );
+          void open(const fc::path& data_dir, std::function<genesis_state_type()> genesis_loader);
 
          /**
           * @brief Rebuild object graph from block history and open detabase
@@ -619,6 +617,12 @@ namespace graphene { namespace chain {
          void perform_helpers(std::tuple<HelperTypes...> helpers);
          ///@}
          ///@}
+
+         ////////////////// db_util.cpp //////////////////////
+
+public:
+         void perform_chain_authority_check(const string& auth_type_name, account_id_type auth_id,
+                                            const account_object& acc_obj) const;
 
          vector< processed_transaction >        _pending_tx;
          fork_database                          _fork_db;

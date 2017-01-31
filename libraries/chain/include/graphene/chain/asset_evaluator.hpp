@@ -162,7 +162,7 @@ namespace graphene { namespace chain {
          void_result do_evaluate(const asset_deny_issue_request_operation& o);
          void_result do_apply(const asset_deny_issue_request_operation& o);
 
-         const issue_asset_request_object* req_obj;
+         const issue_asset_request_object* req_obj_;
    };
 
 } } // graphene::chain

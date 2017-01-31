@@ -15,15 +15,11 @@ void_result license_type_create_evaluator::do_evaluate(const license_type_create
   const auto license_admin_id = d.get_global_properties().authorities.license_administrator;
   const auto& op_admin_obj = op.admin(d);
 
-  FC_ASSERT( license_admin_id == op.admin, 
-             "Operation must be signed by license administration authority '${la}', signed by '${a}' instead",
-             ("la", license_admin_id(d).name)
-             ("a", op_admin_obj.name)
-           );
+  d.perform_chain_authority_check("license administration", license_admin_id, op_admin_obj);
 
   return {};
 
-} FC_CAPTURE_AND_RETHROW( (op) ) }
+} FC_CAPTURE_AND_RETHROW((op)) }
 
 object_id_type license_type_create_evaluator::do_apply(const license_type_create_operation& op)
 { try {
@@ -45,11 +41,7 @@ void_result license_type_edit_evaluator::do_evaluate(const license_type_edit_ope
   const auto license_admin_id = d.get_global_properties().authorities.license_administrator;
   const auto& op_admin_obj = op.admin(d);
 
-  FC_ASSERT( license_admin_id == op.admin,
-             "Operation must be signed by license administration authority '${la}', signed by '${a}' instead",
-             ("la", license_admin_id(d).name)
-             ("a", op_admin_obj.name)
-           );
+  d.perform_chain_authority_check("license administration", license_admin_id, op_admin_obj);
 
   return {};
 
@@ -96,11 +88,7 @@ void_result license_request_evaluator::do_evaluate(const license_request_operati
   const auto op_issuer_obj = op.license_issuing_account(d);
 
   // First, check that the license issuer matches the current license issuing account:
-  FC_ASSERT( issuer_id == op.license_issuing_account,
-             "Operation must be signed by the license issuing authority '${li}', signed by '${a}' instead",
-             ("li", issuer_id(d).name)
-             ("a", op_issuer_obj.name)
-           );
+  d.perform_chain_authority_check("license issuing", issuer_id, op_issuer_obj);
 
   const auto& account_obj = op.account(d);
   const auto& new_license_obj = op.license(d);
@@ -168,11 +156,7 @@ void_result license_deny_evaluator::do_evaluate(const license_deny_operation& op
   const auto auth_id = d.get_chain_authorities().license_authenticator;
   const auto& op_auth_obj = op.license_authentication_account(d);
 
-  FC_ASSERT( auth_id == op.license_authentication_account,
-             "Operation must be signed by license authentication account '${la}', signed by '${a}' instead",
-             ("la", auth_id(d).name)
-             ("a", op_auth_obj.name)
-           );
+  d.perform_chain_authority_check("license authentication", auth_id, op_auth_obj);
 
   const auto& request_obj = op.request(d);
   const auto& account_obj = request_obj.account(d);

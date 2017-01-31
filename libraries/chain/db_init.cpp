@@ -773,6 +773,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
        apply_operation(_genesis_eval_state, std::move(op));
    });
 
+   initialize_chain_authority("license_administrator", genesis_state.initial_license_administration_authority.owner_name);
    initialize_chain_authority("license_issuer", genesis_state.initial_license_issuing_authority.owner_name);
    initialize_chain_authority("license_authenticator", genesis_state.initial_license_authentication_authority.owner_name);
    initialize_chain_authority("webasset_issuer", genesis_state.initial_webasset_issuing_authority.owner_name);

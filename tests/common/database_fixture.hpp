@@ -338,6 +338,7 @@ struct database_fixture {
    const global_property_object& get_global_properties() const;
    const dynamic_global_property_object& get_dynamic_global_properties() const;
    const chain_parameters& get_chain_parameters() const;
+   account_id_type get_license_administrator_id() const;
    account_id_type get_license_issuer_id() const;
    account_id_type get_license_authenticator_id() const;
    account_id_type get_webasset_issuer_id() const;

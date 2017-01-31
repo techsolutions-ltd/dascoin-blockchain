@@ -113,15 +113,16 @@ namespace graphene { namespace chain {
    enum chain_authority_kind
    {
       no_authority = 0,
-      license_issuer = 1,
-      license_authenticator = 2,
-      webasset_issuer = 3,
-      webasset_authenticator = 4,
-      cycle_issuer = 5,
-      cycle_authenticator = 6,
-      registrar = 7,
-      pi_validator = 8,
-      wire_out_handler = 9,
+      license_administrator = 1,
+      license_issuer = 2,
+      license_authenticator = 3,
+      webasset_issuer = 4,
+      webasset_authenticator = 5,
+      cycle_issuer = 6,
+      cycle_authenticator = 7,
+      registrar = 8,
+      pi_validator = 9,
+      wire_out_handler = 10,
       CHAIN_AUTHORITY_KIND_COUNT
    };
 
@@ -458,6 +459,7 @@ REFLECT_ENUM_CHECK( graphene::chain::account_kind,
 
 REFLECT_ENUM_CHECK( graphene::chain::chain_authority_kind,
                     (no_authority)
+                    (license_administrator)
                     (license_issuer)
                     (license_authenticator)
                     (webasset_issuer)

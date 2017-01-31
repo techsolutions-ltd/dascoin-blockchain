@@ -120,7 +120,7 @@ void database_fixture::edit_license_type(license_type_id_type license_id,
                                          optional<upgrade_multiplier_type> return_multipliers)
 { try {
   license_type_edit_operation op;
-  op.license_authentication_account = get_license_authenticator_id();
+  op.admin = get_license_administrator_id();
   op.license = license_id;
   op.name = name;
   op.amount = amount;

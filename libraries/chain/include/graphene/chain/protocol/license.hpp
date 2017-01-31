@@ -46,7 +46,7 @@ namespace graphene { namespace chain {
    * @brief edit a license type object
    * @ingroup operations
    *
-   * An authorized license authentication authority may edit licenses to be distributed to users.
+   * An authorized license administration authority may edit licenses to be distributed to users.
    *
    * WARNING: this operation is NOT RETROACTIVE!
    */
@@ -56,17 +56,16 @@ namespace graphene { namespace chain {
 
      asset fee;
      license_type_id_type license;
-     account_id_type license_authentication_account;  // This MUST be the license authentication authority.
+     account_id_type admin;
 
      optional<string> name;
      optional<share_type> amount;
 
-     // Upgrade multipliers:
      optional<upgrade_multiplier_type> balance_multipliers;
      optional<upgrade_multiplier_type> requeue_multipliers;
      optional<upgrade_multiplier_type> return_multipliers;
 
-     account_id_type fee_payer() const { return license_authentication_account; }
+     account_id_type fee_payer() const { return admin; }
      void validate() const;
      share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
@@ -190,7 +189,7 @@ FC_REFLECT( graphene::chain::license_type_edit_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::license_type_edit_operation,
             (fee)
             (license)
-            (license_authentication_account)
+            (admin)
             (name)
             (amount)
             (balance_multipliers)

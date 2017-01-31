@@ -33,7 +33,7 @@ namespace graphene { namespace chain {
 
   void license_information::add_license(license_type_id_type license_id, frequency_type frequency_lock)
   {
-    history.emplace_back();
+    history.emplace_back(license_id, frequency_lock);
   }
 
 } } // namespace graphene::chain

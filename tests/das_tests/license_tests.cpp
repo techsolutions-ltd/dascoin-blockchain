@@ -243,8 +243,17 @@ BOOST_AUTO_TEST_CASE( upgrade_cycles_test )
 
 } FC_LOG_AND_RETHROW() }
 
-BOOST_AUTO_TEST_CASE( mass_license_issue_test )
+BOOST_AUTO_TEST_CASE( issue_single_license_test )
 { try {
+
+  VAULT_ACTOR(vault);
+  const auto pro_id = get_license_type("pro").id;
+
+  issue_license_to_vault_account(vault_id, pro_id);
+  generate_block();
+
+  generate_blocks(db.head_block_time() + fc::hours(24));
+  BOOST_CHECK( vault.license_info.active_license() == pro_id );
 
 } FC_LOG_AND_RETHROW() }
 

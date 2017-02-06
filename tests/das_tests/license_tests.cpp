@@ -18,6 +18,21 @@ using namespace graphene::chain::test;
 
 BOOST_FIXTURE_TEST_SUITE( dascoin_tests, database_fixture )
 
+BOOST_FIXTURE_TEST_SUITE( license_tests, database_fixture )
+
+BOOST_AUTO_TEST_CASE( issue_single_license_test )
+{ try {
+  VAULT_ACTOR(vault);
+  const auto pro_id = get_license_type("pro").id;
+
+  issue_license_to_vault_account(vault_id, pro_id);
+  generate_block();
+
+  generate_blocks(db.head_block_time() + fc::hours(24));
+  BOOST_CHECK( vault.license_info.active_license() == pro_id );
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_CASE( upgrade_type_test )
 { try {
 
@@ -243,18 +258,6 @@ BOOST_AUTO_TEST_CASE( upgrade_cycles_test )
 
 } FC_LOG_AND_RETHROW() }
 
-BOOST_AUTO_TEST_CASE( issue_single_license_test )
-{ try {
-
-  VAULT_ACTOR(vault);
-  const auto pro_id = get_license_type("pro").id;
-
-  issue_license_to_vault_account(vault_id, pro_id);
-  generate_block();
-
-  generate_blocks(db.head_block_time() + fc::hours(24));
-  BOOST_CHECK( vault.license_info.active_license() == pro_id );
-
-} FC_LOG_AND_RETHROW() }
+BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

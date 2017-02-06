@@ -584,13 +584,13 @@ void database::mint_dascoin_rewards()
 
       const auto& el = *queue.begin();
       account_id_type el_receiver_id = el.account;
-      share_type el_dascoin_amount = (el.amount * DASCOIN_DEFAULT_ASSET_PRECISION) / el.frequency;
+      share_type el_dascoin_amount = cycles_to_dascoin(el.amount, el.frequency);
       if ( to_distribute >= el_dascoin_amount )
         remove(el);
       else
       {
         el_dascoin_amount = to_distribute;
-        share_type cycles = (to_distribute * el.frequency) / DASCOIN_DEFAULT_ASSET_PRECISION;
+        share_type cycles = dascoin_to_cycles(to_distribute, el.frequency);
         modify(el, [cycles](reward_queue_object& rqo){
           rqo.amount -= cycles;
         });

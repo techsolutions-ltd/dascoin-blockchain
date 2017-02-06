@@ -623,7 +623,10 @@ namespace graphene { namespace chain {
 public:
          void perform_chain_authority_check(const string& auth_type_name, account_id_type auth_id,
                                             const account_object& acc_obj) const;
+         share_type cycles_to_dascoin(share_type cycles, share_type frequency) const;
+         share_type dascoin_to_cycles(share_type dascoin, share_type frequency) const;
 
+private:
          vector< processed_transaction >        _pending_tx;
          fork_database                          _fork_db;
 

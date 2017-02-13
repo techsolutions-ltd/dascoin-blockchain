@@ -424,7 +424,26 @@ namespace graphene { namespace chain {
       friend bool operator == ( const extended_private_key_type& p1, const extended_private_key_type& p2);
       friend bool operator != ( const extended_private_key_type& p1, const extended_private_key_type& p2);
    };
-} }  // graphene::chain
+
+   struct version
+   {
+      version() {}
+      version( uint8_t m, uint8_t h, uint16_t r );
+      virtual ~version() {}
+
+      bool operator == ( const version& o )const { return v_num == o.v_num; }
+      bool operator != ( const version& o )const { return v_num != o.v_num; }
+      bool operator <  ( const version& o )const { return v_num <  o.v_num; }
+      bool operator <= ( const version& o )const { return v_num <= o.v_num; }
+      bool operator >  ( const version& o )const { return v_num >  o.v_num; }
+      bool operator >= ( const version& o )const { return v_num >= o.v_num; }
+
+      operator fc::string() const;
+
+      uint32_t v_num = 0;
+   };
+
+} }  // namespace graphene::chain
 
 namespace fc
 {
@@ -434,6 +453,8 @@ namespace fc
     void from_variant( const fc::variant& var, graphene::chain::extended_public_key_type& vo );
     void to_variant( const graphene::chain::extended_private_key_type& var, fc::variant& vo );
     void from_variant( const fc::variant& var, graphene::chain::extended_private_key_type& vo );
+    void to_variant( const graphene::chain::version& v, variant& var );
+    void from_variant( const variant& var, graphene::chain::version& v );
 }
 
 REFLECT_ENUM_CHECK( graphene::chain::limit_kind,
@@ -582,3 +603,5 @@ FC_REFLECT_ENUM( graphene::chain::cycle_policy_flags,
                  (auto_submit_to_queue)
                  (retain_after_submission)
                )
+
+FC_REFLECT( graphene::chain::version, (v_num) )

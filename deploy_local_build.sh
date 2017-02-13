@@ -1,87 +1,162 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-function check_exists {
-    if [[ ! -d "$1" ]]; then
-        echo "ERROR: Could not locate $1";
+# The purpose of this script is to deploy the local build of the blockchain to a defined target directory.
+# The script will use a configuration specified in the config folder.
+
+# TODO: fix compression path
+
+set -o errexit
+set -o pipefail
+# set -o nounset
+# set -o xtrace
+
+function check_dir_exists {
+    if [[ ! -d "${1}" ]]; then
+        echo "ERROR: could not locate directory ${1}";
         exit 1;
     fi
 }
 
 function make_dir {
-    mkdir -p "$1"
+    mkdir -p "${1}"
     if [[ $? != 0 ]]; then
-        echo "Could not create build directory $1";
-        cd "$CUR_DIR";
-        return 1;
+        echo "ERROR: could not create directory ${1}";
+        exit 1;
     fi
 }
 
-function copy_dir {
-    rsync -aPv "$1" .;
-    if [[ $? != 0 ]]; then
-        echo "Failed to copy dir $1 to $PWD";
-        return 1;
+function copy {
+    rsync -qaP $1 $2
+    if [ $? -ne 0 ]; then
+        echo "ERROR: could not copy directory ${1} to directory ${2}"
+        exit 1
     fi
 }
 
-DATE_TIME=`date +"%d-%m-%YT%H-%M-%S"`;
-PROGRAM_DIR="/home/paki/graphene-fork/programs"
-CONFIGS_DIR="/home/paki/graphene-fork/configs/$1"
-TARGET_DIR="/home/paki/blockchain-builds/$1_$DATE_TIME"
-CLI_WALLET_DIR="$PROGRAM_DIR/cli_wallet"
-JS_SERIALIZER_DIR="$PROGRAM_DIR/js_operation_serializer"
-WITNESS_NODE_DIR="$PROGRAM_DIR/witness_node"
-REMOTE_PATH="repo:/home/repo/shared/blockchain_builds/"
+# Compress folder <archive_path> <folder_path> <target_path>
+function compress_folder {
+    tar zcf "${1}.tar.gz" -C "${2}" .
+    if [ $? -ne 0 ]; then
+        echo "ERROR: could not compress directory ${2}"
+        exit 1
+    fi
+    check_dir_exists "${3}"
+    mv "${1}.tar.gz" "${3}"
+}
 
-CUR_DIR=`pwd`;
+# Return <string> with build type: "Debug"/"Release"
+function get_cmake_build_type {
+    grep CMAKE_BUILD_TYPE CMakeCache.txt | awk -F"=" '{print $2}'
+}
 
-if [[ $# == 0 ]]; then
-    echo "ERROR: Missing config directory name";
+# Setting magic variables for current file and dir:
+__dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+__file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
+__base="$(basename ${__file} .sh)"
+__root="$(cd "$(dirname "${__dir}")" && pwd)"
+__script="$(basename ${BASH_SOURCE[0]})"
+
+# Set default variables:
+config_name="testing"
+program_dir="${__dir}/programs"
+configs_root="${__dir}/configs"
+target_dir="${__root}/blockchain-builds"
+compress=false
+
+#Set fonts:
+norm_font=`tput sgr0`
+bold_font=`tput bold`
+# rev_font=`tput smso`
+
+# Describe usage of the script:
+function help {
+    echo -e \\n"Copy the local blockchain build to a staging deployment."\\n
+    echo -e "Basic usage: ${bold_font}${__script} [-t <string> | -c <string>]${norm_font}"\\n
+    echo -e "Command line switches are optional. The following switches are recognized:"\\n
+    echo -e "${bold_font}-t${norm_font}  --Target directory to which to deploy the build. Default is ${bold_font}${target_dir}${norm_font}"
+    echo -e "${bold_font}-c${norm_font}  --Configuration name. Default is ${bold_font}${config_name}${norm_font}"
+    echo -e "${bold_font}-z${norm_font}  --Create a compressed build folder. Default is ${bold_font}false${norm_font}"
+    echo -e "${bold_font}-h${norm_font}  --Displays this message."\\n
     exit 1;
+    }
+
+numargs=$#
+
+while getopts :c:t:zh flag; do
+  case $flag in
+    c)
+      config_name=$OPTARG
+      ;;
+    t)
+      target_dir=$OPTARG
+      ;;
+    z)
+      compress=true;
+      ;;
+    h)
+      help
+      ;;
+    \?) #unrecognized option - show help
+      echo -e \\n"Option -${bold_font}$OPTARG${norm_font} not allowed."
+      echo -e "Use ${bold_font}$__script -h${norm_font} to see the help documentation."\\n
+      exit 2
+      ;;
+  esac
+done
+
+shift $((OPTIND-1))  #This tells getopts to move on to the next argument.
+
+config_dir="${configs_root}/${config_name}"
+
+# Check if configuration directory exists:
+check_dir_exists ${config_dir};
+
+# Form build name:
+get_cmake_build_type
+build_name="$(git describe)_${config_name}_$(get_cmake_build_type)"
+build_dir="${target_dir}/${build_name}"
+
+step=0
+
+echo "Deploying build ${build_name} to ${target_dir}:"
+
+echo "${step}) Copying ${config_name} configuration:"
+make_dir "${build_dir}"
+copy "${config_dir}/" "${build_dir}"
+echo "Done"
+echo
+step=$((${step}+1))
+
+echo "${step}) Creating serializers file:"
+"${program_dir}"/js_operation_serializer/js_operation_serializer | decaffeinate > ${build_dir}/serializers.js;
+echo "Done"
+echo
+step=$((${step}+1))
+
+echo "${step}) Copying witness node executable:"
+copy "${program_dir}/witness_node/witness_node" "${build_dir}/witness_node/witness_node"
+echo "Done"
+echo
+step=$((${step}+1))
+
+echo "${step}) Copying cli_wallet node executable:"
+copy "${program_dir}/cli_wallet/cli_wallet" "${build_dir}/cli_wallet/cli_wallet"
+echo "Done"
+echo
+step=$((${step}+1))
+
+if [ ${compress} = true ]; then
+    echo "${step}) Compressing build folder:"
+    compress_folder "${build_name}" "${build_dir}" "${target_dir}"
+    echo "Done"
+    echo
+    step=$((${step}+1))
 fi
-echo "Checking if config $1 exists:";
-check_exists "$CONFIGS_DIR";
 
-echo "Preparing to deploy blochain witness node and cli wallet for $DATE_TIME"
-
-check_exists "$CLI_WALLET_DIR";
-check_exists "$WITNESS_NODE_DIR";
-check_exists "$JS_SERIALIZER_DIR";
-
-echo "Creating directory $TARGET_DIR:";
-make_dir "$TARGET_DIR"
-cd "$TARGET_DIR"
-
-echo "Generating serializers js file:";
-/"$JS_SERIALIZER_DIR"/js_operation_serializer | decaffeinate > serializers.js;
-
-echo "Copyining configuration files:"
-rsync -qaP "$CONFIGS_DIR"/ .;
-
-echo "Preparing cli_wallet:";
-rsync -qaP /"$CLI_WALLET_DIR"/cli_wallet cli_wallet/;
-
-echo "Preparing witness node:";
-rsync -qaP "$WITNESS_NODE_DIR"/witness_node witness_node/;
-
-echo "Copyinig chain_id"
-
-# # Copy to repo server:
-# # rsync -aPv "$TARGET_DIR" "$REMOTE_PATH";
-
-cd "$CUR_DIR";
+echo "${step}) Creating symbolic link for last build"
+rm ${target_dir}/last_build
+ln -s ${build_dir} ${target_dir}/last_build
+echo "Done"
+echo
 
 echo "All done!";
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -8,64 +8,38 @@
 #include <graphene/chain/queue_objects.hpp>
 #include <graphene/chain/license_evaluator.hpp>
 
+class optional;
+
 namespace graphene { namespace chain {
 
-object_id_type database::create_license_type(const string& name, share_type amount, const policy_type& policy)
+object_id_type database::create_license_type(license_kind kind, const string& name, share_type amount, 
+                                   upgrade_multiplier_type balance_multipliers,
+                                   upgrade_multiplier_type requeue_multipliers,
+                                   upgrade_multiplier_type return_multipliers)
 {
-  return create<license_type_object>([&]( license_type_object& lic )
-  {
-    lic.name = name;
-    lic.amount = amount;
-
-    // START PARCING LICENSE POLICY:
-    //
-    // 1) Handle the kind of the license:
-    //    TYPE: string
-    //    VALUES: standard, charter, pro
-    auto it = policy.find("kind");
-    if ( it != policy.end() )
-    {
-      string k = it->second.as_string();
-      if ( k == "regular" )
-        lic.kind = license_kind::regular;
-      else if ( k == "chartered")
-        lic.kind = license_kind::chartered;
-      else if ( k == "promo" )
-        lic.kind = license_kind::promo;
-      else
-        FC_THROW( "License ${n} cannot have kind of ${k}", ("n", name)("k", k) );
-    }
-    // 2) Fetch the balance upgrades:
-    //    TYPE: vector<uint8_t>
-    it = policy.find("balance_upgrades");
-    if ( it != policy.end() )
-    {
-      vector<uint8_t> v;
-      fc::from_variant<uint8_t>(it->second, v);
-      lic.balance_upgrade.reset(v);
-    }
-    // 3) Fetch the requeue upgrades:
-    //    TYPE: vector<uint8_t>
-    it = policy.find("requeue_upgrades");
-    if ( it != policy.end() )
-    {
-      vector<uint8_t> v;
-      fc::from_variant<uint8_t>(it->second, v);
-      lic.requeue_upgrade.reset(v);
-    }
-    // 4) Fetch the return upgrades:
-    //    TYPE: vector<uint8_t>
-    it = policy.find("return_upgrades");
-    if ( it != policy.end() )
-    {
-      vector<uint8_t> v;
-      fc::from_variant<uint8_t>(it->second, v);
-      lic.return_upgrade.reset(v);
-    }
-    //
-    // DONE PARSING POLICY.
-
+  return create<license_type_object>([&](license_type_object& lto){
+    lto.name = name;
+    lto.amount = amount;
+    lto.kind = kind;
+    lto.balance_upgrade.reset(balance_multipliers);
+    lto.requeue_upgrade.reset(requeue_multipliers);
+    lto.return_upgrade.reset(return_multipliers);
   }).id;
+}
+
+void database::edit_license_type(license_type_id_type license_id, optional<string> name,
+                                 optional<share_type> amount,
+                                 optional<upgrade_multiplier_type> balance_multipliers,
+                                 optional<upgrade_multiplier_type> requeue_multipliers,
+                                 optional<upgrade_multiplier_type> return_multipliers)
+{
+  modify(get(license_id), [&](license_type_object& lto) {
+      if (name.valid()) lto.name = *name;
+      if (amount.valid()) lto.amount = *amount;
+      if (balance_multipliers.valid()) lto.balance_upgrade.reset(*balance_multipliers);
+      if (requeue_multipliers.valid()) lto.requeue_upgrade.reset(*requeue_multipliers);
+      if (return_multipliers.valid()) lto.return_upgrade.reset(*return_multipliers);
+  });
 }
 
 void database::fulfill_license_request(const license_request_object& req)

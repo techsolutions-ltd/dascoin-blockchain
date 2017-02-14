@@ -115,6 +115,9 @@ namespace detail {
                                                 GRAPHENE_MAX_SHARE_SUPPLY});
 
       // Initial chain authorities:
+      make_account("sys.license-administrator");
+      initial_state.initial_license_administration_authority = {"sys.license-administrator"};
+
       make_account("sys.license-issuer");
       initial_state.initial_license_issuing_authority = {"sys.license-issuer"};
 

@@ -36,6 +36,10 @@
 #include <fc/rpc/websocket_api.hpp>
 #include <fc/smart_ref_impl.hpp>
 
+#include <graphene/chain/protocol/types.hpp>
+#include <graphene/utilities/git_revision.hpp>
+#include <fc/git_revision.hpp>
+
 #include <graphene/app/api.hpp>
 #include <graphene/chain/protocol/protocol.hpp>
 #include <graphene/egenesis/egenesis.hpp>
@@ -70,6 +74,7 @@ int main( int argc, char** argv )
       boost::program_options::options_description opts;
          opts.add_options()
          ("help,h", "Print this help message and exit.")
+         ("version,v", "Display cli_wallet version and exit.")
          ("server-rpc-endpoint,s", bpo::value<string>()->implicit_value("ws://127.0.0.1:8090"), "Server websocket RPC endpoint")
          ("server-rpc-user,u", bpo::value<string>(), "Server Username")
          ("server-rpc-password,p", bpo::value<string>(), "Server Password")
@@ -88,6 +93,17 @@ int main( int argc, char** argv )
       if( options.count("help") )
       {
          std::cout << opts << "\n";
+         return 0;
+      }
+
+      if( options.count("version") )
+      {
+         // TODO: display blockchain protocol version?
+         std::cout << "Git version:\t" << fc::string(graphene::utilities::git_revision_description)
+            << "\nGit revision:\t" << fc::string(graphene::utilities::git_revision_sha)
+            << "\nRevision age:\t" << fc::get_approximate_relative_time_string(fc::time_point_sec(graphene::utilities::git_revision_unix_timestamp))
+            << "\nFC revision:\t" << fc::string(fc::git_revision_sha)
+            << std::endl;
          return 0;
       }
 

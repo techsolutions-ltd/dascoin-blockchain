@@ -5,36 +5,29 @@
 
 namespace graphene { namespace chain {
 
-//////////////////////
-// Private methods: //
-//////////////////////
-
-void assert_license_authenticator(const database& db, account_id_type account)
-{
-	FC_ASSERT( account == db.get_global_properties().authorities.license_authenticator );
-}
-
-void assert_license_issuer(const database& db, account_id_type account)
-{
-  FC_ASSERT( account == db.get_global_properties().authorities.license_issuer );
-}
-
 ////////////////////////////
 // License type creation: //
 ////////////////////////////
 
 void_result license_type_create_evaluator::do_evaluate(const license_type_create_operation& op)
 { try {
+  const auto& d = db();
+  const auto license_admin_id = d.get_global_properties().authorities.license_administrator;
+  const auto& op_admin_obj = op.admin(d);
 
-  assert_license_authenticator(db(), op.license_authentication_account);
-  return void_result();
+  d.perform_chain_authority_check("license administration", license_admin_id, op_admin_obj);
 
-} FC_CAPTURE_AND_RETHROW( (op) ) }
+  return {};
+
+} FC_CAPTURE_AND_RETHROW((op)) }
 
 object_id_type license_type_create_evaluator::do_apply(const license_type_create_operation& op)
 { try {
+  using namespace graphene::chain::util;
+  auto kind = convert_enum<license_kind>::from_string(op.kind);
 
-  return db().create_license_type(op.name, op.amount, op.policy);
+  return db().create_license_type(kind, op.name, op.amount, op.balance_multipliers, op.requeue_multipliers, 
+                                  op.return_multipliers);
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
@@ -44,23 +37,24 @@ object_id_type license_type_create_evaluator::do_apply(const license_type_create
 
 void_result license_type_edit_evaluator::do_evaluate(const license_type_edit_operation& op)
 { try {
+  const auto& d = db();
+  const auto license_admin_id = d.get_global_properties().authorities.license_administrator;
+  const auto& op_admin_obj = op.admin(d);
 
-  assert_license_authenticator(db(), op.license_authentication_account);
+  d.perform_chain_authority_check("license administration", license_admin_id, op_admin_obj);
+
   return {};
 
-}  FC_CAPTURE_AND_RETHROW( (op)) }
+}  FC_CAPTURE_AND_RETHROW((op)) }
 
 void_result license_type_edit_evaluator::do_apply(const license_type_edit_operation& op)
 { try {
 
-  db().modify( db().get(op.license), [&]( license_type_object& lic ) {
-    if (op.name.valid()) lic.name = *op.name;
-    if (op.amount.valid()) lic.amount = *op.amount;
-    if (op.policy.valid()) lic.policy = *op.policy;
-  });
+  db().edit_license_type(op.license, op.name, op.amount, op.balance_multipliers, op.requeue_multipliers, 
+                         op.return_multipliers);
   return {};
 
-} FC_CAPTURE_AND_RETHROW( (op) ) }
+} FC_CAPTURE_AND_RETHROW((op)) }
 
 ////////////////////////////
 // License type deletion: //
@@ -69,7 +63,7 @@ void_result license_type_edit_evaluator::do_apply(const license_type_edit_operat
 void_result license_type_delete_evaluator::do_evaluate(const license_type_delete_operation& op)
 { try {
 
-  assert_license_authenticator( db(), op.license_authentication_account );
+  // assert_license_authenticator( db(), op.license_authentication_account );
   return void_result();
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
@@ -90,17 +84,20 @@ void_result license_request_evaluator::do_evaluate(const license_request_operati
 { try {
 
   const auto& d = db();
-  const auto& account_obj = op.account(d);
-  const auto& new_license_obj = op.license(d);
-  const auto& info = account_obj.license_info;
+  const auto issuer_id = d.get_chain_authorities().license_issuer;
+  const auto op_issuer_obj = op.license_issuing_account(d);
 
   // First, check that the license issuer matches the current license issuing account:
-  assert_license_issuer(d, op.license_issuing_account);
+  d.perform_chain_authority_check("license issuing", issuer_id, op_issuer_obj);
+
+  const auto& account_obj = op.account(d);
+  const auto& new_license_obj = op.license(d);
 
   // Licenses can only be issued to vault accounts:
   FC_ASSERT( account_obj.is_vault(), "Account '${n}' is not a vault account", ("n", account_obj.name) );
 
   // Make sure that there is no pending license:
+  const auto& info = account_obj.license_info;
   FC_ASSERT( !info.pending.valid(),
              "Cannot issue license ${l_n} on account ${a}, license ${l_p} is pending",
              ("l_n", new_license_obj.name)
@@ -156,8 +153,10 @@ object_id_type license_request_evaluator::do_apply(const license_request_operati
 void_result license_deny_evaluator::do_evaluate(const license_deny_operation& op)
 { try {
   const auto& d = db();
+  const auto auth_id = d.get_chain_authorities().license_authenticator;
+  const auto& op_auth_obj = op.license_authentication_account(d);
 
-  assert_license_authenticator(d, op.license_authentication_account);
+  d.perform_chain_authority_check("license authentication", auth_id, op_auth_obj);
 
   const auto& request_obj = op.request(d);
   const auto& account_obj = request_obj.account(d);

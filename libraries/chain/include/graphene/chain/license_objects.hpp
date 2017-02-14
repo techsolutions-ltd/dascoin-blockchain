@@ -76,9 +76,6 @@ namespace graphene { namespace chain {
       string name;                        // Name of the license.
       share_type amount = 0;              // The amount of cycles the license grants.
 
-      // TODO: this is stored here for debug purposes.
-      policy_type policy;  // This is a dynamic map of all variable policy settings on the license type.
-
       license_kind kind = license_kind::regular;
 
       // All upgrades in the system:

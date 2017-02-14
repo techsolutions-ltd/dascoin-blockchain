@@ -39,6 +39,7 @@ database::database()
 {
    initialize_indexes();
    initialize_evaluators();
+   initialize_genesis_transaction_state();
 }
 
 database::~database()

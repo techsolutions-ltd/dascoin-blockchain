@@ -20,20 +20,24 @@ namespace graphene { namespace chain {
    * @brief create a license type object
    * @ingroup operations
    *
-   * An authorized license authentication authority may define licenses to be distributed to users.
+   * An authorized license administration authority may define licenses to be distributed to users.
    */
   struct license_type_create_operation : public base_operation
   {
      struct fee_parameters_type {};  // No fees are paid for this operation.
 
      asset fee;
-     account_id_type license_authentication_account;  // This MUST be the license authentication authority.
+     account_id_type admin;
 
-     string name;                    // Name of the license.
-     share_type amount;              // The amount of cycles the license grants.
-     policy_type policy;
+     string name;
+     share_type amount;
+     string kind;
 
-     account_id_type fee_payer() const { return license_authentication_account; }
+     upgrade_multiplier_type balance_multipliers;
+     upgrade_multiplier_type requeue_multipliers;
+     upgrade_multiplier_type return_multipliers;
+
+     account_id_type fee_payer() const { return admin; }
      void validate() const;
      share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
@@ -42,7 +46,7 @@ namespace graphene { namespace chain {
    * @brief edit a license type object
    * @ingroup operations
    *
-   * An authorized license authentication authority may edit licenses to be distributed to users.
+   * An authorized license administration authority may edit licenses to be distributed to users.
    *
    * WARNING: this operation is NOT RETROACTIVE!
    */
@@ -52,13 +56,16 @@ namespace graphene { namespace chain {
 
      asset fee;
      license_type_id_type license;
-     account_id_type license_authentication_account;  // This MUST be the license authentication authority.
+     account_id_type admin;
 
-     optional<string> name;                       // Name of the license.
-     optional<share_type> amount;                 // The amount of cycles the license grants.
-     optional<policy_type> policy;
+     optional<string> name;
+     optional<share_type> amount;
 
-     account_id_type fee_payer() const { return license_authentication_account; }
+     optional<upgrade_multiplier_type> balance_multipliers;
+     optional<upgrade_multiplier_type> requeue_multipliers;
+     optional<upgrade_multiplier_type> return_multipliers;
+
+     account_id_type fee_payer() const { return admin; }
      void validate() const;
      share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
@@ -169,20 +176,25 @@ namespace graphene { namespace chain {
 FC_REFLECT( graphene::chain::license_type_create_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::license_type_create_operation,
             (fee)
-            (license_authentication_account)
+            (admin)
             (name)
             (amount)
-            (policy)
+            (kind)
+            (balance_multipliers)
+            (requeue_multipliers)
+            (return_multipliers)
           )
 
 FC_REFLECT( graphene::chain::license_type_edit_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::license_type_edit_operation,
             (fee)
             (license)
-            (license_authentication_account)
+            (admin)
             (name)
             (amount)
-            (policy)
+            (balance_multipliers)
+            (requeue_multipliers)
+            (return_multipliers)
           )
 FC_REFLECT( graphene::chain::license_type_delete_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::license_type_delete_operation,

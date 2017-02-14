@@ -46,6 +46,11 @@ const chain_parameters& database_fixture::get_chain_parameters() const
   return db.get_global_properties().parameters;
 }
 
+account_id_type database_fixture::get_license_administrator_id() const
+{
+  return db.get_global_properties().authorities.license_administrator;
+}
+
 account_id_type database_fixture::get_license_issuer_id() const
 {
   return db.get_global_properties().authorities.license_issuer;

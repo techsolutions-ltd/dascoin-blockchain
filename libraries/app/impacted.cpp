@@ -152,46 +152,7 @@ struct get_impacted_account_visitor
       _impacted.insert( op.committee_member_account );
    }
    void operator()( const committee_member_update_global_parameters_operation& op ) {}
-   void operator()( const committee_member_update_license_issuer_operation& op)
-   {
-      _impacted.insert( op.license_issuer );
-   }
-
-   void operator()( const committee_member_update_license_authenticator_operation& op )
-   {
-      _impacted.insert( op.license_authenticator );
-   }
-
-   void operator()( const committee_member_update_account_registrar_operation& op )
-   {
-      _impacted.insert( op.registrar );
-   }
-
-   void operator()( const committee_member_update_webasset_issuer_operation& op )
-   {
-      _impacted.insert(op.issuer);
-   }
-
-   void operator()( const committee_member_update_webasset_authenticator_operation& op )
-   {
-      _impacted.insert(op.authenticator);
-   }
-
-   void operator()( const committee_member_update_cycle_issuer_operation& op )
-   {
-      _impacted.insert(op.cycle_issuer);
-   }
-
-   void operator()( const committee_member_update_cycle_authenticator_operation& op )
-   {
-      _impacted.insert(op.cycle_authenticator);
-   }
-
-   void operator()( const committee_member_update_wire_out_handler_operation& op )
-   {
-      _impacted.insert(op.wire_out_handler);
-   }
-
+   void operator()( const board_update_chain_authority_operation& op ) {}
    void operator()( const license_type_create_operation& op ) {}
    void operator()( const license_type_edit_operation& op ) {}
    void operator()( const license_type_delete_operation& op ) {}

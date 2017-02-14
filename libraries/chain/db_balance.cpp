@@ -45,20 +45,6 @@ asset database::get_balance(const account_object& owner, const asset_object& ass
    return get_balance(owner.get_id(), asset_obj.get_id());
 }
 
-asset database::get_reserved_balance(account_id_type owner, asset_id_type asset_id) const
-{
-   auto& index = get_index_type<account_balance_index>().indices().get<by_account_asset>();
-   auto itr = index.find(boost::make_tuple(owner, asset_id));
-   if( itr == index.end() )
-      return asset(0, asset_id);
-   return itr->get_reserved_balance();
-}
-/// This is an overloaded method.
-asset database::get_reserved_balance(const account_object& owner, const asset_object& asset_obj) const
-{
-   return get_reserved_balance(owner.id, asset_obj.id);
-}
-
 const account_balance_object& database::get_balance_object(account_id_type owner, asset_id_type asset_id) const
 {
    auto& index = get_index_type<account_balance_index>().indices().get<by_account_asset>();
@@ -104,6 +90,11 @@ string database::to_pretty_string(const asset& a) const
 string database::to_pretty_string(const asset_reserved& a) const
 {
    return a.asset_id(*this).amount_to_pretty_string(a);
+}
+
+string database::to_pretty_string(const account_balance_object& abo) const
+{
+  return abo.asset_type(*this).amount_to_pretty_string(abo.get_asset_reserved_balance());
 }
 
 share_type database::get_cycle_balance(account_id_type owner) const
@@ -249,10 +240,10 @@ void database::adjust_cycle_balance(account_id_type account, share_type delta)
 
    if( delta < 0 )
       FC_ASSERT( itr->get_balance() >= -delta,
-                 "Insufficient Balance: ${a}'s balance of ${b} is less than required ${r}",
+                 "Insufficient Cycle Balance: ${a}'s balance of ${b} is less than required ${r}",
                  ("a",account(*this).name)
-                 ("b",to_pretty_string(itr->get_balance()))
-                 ("r",to_pretty_string(-delta))
+                 ("b", itr->get_balance())
+                 ("r", -delta)
                );
 
    modify(*itr, [delta](account_cycle_balance_object& b) {

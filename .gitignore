@@ -29,15 +29,6 @@ tests/das_test
 
 doxygen
 
-wallet.json
-witness_node_data_dir
-
-*.wallet
-
-programs/witness_node/object_database/*
-
-object_database/*
-
 *.pyc
 *.pyo
 
@@ -47,6 +38,8 @@ libraries/egenesis/embed_genesis
 
 programs/build_helpers/cat-parts
 programs/build_helpers/member_enumerator
+programs/cli_wallet/wallet.json
+programs/cli_wallet/*.wallet
 programs/debug_node/debug_node
 programs/delayed_node/delayed_node
 programs/genesis_util/convert_address
@@ -54,7 +47,8 @@ programs/genesis_util/genesis_update
 programs/genesis_util/get_dev_key
 programs/size_checker/size_checker
 programs/witness_node/clear.sh
-programs/witness_node/config.ini
+programs/witness_node/object_database
+programs/witness_node/witness_node_data_dir
 programs/witness_node/*genesis*.json
 
 tests/generate_empty_blocks/generate_empty_blocks
@@ -62,3 +56,4 @@ tests/generate_empty_blocks/generate_empty_blocks
 programs/cli_wallet/nuke_cli_wallet.sh
 
 .vscode/
+programs/cli_wallet/wallet.json\nprograms/witness_node/witness_node_data_dir/

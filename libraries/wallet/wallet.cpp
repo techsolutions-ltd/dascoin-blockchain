@@ -2204,7 +2204,7 @@ public:
             << "\n====================================================================================="
             << "|=====================================================================================\n";
 
-         for (int i = 0; i < bids.size() || i < asks.size() ; i++)
+         for (size_t i = 0; i < bids.size() || i < asks.size() ; i++)
          {
             if ( i < bids.size() )
             {
@@ -2882,7 +2882,7 @@ map<string,account_id_type> wallet_api::list_accounts(const string& lowerbound, 
    return my->_remote_db->lookup_accounts(lowerbound, limit);
 }
 
-vector<asset> wallet_api::list_account_balances(const string& id)
+vector<asset_reserved> wallet_api::list_account_balances(const string& id)
 {
    if( auto real_id = detail::maybe_id<account_id_type>(id) )
       return my->_remote_db->get_account_balances(*real_id, flat_set<asset_id_type>());

@@ -86,8 +86,8 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       uint64_t get_account_count()const;
 
       // Balances
-      vector<asset> get_account_balances(account_id_type id, const flat_set<asset_id_type>& assets)const;
-      vector<asset> get_named_account_balances(const std::string& name, const flat_set<asset_id_type>& assets)const;
+      vector<asset_reserved> get_account_balances(account_id_type id, const flat_set<asset_id_type>& assets)const;
+      vector<asset_reserved> get_named_account_balances(const std::string& name, const flat_set<asset_id_type>& assets)const;
       vector<balance_object> get_balance_objects( const vector<address>& addrs )const;
       vector<asset> get_vested_balances( const vector<balance_id_type>& objs )const;
       vector<vesting_balance_object> get_vesting_balances( account_id_type account_id )const;
@@ -800,39 +800,38 @@ uint64_t database_api_impl::get_account_count()const
 //                                                                  //
 //////////////////////////////////////////////////////////////////////
 
-vector<asset> database_api::get_account_balances(account_id_type id, const flat_set<asset_id_type>& assets)const
+vector<asset_reserved> database_api::get_account_balances(account_id_type id, const flat_set<asset_id_type>& assets) const
 {
    return my->get_account_balances( id, assets );
 }
 
-vector<asset> database_api_impl::get_account_balances(account_id_type acnt, const flat_set<asset_id_type>& assets)const
+vector<asset_reserved> database_api_impl::get_account_balances(account_id_type acnt, const flat_set<asset_id_type>& assets) const
 {
-   vector<asset> result;
+   vector<asset_reserved> result;
    if (assets.empty())
    {
-      // if the caller passes in an empty list of assets, return balances for all assets the account owns
+      // if the caller passes in an empty list of assets, return balances for all assets the account owns.
       const account_balance_index& balance_index = _db.get_index_type<account_balance_index>();
       auto range = balance_index.indices().get<by_account_asset>().equal_range(boost::make_tuple(acnt));
-      for (const account_balance_object& balance : boost::make_iterator_range(range.first, range.second))
-         result.push_back(asset(balance.get_balance()));
+      for ( const account_balance_object& balance : boost::make_iterator_range(range.first, range.second) )
+         result.emplace_back(balance.get_asset_reserved_balance());
    }
    else
    {
       result.reserve(assets.size());
-
-      std::transform(assets.begin(), assets.end(), std::back_inserter(result),
-                     [this, acnt](asset_id_type id) { return _db.get_balance(acnt, id); });
+      std::transform(assets.begin(), assets.end(), std::back_inserter(result), [this, acnt](asset_id_type id) {
+         return _db.get_balance_object(acnt, id).get_asset_reserved_balance();
+      });
    }
-
    return result;
 }
 
-vector<asset> database_api::get_named_account_balances(const std::string& name, const flat_set<asset_id_type>& assets)const
+vector<asset_reserved> database_api::get_named_account_balances(const std::string& name, const flat_set<asset_id_type>& assets)const
 {
    return my->get_named_account_balances( name, assets );
 }
 
-vector<asset> database_api_impl::get_named_account_balances(const std::string& name, const flat_set<asset_id_type>& assets) const
+vector<asset_reserved> database_api_impl::get_named_account_balances(const std::string& name, const flat_set<asset_id_type>& assets) const
 {
    const auto& accounts_by_name = _db.get_index_type<account_index>().indices().get<by_name>();
    auto itr = accounts_by_name.find(name);
@@ -1121,7 +1120,7 @@ market_ticker database_api_impl::get_ticker( const string& base, const string& q
    result.lowest_ask = 0;
    result.highest_bid = 0;
 
-   auto price_to_real = [&]( const share_type a, int p ) { return double( a.value ) / pow( 10, p ); };
+   // auto price_to_real = [&]( const share_type a, int p ) { return double( a.value ) / pow( 10, p ); };
 
    try {
       if( base_id > quote_id ) std::swap(base_id, quote_id);

@@ -45,6 +45,7 @@
 #include <graphene/chain/protocol/address.hpp>
 #include <graphene/db/object_id.hpp>
 #include <graphene/chain/protocol/config.hpp>
+#include <graphene/chain/protocol/enum_reflect.hpp>
 
 namespace graphene { namespace chain {
    using namespace graphene::db;
@@ -107,6 +108,22 @@ namespace graphene { namespace chain {
       vault_to_wallet_reserved_webasset = 1,
       wallet_out_webasset = 2,
       LIMIT_KIND_COUNT
+   };
+
+   enum chain_authority_kind
+   {
+      no_authority = 0,
+      license_administrator = 1,
+      license_issuer = 2,
+      license_authenticator = 3,
+      webasset_issuer = 4,
+      webasset_authenticator = 5,
+      cycle_issuer = 6,
+      cycle_authenticator = 7,
+      registrar = 8,
+      pi_validator = 9,
+      wire_out_handler = 10,
+      CHAIN_AUTHORITY_KIND_COUNT
    };
 
    enum asset_issuer_permission_flags
@@ -339,7 +356,7 @@ namespace graphene { namespace chain {
    typedef uint16_t                                             weight_type;
    typedef safe<int64_t>                                        frequency_type;
    typedef std::vector<share_type>                              limits_type;
-   typedef std::map<std::string, fc::variant>                   policy_type;
+   typedef std::vector<uint8_t>                                 upgrade_multiplier_type;
 
    struct public_key_type
    {
@@ -407,7 +424,26 @@ namespace graphene { namespace chain {
       friend bool operator == ( const extended_private_key_type& p1, const extended_private_key_type& p2);
       friend bool operator != ( const extended_private_key_type& p1, const extended_private_key_type& p2);
    };
-} }  // graphene::chain
+
+   struct version
+   {
+      version() {}
+      version( uint8_t m, uint8_t h, uint16_t r );
+      virtual ~version() {}
+
+      bool operator == ( const version& o )const { return v_num == o.v_num; }
+      bool operator != ( const version& o )const { return v_num != o.v_num; }
+      bool operator <  ( const version& o )const { return v_num <  o.v_num; }
+      bool operator <= ( const version& o )const { return v_num <= o.v_num; }
+      bool operator >  ( const version& o )const { return v_num >  o.v_num; }
+      bool operator >= ( const version& o )const { return v_num >= o.v_num; }
+
+      operator fc::string() const;
+
+      uint32_t v_num = 0;
+   };
+
+} }  // namespace graphene::chain
 
 namespace fc
 {
@@ -417,28 +453,45 @@ namespace fc
     void from_variant( const fc::variant& var, graphene::chain::extended_public_key_type& vo );
     void to_variant( const graphene::chain::extended_private_key_type& var, fc::variant& vo );
     void from_variant( const fc::variant& var, graphene::chain::extended_private_key_type& vo );
+    void to_variant( const graphene::chain::version& v, variant& var );
+    void from_variant( const variant& var, graphene::chain::version& v );
 }
 
-FC_REFLECT_ENUM( graphene::chain::limit_kind,
-                 (vault_to_wallet_webasset)
-                 (vault_to_wallet_reserved_webasset)
-                 (wallet_out_webasset)
-                 (LIMIT_KIND_COUNT)
-               )
+REFLECT_ENUM_CHECK( graphene::chain::limit_kind,
+                    (vault_to_wallet_webasset)
+                    (vault_to_wallet_reserved_webasset)
+                    (wallet_out_webasset)
+                    (LIMIT_KIND_COUNT)
+                  )
 
-FC_REFLECT_ENUM( graphene::chain::license_kind,
-                 (regular)
-                 (chartered)
-                 (promo)
-                 (LICENSE_KIND_COUNT)
-               )
+REFLECT_ENUM_CHECK( graphene::chain::license_kind,
+                    (regular)
+                    (chartered)
+                    (promo)
+                    (LICENSE_KIND_COUNT)
+                  )
 
-FC_REFLECT_ENUM( graphene::chain::account_kind,
-                 (wallet)
-                 (vault)
-                 (special)
-                 (VAULT_KIND_COUNT)
-               )
+REFLECT_ENUM_CHECK( graphene::chain::account_kind,
+                    (wallet)
+                    (vault)
+                    (special)
+                    (VAULT_KIND_COUNT)
+                  )
+
+REFLECT_ENUM_CHECK( graphene::chain::chain_authority_kind,
+                    (no_authority)
+                    (license_administrator)
+                    (license_issuer)
+                    (license_authenticator)
+                    (webasset_issuer)
+                    (webasset_authenticator)
+                    (cycle_issuer)
+                    (cycle_authenticator)
+                    (registrar)
+                    (pi_validator)
+                    (wire_out_handler)
+                    (CHAIN_AUTHORITY_KIND_COUNT)
+                  )
 
 FC_REFLECT( graphene::chain::public_key_type, (key_data) )
 FC_REFLECT( graphene::chain::public_key_type::binary_key, (data)(check) )
@@ -529,6 +582,7 @@ FC_REFLECT_TYPENAME( graphene::chain::issue_asset_request_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::wire_out_holder_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::cycle_issue_request_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::reward_queue_id_type )
+FC_REFLECT_TYPENAME( graphene::chain::upgrade_multiplier_type )
 
 FC_REFLECT( graphene::chain::void_t, )
 
@@ -549,3 +603,5 @@ FC_REFLECT_ENUM( graphene::chain::cycle_policy_flags,
                  (auto_submit_to_queue)
                  (retain_after_submission)
                )
+
+FC_REFLECT( graphene::chain::version, (v_num) )

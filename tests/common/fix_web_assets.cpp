@@ -64,8 +64,8 @@ const issue_asset_request_object* database_fixture::issue_webasset(account_id_ty
 
 std::pair<share_type, share_type> database_fixture::get_web_asset_amounts(account_id_type owner_id)
 {
-  return std::make_pair(db.get_balance(owner_id, get_web_asset_id()).amount,
-                        db.get_reserved_balance(owner_id, get_web_asset_id()).amount);
+  const auto& balance_obj = db.get_balance_object(owner_id, get_web_asset_id());
+  return std::make_pair(balance_obj.balance, balance_obj.reserved);
 }
 
 std::pair<asset, asset> database_fixture::get_web_asset_balances(account_id_type owner_id)

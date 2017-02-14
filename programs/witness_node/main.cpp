@@ -27,6 +27,10 @@
 #include <graphene/account_history/account_history_plugin.hpp>
 #include <graphene/market_history/market_history_plugin.hpp>
 
+#include <graphene/chain/protocol/types.hpp>
+#include <graphene/utilities/git_revision.hpp>
+#include <fc/git_revision.hpp>
+
 #include <fc/exception/exception.hpp>
 #include <fc/thread/thread.hpp>
 #include <fc/interprocess/signals.hpp>
@@ -65,6 +69,7 @@ int main(int argc, char** argv) {
       bpo::options_description app_options("Graphene Witness Node");
       bpo::options_description cfg_options("Graphene Witness Node");
       app_options.add_options()
+            ("version,v", "Print witness_node version and exit.")
             ("help,h", "Print this help message and exit.")
             ("data-dir,d", bpo::value<boost::filesystem::path>()->default_value("witness_node_data_dir"), "Directory containing databases, configuration file, etc.")
             ;
@@ -92,6 +97,17 @@ int main(int argc, char** argv) {
       if( options.count("help") )
       {
          std::cout << app_options << "\n";
+         return 0;
+      }
+
+      if( options.count("version") )
+      {
+         // TODO: display blockchain protocol version?
+         std::cout << "Git version:\t" << fc::string(graphene::utilities::git_revision_description)
+            << "\nGit revision:\t" << fc::string(graphene::utilities::git_revision_sha)
+            << "\nRevision age:\t" << fc::get_approximate_relative_time_string(fc::time_point_sec(graphene::utilities::git_revision_unix_timestamp))
+            << "\nFC revision:\t" << fc::string(fc::git_revision_sha)
+            << std::endl;
          return 0;
       }
 

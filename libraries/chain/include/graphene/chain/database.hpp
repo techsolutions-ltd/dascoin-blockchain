@@ -34,6 +34,7 @@
 #include <graphene/db/object_database.hpp>
 #include <graphene/db/object.hpp>
 #include <graphene/db/simple_index.hpp>
+#include <fc/optional.hpp>
 #include <fc/signals.hpp>
 
 #include <graphene/chain/protocol/protocol.hpp>
@@ -90,9 +91,7 @@ namespace graphene { namespace chain {
           * @param data_dir Path to open or create database in
           * @param genesis_loader A callable object which returns the genesis state to initialize new databases on
           */
-          void open(
-             const fc::path& data_dir,
-             std::function<genesis_state_type()> genesis_loader );
+          void open(const fc::path& data_dir, std::function<genesis_state_type()> genesis_loader);
 
          /**
           * @brief Rebuild object graph from block history and open detabase
@@ -173,6 +172,8 @@ namespace graphene { namespace chain {
 
          string to_pretty_string(const asset& a) const;
          string to_pretty_string(const asset_reserved& a) const;
+         string to_pretty_string(const account_balance_object& abo) const;
+
 
          /**
           *  This signal is emitted after all operations and virtual operation for a
@@ -277,6 +278,19 @@ namespace graphene { namespace chain {
          void initialize_indexes();
 
          /**
+          * Initialize the genesis tranasction state. During the initialization of the starting state of the chain, the
+          * transactions will applied with this state.
+          */
+         void initialize_genesis_transaction_state();
+
+         /**
+          * Initialize the chain authority from the genesis state.
+          * @param kind The kind of authority to initialize. See @ref chain_authority_kind
+          * @param name The account name in the genesis state.
+          */
+         account_id_type initialize_chain_authority(const string& kind, const string& name);
+
+         /**
           * Distribute the initial cycles to accounts in the genesis_state.
           */
          void initialize_preissued_cycles(const genesis_state_type& genesis_state);
@@ -307,10 +321,6 @@ namespace graphene { namespace chain {
          /// This is an overloaded method.
          asset get_balance(const account_object& owner, const asset_object& asset_obj)const;
 
-         asset get_reserved_balance(account_id_type owner, asset_id_type asset_id) const;
-         /// This is an overloaded method.
-         asset get_reserved_balance(const account_object& owner, const asset_object& asset_obj) const;
-
          /**
           * Retrieve the balance object for a given asset on an account, This method will throw an exception if the
           * object does not exist.
@@ -329,8 +339,6 @@ namespace graphene { namespace chain {
           * @return          Const reference to the cycle balance object.
           */
          const account_cycle_balance_object& get_cycle_balance_object(account_id_type owner) const;
-
-         pair<asset, share_type> get_balance_and_spent(account_id_type owner, asset_id_type asset_id) const;
 
          /**
           * @brief Retrieve a particular account's cycle balance.
@@ -531,7 +539,14 @@ namespace graphene { namespace chain {
 
          //////////////////// db_license.cpp ////////////////////
 
-         object_id_type create_license_type(const string& name, share_type amount, const policy_type& policy);
+         object_id_type create_license_type(license_kind kind, const string& name, share_type amount, 
+                                            upgrade_multiplier_type balance_multipliers,
+                                            upgrade_multiplier_type requeue_multipliers,
+                                            upgrade_multiplier_type return_multipliers);
+         void edit_license_type(license_type_id_type license_id, optional<string> name, optional<share_type> amount,
+                                optional<upgrade_multiplier_type> balance_multipliers,
+                                optional<upgrade_multiplier_type> requeue_multipliers,
+                                optional<upgrade_multiplier_type> return_multipliers);
          void fulfill_license_request(const license_request_object& req);
 
 
@@ -603,6 +618,15 @@ namespace graphene { namespace chain {
          ///@}
          ///@}
 
+         ////////////////// db_util.cpp //////////////////////
+
+public:
+         void perform_chain_authority_check(const string& auth_type_name, account_id_type auth_id,
+                                            const account_object& acc_obj) const;
+         share_type cycles_to_dascoin(share_type cycles, share_type frequency) const;
+         share_type dascoin_to_cycles(share_type dascoin, share_type frequency) const;
+
+private:
          vector< processed_transaction >        _pending_tx;
          fork_database                          _fork_db;
 
@@ -638,6 +662,8 @@ namespace graphene { namespace chain {
          flat_map<uint32_t,block_id_type>  _checkpoints;
 
          node_property_object              _node_property_object;
+
+         transaction_evaluation_state      _genesis_eval_state;
    };
 
    namespace detail

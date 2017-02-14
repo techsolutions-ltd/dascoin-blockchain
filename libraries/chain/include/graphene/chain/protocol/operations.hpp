@@ -96,14 +96,7 @@ namespace graphene { namespace chain {
             asset_settle_cancel_operation,  // VIRTUAL
             asset_claim_fees_operation,
             fba_distribute_operation,  // VIRTUAL
-            committee_member_update_license_issuer_operation,
-            committee_member_update_license_authenticator_operation,
-            committee_member_update_account_registrar_operation,
-            committee_member_update_webasset_issuer_operation,
-            committee_member_update_webasset_authenticator_operation,
-            committee_member_update_wire_out_handler_operation,
-            committee_member_update_cycle_issuer_operation,
-            committee_member_update_cycle_authenticator_operation,
+            board_update_chain_authority_operation,
             license_type_create_operation,
             license_type_edit_operation,
             license_type_delete_operation,
@@ -111,7 +104,7 @@ namespace graphene { namespace chain {
             license_approve_operation,  // VIRTUAL
             license_deny_operation,
             tether_accounts_operation,
-            update_pi_limits_operation,
+            // update_pi_limits_operation,
             asset_create_issue_request_operation,
             asset_distribute_completed_request_operation,  // VIRTUAL
             asset_deny_issue_request_operation,

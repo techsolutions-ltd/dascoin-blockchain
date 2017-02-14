@@ -18,6 +18,21 @@ using namespace graphene::chain::test;
 
 BOOST_FIXTURE_TEST_SUITE( dascoin_tests, database_fixture )
 
+BOOST_FIXTURE_TEST_SUITE( license_tests, database_fixture )
+
+BOOST_AUTO_TEST_CASE( issue_single_license_test )
+{ try {
+  VAULT_ACTOR(vault);
+  const auto pro_id = get_license_type("pro").id;
+
+  issue_license_to_vault_account(vault_id, pro_id);
+  generate_block();
+
+  generate_blocks(db.head_block_time() + fc::hours(24));
+  BOOST_CHECK( vault.license_info.active_license() == pro_id );
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_CASE( upgrade_type_test )
 { try {
 
@@ -72,6 +87,30 @@ BOOST_AUTO_TEST_CASE( license_type_integrity_test )
   BOOST_CHECK( lic_obj.balance_upgrade == upgrade_type() );
   BOOST_CHECK( lic_obj.requeue_upgrade == upgrade_type() );
   BOOST_CHECK( lic_obj.return_upgrade == upgrade_type({1}) );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( edit_license_type_test )
+{ try {
+  using up_t = upgrade_multiplier_type;
+  using o_up_t = optional<upgrade_multiplier_type>;
+  
+  auto empty = o_up_t(up_t());
+
+  create_license_type("regular", "test", 100, {1, 2, 3}, {4, 5, 6}, {7, 8, 9});
+  generate_block();
+  auto lt = get_license_type("test");
+  edit_license_type(lt.id, {"test-modified"}, {1000}, o_up_t(up_t{2, 4, 6}), empty, o_up_t());
+  generate_block();
+  
+  lt = get_license_type("test-modified");
+  BOOST_CHECK_EQUAL( lt.name, "test-modified" );
+  BOOST_CHECK_EQUAL( lt.amount.value, 1000 );
+  BOOST_CHECK_EQUAL( lt.kind, license_kind::regular );
+  BOOST_CHECK( lt.balance_upgrade == upgrade_type({2, 4, 6}) );
+  BOOST_CHECK( lt.requeue_upgrade == upgrade_type() );
+  BOOST_CHECK( lt.return_upgrade == upgrade_type({7, 8, 9}) );
+
 
 } FC_LOG_AND_RETHROW() }
 
@@ -219,9 +258,6 @@ BOOST_AUTO_TEST_CASE( upgrade_cycles_test )
 
 } FC_LOG_AND_RETHROW() }
 
-BOOST_AUTO_TEST_CASE( mass_license_issue_test )
-{ try {
-
-} FC_LOG_AND_RETHROW() }
+BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

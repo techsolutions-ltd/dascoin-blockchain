@@ -144,7 +144,8 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<optional<license_request_object>> get_license_requests(const vector<license_request_id_type>& license_req_ids)const;
 
       // Cycles:
-      share_type get_account_cycle_balance(const account_id_type account_id)const;
+      share_type get_account_cycle_balance(const account_id_type account_id) const;
+      vector<cycle_agreement> get_total_account_cycles(account_id_type id) const;
 
       // Queue:
       uint32_t get_reward_queue_size() const;
@@ -1940,6 +1941,21 @@ share_type database_api::get_account_cycle_balance(const account_id_type id)cons
 share_type database_api_impl::get_account_cycle_balance(const account_id_type id)const
 {
    return _db.get_cycle_balance(id);
+}
+
+vector<cycle_agreement> database_api::get_total_account_cycles(account_id_type id) const
+{
+    return my->get_total_account_cycles(id);
+}
+
+vector<cycle_agreement> database_api_impl::get_total_account_cycles(account_id_type id) const
+{
+    vector<cycle_agreement> result;
+
+    // Free cycles have a frequency lock of 0:
+    result.emplace_back(_db.get_cycle_balance(id), 0);
+    // TODO: cycle submissions from queue.
+    return result;
 }
 
 //////////////////////////////////////////////////////////////////////

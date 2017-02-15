@@ -111,6 +111,15 @@ struct market_trade
    double                     value;
 };
 
+struct cycle_agreement
+{
+  share_type cycles;
+  frequency_type frequency_lock;
+
+  cycle_agreement() : cycles(0), frequency_lock(0) {}
+  cycle_agreement(share_type c, frequency_type f_l) : cycles(c), frequency_lock(f_l) {}
+};
+
 /**
  * @brief The database_api class implements the RPC API for the chain database.
  *
@@ -633,7 +642,9 @@ class database_api
        * @param  account_id ID of the account to check.
        * @return            Amount of cycles attached to the account.
        */
-      share_type get_account_cycle_balance(const account_id_type account_id)const;
+      share_type get_account_cycle_balance(const account_id_type account_id) const;
+
+      vector<cycle_agreement> get_total_account_cycles(account_id_type account_id) const;
 
       //////////////////////////
       // PI:                  //
@@ -708,6 +719,7 @@ FC_REFLECT( graphene::app::order_book, (base)(quote)(bids)(asks) );
 FC_REFLECT( graphene::app::market_ticker, (base)(quote)(latest)(lowest_ask)(highest_bid)(percent_change)(base_volume)(quote_volume) );
 FC_REFLECT( graphene::app::market_volume, (base)(quote)(base_volume)(quote_volume) );
 FC_REFLECT( graphene::app::market_trade, (date)(price)(amount)(value) );
+FC_REFLECT( graphene::app::cycle_agreement, (cycles)(frequency_lock) )
 
 FC_API(graphene::app::database_api,
    // Objects
@@ -811,6 +823,7 @@ FC_API(graphene::app::database_api,
 
    // Cycles
    (get_account_cycle_balance)
+   (get_total_account_cycles)
 
    // PI
    (get_account_limits)

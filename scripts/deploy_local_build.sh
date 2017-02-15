@@ -3,8 +3,6 @@
 # The purpose of this script is to deploy the local build of the blockchain to a defined target directory.
 # The script will use a configuration specified in the config folder.
 
-# TODO: fix compression path
-
 set -o errexit
 set -o pipefail
 # set -o nounset
@@ -46,7 +44,7 @@ function compress_folder {
 
 # Return <string> with build type: "Debug"/"Release"
 function get_cmake_build_type {
-    grep CMAKE_BUILD_TYPE CMakeCache.txt | awk -F"=" '{print $2}'
+    grep CMAKE_BUILD_TYPE ${__root}/CMakeCache.txt | awk -F"=" '{print $2}'
 }
 
 # Setting magic variables for current file and dir:
@@ -58,14 +56,15 @@ __script="$(basename ${BASH_SOURCE[0]})"
 
 # Set default variables:
 config_name="testing"
-program_dir="${__dir}/programs"
-configs_root="${__dir}/configs"
-target_dir="${__root}/blockchain-builds"
+program_dir="${__root}/programs"
+configs_root="${__root}/configs"
+target_dir="${HOME}/blockchain-builds"
+remote_dir=""
 compress=false
 
 #Set fonts:
-norm_font=`tput sgr0`
-bold_font=`tput bold`
+# norm_font=`tput sgr0`
+# bold_font=`tput bold`
 # rev_font=`tput smso`
 
 # Describe usage of the script:
@@ -76,13 +75,14 @@ function help {
     echo -e "${bold_font}-t${norm_font}  --Target directory to which to deploy the build. Default is ${bold_font}${target_dir}${norm_font}"
     echo -e "${bold_font}-c${norm_font}  --Configuration name. Default is ${bold_font}${config_name}${norm_font}"
     echo -e "${bold_font}-z${norm_font}  --Create a compressed build folder. Default is ${bold_font}false${norm_font}"
+    echo -e "${bold_font}-s${norm_font}  --Copy the compressed build to a remote location. Activates ${bold_font}-z${norm_font}"
     echo -e "${bold_font}-h${norm_font}  --Displays this message."\\n
     exit 1;
     }
 
 numargs=$#
 
-while getopts :c:t:zh flag; do
+while getopts :c:t:s:zh flag; do
   case $flag in
     c)
       config_name=$OPTARG
@@ -92,6 +92,10 @@ while getopts :c:t:zh flag; do
       ;;
     z)
       compress=true;
+      ;;
+    s)
+      compress=true;
+      remote_dir=$OPTARG
       ;;
     h)
       help
@@ -105,6 +109,9 @@ while getopts :c:t:zh flag; do
 done
 
 shift $((OPTIND-1))  #This tells getopts to move on to the next argument.
+
+# Test for mandatory parameters:
+
 
 config_dir="${configs_root}/${config_name}"
 
@@ -147,15 +154,23 @@ step=$((${step}+1))
 
 if [ ${compress} = true ]; then
     echo "${step}) Compressing build folder:"
+    build_archive_name="${target_dir}/${build_name}.tar.gz"
     compress_folder "${build_name}" "${build_dir}" "${target_dir}"
     echo "Done"
     echo
     step=$((${step}+1))
 fi
 
+if [ -n "${remote_dir}" ]; then
+    echo "${step}) Copyinig compressed build to remote ${remote_dir}:"
+    copy "${target_dir}/${build_name}.tar.gz" "${remote_dir}"
+    echo "Done"
+    echo
+    step=$((${step}+1))
+fi
+
 echo "${step}) Creating symbolic link for last build"
-rm ${target_dir}/last_build
-ln -s ${build_dir} ${target_dir}/last_build
+ln -fs ${build_dir} ${target_dir}/last_build
 echo "Done"
 echo
 

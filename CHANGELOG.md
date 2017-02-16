@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 ### Changed
+- Updated scripts
+- Created scripts folder in project root
 
 ## [0.0.1] - 2017-02-14
 ### Added

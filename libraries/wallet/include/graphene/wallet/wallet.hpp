@@ -1462,6 +1462,7 @@ class wallet_api
        * @param issuer            This MUST be the license issuing chain authority.
        * @param account           The account that will benefit the license.
        * @param license           The id of the license that will be granted to the account.
+       * @param bonus_percentage  Bonus percentage of license base cycles to be issued. Value must be greater than -100.
        * @param frequency         Frequency lock for this license.
        * @param broadcast         true if you wish to broadcast the transaction.
        * @return                  The signed version of the transaction.
@@ -1470,6 +1471,7 @@ class wallet_api
         const string& issuer,
         const string& account,
         const string& license,
+        share_type bonus_percentage,
         frequency_type frequency,
         bool broadcast /* false */
         );

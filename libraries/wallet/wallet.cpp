@@ -2476,6 +2476,7 @@ public:
       const string& issuer,
       const string& account,
       const string& license,
+      share_type bonus_percentage,
       frequency_type frequency,
       bool broadcast)
    {
@@ -2488,6 +2489,7 @@ public:
       op.license_issuing_account = issuer_account.id;
       op.account = beneficiary.id;
       op.license = new_license.id;
+      op.bonus_percentage = bonus_percentage;
       op.frequency = frequency;
 
       signed_transaction tx;
@@ -4419,9 +4421,10 @@ vector<license_type_object> wallet_api::list_license_types_by_amount(const uint3
 }
 
 signed_transaction wallet_api::issue_license( const string& issuer, const string& account, const string& license,
-                                              frequency_type account_frequency, bool broadcast )
+                                              share_type bonus_percentage, frequency_type account_frequency,
+                                              bool broadcast )
 {
-   return my->issue_license( issuer, account, license, account_frequency, broadcast );
+   return my->issue_license( issuer, account, license, bonus_percentage, account_frequency, broadcast );
 }
 
 signed_transaction wallet_api::deny_license_request( const string& authenticator, const string& req_id, bool broadcast)

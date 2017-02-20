@@ -6,6 +6,19 @@
 namespace graphene { namespace chain {
 
 ////////////////////////////
+// Private methods:       //
+////////////////////////////
+
+namespace detail {
+
+share_type apply_percentage(share_type val, share_type percent)
+{
+  return val + (val * percent / 100);
+};
+
+}  // namespace graphene::chain::detail
+
+////////////////////////////
 // License type creation: //
 ////////////////////////////
 
@@ -128,6 +141,7 @@ void_result license_request_evaluator::do_evaluate(const license_request_operati
              );
   }
 
+  new_license_obj_ = &new_license_obj;
   account_obj_ = &account_obj;
   return {};
 
@@ -138,11 +152,14 @@ object_id_type license_request_evaluator::do_apply(const license_request_operati
   auto& d = db();
   const auto& params = d.get_global_properties().parameters;
 
+  share_type amount = detail::apply_percentage(new_license_obj_->amount, op.bonus_percentage);
+
   // Create the new request object:
   license_request_id_type req_id =  d.create<license_request_object>([&](license_request_object &req) {
     req.license_issuing_account = op.license_issuing_account;
     req.account = op.account;
     req.license = op.license;
+    req.amount = amount;
     req.frequency = op.frequency;
     req.expiration = d.head_block_time() + fc::seconds(params.license_expiration_time_seconds);
   }).id;

@@ -19,10 +19,12 @@ namespace graphene { namespace chain {
       struct license_history_record
       {
         license_type_id_type license;
+        share_type amount;
         frequency_type frequency_lock;
 
         license_history_record() = default;
-        license_history_record(license_type_id_type l, frequency_type f) : license(l), frequency_lock(f) {}
+        license_history_record(license_type_id_type l, share_type a, frequency_type f) 
+          : license(l), amount(a), frequency_lock(f) {}
       };
 
       struct pending_license_record
@@ -36,7 +38,7 @@ namespace graphene { namespace chain {
 
       optional<license_type_id_type> active_license() const;
       frequency_type active_frequency_lock() const;
-      void add_license(license_type_id_type license_id, frequency_type frequency_lock = 0);
+      void add_license(license_type_id_type license_id, share_type amount, frequency_type frequency_lock);
 
       void set_pending(license_type_id_type license_id, license_request_id_type req)
       {
@@ -123,8 +125,10 @@ namespace graphene { namespace chain {
       static const uint8_t type_id  = impl_license_request_object_type;
 
       account_id_type license_issuing_account;  // This MUST be the license authentication authority.
+
       account_id_type account;                  // The account to benefit the license.
       license_type_id_type license;             // The license to be granted to the account.
+      share_type amount;                        // The amount of cycles (with multiplier).
       time_point_sec expiration;                // Deadline for denial.
       frequency_type frequency;                 // Account frequency lock to be applied.
 
@@ -196,6 +200,7 @@ namespace graphene { namespace chain {
 
 FC_REFLECT( graphene::chain::license_information::license_history_record,
             (license)
+            (amount)
             (frequency_lock)
           )
 FC_REFLECT( graphene::chain::license_information::pending_license_record,
@@ -224,6 +229,7 @@ FC_REFLECT_DERIVED( graphene::chain::license_request_object, (graphene::db::obje
                     (license_issuing_account)
                     (account)
                     (license)
+                    (amount)
                     (expiration)
                     (frequency)
                     (extensions)

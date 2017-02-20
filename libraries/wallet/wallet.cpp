@@ -4429,11 +4429,18 @@ signed_transaction wallet_api::deny_license_request( const string& authenticator
    return my->deny_license_request( authenticator, req_id, broadcast );
 }
 
-share_type wallet_api::get_account_cycle_balance(const string& name_or_id)const
+share_type wallet_api::get_account_cycle_balance(const string& name_or_id) const
 {
    if( auto real_id = detail::maybe_id<account_id_type>(name_or_id) )
       return my->_remote_db->get_account_cycle_balance(*real_id);
    return my->_remote_db->get_account_cycle_balance(get_account(name_or_id).id);
+}
+
+vector<cycle_agreement> wallet_api::get_total_account_cycles(const string& name_or_id) const
+{
+   if( auto real_id = detail::maybe_id<account_id_type>(name_or_id) )
+      return my->_remote_db->get_total_account_cycles(*real_id);
+   return my->_remote_db->get_total_account_cycles(get_account(name_or_id).id);
 }
 
 uint32_t wallet_api::get_reward_queue_size() const

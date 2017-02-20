@@ -43,7 +43,8 @@ const license_type_object& database_fixture::get_license_type(const string& name
 } FC_LOG_AND_RETHROW() }
 
 const license_request_object* database_fixture::issue_license_to_vault_account(const account_id_type vault_account_id,
-   const license_type_id_type license_id, frequency_type frequency)
+                                                                               const license_type_id_type license_id, 
+                                                                               frequency_type frequency)
 { try {
   license_request_operation op;
   op.license_issuing_account = get_license_issuer_id();

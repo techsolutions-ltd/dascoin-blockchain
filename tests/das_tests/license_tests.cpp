@@ -33,6 +33,21 @@ BOOST_AUTO_TEST_CASE( issue_single_license_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( check_issue_frequency_lock_not_zero )
+{ try {
+  VAULT_ACTOR(vault);
+
+  // Regular license can have a frequency lock of 0:
+  issue_license_to_vault_account(vault_id, get_license_type("pro").id, 0);
+
+  // Charter license CANNOT have a frequency lock of 0:
+  GRAPHENE_REQUIRE_THROW( issue_license_to_vault_account(vault_id, get_license_type("pro-charter").id, 0), fc::exception );
+
+  // Promo license CANNOT have a frequency lock of 0:
+  GRAPHENE_REQUIRE_THROW( issue_license_to_vault_account(vault_id, get_license_type("pro-promo").id, 0), fc::exception );
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_CASE( upgrade_type_test )
 { try {
 
@@ -94,7 +109,7 @@ BOOST_AUTO_TEST_CASE( edit_license_type_test )
 { try {
   using up_t = upgrade_multiplier_type;
   using o_up_t = optional<upgrade_multiplier_type>;
-  
+
   auto empty = o_up_t(up_t());
 
   create_license_type("regular", "test", 100, {1, 2, 3}, {4, 5, 6}, {7, 8, 9});
@@ -102,7 +117,7 @@ BOOST_AUTO_TEST_CASE( edit_license_type_test )
   auto lt = get_license_type("test");
   edit_license_type(lt.id, {"test-modified"}, {1000}, o_up_t(up_t{2, 4, 6}), empty, o_up_t());
   generate_block();
-  
+
   lt = get_license_type("test-modified");
   BOOST_CHECK_EQUAL( lt.name, "test-modified" );
   BOOST_CHECK_EQUAL( lt.amount.value, 1000 );

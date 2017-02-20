@@ -1528,6 +1528,8 @@ class wallet_api
        */
       share_type get_account_cycle_balance( const string& account )const;
 
+      vector<cycle_agreement> get_total_account_cycles(const string& account) const;
+
       order_book get_order_book( const string& base, const string& quote, unsigned limit = 50);
 
       ///////////////////////////////
@@ -1787,6 +1789,7 @@ FC_API( graphene::wallet::wallet_api,
         (deny_license_request)
         // Cycles:
         (get_account_cycle_balance)
+        (get_total_account_cycles)
         (get_order_book)
         (wire_out)
         // Requests:

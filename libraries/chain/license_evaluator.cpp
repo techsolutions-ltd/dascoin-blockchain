@@ -93,6 +93,16 @@ void_result license_request_evaluator::do_evaluate(const license_request_operati
   const auto& account_obj = op.account(d);
   const auto& new_license_obj = op.license(d);
 
+  // For charter licenses: frequency lock cannot be zero:
+  if ( new_license_obj.kind == license_kind::chartered || new_license_obj.kind == license_kind::promo )
+  {
+    FC_ASSERT( op.frequency != 0,
+               "Cannot issue license ${l_n} on account ${a}, frequency lock cannot be zero",
+               ("l_n", new_license_obj.name)
+               ("a", account_obj.name)
+             );
+  }
+
   // Licenses can only be issued to vault accounts:
   FC_ASSERT( account_obj.is_vault(), "Account '${n}' is not a vault account", ("n", account_obj.name) );
 

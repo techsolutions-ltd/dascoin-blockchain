@@ -25,50 +25,37 @@ BOOST_AUTO_TEST_CASE( issue_single_license_test )
   VAULT_ACTOR(vault);
   const auto pro_id = get_license_type("pro").id;
 
-  issue_license_to_vault_account(vault_id, pro_id);
-  generate_block();
+  issue_license_to_vault_account(vault_id, pro_id, 0, 0);
+  generate_blocks_until_license_approved();
 
-  generate_blocks(db.head_block_time() + fc::hours(24));
   BOOST_CHECK( vault.license_info.active_license() == pro_id );
 
 } FC_LOG_AND_RETHROW() }
 
-BOOST_AUTO_TEST_CASE( check_issue_frequency_lock_not_zero )
+BOOST_AUTO_TEST_CASE( issue_license_with_bonus_cycles )
 { try {
-  VAULT_ACTOR(vault);
+  const frequency_type frequency_lock = 200;
+  VAULT_ACTOR(v100);
+  VAULT_ACTOR(v150);
+  VAULT_ACTOR(v50);
+  VAULT_ACTOR(vzero);
+  VAULT_ACTOR(vneg)
+  vector<license_request_object> requests;
 
-  // Regular license can have a frequency lock of 0:
-  issue_license_to_vault_account(vault_id, get_license_type("pro").id, 0);
+  const auto& get_pending_request = [&](const account_object& account) -> const license_request_object&
+  {
+    return (*account.license_info.pending).request(db);
+  };
+  
+  issue_license_to_vault_account(v100, "standard-charter", 0, frequency_lock);
+  issue_license_to_vault_account(v150, "standard-charter", 50, frequency_lock);
+  issue_license_to_vault_account(v50, "standard-charter", -50, frequency_lock);
+  GRAPHENE_CHECK_THROW( issue_license_to_vault_account(vzero, "standard-charter", -100, frequency_lock), fc::exception );
+  GRAPHENE_CHECK_THROW( issue_license_to_vault_account(vneg, "standard-charter", -200, frequency_lock), fc::exception );
 
-  // Charter license CANNOT have a frequency lock of 0:
-  GRAPHENE_REQUIRE_THROW( issue_license_to_vault_account(vault_id, get_license_type("pro-charter").id, 0), fc::exception );
-
-  // Promo license CANNOT have a frequency lock of 0:
-  GRAPHENE_REQUIRE_THROW( issue_license_to_vault_account(vault_id, get_license_type("pro-promo").id, 0), fc::exception );
-
-} FC_LOG_AND_RETHROW() }
-
-BOOST_AUTO_TEST_CASE( upgrade_type_test )
-{ try {
-
-  upgrade_type test_pres_charter_upgrade({1,2,2});
-  share_type x = 1000;
-
-  // 1000 x1 = 1000
-  x = test_pres_charter_upgrade(x);
-  BOOST_CHECK_EQUAL( x.value, 1000 );
-
-  // 1000 x2 = 2000
-  x = test_pres_charter_upgrade(x);
-  BOOST_CHECK_EQUAL( x.value, 2000 );
-
-  // 2000 x2 = 4000
-  x = test_pres_charter_upgrade(x);
-  BOOST_CHECK_EQUAL( x.value, 4000 );
-
-  // After this it stays the same:
-  x = test_pres_charter_upgrade(x);
-  BOOST_CHECK_EQUAL( x.value, 4000 );
+  BOOST_CHECK_EQUAL( get_pending_request(v100).amount.value, 100 );
+  BOOST_CHECK_EQUAL( get_pending_request(v150).amount.value, 150 );
+  BOOST_CHECK_EQUAL( get_pending_request(v50).amount.value, 50 );
 
 } FC_LOG_AND_RETHROW() }
 
@@ -105,6 +92,45 @@ BOOST_AUTO_TEST_CASE( license_type_integrity_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( check_issue_frequency_lock_not_zero )
+{ try {
+  VAULT_ACTOR(vault);
+
+  // Regular license can have a frequency lock of 0:
+  issue_license_to_vault_account(vault_id, get_license_type("pro").id, 0, 0);
+
+  // Charter license CANNOT have a frequency lock of 0:
+  GRAPHENE_REQUIRE_THROW( issue_license_to_vault_account(vault_id, get_license_type("pro-charter").id, 0, 0), fc::exception );
+
+  // Promo license CANNOT have a frequency lock of 0:
+  GRAPHENE_REQUIRE_THROW( issue_license_to_vault_account(vault_id, get_license_type("pro-promo").id, 0, 0), fc::exception );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( upgrade_type_test )
+{ try {
+
+  upgrade_type test_pres_charter_upgrade({1,2,2});
+  share_type x = 1000;
+
+  // 1000 x1 = 1000
+  x = test_pres_charter_upgrade(x);
+  BOOST_CHECK_EQUAL( x.value, 1000 );
+
+  // 1000 x2 = 2000
+  x = test_pres_charter_upgrade(x);
+  BOOST_CHECK_EQUAL( x.value, 2000 );
+
+  // 2000 x2 = 4000
+  x = test_pres_charter_upgrade(x);
+  BOOST_CHECK_EQUAL( x.value, 4000 );
+
+  // After this it stays the same:
+  x = test_pres_charter_upgrade(x);
+  BOOST_CHECK_EQUAL( x.value, 4000 );
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_CASE( edit_license_type_test )
 { try {
   using up_t = upgrade_multiplier_type;
@@ -135,18 +161,6 @@ BOOST_AUTO_TEST_CASE( issue_license_test )
   VAULT_ACTOR(stan);
   VAULT_ACTOR(allguy);
 
-  const auto& issue = [&](const account_object& acc, const string& lic_name, frequency_type f = 0)
-  { try {
-    auto lic = get_license_type(lic_name);
-    auto req = issue_license_to_vault_account(acc.id, lic.id);
-    BOOST_CHECK( req );
-    BOOST_CHECK( req->license_issuing_account == get_license_issuer_id() );
-    BOOST_CHECK( req->account == acc.id );
-    BOOST_CHECK( req->license == lic.id );
-    BOOST_CHECK( req->frequency == f );
-    generate_block();
-  } FC_LOG_AND_RETHROW() };
-
   const auto& check_pending = [&](const account_object& acc, const string& lic_name)
   {
     auto lic = get_license_type(lic_name);
@@ -154,24 +168,18 @@ BOOST_AUTO_TEST_CASE( issue_license_test )
     BOOST_CHECK( lic.id == pending.license );
   };
 
-  const auto& generate_blocks_until_license_approved = [&]()
-  {
-    // Wait for license time to elapse:
-    generate_blocks(db.head_block_time() + fc::seconds(get_chain_parameters().license_expiration_time_seconds));
-  };
-
   // Rejected: cannot issue to a vault account.
-  GRAPHENE_REQUIRE_THROW( issue(wallet, "standard"), fc::exception );
+  GRAPHENE_REQUIRE_THROW( issue_license_to_vault_account(wallet, "standard"), fc::exception );
 
   // Issue standard license to our old pal Stan, and Allguy:
-  issue(stan, "standard");
+  issue_license_to_vault_account(stan, "standard");
   check_pending(stan, "standard");
 
-  issue(allguy, "standard");
+  issue_license_to_vault_account(allguy, "standard");
   check_pending(allguy, "standard");
 
   // Try and issue another license to stan:
-  GRAPHENE_REQUIRE_THROW( issue(stan, "manager-charter"), fc::exception );
+  GRAPHENE_REQUIRE_THROW( issue_license_to_vault_account(stan, "manager-charter", 0, 200), fc::exception );
 
   generate_blocks_until_license_approved();
 
@@ -181,25 +189,25 @@ BOOST_AUTO_TEST_CASE( issue_license_test )
   // Now we try the Allguy:
   // Allguy should get all the licenses in order:
   license_information lic_info;
-  issue(allguy, "manager");
+  issue_license_to_vault_account(allguy, "manager");
   generate_blocks_until_license_approved();
   BOOST_CHECK_EQUAL( get_cycle_balance(allguy_id).value, 600 );
   lic_info = allguy_id(db).license_info;
   BOOST_CHECK( lic_info.balance_upgrade == upgrade_type({2}) );
 
-  issue(allguy, "pro");
+  issue_license_to_vault_account(allguy, "pro");
   generate_blocks_until_license_approved();
   BOOST_CHECK_EQUAL( get_cycle_balance(allguy_id).value, 2600 );
   lic_info = allguy_id(db).license_info;
   BOOST_CHECK( lic_info.balance_upgrade == upgrade_type({2}) );
 
-  issue(allguy, "executive");
+  issue_license_to_vault_account(allguy, "executive");
   generate_blocks_until_license_approved();
   BOOST_CHECK_EQUAL( get_cycle_balance(allguy_id).value, 7600 );
   lic_info = allguy_id(db).license_info;
   BOOST_CHECK( lic_info.balance_upgrade == upgrade_type({2,2}) );
 
-  issue(allguy, "president");
+  issue_license_to_vault_account(allguy, "president");
   generate_blocks_until_license_approved();
   BOOST_CHECK_EQUAL( get_cycle_balance(allguy_id).value, 32600 );
   lic_info = allguy_id(db).license_info;
@@ -216,13 +224,8 @@ BOOST_AUTO_TEST_CASE( upgrade_cycles_test )
   ACTOR(wallet);
   generate_block();
 
-  const auto& issue = [&](const account_object& account, const string& license_name){
-    issue_license_to_vault_account(account.id, get_license_type(license_name).id);
-    generate_block();
-  };
-
-  issue(stan, "standard");  // 100 cycles.
-  issue(richguy, "president");  // 25000 cycles.
+  issue_license_to_vault_account(stan, "standard");  // 100 cycles.
+  issue_license_to_vault_account(richguy, "president");  // 25000 cycles.
 
   adjust_cycles(wallet_id, 2000);  // Wallet has no license, but has floating cycles.
 

@@ -110,6 +110,7 @@ namespace graphene { namespace chain {
 
     account_id_type account;                  // The account to benefit the license.
     license_type_id_type license;             // The license to be granted.
+    share_type bonus_percentage;              // The bonus multiplier of base license cycles.
     frequency_type frequency;                 // The frequency lock on this license, zero for none.
 
     extensions_type extensions;
@@ -209,6 +210,7 @@ FC_REFLECT( graphene::chain::license_request_operation,
             (license_issuing_account)
             (account)
             (license)
+            (bonus_percentage)
             (frequency)
             (extensions)
           )

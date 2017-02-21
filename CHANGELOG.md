@@ -6,9 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 ### Added
-- Fix preventing frequency lock being 0 when issuing a chartered or promo license
+- Bonus percentage of cycles when issuing a license
 
 ### Changed
+- Fix preventing frequency lock being 0 when issuing a chartered or promo license
 - Updated scripts
 - Created scripts folder in project root
 

@@ -48,6 +48,7 @@ public:
   object_id_type do_apply(const license_request_operation& op);
 
 private:
+  const license_type_object* new_license_obj_ = nullptr;
   const account_object* account_obj_ = nullptr;
 };
 

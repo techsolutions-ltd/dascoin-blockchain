@@ -28,23 +28,11 @@ BOOST_AUTO_TEST_CASE( convert_dascoin_cycles_test )
 
 BOOST_AUTO_TEST_CASE( submit_user_cycles_test )
 { try {
-  // Prepare long term actors:
   ACTOR(wallet);
   VAULT_ACTOR(vault);
   VAULT_ACTOR(stan);
   VAULT_ACTOR(coolguy);
   VAULT_ACTOR(promoguy);
-
-  const auto& issue = [&](const account_object& acc, const string& lic_name, frequency_type f = 0){
-    auto lic = get_license_type(lic_name);
-    auto req = issue_license_to_vault_account(acc.id, lic.id);
-    BOOST_CHECK( req );
-    BOOST_CHECK( req->license_issuing_account == get_license_issuer_id() );
-    BOOST_CHECK( req->account == acc.id );
-    BOOST_CHECK( req->license == lic.id );
-    BOOST_CHECK( req->frequency == f );
-    generate_block();
-  };
 
   const auto& check = [&](const reward_queue_object& rqo, const account_object& acc, share_type am, frequency_type f){
     BOOST_CHECK( rqo.account == acc.id );
@@ -59,7 +47,7 @@ BOOST_AUTO_TEST_CASE( submit_user_cycles_test )
   GRAPHENE_CHECK_THROW( submit_cycles(vault_id, 100) , fc::exception );
 
   // Issue chartered license to the cool person:
-  issue(coolguy, "pro-charter");
+  issue_license_to_vault_account(coolguy, "pro-charter", 0, 200);
 
   // Wait for the issue to process:
   generate_blocks(db.head_block_time() + fc::hours(24));
@@ -68,7 +56,7 @@ BOOST_AUTO_TEST_CASE( submit_user_cycles_test )
   check(get_reward_queue_objects_by_account(coolguy_id)[0], coolguy, 2000, coolguy.license_info.active_frequency_lock());
 
   // // Issue promo license to the promo person:
-  issue(promoguy, "executive-promo");
+  issue_license_to_vault_account(promoguy, "executive-promo", 0, 200);
 
   // // Wait for the issue to process:
   generate_blocks(db.head_block_time() + fc::hours(24));
@@ -89,7 +77,7 @@ BOOST_AUTO_TEST_CASE( submit_user_cycles_test )
   submit_cycles(vault_id, 500);
 
   // Issue license to Stan's vault account:
-  issue(stan, "standard");
+  issue_license_to_vault_account(stan, "standard");
 
   // Wait for the license to process:
   generate_blocks(db.head_block_time() + fc::hours(24));

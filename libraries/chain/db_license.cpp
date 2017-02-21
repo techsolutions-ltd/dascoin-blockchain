@@ -56,7 +56,7 @@ void database::fulfill_license_request(const license_request_object& req)
     auto& info = a.license_info;
 
     // Add the license to the top of the history, so it becomes the new active license:
-    info.add_license(new_license_obj.id, req.frequency);
+    info.add_license(new_license_obj.id, req.amount, req.frequency);
 
     // Improve all the upgrades to match the new license:
     info.balance_upgrade += new_license_obj.balance_upgrade;
@@ -67,9 +67,9 @@ void database::fulfill_license_request(const license_request_object& req)
     info.clear_pending();
   });
 
-  // For regular licenses, increase the cycle balance for the appropriate amount:
+  // For regular licenses, increase the cycle balance by the requested amount:
   if ( new_license_obj.kind == license_kind::regular )
-    issue_cycles(account_obj.id, new_license_obj.amount);
+    issue_cycles(account_obj.id, req.amount);
 
   // For auto submit licenses, submit a new license request with frequency locked:
   else if ( new_license_obj.kind == license_kind::chartered || new_license_obj.kind == license_kind::promo )
@@ -77,7 +77,7 @@ void database::fulfill_license_request(const license_request_object& req)
     // Create a new element in the reward queue:
     create<reward_queue_object>([&](reward_queue_object& rqo){
       rqo.account = req.account;
-      rqo.amount = new_license_obj.amount;
+      rqo.amount = req.amount;
       rqo.frequency = req.frequency;
       rqo.time = head_block_time();
     });
@@ -85,7 +85,7 @@ void database::fulfill_license_request(const license_request_object& req)
     // Submit a virtual operation for the submission of the license cycles:
     submit_cycles_operation vop;
     vop.account = req.account;
-    vop.amount = new_license_obj.amount;
+    vop.amount = req.amount;
 
     push_applied_operation(vop);
   }

@@ -14,7 +14,7 @@ namespace graphene { namespace chain {
 
   void license_request_object::validate() const
   {
-
+    FC_ASSERT( amount > 0 );
   }
 
   optional<license_type_id_type> license_information::active_license() const
@@ -31,9 +31,9 @@ namespace graphene { namespace chain {
     return history.back().frequency_lock;
   }
 
-  void license_information::add_license(license_type_id_type license_id, frequency_type frequency_lock)
+  void license_information::add_license(license_type_id_type license_id, share_type amount, frequency_type frequency_lock)
   {
-    history.emplace_back(license_id, frequency_lock);
+    history.emplace_back(license_id, amount, frequency_lock);
   }
 
 } } // namespace graphene::chain

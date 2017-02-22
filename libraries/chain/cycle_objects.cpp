@@ -6,7 +6,7 @@
 
 namespace graphene { namespace chain {
 
-  void cycle_issue_request_object::validate() const
+  void submit_reserve_cycles_to_queue_request_object::validate() const
   {
 
   }

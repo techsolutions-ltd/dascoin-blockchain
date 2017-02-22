@@ -694,7 +694,7 @@ class database_api
        * @brief Get all cycle issue requests, sorted by expiration.
        * @return Vector of cycle issue request objects.
        */
-      vector<cycle_issue_request_object> get_all_cycle_issue_requests() const;
+      vector<submit_reserve_cycles_to_queue_request_object> get_all_cycle_issue_requests() const;
 
       /**
        * @brief Get all wire out holder objects.

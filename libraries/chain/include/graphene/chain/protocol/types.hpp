@@ -237,7 +237,7 @@ namespace graphene { namespace chain {
       impl_account_cycle_balance_object_type,
       impl_issue_asset_request_object_type,
       impl_wire_out_holder_object_type,
-      impl_cycle_issue_request_object_type,
+      impl_submit_reserve_cycles_to_queue_request_object_type,
       impl_reward_queue_object_type
    };
 
@@ -299,7 +299,7 @@ namespace graphene { namespace chain {
    class account_cycle_balance_object;
    class issue_asset_request_object;
    class wire_out_holder_object;
-   class cycle_issue_request_object;
+   class submit_reserve_cycles_to_queue_request_object;
    class reward_queue_object;
 
    typedef object_id< implementation_ids, impl_global_property_object_type,  global_property_object>                    global_property_id_type;
@@ -339,7 +339,7 @@ namespace graphene { namespace chain {
    > wire_out_holder_id_type;
 
    typedef object_id<
-      implementation_ids, impl_cycle_issue_request_object_type, cycle_issue_request_object
+      implementation_ids, impl_submit_reserve_cycles_to_queue_request_object_type, submit_reserve_cycles_to_queue_request_object
    > cycle_issue_request_id_type;
 
    typedef object_id<
@@ -542,7 +542,7 @@ FC_REFLECT_ENUM( graphene::chain::impl_object_type,
                  (impl_account_cycle_balance_object_type)
                  (impl_issue_asset_request_object_type)
                  (impl_wire_out_holder_object_type)
-                 (impl_cycle_issue_request_object_type)
+                 (impl_submit_reserve_cycles_to_queue_request_object_type)
                  (impl_reward_queue_object_type)
                )
 

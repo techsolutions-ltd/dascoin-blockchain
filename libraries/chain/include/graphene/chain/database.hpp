@@ -547,8 +547,6 @@ namespace graphene { namespace chain {
                                 optional<upgrade_multiplier_type> balance_multipliers,
                                 optional<upgrade_multiplier_type> requeue_multipliers,
                                 optional<upgrade_multiplier_type> return_multipliers);
-         void fulfill_license_request(const license_request_object& req);
-
 
    protected:
          //Mark pop_undo() as protected -- we do not want outside calling pop_undo(); it should call pop_block() instead
@@ -593,11 +591,10 @@ namespace graphene { namespace chain {
          void update_withdraw_permissions();
          bool check_for_blackswan( const asset_object& mia, bool enable_black_swan = true );
          void assign_licenses();
-         void distribute_issue_requested_cycles();
          void distribute_issue_requested_assets();
-         void deny_license_request(const license_request_object& req);
          void mint_dascoin_rewards();
          void reset_spending_limits();
+         void submit_reserve_cycles_to_queue();
 
          ///Steps performed only at maintenance intervals
          ///@{

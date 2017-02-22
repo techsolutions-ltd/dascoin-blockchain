@@ -44,11 +44,11 @@ void database_fixture::adjust_cycles(const account_id_type id, const share_type 
   db.adjust_cycle_balance(id, amount);
 }
 
-const cycle_issue_request_object* database_fixture::issue_cycles(account_id_type receiver_id, share_type amount)
+const submit_reserve_cycles_to_queue_request_object* database_fixture::issue_cycles(account_id_type receiver_id, share_type amount)
 { try {
 
   submit_reserve_cycles_to_queue_operation op;
-  op.cycle_issuer = get_cycle_issuer_id();
+  op.issuer = get_cycle_issuer_id();
   op.account = receiver_id;
   op.amount = amount;
 
@@ -60,7 +60,7 @@ const cycle_issue_request_object* database_fixture::issue_cycles(account_id_type
   processed_transaction ptx = db.push_transaction(tx, ~0);
   tx.clear();
 
-  return db.find<cycle_issue_request_object>(ptx.operation_results[0].get<object_id_type>());
+  return db.find<submit_reserve_cycles_to_queue_request_object>(ptx.operation_results[0].get<object_id_type>());
 
 } FC_LOG_AND_RETHROW() }
 
@@ -79,10 +79,10 @@ void database_fixture::deny_issue_cycles(cycle_issue_request_id_type request_id)
 
 } FC_LOG_AND_RETHROW() }
 
-vector<cycle_issue_request_object> database_fixture::get_cycle_issue_request_objects_by_expiration() const
+vector<submit_reserve_cycles_to_queue_request_object> database_fixture::get_cycle_issue_request_objects_by_expiration() const
 {
-  vector<cycle_issue_request_object> result;
-  const auto& idx = db.get_index_type<cycle_issue_request_index>().indices().get<by_expiration>();
+  vector<submit_reserve_cycles_to_queue_request_object> result;
+  const auto& idx = db.get_index_type<submit_reserve_cycles_to_queue_request_index>().indices().get<by_expiration>();
   for ( auto req: idx )
     result.emplace_back(req);
   return result;

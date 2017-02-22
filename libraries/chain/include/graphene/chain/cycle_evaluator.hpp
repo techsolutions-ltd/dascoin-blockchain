@@ -26,7 +26,7 @@ namespace graphene { namespace chain {
     void_result do_evaluate(const operation_type& op);
     object_id_type do_apply(const operation_type& op);
 
-    const cycle_issue_request_object* request_ = nullptr;
+    const submit_reserve_cycles_to_queue_request_object* request_ = nullptr;
   };
 
   class submit_cycles_evaluator : public evaluator<submit_cycles_evaluator>

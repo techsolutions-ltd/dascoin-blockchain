@@ -76,7 +76,7 @@ void_result license_type_edit_evaluator::do_apply(const license_type_edit_operat
 void_result license_type_delete_evaluator::do_evaluate(const license_type_delete_operation& op)
 { try {
 
-  // assert_license_authenticator( db(), op.license_authentication_account );
+  // assert_license_authenticator( db(), op.license_authenticator );
   return void_result();
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
@@ -98,7 +98,7 @@ void_result license_request_evaluator::do_evaluate(const license_request_operati
 
   const auto& d = db();
   const auto issuer_id = d.get_chain_authorities().license_issuer;
-  const auto op_issuer_obj = op.license_issuing_account(d);
+  const auto op_issuer_obj = op.license_issuer(d);
 
   // First, check that the license issuer matches the current license issuing account:
   d.perform_chain_authority_check("license issuing", issuer_id, op_issuer_obj);
@@ -156,11 +156,11 @@ object_id_type license_request_evaluator::do_apply(const license_request_operati
 
   // Create the new request object:
   license_request_id_type req_id =  d.create<license_request_object>([&](license_request_object &req) {
-    req.license_issuing_account = op.license_issuing_account;
+    req.license_issuer = op.license_issuer;
     req.account = op.account;
     req.license = op.license;
     req.amount = amount;
-    req.frequency = op.frequency;
+    req.frequency_lock = op.frequency;
     req.expiration = d.head_block_time() + fc::seconds(params.license_expiration_time_seconds);
   }).id;
 
@@ -181,7 +181,7 @@ void_result license_deny_evaluator::do_evaluate(const license_deny_operation& op
 { try {
   const auto& d = db();
   const auto auth_id = d.get_chain_authorities().license_authenticator;
-  const auto& op_auth_obj = op.license_authentication_account(d);
+  const auto& op_auth_obj = op.license_authenticator(d);
 
   d.perform_chain_authority_check("license authentication", auth_id, op_auth_obj);
 

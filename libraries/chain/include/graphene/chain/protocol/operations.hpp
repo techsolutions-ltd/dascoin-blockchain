@@ -118,6 +118,8 @@ namespace graphene { namespace chain {
             cycle_issue_complete_operation,  // VIRTUAL
             upgrade_account_cycles_operation,  // VIRTUAL
             submit_cycles_operation,
+            submit_reserve_cycles_operation, // VIRTUAL
+            submit_charter_license_cycles_operation, // VIRTUAL
             distribute_dascoin_operation  // VIRTUAL
          > operation;
 

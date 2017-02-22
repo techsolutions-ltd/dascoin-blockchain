@@ -26,14 +26,15 @@ namespace graphene { namespace chain {
     struct fee_parameters_type {};  // No fees are paid for this operation.
 
     asset fee;
-    account_id_type cycle_issuer;  // This MUST be the cycle issuer authority.
+    account_id_type issuer;  // This MUST be the cycle issuer authority.
 
     account_id_type account;
     share_type amount;
+    frequency_type frequency_lock;
 
     extensions_type extensions;
 
-    account_id_type fee_payer() const { return cycle_issuer; }
+    account_id_type fee_payer() const { return issuer; }
     void validate() const;
     share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
@@ -107,6 +108,44 @@ namespace graphene { namespace chain {
     share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
 
+  struct submit_reserve_cycles_operation : public base_operation
+  {
+    struct fee_parameters_type {};  // Virtual operation.
+
+    asset fee;
+
+    account_id_type cycle_issuer;
+
+    account_id_type account;
+    share_type amount;
+    frequency_type frequency_lock;
+
+    extensions_type extensions;
+
+    account_id_type fee_payer() const { return account; }
+    void validate() const { FC_ASSERT( false ); }
+    share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+  };
+
+  struct submit_charter_license_cycles_operation : public base_operation
+  {
+    struct fee_parameters_type {};  // Virtual operation.
+
+    asset fee;
+
+    account_id_type license_issuer;
+
+    account_id_type account;
+    share_type amount;
+    frequency_type frequency_lock;
+
+    extensions_type extensions;
+
+    account_id_type fee_payer() const { return account; }
+    void validate() const { FC_ASSERT( false ); }
+    share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+  };
+
 } }  // namespace graphene::chain
 
 ///////////////////////////////
@@ -116,9 +155,10 @@ namespace graphene { namespace chain {
 FC_REFLECT( graphene::chain::submit_reserve_cycles_to_queue_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::submit_reserve_cycles_to_queue_operation,
             (fee)
-            (cycle_issuer)
+            (issuer)
             (account)
             (amount)
+            (frequency_lock)
             (extensions)
           )
 
@@ -144,5 +184,25 @@ FC_REFLECT( graphene::chain::submit_cycles_operation,
             (fee)
             (account)
             (amount)
+            (extensions)
+          )
+
+FC_REFLECT( graphene::chain::submit_reserve_cycles_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::submit_reserve_cycles_operation,
+            (fee)
+            (cycle_issuer)
+            (account)
+            (amount)
+            (frequency_lock)
+            (extensions)
+          )
+
+FC_REFLECT( graphene::chain::submit_charter_license_cycles_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::submit_charter_license_cycles_operation,
+            (fee)
+            (license_issuer)
+            (account)
+            (amount)
+            (frequency_lock)
             (extensions)
           )

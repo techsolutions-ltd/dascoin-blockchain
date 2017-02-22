@@ -47,7 +47,7 @@ void database_fixture::adjust_cycles(const account_id_type id, const share_type 
 const cycle_issue_request_object* database_fixture::issue_cycles(account_id_type receiver_id, share_type amount)
 { try {
 
-  cycle_issue_request_operation op;
+  submit_reserve_cycles_to_queue_operation op;
   op.cycle_issuer = get_cycle_issuer_id();
   op.account = receiver_id;
   op.amount = amount;
@@ -67,7 +67,7 @@ const cycle_issue_request_object* database_fixture::issue_cycles(account_id_type
 void database_fixture::deny_issue_cycles(cycle_issue_request_id_type request_id)
 { try {
 
-  cycle_issue_deny_operation op;
+  deny_submitting_reserve_cycles_to_queue_operation op;
   op.cycle_authenticator = get_cycle_authenticator_id();
   op.request = request_id;
 

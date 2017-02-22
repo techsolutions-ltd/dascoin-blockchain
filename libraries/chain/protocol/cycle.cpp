@@ -6,7 +6,7 @@
 
 namespace graphene { namespace chain {
 
-void cycle_issue_request_operation::validate() const
+void submit_reserve_cycles_to_queue_operation::validate() const
 {
 
 }
@@ -16,7 +16,7 @@ void cycle_issue_complete_operation::validate() const
 
 }
 
-void cycle_issue_deny_operation::validate() const
+void deny_submitting_reserve_cycles_to_queue_operation::validate() const
 {
 
 }

@@ -9,7 +9,7 @@
 
 namespace graphene { namespace chain {
 
-void_result cycle_issue_request_evaluator::do_evaluate(const cycle_issue_request_operation& op)
+void_result submit_reserve_cycles_to_queue_evaluator::do_evaluate(const submit_reserve_cycles_to_queue_operation& op)
 { try {
   const auto& d = db();
 
@@ -34,7 +34,7 @@ void_result cycle_issue_request_evaluator::do_evaluate(const cycle_issue_request
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-object_id_type cycle_issue_request_evaluator::do_apply(const cycle_issue_request_operation& op)
+object_id_type submit_reserve_cycles_to_queue_evaluator::do_apply(const submit_reserve_cycles_to_queue_operation& op)
 { try {
   auto& d = db();
   const auto& params = d.get_global_properties().parameters;
@@ -49,7 +49,7 @@ object_id_type cycle_issue_request_evaluator::do_apply(const cycle_issue_request
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result cycle_issue_deny_evaluator::do_evaluate(const cycle_issue_deny_operation& op)
+void_result deny_submitting_reserve_cycles_to_queue_evaluator::do_evaluate(const deny_submitting_reserve_cycles_to_queue_operation& op)
 { try {
   const auto& d = db();
   const auto cycle_auth_id = d.get_chain_authorities().cycle_authenticator;
@@ -62,7 +62,7 @@ void_result cycle_issue_deny_evaluator::do_evaluate(const cycle_issue_deny_opera
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-object_id_type cycle_issue_deny_evaluator::do_apply(const cycle_issue_deny_operation& op)
+object_id_type deny_submitting_reserve_cycles_to_queue_evaluator::do_apply(const deny_submitting_reserve_cycles_to_queue_operation& op)
 { try {
 
   db().remove(*request_);

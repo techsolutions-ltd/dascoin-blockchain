@@ -21,7 +21,7 @@ namespace graphene { namespace chain {
    * An authorized cycle issuing authority can request to issue a certain amount of cycles.
    * An independent authorized cycle authentication authority must inspect and approve this request.
    */
-  struct cycle_issue_request_operation : public base_operation
+  struct submit_reserve_cycles_to_queue_operation : public base_operation
   {
     struct fee_parameters_type {};  // No fees are paid for this operation.
 
@@ -69,7 +69,7 @@ namespace graphene { namespace chain {
    * An authorized cycle authentication authority can deny a cycle issuing request.
    * NOTE: this is a virtual operation.
    */
-  struct cycle_issue_deny_operation : public base_operation
+  struct deny_submitting_reserve_cycles_to_queue_operation : public base_operation
   {
     struct fee_parameters_type {};  // No fees are paid for this operation.
 
@@ -113,8 +113,8 @@ namespace graphene { namespace chain {
 // REFLECTIONS:              //
 ///////////////////////////////
 
-FC_REFLECT( graphene::chain::cycle_issue_request_operation::fee_parameters_type, )
-FC_REFLECT( graphene::chain::cycle_issue_request_operation,
+FC_REFLECT( graphene::chain::submit_reserve_cycles_to_queue_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::submit_reserve_cycles_to_queue_operation,
             (fee)
             (cycle_issuer)
             (account)
@@ -131,8 +131,8 @@ FC_REFLECT( graphene::chain::cycle_issue_complete_operation,
             (extensions)
           )
 
-FC_REFLECT( graphene::chain::cycle_issue_deny_operation::fee_parameters_type, )
-FC_REFLECT( graphene::chain::cycle_issue_deny_operation,
+FC_REFLECT( graphene::chain::deny_submitting_reserve_cycles_to_queue_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::deny_submitting_reserve_cycles_to_queue_operation,
             (fee)
             (cycle_authenticator)
             (request)

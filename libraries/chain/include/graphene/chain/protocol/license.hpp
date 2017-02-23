@@ -127,7 +127,7 @@ namespace graphene { namespace chain {
    * An authorized license authentication authority may approve an existing request made by the license issuing
    * authority. If such a request is approved the license is irrevocably granted to the account.
    */
-  struct license_approve_operation : public base_operation
+  struct record_issue_license_operation : public base_operation
   {
     struct fee_parameters_type {};  // No fees are paid for this operation.
 
@@ -140,7 +140,7 @@ namespace graphene { namespace chain {
     extensions_type   extensions;
 
     account_id_type fee_payer() const { return license_authenticator; }
-    void validate() const;
+    void validate() const { FC_ASSERT( false ); }
     share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
 
@@ -215,8 +215,8 @@ FC_REFLECT( graphene::chain::issue_license_operation,
             (extensions)
           )
 
-FC_REFLECT( graphene::chain::license_approve_operation::fee_parameters_type, )
-FC_REFLECT( graphene::chain::license_approve_operation,
+FC_REFLECT( graphene::chain::record_issue_license_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::record_issue_license_operation,
             (fee)
             (license_authenticator)
             (account)

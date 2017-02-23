@@ -29,9 +29,4 @@ namespace graphene { namespace chain {
              );
   }
 
-  void license_approve_operation::validate() const
-  {
-
-  }
-
 } } // namespace graphene::chain

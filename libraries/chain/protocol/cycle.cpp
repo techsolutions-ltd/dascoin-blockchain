@@ -12,11 +12,6 @@ void submit_reserve_cycles_to_queue_operation::validate() const
   FC_ASSERT( frequency_lock > 0, "Must submit a non-zero value" );
 }
 
-void cycle_issue_complete_operation::validate() const
-{
-
-}
-
 void deny_submit_reserve_cycles_to_queue_operation::validate() const
 {
 

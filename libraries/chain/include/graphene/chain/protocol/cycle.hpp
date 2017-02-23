@@ -46,7 +46,7 @@ namespace graphene { namespace chain {
    * When the issue request expires, record the final issue of cycles to an account.
    * NOTE: this is a virtual operation.
    */
-  struct cycle_issue_complete_operation : public base_operation
+  struct record_submit_cycles_to_queue_operation : public base_operation
   {
     struct fee_parameters_type {};  // No fees are paid for this operation.
 
@@ -59,7 +59,7 @@ namespace graphene { namespace chain {
     extensions_type extensions;
 
     account_id_type fee_payer() const { return cycle_authenticator; }
-    void validate() const;
+    void validate() const { FC_ASSERT( false ); }
     share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
 
@@ -108,7 +108,7 @@ namespace graphene { namespace chain {
     share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
 
-  struct submit_reserve_cycles_operation : public base_operation
+  struct record_submit_reserve_cycles_to_queue_operation : public base_operation
   {
     struct fee_parameters_type {};  // Virtual operation.
 
@@ -127,7 +127,7 @@ namespace graphene { namespace chain {
     share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
 
-  struct submit_charter_license_cycles_operation : public base_operation
+  struct record_submit_charter_license_cycles_operation : public base_operation
   {
     struct fee_parameters_type {};  // Virtual operation.
 
@@ -162,8 +162,8 @@ FC_REFLECT( graphene::chain::submit_reserve_cycles_to_queue_operation,
             (extensions)
           )
 
-FC_REFLECT( graphene::chain::cycle_issue_complete_operation::fee_parameters_type, )
-FC_REFLECT( graphene::chain::cycle_issue_complete_operation,
+FC_REFLECT( graphene::chain::record_submit_cycles_to_queue_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::record_submit_cycles_to_queue_operation,
             (fee)
             (cycle_authenticator)
             (account)
@@ -187,8 +187,8 @@ FC_REFLECT( graphene::chain::submit_cycles_to_queue_operation,
             (extensions)
           )
 
-FC_REFLECT( graphene::chain::submit_reserve_cycles_operation::fee_parameters_type, )
-FC_REFLECT( graphene::chain::submit_reserve_cycles_operation,
+FC_REFLECT( graphene::chain::record_submit_reserve_cycles_to_queue_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::record_submit_reserve_cycles_to_queue_operation,
             (fee)
             (cycle_issuer)
             (account)
@@ -197,8 +197,8 @@ FC_REFLECT( graphene::chain::submit_reserve_cycles_operation,
             (extensions)
           )
 
-FC_REFLECT( graphene::chain::submit_charter_license_cycles_operation::fee_parameters_type, )
-FC_REFLECT( graphene::chain::submit_charter_license_cycles_operation,
+FC_REFLECT( graphene::chain::record_submit_charter_license_cycles_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::record_submit_charter_license_cycles_operation,
             (fee)
             (license_issuer)
             (account)

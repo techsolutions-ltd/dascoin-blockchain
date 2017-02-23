@@ -523,7 +523,7 @@ void database::assign_licenses()
       });
 
       // Create a virtual operation:
-      submit_charter_license_cycles_operation vop;
+      record_submit_charter_license_cycles_operation vop;
       vop.license_issuer = req.license_issuer;
       vop.account = req.account;
       vop.amount = req.amount;
@@ -531,7 +531,7 @@ void database::assign_licenses()
       push_applied_operation(vop);
     }
 
-    license_approve_operation vop;
+    record_issue_license_operation vop;
     vop.license_authenticator = get_chain_authorities().license_authenticator;
     vop.account = req.account;
     vop.license = req.license;
@@ -591,7 +591,7 @@ void database::mint_dascoin_rewards()
       const auto& distribute = [this](account_id_type account_id, share_type amount){
         issue_asset(account_id, amount, get_dascoin_asset_id(), 0);
         // Emit a virtual op:
-        distribute_dascoin_operation vop;
+        record_distribute_dascoin_operation vop;
         vop.account = account_id;
         vop.amount = amount;
         push_applied_operation(vop);
@@ -639,7 +639,7 @@ void database::submit_reserve_cycles_to_queue()
     });
 
     // Submit a virtual operation:
-    submit_reserve_cycles_operation vop;
+    record_submit_reserve_cycles_to_queue_operation vop;
     vop.cycle_issuer = req.cycle_issuer;
     vop.account = req.account;
     vop.amount = req.amount;

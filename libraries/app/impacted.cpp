@@ -157,7 +157,7 @@ struct get_impacted_account_visitor
    void operator()( const license_type_edit_operation& op ) {}
    void operator()( const license_type_delete_operation& op ) {}
    void operator()( const issue_license_operation& op ) {}
-   void operator()( const license_approve_operation& op ) {}  // TODO: check if this should be impacting an account.
+   void operator()( const record_issue_license_operation& op ) {}  // TODO: check if this should be impacting an account.
    void operator()( const deny_license_operation& op ) {}
 
    void operator()( const vesting_balance_create_operation& op )
@@ -256,7 +256,7 @@ struct get_impacted_account_visitor
    void operator()( const submit_reserve_cycles_to_queue_operation& op ) {}
    void operator()( const deny_submit_reserve_cycles_to_queue_operation& op ) {}
 
-   void operator()( const cycle_issue_complete_operation& op )
+   void operator()( const record_submit_cycles_to_queue_operation& op )
    {
       _impacted.insert( op.account );
    }
@@ -266,17 +266,17 @@ struct get_impacted_account_visitor
       _impacted.insert( op.account );
    }
 
-   void operator()( const submit_reserve_cycles_operation& op )
+   void operator()( const record_submit_reserve_cycles_to_queue_operation& op )
    {
       _impacted.insert( op.account );
    }
 
-   void operator()( const submit_charter_license_cycles_operation& op )
+   void operator()( const record_submit_charter_license_cycles_operation& op )
    {
       _impacted.insert( op.account );
    }
 
-   void operator()( const distribute_dascoin_operation& op ) {}
+   void operator()( const record_distribute_dascoin_operation& op ) {}
 
 };
 

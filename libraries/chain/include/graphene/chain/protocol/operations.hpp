@@ -55,7 +55,6 @@ namespace graphene { namespace chain {
             limit_order_create_operation,
             limit_order_cancel_operation,
             call_order_update_operation,
-            fill_order_operation,           // VIRTUAL
             account_create_operation,
             account_update_operation,
             account_whitelist_operation,
@@ -93,20 +92,16 @@ namespace graphene { namespace chain {
             transfer_to_blind_operation,
             blind_transfer_operation,
             transfer_from_blind_operation,
-            asset_settle_cancel_operation,  // VIRTUAL
             asset_claim_fees_operation,
-            fba_distribute_operation,  // VIRTUAL
             board_update_chain_authority_operation,
             create_license_type_operation,
             license_type_edit_operation,
             license_type_delete_operation,
             issue_license_operation,
-            license_approve_operation,  // VIRTUAL
             deny_license_operation,
             tether_accounts_operation,
             // update_pi_limits_operation,
             asset_create_issue_request_operation,
-            asset_distribute_completed_request_operation,  // VIRTUAL
             asset_deny_issue_request_operation,
             wire_out_operation,
             wire_out_complete_operation,
@@ -115,12 +110,25 @@ namespace graphene { namespace chain {
             transfer_wallet_to_vault_operation,
             submit_reserve_cycles_to_queue_operation,
             deny_submit_reserve_cycles_to_queue_operation,
-            cycle_issue_complete_operation,  // VIRTUAL
-            upgrade_account_cycles_operation,  // VIRTUAL
             submit_cycles_to_queue_operation,
-            submit_reserve_cycles_operation, // VIRTUAL
-            submit_charter_license_cycles_operation, // VIRTUAL
-            distribute_dascoin_operation  // VIRTUAL
+
+            // Virtual operations below this point:
+
+            record_issue_license_operation,
+
+            record_submit_reserve_cycles_to_queue_operation,
+            record_submit_cycles_to_queue_operation,
+            record_submit_charter_license_cycles_operation,
+
+            record_distribute_dascoin_operation,
+
+            asset_distribute_completed_request_operation,
+            upgrade_account_cycles_operation,
+
+            fba_distribute_operation,
+            asset_settle_cancel_operation,
+            fill_order_operation
+
          > operation;
 
    /// @} // operations group

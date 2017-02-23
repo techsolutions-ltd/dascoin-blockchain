@@ -237,7 +237,7 @@ void database::initialize_preissued_cycles(const genesis_state_type& genesis_sta
       adjust_cycle_balance(account_id, handout.amount);
 
       // Execute the virtual operation:
-      cycle_issue_complete_operation vop;
+      record_submit_cycles_to_queue_operation vop;
       vop.cycle_authenticator = cycle_auth_id;
       vop.account = account_id;
       vop.amount = handout.amount;

@@ -261,7 +261,7 @@ struct get_impacted_account_visitor
       _impacted.insert( op.account );
    }
 
-   void operator()( const submit_cycles_operation& op )
+   void operator()( const submit_cycles_to_queue_operation& op )
    {
       _impacted.insert( op.account );
    }

@@ -223,7 +223,7 @@ void database::initialize_evaluators()
    register_evaluator<transfer_wallet_to_vault_evaluator>();
    register_evaluator<submit_reserve_cycles_to_queue_evaluator>();
    register_evaluator<deny_submit_reserve_cycles_to_queue_evaluator>();
-   register_evaluator<submit_cycles_evaluator>();
+   register_evaluator<submit_cycles_to_queue_evaluator>();
 }
 
 void database::initialize_preissued_cycles(const genesis_state_type& genesis_state)

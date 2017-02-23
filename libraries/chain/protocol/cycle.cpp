@@ -22,7 +22,7 @@ void deny_submit_reserve_cycles_to_queue_operation::validate() const
 
 }
 
-void submit_cycles_operation::validate() const
+void submit_cycles_to_queue_operation::validate() const
 {
   FC_ASSERT( amount > 0 );
 }

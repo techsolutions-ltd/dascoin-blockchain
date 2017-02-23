@@ -92,7 +92,7 @@ namespace graphene { namespace chain {
    *
    * A user can submit their cycles to the dascoin distribution queue where they await to be minted.
    */
-  struct submit_cycles_operation : public base_operation
+  struct submit_cycles_to_queue_operation : public base_operation
   {
     struct fee_parameters_type {};  // No fees are paid for this operation.
 
@@ -179,8 +179,8 @@ FC_REFLECT( graphene::chain::deny_submit_reserve_cycles_to_queue_operation,
             (extensions)
           )
 
-FC_REFLECT( graphene::chain::submit_cycles_operation::fee_parameters_type, )
-FC_REFLECT( graphene::chain::submit_cycles_operation,
+FC_REFLECT( graphene::chain::submit_cycles_to_queue_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::submit_cycles_to_queue_operation,
             (fee)
             (account)
             (amount)

@@ -74,7 +74,7 @@ object_id_type deny_submit_reserve_cycles_to_queue_evaluator::do_apply(const den
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result submit_cycles_evaluator::do_evaluate(const submit_cycles_operation& op)
+void_result submit_cycles_to_queue_evaluator::do_evaluate(const submit_cycles_to_queue_operation& op)
 { try {
   const auto& d = db();
   const auto& account_obj = op.account(d);
@@ -97,7 +97,7 @@ void_result submit_cycles_evaluator::do_evaluate(const submit_cycles_operation& 
 
 } FC_CAPTURE_AND_RETHROW((op)) }
 
-object_id_type submit_cycles_evaluator::do_apply(const submit_cycles_operation& op)
+object_id_type submit_cycles_to_queue_evaluator::do_apply(const submit_cycles_to_queue_operation& op)
 { try {
   auto& d = db();
 

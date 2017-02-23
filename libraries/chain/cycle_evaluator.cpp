@@ -42,7 +42,7 @@ object_id_type submit_reserve_cycles_to_queue_evaluator::do_apply(const submit_r
   auto& d = db();
   const auto& params = d.get_global_properties().parameters;
 
-  return d.create<submit_reserve_cycles_to_queue_request_object>([&]( submit_reserve_cycles_to_queue_request_object& req )
+  return d.create<submit_reserve_cycles_to_queue_request_object>([&](submit_reserve_cycles_to_queue_request_object& req)
   {
     req.cycle_issuer = op.issuer;
     req.account = op.account;

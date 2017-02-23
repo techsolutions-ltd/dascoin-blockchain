@@ -26,6 +26,44 @@ BOOST_AUTO_TEST_CASE( convert_dascoin_cycles_test )
   BOOST_CHECK_EQUAL( amount.value, 9999 );
 }
 
+BOOST_AUTO_TEST_CASE( basic_submit_reserved_cycles_test )
+{ try {
+  VAULT_ACTORS((first)(second)(third)(fourth))
+
+  adjust_dascoin_reward(500 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  adjust_frequency(200);
+
+  submit_reserve_cycles_to_queue(first_id, 200, 200);
+  submit_reserve_cycles_to_queue(second_id, 400, 200);
+  submit_reserve_cycles_to_queue(third_id, 200, 200);
+  submit_reserve_cycles_to_queue(fourth_id, 600, 200);
+
+  // Wait for requests to pass:
+  generate_blocks(db.head_block_time() + fc::seconds(get_chain_parameters().cycle_request_expiration_time_seconds));
+
+  // Queue looks like this:
+  // 200 --> 400 --> 200 --> 600
+
+  toggle_reward_queue(true);
+
+  // Wait for the cycles to be distributed:
+  generate_blocks(db.head_block_time() + fc::seconds(get_chain_parameters().reward_interval_time_seconds));
+
+  // Dascoin amounts shoud be:
+  // 100, 200, 100, 100
+
+  BOOST_CHECK_EQUAL( get_balance(first_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
+  BOOST_CHECK_EQUAL( get_balance(second_id, get_dascoin_asset_id()), 200 * DASCOIN_DEFAULT_ASSET_PRECISION );
+  BOOST_CHECK_EQUAL( get_balance(third_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
+  BOOST_CHECK_EQUAL( get_balance(fourth_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+  // Wait for the rest if the cycles to be distributed:
+  generate_blocks(db.head_block_time() + fc::seconds(get_chain_parameters().reward_interval_time_seconds));
+
+  BOOST_CHECK_EQUAL( get_balance(fourth_id, get_dascoin_asset_id()), 300 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_CASE( basic_queue_test )
 { try {
   VAULT_ACTORS((first)(second)(third)(fourth))

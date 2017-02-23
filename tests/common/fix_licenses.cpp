@@ -48,7 +48,7 @@ const license_request_object* database_fixture::issue_license_to_vault_account(c
                                                                                frequency_type frequency)
 { try {
   license_request_operation op;
-  op.license_issuing_account = get_license_issuer_id();
+  op.license_issuer = get_license_issuer_id();
   op.account = vault_account_id;
   op.license = license_id;
   op.bonus_percentage = bonus_percentage,
@@ -149,10 +149,10 @@ void database_fixture::issue_license_to_vault_account(const account_object& acc,
   auto req = issue_license_to_vault_account(acc.id, lic.id, bonus_percent, frequency_lock);
 
   BOOST_CHECK( req );
-  BOOST_CHECK( req->license_issuing_account == get_license_issuer_id() );
+  BOOST_CHECK( req->license_issuer == get_license_issuer_id() );
   BOOST_CHECK( req->account == acc.id );
   BOOST_CHECK( req->license == lic.id );
-  BOOST_CHECK( req->frequency == frequency_lock );
+  BOOST_CHECK( req->frequency_lock == frequency_lock );
   generate_block();
 
 } FC_LOG_AND_RETHROW() };

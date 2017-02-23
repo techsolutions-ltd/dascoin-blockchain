@@ -2006,9 +2006,9 @@ vector<issue_asset_request_object> database_api::get_all_webasset_issue_requests
    return my->list_all_objects<issue_asset_request_index, by_expiration>();
 }
 
-vector<cycle_issue_request_object> database_api::get_all_cycle_issue_requests() const
+vector<submit_reserve_cycles_to_queue_request_object> database_api::get_all_cycle_issue_requests() const
 {
-   return my->list_all_objects<cycle_issue_request_index, by_expiration>();
+   return my->list_all_objects<submit_reserve_cycles_to_queue_request_index, by_expiration>();
 }
 
 vector<wire_out_holder_object> database_api::get_all_wire_out_holders() const

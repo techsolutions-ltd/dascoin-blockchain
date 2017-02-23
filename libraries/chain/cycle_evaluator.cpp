@@ -9,14 +9,16 @@
 
 namespace graphene { namespace chain {
 
-void_result cycle_issue_request_evaluator::do_evaluate(const cycle_issue_request_operation& op)
+void_result submit_reserve_cycles_to_queue_evaluator::do_evaluate(const submit_reserve_cycles_to_queue_operation& op)
 { try {
   const auto& d = db();
 
   // Make sure that we are allowed to issue cycles to accounts:
-  FC_ASSERT( d.get_global_properties().parameters.enable_cycle_issuing, "Non-license cycle issuing is disabled" );
+  FC_ASSERT( d.get_global_properties().parameters.enable_cycle_issuing,
+             "Submitting reserve cycles to the queue is disabled"
+           );
 
-  const auto& op_issuer_obj = op.cycle_issuer(d);
+  const auto& op_issuer_obj = op.issuer(d);
   const auto cycle_issuer_id = d.get_chain_authorities().cycle_issuer;
 
   // Make sure that this is the current license issuer:
@@ -26,7 +28,8 @@ void_result cycle_issue_request_evaluator::do_evaluate(const cycle_issue_request
   const auto& account_obj = op.account(d);
 
   // Only vault accounts can receive cycles:
-  FC_ASSERT( account_obj.is_vault(), "Account '${name}' must be a vault account",
+  FC_ASSERT( account_obj.is_vault(),
+             "Account '${name}' must be a vault account",
              ("name", account_obj.name)
            );
 
@@ -34,22 +37,23 @@ void_result cycle_issue_request_evaluator::do_evaluate(const cycle_issue_request
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-object_id_type cycle_issue_request_evaluator::do_apply(const cycle_issue_request_operation& op)
+object_id_type submit_reserve_cycles_to_queue_evaluator::do_apply(const submit_reserve_cycles_to_queue_operation& op)
 { try {
   auto& d = db();
   const auto& params = d.get_global_properties().parameters;
 
-  return d.create<cycle_issue_request_object>([&]( cycle_issue_request_object& req )
+  return d.create<submit_reserve_cycles_to_queue_request_object>([&](submit_reserve_cycles_to_queue_request_object& req)
   {
-    req.cycle_issuer = op.cycle_issuer;
+    req.cycle_issuer = op.issuer;
     req.account = op.account;
     req.amount = op.amount;
+    req.frequency_lock = op.frequency_lock;
     req.expiration = d.head_block_time() + fc::seconds(params.cycle_request_expiration_time_seconds);
   }).id;
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result cycle_issue_deny_evaluator::do_evaluate(const cycle_issue_deny_operation& op)
+void_result deny_submitting_reserve_cycles_to_queue_evaluator::do_evaluate(const deny_submitting_reserve_cycles_to_queue_operation& op)
 { try {
   const auto& d = db();
   const auto cycle_auth_id = d.get_chain_authorities().cycle_authenticator;
@@ -62,7 +66,7 @@ void_result cycle_issue_deny_evaluator::do_evaluate(const cycle_issue_deny_opera
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-object_id_type cycle_issue_deny_evaluator::do_apply(const cycle_issue_deny_operation& op)
+object_id_type deny_submitting_reserve_cycles_to_queue_evaluator::do_apply(const deny_submitting_reserve_cycles_to_queue_operation& op)
 { try {
 
   db().remove(*request_);

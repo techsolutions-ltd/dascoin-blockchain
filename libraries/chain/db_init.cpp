@@ -149,8 +149,8 @@ const uint8_t issue_asset_request_object::type_id;
 const uint8_t wire_out_holder_object::space_id;
 const uint8_t wire_out_holder_object::type_id;
 
-const uint8_t cycle_issue_request_object::space_id;
-const uint8_t cycle_issue_request_object::type_id;
+const uint8_t submit_reserve_cycles_to_queue_request_object::space_id;
+const uint8_t submit_reserve_cycles_to_queue_request_object::type_id;
 
 const uint8_t reward_queue_object::space_id;
 const uint8_t reward_queue_object::type_id;
@@ -221,8 +221,8 @@ void database::initialize_evaluators()
    register_evaluator<wire_out_reject_evaluator>();
    register_evaluator<transfer_vault_to_wallet_evaluator>();
    register_evaluator<transfer_wallet_to_vault_evaluator>();
-   register_evaluator<cycle_issue_request_evaluator>();
-   register_evaluator<cycle_issue_deny_evaluator>();
+   register_evaluator<submit_reserve_cycles_to_queue_evaluator>();
+   register_evaluator<deny_submitting_reserve_cycles_to_queue_evaluator>();
    register_evaluator<submit_cycles_evaluator>();
 }
 
@@ -300,7 +300,7 @@ void database::initialize_indexes()
 
    add_index<primary_index<wire_out_holder_index>>();
 
-   add_index<primary_index<cycle_issue_request_index>>();
+   add_index<primary_index<submit_reserve_cycles_to_queue_request_index>>();
 
    add_index<primary_index<reward_queue_index>>();
 }

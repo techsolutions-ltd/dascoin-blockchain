@@ -84,11 +84,11 @@ namespace graphene { namespace chain {
     struct fee_parameters_type {};  // No fees are paid for this operation.
 
     asset fee;
-    account_id_type license_authentication_account;  // This MUST be the license authentication authority.
+    account_id_type license_authenticator;  // This MUST be the license authentication authority.
 
     license_type_id_type license;
 
-    account_id_type fee_payer() const { return license_authentication_account; }
+    account_id_type fee_payer() const { return license_authenticator; }
     void validate() const;
     share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
@@ -106,7 +106,7 @@ namespace graphene { namespace chain {
     struct fee_parameters_type {};  // No fees are paid for this operation.
 
     asset fee;
-    account_id_type license_issuing_account;  // This MUST be the license issuer authority.
+    account_id_type license_issuer;  // This MUST be the license issuer authority.
 
     account_id_type account;                  // The account to benefit the license.
     license_type_id_type license;             // The license to be granted.
@@ -115,7 +115,7 @@ namespace graphene { namespace chain {
 
     extensions_type extensions;
 
-    account_id_type fee_payer() const { return license_issuing_account; }
+    account_id_type fee_payer() const { return license_issuer; }
     void validate() const;
     share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
@@ -132,14 +132,14 @@ namespace graphene { namespace chain {
     struct fee_parameters_type {};  // No fees are paid for this operation.
 
     asset fee;
-    account_id_type license_authentication_account;  // This MUST be the license issuing authority.
+    account_id_type license_authenticator;  // This MUST be the license issuing authority.
 
     account_id_type account;                  // The account to benefit the license.
     license_type_id_type license;             // The license to be granted.
 
     extensions_type   extensions;
 
-    account_id_type fee_payer() const { return license_authentication_account; }
+    account_id_type fee_payer() const { return license_authenticator; }
     void validate() const;
     share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
@@ -159,11 +159,11 @@ namespace graphene { namespace chain {
     struct fee_parameters_type {};  // No fees are paid for this operation.
 
     asset fee;
-    account_id_type license_authentication_account;  // This MUST be the license authentication authority.
+    account_id_type license_authenticator;  // This MUST be the license authentication authority.
 
     license_request_id_type request;  // The license request we are denying.
 
-    account_id_type fee_payer() const { return license_authentication_account; }
+    account_id_type fee_payer() const { return license_authenticator; }
     void validate() const {}
     share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
@@ -200,14 +200,14 @@ FC_REFLECT( graphene::chain::license_type_edit_operation,
 FC_REFLECT( graphene::chain::license_type_delete_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::license_type_delete_operation,
             (fee)
-            (license_authentication_account)
+            (license_authenticator)
             (license)
           )
 
 FC_REFLECT( graphene::chain::license_request_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::license_request_operation,
             (fee)
-            (license_issuing_account)
+            (license_issuer)
             (account)
             (license)
             (bonus_percentage)
@@ -218,7 +218,7 @@ FC_REFLECT( graphene::chain::license_request_operation,
 FC_REFLECT( graphene::chain::license_approve_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::license_approve_operation,
             (fee)
-            (license_authentication_account)
+            (license_authenticator)
             (account)
             (license)
             (extensions)
@@ -227,6 +227,6 @@ FC_REFLECT( graphene::chain::license_approve_operation,
 FC_REFLECT( graphene::chain::license_deny_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::license_deny_operation,
             (fee)
-            (license_authentication_account)
+            (license_authenticator)
             (request)
           )

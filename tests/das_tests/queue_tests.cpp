@@ -26,67 +26,41 @@ BOOST_AUTO_TEST_CASE( convert_dascoin_cycles_test )
   BOOST_CHECK_EQUAL( amount.value, 9999 );
 }
 
-BOOST_AUTO_TEST_CASE( submit_user_cycles_test )
+BOOST_AUTO_TEST_CASE( basic_submit_reserved_cycles_test )
 { try {
-  ACTOR(wallet);
-  VAULT_ACTOR(vault);
-  VAULT_ACTOR(stan);
-  VAULT_ACTOR(coolguy);
-  VAULT_ACTOR(promoguy);
+  VAULT_ACTORS((first)(second)(third)(fourth))
 
-  const auto& check = [&](const reward_queue_object& rqo, const account_object& acc, share_type am, frequency_type f){
-    BOOST_CHECK( rqo.account == acc.id );
-    BOOST_CHECK_EQUAL( rqo.amount.value, am.value );
-    BOOST_CHECK_EQUAL( rqo.frequency.value, f.value );
-  };
+  adjust_dascoin_reward(500 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  adjust_frequency(200);
 
-  // Attempt to submit from a wallet -> reject, cannot submit frow wallet
-  GRAPHENE_CHECK_THROW( submit_cycles(wallet_id, 100) , fc::exception );
+  submit_reserve_cycles_to_queue(first_id, 200, 200);
+  submit_reserve_cycles_to_queue(second_id, 400, 200);
+  submit_reserve_cycles_to_queue(third_id, 200, 200);
+  submit_reserve_cycles_to_queue(fourth_id, 600, 200);
 
-  // Attempt to submit from empty vault -> reject, not enough cycles
-  GRAPHENE_CHECK_THROW( submit_cycles(vault_id, 100) , fc::exception );
+  // Wait for requests to pass:
+  generate_blocks(db.head_block_time() + fc::seconds(get_chain_parameters().cycle_request_expiration_time_seconds));
 
-  // Issue chartered license to the cool person:
-  issue_license_to_vault_account(coolguy, "pro-charter", 0, 200);
+  // Queue looks like this:
+  // 200 --> 400 --> 200 --> 600
 
-  // Wait for the issue to process:
-  generate_blocks(db.head_block_time() + fc::hours(24));
+  toggle_reward_queue(true);
 
-  // It should correspond to the pro license:
-  check(get_reward_queue_objects_by_account(coolguy_id)[0], coolguy, 2000, coolguy.license_info.active_frequency_lock());
+  // Wait for the cycles to be distributed:
+  generate_blocks(db.head_block_time() + fc::seconds(get_chain_parameters().reward_interval_time_seconds));
 
-  // // Issue promo license to the promo person:
-  issue_license_to_vault_account(promoguy, "executive-promo", 0, 200);
+  // Dascoin amounts shoud be:
+  // 100, 200, 100, 100
 
-  // // Wait for the issue to process:
-  generate_blocks(db.head_block_time() + fc::hours(24));
+  BOOST_CHECK_EQUAL( get_balance(first_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
+  BOOST_CHECK_EQUAL( get_balance(second_id, get_dascoin_asset_id()), 200 * DASCOIN_DEFAULT_ASSET_PRECISION );
+  BOOST_CHECK_EQUAL( get_balance(third_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
+  BOOST_CHECK_EQUAL( get_balance(fourth_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
 
-  // // It should correspond to the pro license:
-  check(get_reward_queue_objects_by_account(promoguy_id)[0], promoguy, 5000, promoguy.license_info.active_frequency_lock());
+  // Wait for the rest if the cycles to be distributed:
+  generate_blocks(db.head_block_time() + fc::seconds(get_chain_parameters().reward_interval_time_seconds));
 
-  // Vault gets some cycles issued to it:
-  issue_cycles(vault_id, 500);
-
-  // Wait for the issue to process:
-  generate_blocks(db.head_block_time() + fc::hours(24));
-
-  // Check if the second and third requests have been fulfilled:
-  BOOST_CHECK_EQUAL( get_cycle_balance(vault_id).value, 500 );
-
-  // Submit from the vault:
-  submit_cycles(vault_id, 500);
-
-  // Issue license to Stan's vault account:
-  issue_license_to_vault_account(stan, "standard");
-
-  // Wait for the license to process:
-  generate_blocks(db.head_block_time() + fc::hours(24));
-
-  // Submit cycles from the license:
-  submit_cycles(stan_id, 100);
-
-  check(get_reward_queue_objects_by_account(vault_id)[0], vault, 500, get_global_frequency());
-  check(get_reward_queue_objects_by_account(stan_id)[0], stan, 100, get_global_frequency());
+  BOOST_CHECK_EQUAL( get_balance(fourth_id, get_dascoin_asset_id()), 300 * DASCOIN_DEFAULT_ASSET_PRECISION );
 
 } FC_LOG_AND_RETHROW() }
 

@@ -9,24 +9,24 @@
 
 namespace graphene { namespace chain {
 
-  class cycle_issue_request_evaluator : public evaluator<cycle_issue_request_evaluator>
+  class submit_reserve_cycles_to_queue_evaluator : public evaluator<submit_reserve_cycles_to_queue_evaluator>
   {
   public:
-    typedef cycle_issue_request_operation operation_type;
+    typedef submit_reserve_cycles_to_queue_operation operation_type;
 
     void_result do_evaluate(const operation_type& op);
     object_id_type do_apply(const operation_type& op);
   };
 
-  class cycle_issue_deny_evaluator : public evaluator<cycle_issue_deny_evaluator>
+  class deny_submitting_reserve_cycles_to_queue_evaluator : public evaluator<deny_submitting_reserve_cycles_to_queue_evaluator>
   {
   public:
-    typedef cycle_issue_deny_operation operation_type;
+    typedef deny_submitting_reserve_cycles_to_queue_operation operation_type;
 
     void_result do_evaluate(const operation_type& op);
     object_id_type do_apply(const operation_type& op);
 
-    const cycle_issue_request_object* request_ = nullptr;
+    const submit_reserve_cycles_to_queue_request_object* request_ = nullptr;
   };
 
   class submit_cycles_evaluator : public evaluator<submit_cycles_evaluator>

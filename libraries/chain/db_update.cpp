@@ -485,12 +485,54 @@ void database::assign_licenses()
   while ( !idx.empty() && idx.begin()->expiration <= head_block_time() )
   {
     const auto& req = *idx.begin();
-    const auto& ca = get_chain_authorities();
 
-    fulfill_license_request(req);
+    const auto& account_obj = req.account(*this);
+    const auto& new_license_obj = req.license(*this);
+    const auto& pending = *account_obj.license_info.pending;
+
+    // TODO: do we need to have this check?
+    FC_ASSERT( pending.request == req.id );
+    FC_ASSERT( pending.license == req.license );
+
+    modify(account_obj, [&](account_object& a) {
+      auto& info = a.license_info;
+
+      // Add the license to the top of the history, so it becomes the new active license:
+      info.add_license(new_license_obj.id, req.amount, req.frequency_lock);
+
+      // Improve all the upgrades to match the new license:
+      info.balance_upgrade += new_license_obj.balance_upgrade;
+      info.requeue_upgrade += new_license_obj.requeue_upgrade;
+      info.return_upgrade += new_license_obj.return_upgrade;
+
+      info.clear_pending();
+    });
+
+    // For regular licenses, increase the cycle balance by the requested amount:
+    if ( new_license_obj.kind == license_kind::regular )
+      issue_cycles(account_obj.id, req.amount);
+
+    // For auto submit licenses, submit a new license request with frequency locked:
+    else if ( new_license_obj.kind == license_kind::chartered || new_license_obj.kind == license_kind::promo )
+    {
+      create<reward_queue_object>([&](reward_queue_object& rqo){
+        rqo.account = req.account;
+        rqo.amount = req.amount;
+        rqo.frequency = req.frequency_lock;
+        rqo.time = head_block_time();
+      });
+
+      // Create a virtual operation:
+      submit_charter_license_cycles_operation vop;
+      vop.license_issuer = req.license_issuer;
+      vop.account = req.account;
+      vop.amount = req.amount;
+
+      push_applied_operation(vop);
+    }
 
     license_approve_operation vop;
-    vop.license_authentication_account = ca.license_authenticator;
+    vop.license_authenticator = get_chain_authorities().license_authenticator;
     vop.account = req.account;
     vop.license = req.license;
     push_applied_operation(vop);
@@ -518,33 +560,6 @@ void database::distribute_issue_requested_assets()
 
     remove(req);
   }
-} FC_CAPTURE_AND_RETHROW() }
-
-void database::distribute_issue_requested_cycles()
-{ try {
-  transaction_evaluation_state distribute_context(this);
-  const auto& idx = get_index_type<cycle_issue_request_index>().indices().get<by_expiration>();
-
-  while (!idx.empty() && idx.begin()->expiration <= head_block_time())
-  {
-    const auto& req = *idx.begin();
-    adjust_cycle_balance(req.account, req.amount);
-
-    cycle_issue_complete_operation vop;
-    vop.cycle_authenticator = get_chain_authorities().cycle_authenticator;
-    vop.account = req.account;
-    vop.amount = req.amount;
-    push_applied_operation(vop);
-
-    remove(req);
-  }
-} FC_CAPTURE_AND_RETHROW() }
-
-void database::deny_license_request(const license_request_object& req)
-{ try {
-
-  remove(req);
-
 } FC_CAPTURE_AND_RETHROW() }
 
 void database::reset_spending_limits()
@@ -604,7 +619,37 @@ void database::mint_dascoin_rewards()
     });
   }
 
-
 } FC_CAPTURE_AND_RETHROW() }
+
+void database::submit_reserve_cycles_to_queue()
+{ try {
+  transaction_evaluation_state assign_context(this);
+  const auto& idx = get_index_type<submit_reserve_cycles_to_queue_request_index>().indices()
+      .get<by_expiration>();
+
+  while ( !idx.empty() && idx.begin()->expiration <= head_block_time() )
+  {
+    const auto& req = *idx.begin();
+
+    create<reward_queue_object>([&](reward_queue_object& rqo){
+      rqo.account = req.account;
+      rqo.amount = req.amount;
+      rqo.frequency = req.frequency_lock;
+      rqo.time = head_block_time();
+    });
+
+    // Submit a virtual operation:
+    submit_reserve_cycles_operation vop;
+    vop.cycle_issuer = req.cycle_issuer;
+    vop.account = req.account;
+    vop.amount = req.amount;
+    vop.frequency_lock = req.frequency_lock;
+
+    push_applied_operation(vop);
+
+    remove(req);
+  }
+} FC_CAPTURE_AND_RETHROW() }
+
 
 } }  // namespace database::chain

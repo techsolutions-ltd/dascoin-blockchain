@@ -124,13 +124,13 @@ namespace graphene { namespace chain {
       static const uint8_t space_id = implementation_ids;
       static const uint8_t type_id  = impl_license_request_object_type;
 
-      account_id_type license_issuing_account;  // This MUST be the license authentication authority.
+      account_id_type license_issuer;  // Must be current license authority.
 
-      account_id_type account;                  // The account to benefit the license.
-      license_type_id_type license;             // The license to be granted to the account.
-      share_type amount;                        // The amount of cycles (with multiplier).
-      time_point_sec expiration;                // Deadline for denial.
-      frequency_type frequency;                 // Account frequency lock to be applied.
+      account_id_type account;
+      license_type_id_type license;
+      share_type amount;
+      frequency_type frequency_lock;
+      time_point_sec expiration;
 
       extensions_type extensions;
 
@@ -182,7 +182,7 @@ namespace graphene { namespace chain {
         >
       >,
       ordered_non_unique< tag<by_issuer_id>,
-        member< license_request_object, account_id_type, &license_request_object::license_issuing_account >
+        member< license_request_object, account_id_type, &license_request_object::license_issuer >
       >,
       ordered_non_unique< tag<by_license_type_id>,
         member< license_request_object, license_type_id_type, &license_request_object::license >
@@ -226,11 +226,11 @@ FC_REFLECT_DERIVED( graphene::chain::license_type_object, (graphene::db::object)
                   )
 
 FC_REFLECT_DERIVED( graphene::chain::license_request_object, (graphene::db::object),
-                    (license_issuing_account)
+                    (license_issuer)
                     (account)
                     (license)
                     (amount)
+                    (frequency_lock)
                     (expiration)
-                    (frequency)
                     (extensions)
                   )

@@ -2486,7 +2486,7 @@ public:
 
       license_request_operation op;
 
-      op.license_issuing_account = issuer_account.id;
+      op.license_issuer = issuer_account.id;
       op.account = beneficiary.id;
       op.license = new_license.id;
       op.bonus_percentage = bonus_percentage;
@@ -2507,7 +2507,7 @@ public:
 
       license_deny_operation op;
 
-      op.license_authentication_account = authenticator_account.id;
+      op.license_authenticator = authenticator_account.id;
       op.request = request.id;
 
       signed_transaction tx;
@@ -4466,7 +4466,7 @@ vector<issue_asset_request_object> wallet_api::get_all_webasset_issue_requests()
    return my->_remote_db->get_all_webasset_issue_requests();
 }
 
-vector<cycle_issue_request_object> wallet_api::get_all_cycle_issue_requests() const
+vector<submit_reserve_cycles_to_queue_request_object> wallet_api::get_all_cycle_issue_requests() const
 {
    return my->_remote_db->get_all_cycle_issue_requests();
 }

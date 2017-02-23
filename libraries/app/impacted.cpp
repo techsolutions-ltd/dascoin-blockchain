@@ -154,7 +154,7 @@ struct get_impacted_account_visitor
    void operator()( const committee_member_update_global_parameters_operation& op ) {}
    void operator()( const board_update_chain_authority_operation& op ) {}
    void operator()( const create_license_type_operation& op ) {}
-   void operator()( const license_type_delete_operation& op ) {}
+
    void operator()( const issue_license_operation& op ) {}
    void operator()( const record_issue_license_operation& op ) {}  // TODO: check if this should be impacting an account.
    void operator()( const deny_license_operation& op ) {}

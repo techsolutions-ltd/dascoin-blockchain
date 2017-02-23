@@ -42,30 +42,6 @@ namespace graphene { namespace chain {
      share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
 
-
-  /**
-   * @brief delete a license type object
-   * @ingroup operations
-   *
-   * An authorized license authentication authority may delete an existing license given to users.
-   * Upon deletion, all license holders must revert to the default NO_LICENSE. Granted cycle balances are unaffected.
-   *
-   * WARNING: this operation is NOT RETROACTIVE!
-   */
-  struct license_type_delete_operation : public base_operation
-  {
-    struct fee_parameters_type {};  // No fees are paid for this operation.
-
-    asset fee;
-    account_id_type license_authenticator;  // This MUST be the license authentication authority.
-
-    license_type_id_type license;
-
-    account_id_type fee_payer() const { return license_authenticator; }
-    void validate() const;
-    share_type calculate_fee(const fee_parameters_type&) const { return 0; }
-  };
-
   /**
    * @brief Request a license to be granted an account
    * @ingroup operations
@@ -157,13 +133,6 @@ FC_REFLECT( graphene::chain::create_license_type_operation,
             (balance_multipliers)
             (requeue_multipliers)
             (return_multipliers)
-          )
-
-FC_REFLECT( graphene::chain::license_type_delete_operation::fee_parameters_type, )
-FC_REFLECT( graphene::chain::license_type_delete_operation,
-            (fee)
-            (license_authenticator)
-            (license)
           )
 
 FC_REFLECT( graphene::chain::issue_license_operation::fee_parameters_type, )

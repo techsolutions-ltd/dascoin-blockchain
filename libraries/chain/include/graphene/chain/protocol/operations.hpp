@@ -113,7 +113,6 @@ namespace graphene { namespace chain {
             board_update_chain_authority_operation,
 
             create_license_type_operation,
-            license_type_delete_operation,
             issue_license_operation,
             deny_license_operation,
             tether_accounts_operation,

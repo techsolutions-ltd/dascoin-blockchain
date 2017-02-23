@@ -45,26 +45,6 @@ object_id_type create_license_type_evaluator::do_apply(const create_license_type
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
 ////////////////////////////
-// License type deletion: //
-////////////////////////////
-
-void_result license_type_delete_evaluator::do_evaluate(const license_type_delete_operation& op)
-{ try {
-
-  // assert_license_authenticator( db(), op.license_authenticator );
-  return void_result();
-
-} FC_CAPTURE_AND_RETHROW( (op) ) }
-
-void_result license_type_delete_evaluator::do_apply(const license_type_delete_operation& op)
-{ try {
-
-  // TODO: to do a meaningfull delete, all accounts with a license must have the license_id removed!
-  return void_result();
-
-} FC_CAPTURE_AND_RETHROW( (op) ) }
-
-////////////////////////////
 // License issue request: //
 ////////////////////////////
 

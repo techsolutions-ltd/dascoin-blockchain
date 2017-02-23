@@ -11,11 +11,6 @@ namespace graphene { namespace chain {
 
   }
 
-  void license_type_delete_operation::validate() const
-  {
-
-  }
-
   void issue_license_operation::validate() const
   {
     FC_ASSERT( bonus_percentage > -100,

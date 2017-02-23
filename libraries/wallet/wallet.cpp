@@ -2505,7 +2505,7 @@ public:
       auto authenticator_account = this->get_account( authenticator );
       auto request = get_license_request( req_id );
 
-      license_deny_operation op;
+      deny_license_operation op;
 
       op.license_authenticator = authenticator_account.id;
       op.request = request.id;

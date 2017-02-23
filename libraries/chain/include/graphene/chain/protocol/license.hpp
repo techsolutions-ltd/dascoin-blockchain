@@ -154,7 +154,7 @@ namespace graphene { namespace chain {
    * If the authorized license authentication authority does not deny the request, the request is automatically approved
    * on expiration.
    */
-  struct license_deny_operation : public base_operation
+  struct deny_license_operation : public base_operation
   {
     struct fee_parameters_type {};  // No fees are paid for this operation.
 
@@ -224,8 +224,8 @@ FC_REFLECT( graphene::chain::license_approve_operation,
             (extensions)
           )
 
-FC_REFLECT( graphene::chain::license_deny_operation::fee_parameters_type, )
-FC_REFLECT( graphene::chain::license_deny_operation,
+FC_REFLECT( graphene::chain::deny_license_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::deny_license_operation,
             (fee)
             (license_authenticator)
             (request)

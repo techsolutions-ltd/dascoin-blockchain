@@ -177,7 +177,7 @@ object_id_type issue_license_evaluator::do_apply(const issue_license_operation& 
 // License request denial: //
 /////////////////////////////
 
-void_result license_deny_evaluator::do_evaluate(const license_deny_operation& op)
+void_result deny_license_evaluator::do_evaluate(const deny_license_operation& op)
 { try {
   const auto& d = db();
   const auto auth_id = d.get_chain_authorities().license_authenticator;
@@ -198,7 +198,7 @@ void_result license_deny_evaluator::do_evaluate(const license_deny_operation& op
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result license_deny_evaluator::do_apply(const license_deny_operation& op)
+void_result deny_license_evaluator::do_apply(const deny_license_operation& op)
 { try {
   auto& d = db();
 

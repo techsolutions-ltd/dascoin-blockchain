@@ -52,13 +52,13 @@ private:
   const account_object* account_obj_ = nullptr;
 };
 
-class license_deny_evaluator : public evaluator<license_deny_evaluator>
+class deny_license_evaluator : public evaluator<deny_license_evaluator>
 {
 public:
-  typedef license_deny_operation operation_type;
+  typedef deny_license_operation operation_type;
 
-  void_result do_evaluate(const license_deny_operation& op);
-  void_result do_apply(const license_deny_operation& op);
+  void_result do_evaluate(const deny_license_operation& op);
+  void_result do_apply(const deny_license_operation& op);
 
 private:
   const account_object* account_obj_ = nullptr;

@@ -87,4 +87,9 @@ namespace graphene { namespace chain {
 
   } FC_LOG_AND_RETHROW() };
 
+  uint32_t database_fixture::get_reward_queue_size() const
+  {
+    return db.get_index_type<reward_queue_index>().indices().size();
+  }
+
 } }  // graphene::chain

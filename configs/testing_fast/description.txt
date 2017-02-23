@@ -1,0 +1,13 @@
+This configuration is used for internal testing.
+
+Notable settings:
+
+* Uses default accounts in genesis.
+* All request intervals (license issue, asset issue etc.) are set to 0.
+* Reward queue is set to 20 seconds
+* Frequency is set to 2.00
+* Reward amount is set to 2000 DasCoin
+
+Port config:
+* 5880 for p2p
+* 9880 for ws

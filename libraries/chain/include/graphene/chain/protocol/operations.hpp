@@ -97,7 +97,7 @@ namespace graphene { namespace chain {
             asset_claim_fees_operation,
             fba_distribute_operation,  // VIRTUAL
             board_update_chain_authority_operation,
-            license_type_create_operation,
+            create_license_type_operation,
             license_type_edit_operation,
             license_type_delete_operation,
             license_request_operation,

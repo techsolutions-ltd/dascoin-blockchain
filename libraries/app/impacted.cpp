@@ -153,7 +153,7 @@ struct get_impacted_account_visitor
    }
    void operator()( const committee_member_update_global_parameters_operation& op ) {}
    void operator()( const board_update_chain_authority_operation& op ) {}
-   void operator()( const license_type_create_operation& op ) {}
+   void operator()( const create_license_type_operation& op ) {}
    void operator()( const license_type_edit_operation& op ) {}
    void operator()( const license_type_delete_operation& op ) {}
    void operator()( const license_request_operation& op ) {}

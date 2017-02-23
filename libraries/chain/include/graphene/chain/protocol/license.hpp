@@ -22,7 +22,7 @@ namespace graphene { namespace chain {
    *
    * An authorized license administration authority may define licenses to be distributed to users.
    */
-  struct license_type_create_operation : public base_operation
+  struct create_license_type_operation : public base_operation
   {
      struct fee_parameters_type {};  // No fees are paid for this operation.
 
@@ -174,8 +174,8 @@ namespace graphene { namespace chain {
 // REFLECTIONS:              //
 ///////////////////////////////
 
-FC_REFLECT( graphene::chain::license_type_create_operation::fee_parameters_type, )
-FC_REFLECT( graphene::chain::license_type_create_operation,
+FC_REFLECT( graphene::chain::create_license_type_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::create_license_type_operation,
             (fee)
             (admin)
             (name)

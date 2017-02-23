@@ -6,7 +6,7 @@
 
 namespace graphene { namespace chain {
 
-  void license_type_create_operation::validate() const
+  void create_license_type_operation::validate() const
   {
 
   }

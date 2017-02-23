@@ -22,7 +22,7 @@ share_type apply_percentage(share_type val, share_type percent)
 // License type creation: //
 ////////////////////////////
 
-void_result license_type_create_evaluator::do_evaluate(const license_type_create_operation& op)
+void_result create_license_type_evaluator::do_evaluate(const create_license_type_operation& op)
 { try {
   const auto& d = db();
   const auto license_admin_id = d.get_global_properties().authorities.license_administrator;
@@ -34,7 +34,7 @@ void_result license_type_create_evaluator::do_evaluate(const license_type_create
 
 } FC_CAPTURE_AND_RETHROW((op)) }
 
-object_id_type license_type_create_evaluator::do_apply(const license_type_create_operation& op)
+object_id_type create_license_type_evaluator::do_apply(const create_license_type_operation& op)
 { try {
   using namespace graphene::chain::util;
   auto kind = convert_enum<license_kind>::from_string(op.kind);

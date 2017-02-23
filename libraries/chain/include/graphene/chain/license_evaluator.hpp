@@ -12,13 +12,13 @@
 
 namespace graphene { namespace chain {
 
-class license_type_create_evaluator : public evaluator<license_type_create_evaluator>
+class create_license_type_evaluator : public evaluator<create_license_type_evaluator>
 {
 public:
-  typedef license_type_create_operation operation_type;
+  typedef create_license_type_operation operation_type;
 
-  void_result do_evaluate(const license_type_create_operation& op);
-  object_id_type do_apply(const license_type_create_operation& op);
+  void_result do_evaluate(const create_license_type_operation& op);
+  object_id_type do_apply(const create_license_type_operation& op);
 };
 
 class license_type_edit_evaluator : public evaluator<license_type_edit_evaluator>

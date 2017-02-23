@@ -207,7 +207,7 @@ void database::initialize_evaluators()
    register_evaluator<blind_transfer_evaluator>();
    register_evaluator<asset_claim_fees_evaluator>();
    register_evaluator<board_update_chain_authority_evaluator>();
-   register_evaluator<license_type_create_evaluator>();
+   register_evaluator<create_license_type_evaluator>();
    register_evaluator<license_type_edit_evaluator>();
    register_evaluator<license_type_delete_evaluator>();
    register_evaluator<license_request_evaluator>();

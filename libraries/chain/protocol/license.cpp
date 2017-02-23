@@ -11,11 +11,6 @@ namespace graphene { namespace chain {
 
   }
 
-  void license_type_edit_operation::validate() const
-  {
-
-  }
-
   void license_type_delete_operation::validate() const
   {
 

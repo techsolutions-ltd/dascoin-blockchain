@@ -118,30 +118,6 @@ const license_type_object& database_fixture::create_license_type(const string& k
 
 } FC_LOG_AND_RETHROW() }
 
-void database_fixture::edit_license_type(license_type_id_type license_id,
-                                         optional<string> name, optional<share_type> amount, 
-                                         optional<upgrade_multiplier_type> balance_multipliers,
-                                         optional<upgrade_multiplier_type> requeue_multipliers,
-                                         optional<upgrade_multiplier_type> return_multipliers)
-{ try {
-  license_type_edit_operation op;
-  op.admin = get_license_administrator_id();
-  op.license = license_id;
-  op.name = name;
-  op.amount = amount;
-  op.balance_multipliers = balance_multipliers;
-  op.requeue_multipliers = requeue_multipliers;
-  op.return_multipliers = return_multipliers;
-
-  set_expiration(db, trx);
-  trx.operations.clear();
-  trx.operations.push_back(op);
-  trx.validate();
-  processed_transaction ptx = db.push_transaction(trx, ~0);
-  trx.operations.clear();
-
-} FC_LOG_AND_RETHROW() }
-
 void database_fixture::issue_license_to_vault_account(const account_object& acc, const string& lic_name, 
                                                       share_type bonus_percent, frequency_type frequency_lock)
 { try {

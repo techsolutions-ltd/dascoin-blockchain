@@ -317,10 +317,6 @@ struct database_fixture {
                                                   upgrade_multiplier_type balance_multipliers,
                                                   upgrade_multiplier_type requeue_multipliers,
                                                   upgrade_multiplier_type return_multipliers);
-   void edit_license_type(license_type_id_type license_id, optional<string> name, optional<share_type> amount,
-                          optional<upgrade_multiplier_type> balance_multipliers,
-                          optional<upgrade_multiplier_type> requeue_multipliers,
-                          optional<upgrade_multiplier_type> return_multipliers);
    const license_request_object* issue_license_to_vault_account(const account_id_type vault_account_id,
                                                                 const license_type_id_type license_id,
                                                                 share_type bonus_percentage,

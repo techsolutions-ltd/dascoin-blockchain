@@ -42,33 +42,6 @@ namespace graphene { namespace chain {
      share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
 
-  /**
-   * @brief edit a license type object
-   * @ingroup operations
-   *
-   * An authorized license administration authority may edit licenses to be distributed to users.
-   *
-   * WARNING: this operation is NOT RETROACTIVE!
-   */
-  struct license_type_edit_operation : public base_operation
-  {
-     struct fee_parameters_type {};  // No fees are paid for this operation.
-
-     asset fee;
-     license_type_id_type license;
-     account_id_type admin;
-
-     optional<string> name;
-     optional<share_type> amount;
-
-     optional<upgrade_multiplier_type> balance_multipliers;
-     optional<upgrade_multiplier_type> requeue_multipliers;
-     optional<upgrade_multiplier_type> return_multipliers;
-
-     account_id_type fee_payer() const { return admin; }
-     void validate() const;
-     share_type calculate_fee(const fee_parameters_type&) const { return 0; }
-  };
 
   /**
    * @brief delete a license type object
@@ -186,17 +159,6 @@ FC_REFLECT( graphene::chain::create_license_type_operation,
             (return_multipliers)
           )
 
-FC_REFLECT( graphene::chain::license_type_edit_operation::fee_parameters_type, )
-FC_REFLECT( graphene::chain::license_type_edit_operation,
-            (fee)
-            (license)
-            (admin)
-            (name)
-            (amount)
-            (balance_multipliers)
-            (requeue_multipliers)
-            (return_multipliers)
-          )
 FC_REFLECT( graphene::chain::license_type_delete_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::license_type_delete_operation,
             (fee)

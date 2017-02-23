@@ -44,31 +44,6 @@ object_id_type create_license_type_evaluator::do_apply(const create_license_type
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-///////////////////////////
-// License type editing: //
-///////////////////////////
-
-void_result license_type_edit_evaluator::do_evaluate(const license_type_edit_operation& op)
-{ try {
-  const auto& d = db();
-  const auto license_admin_id = d.get_global_properties().authorities.license_administrator;
-  const auto& op_admin_obj = op.admin(d);
-
-  d.perform_chain_authority_check("license administration", license_admin_id, op_admin_obj);
-
-  return {};
-
-}  FC_CAPTURE_AND_RETHROW((op)) }
-
-void_result license_type_edit_evaluator::do_apply(const license_type_edit_operation& op)
-{ try {
-
-  db().edit_license_type(op.license, op.name, op.amount, op.balance_multipliers, op.requeue_multipliers, 
-                         op.return_multipliers);
-  return {};
-
-} FC_CAPTURE_AND_RETHROW((op)) }
-
 ////////////////////////////
 // License type deletion: //
 ////////////////////////////

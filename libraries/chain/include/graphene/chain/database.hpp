@@ -543,10 +543,6 @@ namespace graphene { namespace chain {
                                             upgrade_multiplier_type balance_multipliers,
                                             upgrade_multiplier_type requeue_multipliers,
                                             upgrade_multiplier_type return_multipliers);
-         void edit_license_type(license_type_id_type license_id, optional<string> name, optional<share_type> amount,
-                                optional<upgrade_multiplier_type> balance_multipliers,
-                                optional<upgrade_multiplier_type> requeue_multipliers,
-                                optional<upgrade_multiplier_type> return_multipliers);
 
    protected:
          //Mark pop_undo() as protected -- we do not want outside calling pop_undo(); it should call pop_block() instead

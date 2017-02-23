@@ -53,7 +53,7 @@ object_id_type submit_reserve_cycles_to_queue_evaluator::do_apply(const submit_r
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result deny_submitting_reserve_cycles_to_queue_evaluator::do_evaluate(const deny_submitting_reserve_cycles_to_queue_operation& op)
+void_result deny_submit_reserve_cycles_to_queue_evaluator::do_evaluate(const deny_submit_reserve_cycles_to_queue_operation& op)
 { try {
   const auto& d = db();
   const auto cycle_auth_id = d.get_chain_authorities().cycle_authenticator;
@@ -66,7 +66,7 @@ void_result deny_submitting_reserve_cycles_to_queue_evaluator::do_evaluate(const
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-object_id_type deny_submitting_reserve_cycles_to_queue_evaluator::do_apply(const deny_submitting_reserve_cycles_to_queue_operation& op)
+object_id_type deny_submit_reserve_cycles_to_queue_evaluator::do_apply(const deny_submit_reserve_cycles_to_queue_operation& op)
 { try {
 
   db().remove(*request_);

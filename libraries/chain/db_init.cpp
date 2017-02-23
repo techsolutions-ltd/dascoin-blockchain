@@ -222,7 +222,7 @@ void database::initialize_evaluators()
    register_evaluator<transfer_vault_to_wallet_evaluator>();
    register_evaluator<transfer_wallet_to_vault_evaluator>();
    register_evaluator<submit_reserve_cycles_to_queue_evaluator>();
-   register_evaluator<deny_submitting_reserve_cycles_to_queue_evaluator>();
+   register_evaluator<deny_submit_reserve_cycles_to_queue_evaluator>();
    register_evaluator<submit_cycles_evaluator>();
 }
 

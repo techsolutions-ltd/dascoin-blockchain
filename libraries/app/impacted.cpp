@@ -254,7 +254,7 @@ struct get_impacted_account_visitor
    }
 
    void operator()( const submit_reserve_cycles_to_queue_operation& op ) {}
-   void operator()( const deny_submitting_reserve_cycles_to_queue_operation& op ) {}
+   void operator()( const deny_submit_reserve_cycles_to_queue_operation& op ) {}
 
    void operator()( const cycle_issue_complete_operation& op )
    {

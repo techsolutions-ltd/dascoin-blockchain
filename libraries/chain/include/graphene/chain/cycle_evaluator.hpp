@@ -18,10 +18,10 @@ namespace graphene { namespace chain {
     object_id_type do_apply(const operation_type& op);
   };
 
-  class deny_submitting_reserve_cycles_to_queue_evaluator : public evaluator<deny_submitting_reserve_cycles_to_queue_evaluator>
+  class deny_submit_reserve_cycles_to_queue_evaluator : public evaluator<deny_submit_reserve_cycles_to_queue_evaluator>
   {
   public:
-    typedef deny_submitting_reserve_cycles_to_queue_operation operation_type;
+    typedef deny_submit_reserve_cycles_to_queue_operation operation_type;
 
     void_result do_evaluate(const operation_type& op);
     object_id_type do_apply(const operation_type& op);

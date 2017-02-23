@@ -69,7 +69,7 @@ const submit_reserve_cycles_to_queue_request_object* database_fixture::submit_re
 void database_fixture::deny_issue_cycles(cycle_issue_request_id_type request_id)
 { try {
 
-  deny_submitting_reserve_cycles_to_queue_operation op;
+  deny_submit_reserve_cycles_to_queue_operation op;
   op.cycle_authenticator = get_cycle_authenticator_id();
   op.request = request_id;
 

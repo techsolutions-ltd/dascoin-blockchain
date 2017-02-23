@@ -17,7 +17,7 @@ void cycle_issue_complete_operation::validate() const
 
 }
 
-void deny_submitting_reserve_cycles_to_queue_operation::validate() const
+void deny_submit_reserve_cycles_to_queue_operation::validate() const
 {
 
 }

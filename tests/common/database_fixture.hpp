@@ -393,6 +393,7 @@ struct database_fixture {
    vector<reward_queue_object> get_reward_queue_objects_by_time();
    vector<reward_queue_object> get_reward_queue_objects_by_account(account_id_type account_id);
    void toggle_reward_queue(bool state);
+   uint32_t get_reward_queue_size() const;
 
 };
 

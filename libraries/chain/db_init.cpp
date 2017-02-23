@@ -210,7 +210,7 @@ void database::initialize_evaluators()
    register_evaluator<create_license_type_evaluator>();
    register_evaluator<license_type_edit_evaluator>();
    register_evaluator<license_type_delete_evaluator>();
-   register_evaluator<license_request_evaluator>();
+   register_evaluator<issue_license_evaluator>();
    register_evaluator<license_deny_evaluator>();
    register_evaluator<tether_accounts_evaluator>();
    // register_evaluator<update_pi_limits_evaluator>();

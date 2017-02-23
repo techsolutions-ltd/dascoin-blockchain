@@ -39,13 +39,13 @@ public:
   void_result do_apply(const license_type_delete_operation& op);
 };
 
-class license_request_evaluator : public evaluator<license_request_evaluator>
+class issue_license_evaluator : public evaluator<issue_license_evaluator>
 {
 public:
-  typedef license_request_operation operation_type;
+  typedef issue_license_operation operation_type;
 
-  void_result do_evaluate(const license_request_operation& op);
-  object_id_type do_apply(const license_request_operation& op);
+  void_result do_evaluate(const issue_license_operation& op);
+  object_id_type do_apply(const issue_license_operation& op);
 
 private:
   const license_type_object* new_license_obj_ = nullptr;

@@ -93,7 +93,7 @@ void_result license_type_delete_evaluator::do_apply(const license_type_delete_op
 // License issue request: //
 ////////////////////////////
 
-void_result license_request_evaluator::do_evaluate(const license_request_operation& op)
+void_result issue_license_evaluator::do_evaluate(const issue_license_operation& op)
 { try {
 
   const auto& d = db();
@@ -147,7 +147,7 @@ void_result license_request_evaluator::do_evaluate(const license_request_operati
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-object_id_type license_request_evaluator::do_apply(const license_request_operation& op)
+object_id_type issue_license_evaluator::do_apply(const issue_license_operation& op)
 { try {
   auto& d = db();
   const auto& params = d.get_global_properties().parameters;

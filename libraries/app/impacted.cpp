@@ -156,7 +156,7 @@ struct get_impacted_account_visitor
    void operator()( const create_license_type_operation& op ) {}
    void operator()( const license_type_edit_operation& op ) {}
    void operator()( const license_type_delete_operation& op ) {}
-   void operator()( const license_request_operation& op ) {}
+   void operator()( const issue_license_operation& op ) {}
    void operator()( const license_approve_operation& op ) {}  // TODO: check if this should be impacting an account.
    void operator()( const license_deny_operation& op ) {}
 

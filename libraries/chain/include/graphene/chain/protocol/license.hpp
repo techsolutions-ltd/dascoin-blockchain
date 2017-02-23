@@ -101,7 +101,7 @@ namespace graphene { namespace chain {
    * An independent authorized license authentication authority must inspect and approve this request. Upon approval,
    * the license is irredeemably granted to the account.
    */
-  struct license_request_operation : public base_operation
+  struct issue_license_operation : public base_operation
   {
     struct fee_parameters_type {};  // No fees are paid for this operation.
 
@@ -204,8 +204,8 @@ FC_REFLECT( graphene::chain::license_type_delete_operation,
             (license)
           )
 
-FC_REFLECT( graphene::chain::license_request_operation::fee_parameters_type, )
-FC_REFLECT( graphene::chain::license_request_operation,
+FC_REFLECT( graphene::chain::issue_license_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::issue_license_operation,
             (fee)
             (license_issuer)
             (account)

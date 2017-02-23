@@ -2484,7 +2484,7 @@ public:
       auto beneficiary = get_account( account );
       auto new_license = get_license_type( license );
 
-      license_request_operation op;
+      issue_license_operation op;
 
       op.license_issuer = issuer_account.id;
       op.account = beneficiary.id;

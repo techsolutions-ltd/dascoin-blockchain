@@ -47,7 +47,7 @@ const license_request_object* database_fixture::issue_license_to_vault_account(c
                                                                                share_type bonus_percentage, 
                                                                                frequency_type frequency)
 { try {
-  license_request_operation op;
+  issue_license_operation op;
   op.license_issuer = get_license_issuer_id();
   op.account = vault_account_id;
   op.license = license_id;

@@ -100,7 +100,7 @@ namespace graphene { namespace chain {
             create_license_type_operation,
             license_type_edit_operation,
             license_type_delete_operation,
-            license_request_operation,
+            issue_license_operation,
             license_approve_operation,  // VIRTUAL
             license_deny_operation,
             tether_accounts_operation,

@@ -2500,23 +2500,6 @@ public:
       return sign_transaction( tx, broadcast );
    }
 
-   signed_transaction deny_license_request(const string& authenticator, const string& req_id, bool broadcast)
-   {
-      auto authenticator_account = this->get_account( authenticator );
-      auto request = get_license_request( req_id );
-
-      deny_license_operation op;
-
-      op.license_authenticator = authenticator_account.id;
-      op.request = request.id;
-
-      signed_transaction tx;
-      tx.operations.push_back( op );
-      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
-
-      return sign_transaction( tx, broadcast );
-   }
-
    signed_transaction wire_out(const string& account_name, share_type amount, bool broadcast)
    {
       auto account = get_account(account_name);
@@ -4425,11 +4408,6 @@ signed_transaction wallet_api::issue_license( const string& issuer, const string
                                               bool broadcast )
 {
    return my->issue_license( issuer, account, license, bonus_percentage, account_frequency, broadcast );
-}
-
-signed_transaction wallet_api::deny_license_request( const string& authenticator, const string& req_id, bool broadcast)
-{
-   return my->deny_license_request( authenticator, req_id, broadcast );
 }
 
 share_type wallet_api::get_account_cycle_balance(const string& name_or_id) const

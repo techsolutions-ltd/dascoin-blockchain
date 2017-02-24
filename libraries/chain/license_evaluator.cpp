@@ -5,10 +5,6 @@
 
 namespace graphene { namespace chain {
 
-////////////////////////////
-// Private methods:       //
-////////////////////////////
-
 namespace detail {
 
 share_type apply_percentage(share_type val, share_type percent)
@@ -17,10 +13,6 @@ share_type apply_percentage(share_type val, share_type percent)
 };
 
 }  // namespace graphene::chain::detail
-
-////////////////////////////
-// License type creation: //
-////////////////////////////
 
 void_result create_license_type_evaluator::do_evaluate(const create_license_type_operation& op)
 { try {
@@ -39,14 +31,14 @@ object_id_type create_license_type_evaluator::do_apply(const create_license_type
   using namespace graphene::chain::util;
   auto kind = convert_enum<license_kind>::from_string(op.kind);
 
-  return db().create_license_type(kind, op.name, op.amount, op.balance_multipliers, op.requeue_multipliers, 
+  return db().create_license_type(kind,
+                                  op.name, 
+                                  op.amount, 
+                                  op.balance_multipliers, 
+                                  op.requeue_multipliers, 
                                   op.return_multipliers);
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
-
-////////////////////////////
-// License issue request: //
-////////////////////////////
 
 void_result issue_license_evaluator::do_evaluate(const issue_license_operation& op)
 { try {
@@ -74,17 +66,8 @@ void_result issue_license_evaluator::do_evaluate(const issue_license_operation& 
   // Licenses can only be issued to vault accounts:
   FC_ASSERT( account_obj.is_vault(), "Account '${n}' is not a vault account", ("n", account_obj.name) );
 
-  // Make sure that there is no pending license:
-  const auto& info = account_obj.license_info;
-  FC_ASSERT( !info.pending.valid(),
-             "Cannot issue license ${l_n} on account ${a}, license ${l_p} is pending",
-             ("l_n", new_license_obj.name)
-             ("a", account_obj.name)
-             ("l_p", (*info.pending).license(d).name)
-           );
-
   // If the account has an active license, then we need to check if we can IMPROVE it:
-  const auto active_lic_opt = info.active_license();
+  const auto active_lic_opt = account_obj.license_info.max_license();
   if ( active_lic_opt.valid() )
   {
     const auto& active_license_obj = (*active_lic_opt)(d);
@@ -102,65 +85,28 @@ void_result issue_license_evaluator::do_evaluate(const issue_license_operation& 
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-object_id_type issue_license_evaluator::do_apply(const issue_license_operation& op)
+void_result issue_license_evaluator::do_apply(const issue_license_operation& op)
 { try {
   auto& d = db();
-  const auto& params = d.get_global_properties().parameters;
-
   share_type amount = detail::apply_percentage(new_license_obj_->amount, op.bonus_percentage);
 
-  // Create the new request object:
-  license_request_id_type req_id =  d.create<license_request_object>([&](license_request_object &req) {
-    req.license_issuer = op.license_issuer;
-    req.account = op.account;
-    req.license = op.license;
-    req.amount = amount;
-    req.frequency_lock = op.frequency;
-    req.expiration = d.head_block_time() + fc::seconds(params.license_expiration_time_seconds);
-  }).id;
+  d.modify(*account_obj_, [&](account_object& a) {
+    auto& info = a.license_info;
 
-  // Update the pending license:
-  d.modify(*account_obj_, [&](account_object& a){
-    a.license_info.set_pending(op.license, req_id);
+    // Add the license to the top of the history, so it becomes the new active license:
+    info.add_license(op.license, amount, op.frequency);
+
+    // Improve all the upgrades to match the new license:
+    info.balance_upgrade += new_license_obj_->balance_upgrade;
+    info.requeue_upgrade += new_license_obj_->requeue_upgrade;
+    info.return_upgrade += new_license_obj_->return_upgrade;
   });
 
-  return req_id;
-
-} FC_CAPTURE_AND_RETHROW( (op) ) }
-
-/////////////////////////////
-// License request denial: //
-/////////////////////////////
-
-void_result deny_license_evaluator::do_evaluate(const deny_license_operation& op)
-{ try {
-  const auto& d = db();
-  const auto auth_id = d.get_chain_authorities().license_authenticator;
-  const auto& op_auth_obj = op.license_authenticator(d);
-
-  d.perform_chain_authority_check("license authentication", auth_id, op_auth_obj);
-
-  const auto& request_obj = op.request(d);
-  const auto& account_obj = request_obj.account(d);
-  const auto& info = account_obj.license_info;
-
-  FC_ASSERT( (*info.pending).request == request_obj.id );
-  FC_ASSERT( (*info.pending).license == request_obj.license );
-
-  request_obj_ = &request_obj;
-  account_obj_ = &account_obj;
-  return {};
-
-} FC_CAPTURE_AND_RETHROW( (op) ) }
-
-void_result deny_license_evaluator::do_apply(const deny_license_operation& op)
-{ try {
-  auto& d = db();
-
-  d.modify(*account_obj_, [&](account_object& ao){
-    ao.license_info.clear_pending();
-  });
-  d.remove(*request_obj_);
+  auto kind = new_license_obj_->kind;
+  if ( kind == license_kind::regular )
+    d.issue_cycles(account_obj_->id, amount);
+  else if ( kind == license_kind::chartered || kind == license_kind::promo )
+    d.submit_cycles_to_queue(account_obj_->id, amount, op.frequency);
 
   return {};
 

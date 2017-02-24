@@ -42,11 +42,12 @@ const license_type_object& database_fixture::get_license_type(const string& name
 
 } FC_LOG_AND_RETHROW() }
 
-const license_request_object* database_fixture::issue_license_to_vault_account(const account_id_type vault_account_id,
-                                                                               const license_type_id_type license_id,
-                                                                               share_type bonus_percentage, 
-                                                                               frequency_type frequency)
+void database_fixture::issue_license_to_vault_account(const account_id_type vault_account_id,
+                                                      const license_type_id_type license_id,
+                                                      share_type bonus_percentage, 
+                                                      frequency_type frequency)
 { try {
+
   issue_license_operation op;
   op.license_issuer = get_license_issuer_id();
   op.account = vault_account_id;
@@ -54,14 +55,11 @@ const license_request_object* database_fixture::issue_license_to_vault_account(c
   op.bonus_percentage = bonus_percentage,
   op.frequency = frequency;
 
-  set_expiration(db, trx);
-  trx.operations.clear();
-  trx.operations.push_back(op);
-  trx.validate();
-  processed_transaction ptx = db.push_transaction(trx, ~0);
-  trx.operations.clear();
-
-  return db.find<license_request_object>( ptx.operation_results[0].get<object_id_type>() );
+  signed_transaction tx;
+  set_expiration(db, tx);
+  tx.operations.push_back(op);
+  tx.validate();
+  db.push_transaction(tx, ~0);
 
 } FC_LOG_AND_RETHROW() }
 
@@ -117,26 +115,5 @@ const license_type_object& database_fixture::create_license_type(const string& k
   return db.get<license_type_object>( ptx.operation_results[0].get<object_id_type>() );
 
 } FC_LOG_AND_RETHROW() }
-
-void database_fixture::issue_license_to_vault_account(const account_object& acc, const string& lic_name, 
-                                                      share_type bonus_percent, frequency_type frequency_lock)
-{ try {
-  auto lic = get_license_type(lic_name);
-  auto req = issue_license_to_vault_account(acc.id, lic.id, bonus_percent, frequency_lock);
-
-  BOOST_CHECK( req );
-  BOOST_CHECK( req->license_issuer == get_license_issuer_id() );
-  BOOST_CHECK( req->account == acc.id );
-  BOOST_CHECK( req->license == lic.id );
-  BOOST_CHECK( req->frequency_lock == frequency_lock );
-  generate_block();
-
-} FC_LOG_AND_RETHROW() };
-
-void database_fixture::generate_blocks_until_license_approved()
-{
-  // Wait for license time to elapse:
-  generate_blocks(db.head_block_time() + fc::seconds(get_chain_parameters().license_expiration_time_seconds));
-};
 
 } }  // namespace graphene::chain

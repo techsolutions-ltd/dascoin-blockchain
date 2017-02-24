@@ -1476,19 +1476,6 @@ class wallet_api
         bool broadcast /* false */
         );
 
-      /**
-       * Deny a license request. Only the license authentication authority can do this.
-       * @param  authenticator THis MUST be the license authentication authority.
-       * @param  req_id        The id of the request we want to deny.
-       * @param  broadcast     true if you wish to broadcast the transaction.
-       * @return               The signed version of the transaction.
-       */
-      signed_transaction deny_license_request(
-        const string& authenticator,
-        const string& req_id,
-        bool broadcast /* false */
-        );
-
       /** Lists all license types active on the blockchain, sorted by name.
        *
        * To list all license types, pass the empty string \c "" for the lowerbound to start
@@ -1788,7 +1775,6 @@ FC_API( graphene::wallet::wallet_api,
         (receive_blind_transfer)
         // Licenses:
         (issue_license)
-        (deny_license_request)
         // Cycles:
         (get_account_cycle_balance)
         (get_total_account_cycles)

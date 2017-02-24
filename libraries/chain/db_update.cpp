@@ -488,11 +488,6 @@ void database::assign_licenses()
 
     const auto& account_obj = req.account(*this);
     const auto& new_license_obj = req.license(*this);
-    const auto& pending = *account_obj.license_info.pending;
-
-    // TODO: do we need to have this check?
-    FC_ASSERT( pending.request == req.id );
-    FC_ASSERT( pending.license == req.license );
 
     modify(account_obj, [&](account_object& a) {
       auto& info = a.license_info;
@@ -504,8 +499,6 @@ void database::assign_licenses()
       info.balance_upgrade += new_license_obj.balance_upgrade;
       info.requeue_upgrade += new_license_obj.requeue_upgrade;
       info.return_upgrade += new_license_obj.return_upgrade;
-
-      info.clear_pending();
     });
 
     // For regular licenses, increase the cycle balance by the requested amount:
@@ -649,6 +642,21 @@ void database::submit_reserve_cycles_to_queue()
 
     remove(req);
   }
+} FC_CAPTURE_AND_RETHROW() }
+
+// TODO: move this to a more appropriate place!
+const reward_queue_object& database::submit_cycles_to_queue(account_id_type beneficiary,
+                                                            share_type amount, 
+                                                            frequency_type frequency_lock)
+{ try {
+
+  return create<reward_queue_object>([&](reward_queue_object& rqo){
+    rqo.account = beneficiary;
+    rqo.amount = amount;
+    rqo.frequency = frequency_lock;
+    rqo.time = head_block_time();
+  });
+
 } FC_CAPTURE_AND_RETHROW() }
 
 

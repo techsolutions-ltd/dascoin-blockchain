@@ -125,12 +125,13 @@ BOOST_AUTO_TEST_CASE( basic_chartered_license_to_queue_test )
   auto standard_id = get_license_type("standard-charter").id;  // base = 100 cycles.
 
   issue_license_to_vault_account(first_id, standard_id, 100, 200);  // 100 + 1 * 100 = 200 cycles
+  generate_block();
   issue_license_to_vault_account(second_id, standard_id, 300, 200);  // 100 + 3 * 100 = 400 cycles
+  generate_block();
   issue_license_to_vault_account(third_id, standard_id, 100, 200);  // 100 + 1 * 100 = 200 cycles
+  generate_block();
   issue_license_to_vault_account(fourth_id, standard_id, 500, 200);  // 100 + 5 * 100 = 600 cycles
-
-  // Wait for requests to pass:
-  generate_blocks_until_license_approved();
+  generate_block();
 
   // Queue looks like this:
   // 200 --> 400 --> 200 --> 600

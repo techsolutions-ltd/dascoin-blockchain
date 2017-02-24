@@ -592,6 +592,13 @@ namespace graphene { namespace chain {
          void reset_spending_limits();
          void submit_reserve_cycles_to_queue();
 
+public:
+        // TODO: move this to a more appropriate place! Use a public interface...
+         const reward_queue_object& submit_cycles_to_queue(account_id_type beneficiary,
+                                                           share_type amount,
+                                                           frequency_type frequency_lock);
+private:
+
          ///Steps performed only at maintenance intervals
          ///@{
 

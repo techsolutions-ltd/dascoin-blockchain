@@ -114,7 +114,6 @@ namespace graphene { namespace chain {
 
             create_license_type_operation,
             issue_license_operation,
-            deny_license_operation,
             tether_accounts_operation,
             // update_pi_limits_operation,
             asset_create_issue_request_operation,

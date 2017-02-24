@@ -93,30 +93,6 @@ namespace graphene { namespace chain {
     share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
 
-  /**
-   * @brief Deny a license grant to an account
-   * @ingroup operations
-   *
-   * An authorized license authentication authority may deny an existing request made by the license issuing
-   * authority. This operation is also applied if the request object expires.
-   *
-   * If the authorized license authentication authority does not deny the request, the request is automatically approved
-   * on expiration.
-   */
-  struct deny_license_operation : public base_operation
-  {
-    struct fee_parameters_type {};  // No fees are paid for this operation.
-
-    asset fee;
-    account_id_type license_authenticator;  // This MUST be the license authentication authority.
-
-    license_request_id_type request;  // The license request we are denying.
-
-    account_id_type fee_payer() const { return license_authenticator; }
-    void validate() const {}
-    share_type calculate_fee(const fee_parameters_type&) const { return 0; }
-  };
-
 } }  // namespace graphene::chain
 
 ///////////////////////////////
@@ -155,9 +131,3 @@ FC_REFLECT( graphene::chain::record_issue_license_operation,
             (extensions)
           )
 
-FC_REFLECT( graphene::chain::deny_license_operation::fee_parameters_type, )
-FC_REFLECT( graphene::chain::deny_license_operation,
-            (fee)
-            (license_authenticator)
-            (request)
-          )

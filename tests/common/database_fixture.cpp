@@ -1134,6 +1134,12 @@ void set_expiration( const database& db, transaction& tx )
    return;
 }
 
+void set_max_expiration(const database& db, transaction& tx)
+{
+   tx.set_reference_block(db.head_block_id());
+   tx.set_expiration( db.head_block_time() + GRAPHENE_DEFAULT_MAX_TIME_UNTIL_EXPIRATION );
+}
+
 bool _push_block( database& db, const signed_block& b, uint32_t skip_flags /* = 0 */ )
 {
    return db.push_block( b, skip_flags);

@@ -317,15 +317,10 @@ struct database_fixture {
                                                   upgrade_multiplier_type balance_multipliers,
                                                   upgrade_multiplier_type requeue_multipliers,
                                                   upgrade_multiplier_type return_multipliers);
-   const license_request_object* issue_license_to_vault_account(const account_id_type vault_account_id,
-                                                                const license_type_id_type license_id,
-                                                                share_type bonus_percentage,
-                                                                frequency_type frequency);
-   void issue_license_to_vault_account(const account_object& acc, const string& lic_name, share_type bonus_percent = 0, 
-                                       frequency_type frequency_lock = 0);
+   void issue_license_to_vault_account(const account_id_type vault_account_id, const license_type_id_type license_id,
+                                       share_type bonus_percentage = 0, frequency_type frequency = 0);
    vector<license_request_object> get_license_issue_requests_by_expiration() const;
    vector<license_type_object> get_license_history(account_id_type) const;
-   void generate_blocks_until_license_approved();
 
    // fix_cycles.cpp
    share_type get_cycle_balance(const account_id_type owner) const;
@@ -396,6 +391,7 @@ struct database_fixture {
 namespace test {
 /// set a reasonable expiration time for the transaction
 void set_expiration( const database& db, transaction& tx );
+void set_max_expiration(const database& db, transaction& tx);
 
 bool _push_block( database& db, const signed_block& b, uint32_t skip_flags = 0 );
 processed_transaction _push_transaction( database& db, const signed_transaction& tx, uint32_t skip_flags = 0 );

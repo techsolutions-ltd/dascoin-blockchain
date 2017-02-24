@@ -27,30 +27,12 @@ namespace graphene { namespace chain {
           : license(l), amount(a), frequency_lock(f) {}
       };
 
-      struct pending_license_record
-      {
-        license_type_id_type license;
-        license_request_id_type request;
-
-        pending_license_record() = default;
-        pending_license_record(license_type_id_type l, license_request_id_type r) : license(l), request(r) {}
-      };
-
-      optional<license_type_id_type> active_license() const;
+      optional<license_type_id_type> max_license() const;
       frequency_type active_frequency_lock() const;
-      void add_license(license_type_id_type license_id, share_type amount, frequency_type frequency_lock);
-
-      void set_pending(license_type_id_type license_id, license_request_id_type req)
-      {
-        pending = pending_license_record(license_id, req);
-      }
-      void clear_pending()
-      {
-        pending.reset();
-      }
+      void add_license(license_type_id_type license_id, share_type amount,
+                       frequency_type frequency_lock);
 
       vector<license_history_record> history;
-      optional<pending_license_record> pending;
 
       upgrade_type balance_upgrade;
       upgrade_type requeue_upgrade;
@@ -203,13 +185,9 @@ FC_REFLECT( graphene::chain::license_information::license_history_record,
             (amount)
             (frequency_lock)
           )
-FC_REFLECT( graphene::chain::license_information::pending_license_record,
-            (license)
-            (request)
-          )
+
 FC_REFLECT( graphene::chain::license_information,
             (history)
-            (pending)
             (balance_upgrade)
             (requeue_upgrade)
             (return_upgrade)

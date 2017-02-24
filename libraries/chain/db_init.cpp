@@ -209,7 +209,6 @@ void database::initialize_evaluators()
    register_evaluator<board_update_chain_authority_evaluator>();
    register_evaluator<create_license_type_evaluator>();
    register_evaluator<issue_license_evaluator>();
-   register_evaluator<deny_license_evaluator>();
    register_evaluator<tether_accounts_evaluator>();
    // register_evaluator<update_pi_limits_evaluator>();
    register_evaluator<asset_create_issue_request_evaluator>();

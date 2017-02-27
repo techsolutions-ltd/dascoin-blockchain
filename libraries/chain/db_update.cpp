@@ -26,7 +26,6 @@
 #include <graphene/chain/db_with.hpp>
 
 #include <graphene/chain/asset_object.hpp>
-#include <graphene/chain/cycle_objects.hpp>
 #include <graphene/chain/global_property_object.hpp>
 #include <graphene/chain/hardfork.hpp>
 #include <graphene/chain/license_objects.hpp>
@@ -552,36 +551,6 @@ void database::mint_dascoin_rewards()
     });
   }
 
-} FC_CAPTURE_AND_RETHROW() }
-
-void database::submit_reserve_cycles_to_queue()
-{ try {
-  transaction_evaluation_state assign_context(this);
-  const auto& idx = get_index_type<submit_reserve_cycles_to_queue_request_index>().indices()
-      .get<by_expiration>();
-
-  while ( !idx.empty() && idx.begin()->expiration <= head_block_time() )
-  {
-    const auto& req = *idx.begin();
-
-    create<reward_queue_object>([&](reward_queue_object& rqo){
-      rqo.account = req.account;
-      rqo.amount = req.amount;
-      rqo.frequency = req.frequency_lock;
-      rqo.time = head_block_time();
-    });
-
-    // Submit a virtual operation:
-    record_submit_reserve_cycles_to_queue_operation vop;
-    vop.cycle_issuer = req.cycle_issuer;
-    vop.account = req.account;
-    vop.amount = req.amount;
-    vop.frequency_lock = req.frequency_lock;
-
-    push_applied_operation(vop);
-
-    remove(req);
-  }
 } FC_CAPTURE_AND_RETHROW() }
 
 // TODO: move this to a more appropriate place!

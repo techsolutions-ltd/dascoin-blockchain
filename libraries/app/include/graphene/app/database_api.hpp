@@ -35,7 +35,6 @@
 #include <graphene/chain/chain_property_object.hpp>
 #include <graphene/chain/committee_member_object.hpp>
 #include <graphene/chain/confidential_object.hpp>
-#include <graphene/chain/cycle_objects.hpp>
 #include <graphene/chain/license_objects.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/operation_history_object.hpp>
@@ -662,12 +661,6 @@ class database_api
       vector<issue_asset_request_object> get_all_webasset_issue_requests() const;
 
       /**
-       * @brief Get all cycle issue requests, sorted by expiration.
-       * @return Vector of cycle issue request objects.
-       */
-      vector<submit_reserve_cycles_to_queue_request_object> get_all_cycle_issue_requests() const;
-
-      /**
        * @brief Get all wire out holder objects.
        * @return Vector of wire out holder objects.
        */
@@ -799,7 +792,6 @@ FC_API( graphene::app::database_api,
 
    // Requests
    (get_all_webasset_issue_requests)
-   (get_all_cycle_issue_requests)
    (get_all_wire_out_holders)
    (get_reward_queue)
    (get_reward_queue_size)

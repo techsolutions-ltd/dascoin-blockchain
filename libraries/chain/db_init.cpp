@@ -34,7 +34,6 @@
 #include <graphene/chain/chain_property_object.hpp>
 #include <graphene/chain/committee_member_object.hpp>
 #include <graphene/chain/confidential_object.hpp>
-#include <graphene/chain/cycle_objects.hpp>
 #include <graphene/chain/fba_object.hpp>
 #include <graphene/chain/global_property_object.hpp>
 #include <graphene/chain/license_objects.hpp>
@@ -146,9 +145,6 @@ const uint8_t issue_asset_request_object::type_id;
 const uint8_t wire_out_holder_object::space_id;
 const uint8_t wire_out_holder_object::type_id;
 
-const uint8_t submit_reserve_cycles_to_queue_request_object::space_id;
-const uint8_t submit_reserve_cycles_to_queue_request_object::type_id;
-
 const uint8_t reward_queue_object::space_id;
 const uint8_t reward_queue_object::type_id;
 
@@ -216,29 +212,7 @@ void database::initialize_evaluators()
    register_evaluator<transfer_vault_to_wallet_evaluator>();
    register_evaluator<transfer_wallet_to_vault_evaluator>();
    register_evaluator<submit_reserve_cycles_to_queue_evaluator>();
-   register_evaluator<deny_submit_reserve_cycles_to_queue_evaluator>();
    register_evaluator<submit_cycles_to_queue_evaluator>();
-}
-
-void database::initialize_preissued_cycles(const genesis_state_type& genesis_state)
-{
-  for( const auto& handout : genesis_state.initial_issued_cycles )
-  {
-      auto account_id = get_account_id(handout.owner_name);
-      auto cycle_auth_id = get_account_id(genesis_state.initial_cycle_authentication_authority.owner_name);
-
-      // Increase the balance:
-      adjust_cycle_balance(account_id, handout.amount);
-
-      // Execute the virtual operation:
-      record_submit_cycles_to_queue_operation vop;
-      vop.cycle_authenticator = cycle_auth_id;
-      vop.account = account_id;
-      vop.amount = handout.amount;
-      push_applied_operation(vop);
-
-     // TODO: increase the global supply of cycles!
-  }
 }
 
 void database::initialize_indexes()
@@ -292,8 +266,6 @@ void database::initialize_indexes()
    add_index<primary_index<issue_asset_request_index>>();
 
    add_index<primary_index<wire_out_holder_index>>();
-
-   add_index<primary_index<submit_reserve_cycles_to_queue_request_index>>();
 
    add_index<primary_index<reward_queue_index>>();
 }
@@ -802,12 +774,9 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       create_license_type(license_kind::promo, "standard-promo", 100, {}, {}, {1});
       create_license_type(license_kind::promo, "manager-promo", 500, {}, {}, {1});
       create_license_type(license_kind::promo, "pro-promo", 2000, {}, {}, {1});
-      create_license_type(license_kind::promo, "executive-promo", 5000, {}, {}, {1,2});
+      create_license_type(license_kind::promo, "executive-promo", 5000, {}, {}, {});
       create_license_type(license_kind::promo, "president-promo", 25000, {}, {}, {1,2,4});
    }
-
-   // Hand out initial cycles, WebAssets and licenses:
-   initialize_preissued_cycles(genesis_state);
 
    // Set active witnesses
    modify(get_global_properties(), [&](global_property_object& p) {

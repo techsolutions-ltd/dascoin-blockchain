@@ -324,11 +324,6 @@ struct database_fixture {
    // fix_cycles.cpp
    share_type get_cycle_balance(const account_id_type owner) const;
    void adjust_cycles(const account_id_type id, const share_type amount);
-   const submit_reserve_cycles_to_queue_request_object* submit_reserve_cycles_to_queue(account_id_type receiver_id, 
-                                                                                       share_type amount,
-                                                                                       frequency_type frequency_lock);
-   void deny_issue_cycles(cycle_issue_request_id_type request_id);
-   vector<submit_reserve_cycles_to_queue_request_object> get_cycle_issue_request_objects_by_expiration() const;
 
    // fix_getter.cpp
    const global_property_object& get_global_properties() const;

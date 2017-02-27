@@ -291,11 +291,6 @@ namespace graphene { namespace chain {
          account_id_type initialize_chain_authority(const string& kind, const string& name);
 
          /**
-          * Distribute the initial cycles to accounts in the genesis_state.
-          */
-         void initialize_preissued_cycles(const genesis_state_type& genesis_state);
-
-         /**
           * Initialize the starting state of the chain from the provided genesis state.
           * @param genesis_state genesis.json file, may be embedded in the binary. If no genesis state
           *                      provided the default one will be used.
@@ -590,7 +585,6 @@ namespace graphene { namespace chain {
          void distribute_issue_requested_assets();
          void mint_dascoin_rewards();
          void reset_spending_limits();
-         void submit_reserve_cycles_to_queue();
 
 public:
         // TODO: move this to a more appropriate place! Use a public interface...

@@ -4424,11 +4424,6 @@ vector<issue_asset_request_object> wallet_api::get_all_webasset_issue_requests()
    return my->_remote_db->get_all_webasset_issue_requests();
 }
 
-vector<submit_reserve_cycles_to_queue_request_object> wallet_api::get_all_cycle_issue_requests() const
-{
-   return my->_remote_db->get_all_cycle_issue_requests();
-}
-
 vector<wire_out_holder_object> wallet_api::get_all_wire_out_holders() const
 {
    return my->_remote_db->get_all_wire_out_holders();

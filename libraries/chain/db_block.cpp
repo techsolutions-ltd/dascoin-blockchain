@@ -535,7 +535,6 @@ void database::_apply_block( const signed_block& next_block )
    update_maintenance_flag( maint_needed );
    update_witness_schedule();
 
-   submit_reserve_cycles_to_queue();
    distribute_issue_requested_assets();
    reset_spending_limits();
 

@@ -125,13 +125,11 @@ namespace graphene { namespace chain {
             transfer_vault_to_wallet_operation,
             transfer_wallet_to_vault_operation,
             submit_reserve_cycles_to_queue_operation,
-            deny_submit_reserve_cycles_to_queue_operation,
             submit_cycles_to_queue_operation,
 
             // Virtual operations below this point:
 
             record_submit_reserve_cycles_to_queue_operation,
-            record_submit_cycles_to_queue_operation,
             record_submit_charter_license_cycles_operation,
 
             record_distribute_dascoin_operation,

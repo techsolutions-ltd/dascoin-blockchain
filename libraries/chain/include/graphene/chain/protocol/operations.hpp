@@ -116,21 +116,26 @@ namespace graphene { namespace chain {
             issue_license_operation,
 
             tether_accounts_operation,
+
             // update_pi_limits_operation,
+
             asset_create_issue_request_operation,
             asset_deny_issue_request_operation,
+
             wire_out_operation,
             wire_out_complete_operation,
             wire_out_reject_operation,
+
             transfer_vault_to_wallet_operation,
             transfer_wallet_to_vault_operation,
+
             submit_reserve_cycles_to_queue_operation,
             submit_cycles_to_queue_operation,
 
             // Virtual operations below this point:
 
             record_submit_reserve_cycles_to_queue_operation,
-            record_submit_charter_license_cycles_operation,
+            record_submit_charter_license_cycles_operation,  //TODO: should we keep this op?
 
             record_distribute_dascoin_operation,
 

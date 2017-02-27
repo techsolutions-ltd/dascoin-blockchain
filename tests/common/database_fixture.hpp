@@ -320,8 +320,6 @@ struct database_fixture {
                                                   upgrade_multiplier_type balance_multipliers,
                                                   upgrade_multiplier_type requeue_multipliers,
                                                   upgrade_multiplier_type return_multipliers);
-   void issue_license_to_vault_account(const account_id_type vault_account_id, const license_type_id_type license_id,
-                                       share_type bonus_percentage = 0, frequency_type frequency = 0);
    vector<license_type_object> get_license_history(account_id_type) const;
 
    // fix_cycles.cpp

@@ -2476,11 +2476,11 @@ public:
 
       issue_license_operation op;
 
-      op.license_issuer = issuer_account.id;
+      op.issuer = issuer_account.id;
       op.account = beneficiary.id;
       op.license = new_license.id;
       op.bonus_percentage = bonus_percentage;
-      op.frequency = frequency;
+      op.frequency_lock = frequency;
 
       signed_transaction tx;
       tx.operations.push_back(op);

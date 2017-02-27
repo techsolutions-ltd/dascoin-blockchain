@@ -45,7 +45,7 @@ void_result issue_license_evaluator::do_evaluate(const issue_license_operation& 
 
   const auto& d = db();
   const auto issuer_id = d.get_chain_authorities().license_issuer;
-  const auto op_issuer_obj = op.license_issuer(d);
+  const auto op_issuer_obj = op.issuer(d);
 
   // TODO: refactor this
   d.perform_chain_authority_check("license issuing", issuer_id, op_issuer_obj);
@@ -55,7 +55,7 @@ void_result issue_license_evaluator::do_evaluate(const issue_license_operation& 
 
   if ( new_license_obj.kind == license_kind::chartered || new_license_obj.kind == license_kind::promo )
   {
-    FC_ASSERT( op.frequency != 0,
+    FC_ASSERT( op.frequency_lock != 0,
                "Cannot issue license ${l_n} on account ${a}, frequency lock cannot be zero",
                ("l_n", new_license_obj.name)
                ("a", account_obj.name)
@@ -96,7 +96,7 @@ void_result issue_license_evaluator::do_apply(const issue_license_operation& op)
     auto& info = a.license_info;
 
     // Add the license to the top of the history, so it becomes the new active license:
-    info.add_license(op.license, amount, op.frequency);
+    info.add_license(op.license, amount, op.frequency_lock);
 
     // Improve all the upgrades to match the new license:
     info.balance_upgrade += new_license_obj_->balance_upgrade;
@@ -107,13 +107,13 @@ void_result issue_license_evaluator::do_apply(const issue_license_operation& op)
   auto kind = new_license_obj_->kind;
   if ( kind == license_kind::regular )
   {
-    d.issue_cycles(account_obj_->id, amount);
+    d.issue_cycles(op.account, amount);
   }
   else if ( kind == license_kind::chartered || kind == license_kind::promo )
   {
-    d.submit_cycles_to_queue(account_obj_->id, amount, op.frequency);
+    d.submit_cycles_to_queue(op.account, amount, op.frequency_lock);
     d.push_applied_operation(
-      record_submit_charter_license_cycles_operation(issuer_id_, account_obj_->id, amount, op.frequency)
+      record_submit_charter_license_cycles_operation(issuer_id_, op.account, amount, op.frequency_lock)
     );
   }
 

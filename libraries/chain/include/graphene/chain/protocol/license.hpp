@@ -20,7 +20,7 @@ namespace graphene { namespace chain {
    * @brief create a license type object
    * @ingroup operations
    *
-   * An authorized license administration authority may define licenses to be distributed to users.
+   * Create a new type of license. Must be signed by the current license_administration authority.
    */
   struct create_license_type_operation : public base_operation
   {
@@ -46,25 +46,28 @@ namespace graphene { namespace chain {
    * @brief Request a license to be granted an account
    * @ingroup operations
    *
-   * An authorized license issuing authority may request a license to be granted to an account.
-   * An independent authorized license authentication authority must inspect and approve this request. Upon approval,
-   * the license is irredeemably granted to the account.
+   * Grant a license to an account. This operation must be signed by the current license_issuer authority.
    */
   struct issue_license_operation : public base_operation
   {
     struct fee_parameters_type {};  // No fees are paid for this operation.
 
     asset fee;
-    account_id_type license_issuer;  // This MUST be the license issuer authority.
+    account_id_type issuer;
 
     account_id_type account;                  // The account to benefit the license.
     license_type_id_type license;             // The license to be granted.
     share_type bonus_percentage;              // The bonus multiplier of base license cycles.
-    frequency_type frequency;                 // The frequency lock on this license, zero for none.
+    frequency_type frequency_lock;            // The frequency lock on this license, zero for none.
 
     extensions_type extensions;
 
-    account_id_type fee_payer() const { return license_issuer; }
+    issue_license_operation() = default;
+    explicit issue_license_operation(account_id_type i, account_id_type a, license_type_id_type l,
+                                     share_type b_p, frequency_type f)
+        : issuer(i), account(a), license(l), bonus_percentage(b_p), frequency_lock(f) {}
+
+    account_id_type fee_payer() const { return issuer; }
     void validate() const;
     share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
@@ -90,11 +93,11 @@ FC_REFLECT( graphene::chain::create_license_type_operation,
 FC_REFLECT( graphene::chain::issue_license_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::issue_license_operation,
             (fee)
-            (license_issuer)
+            (issuer)
             (account)
             (license)
             (bonus_percentage)
-            (frequency)
+            (frequency_lock)
             (extensions)
           )
 

@@ -115,21 +115,23 @@ BOOST_AUTO_TEST_CASE( basic_submit_cycles_to_queue_test )
 
 BOOST_AUTO_TEST_CASE( basic_chartered_license_to_queue_test )
 { try {
+
+  const auto& issue =  [&](account_id_type account_id, const string& license_name, share_type bonus_percentage, 
+                           share_type frequency_lock)
+  {
+    do_op(issue_license_operation(get_license_issuer_id(), account_id, get_license_type(license_name).id,
+        bonus_percentage, frequency_lock));
+  };
+
   VAULT_ACTORS((first)(second)(third)(fourth))
 
   adjust_dascoin_reward(500 * DASCOIN_DEFAULT_ASSET_PRECISION);
   adjust_frequency(200);
 
-  auto standard_id = get_license_type("standard-charter").id;  // base = 100 cycles.
-
-  issue_license_to_vault_account(first_id, standard_id, 100, 200);  // 100 + 1 * 100 = 200 cycles
-  generate_block();
-  issue_license_to_vault_account(second_id, standard_id, 300, 200);  // 100 + 3 * 100 = 400 cycles
-  generate_block();
-  issue_license_to_vault_account(third_id, standard_id, 100, 200);  // 100 + 1 * 100 = 200 cycles
-  generate_block();
-  issue_license_to_vault_account(fourth_id, standard_id, 500, 200);  // 100 + 5 * 100 = 600 cycles
-  generate_block();
+  issue(first_id, "standard-charter", 100, 200);  // 100 + 1 * 100 = 200 cycles
+  issue(second_id, "standard-charter", 300, 200);  // 100 + 3 * 100 = 400 cycles
+  issue(third_id, "standard-charter", 100, 200);  // 100 + 1 * 100 = 200 cycles
+  issue(fourth_id, "standard-charter", 500, 200);  // 100 + 5 * 100 = 600 cycles
 
   // Queue looks like this:
   // 200 --> 400 --> 200 --> 600

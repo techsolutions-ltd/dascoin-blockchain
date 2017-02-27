@@ -35,10 +35,8 @@ void_result submit_reserve_cycles_to_queue_evaluator::do_evaluate(const submit_r
 
 object_id_type submit_reserve_cycles_to_queue_evaluator::do_apply(const submit_reserve_cycles_to_queue_operation& op)
 { try {
-  auto& d = db();
-  const auto& params = d.get_global_properties().parameters;
 
-  return d.submit_cycles_to_queue(op.account, op.amount, op.frequency_lock).id;
+  return db().submit_cycles_to_queue(op.account, op.amount, op.frequency_lock).id;
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 

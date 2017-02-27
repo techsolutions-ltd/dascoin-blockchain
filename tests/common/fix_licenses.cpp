@@ -42,27 +42,6 @@ const license_type_object& database_fixture::get_license_type(const string& name
 
 } FC_LOG_AND_RETHROW() }
 
-void database_fixture::issue_license_to_vault_account(const account_id_type vault_account_id,
-                                                      const license_type_id_type license_id,
-                                                      share_type bonus_percentage, 
-                                                      frequency_type frequency)
-{ try {
-
-  issue_license_operation op;
-  op.license_issuer = get_license_issuer_id();
-  op.account = vault_account_id;
-  op.license = license_id;
-  op.bonus_percentage = bonus_percentage,
-  op.frequency = frequency;
-
-  signed_transaction tx;
-  set_expiration(db, tx);
-  tx.operations.push_back(op);
-  tx.validate();
-  db.push_transaction(tx, ~0);
-
-} FC_LOG_AND_RETHROW() }
-
 vector<license_type_object> database_fixture::get_license_history(account_id_type account_id) const
 { try {
   vector<license_type_object> result;

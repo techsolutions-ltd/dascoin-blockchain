@@ -2453,16 +2453,6 @@ public:
       return *opt;
    }
 
-   license_request_object get_license_request(string id_str)const
-   {
-      // TODO: fix this in a template method.
-      auto id_opt = maybe_id<license_request_id_type>( id_str );
-      FC_ASSERT( id_opt );
-      auto opt = _remote_db->get_license_requests({*id_opt}).front();
-      FC_ASSERT( opt );
-      return *opt;
-   }
-
    /**
     * Issue a license to an account. This will create the license request that can be denied by the license
     * authentication authority.  Only the license issuing authority can do this.
@@ -2877,11 +2867,6 @@ vector<asset_reserved> wallet_api::list_account_balances(const string& id)
 vector<asset_object> wallet_api::list_assets(const string& lowerbound, uint32_t limit)const
 {
    return my->_remote_db->list_assets( lowerbound, limit );
-}
-
-vector<license_request_object> wallet_api::list_license_requests_by_expiration(uint32_t limit)const
-{
-   return my->_remote_db->list_license_requests_by_expiration( limit );
 }
 
 vector<operation_detail> wallet_api::get_account_history(string name, int limit)const
@@ -4432,11 +4417,6 @@ uint32_t wallet_api::get_reward_queue_size() const
 signed_transaction wallet_api::wire_out(const string& account, share_type amount, bool broadcast) const
 {
    return my->wire_out(account, amount, broadcast);
-}
-
-vector<license_request_object> wallet_api::get_all_license_requests() const
-{
-   return my->_remote_db->get_all_license_requests();
 }
 
 vector<issue_asset_request_object> wallet_api::get_all_webasset_issue_requests() const

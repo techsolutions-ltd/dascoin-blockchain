@@ -137,9 +137,6 @@ const uint8_t worker_object::type_id;
 const uint8_t license_type_object::space_id;
 const uint8_t license_type_object::type_id;
 
-const uint8_t license_request_object::space_id;
-const uint8_t license_request_object::type_id;
-
 const uint8_t account_cycle_balance_object::space_id;
 const uint8_t account_cycle_balance_object::type_id;
 
@@ -289,7 +286,6 @@ void database::initialize_indexes()
    add_index< primary_index< simple_index< fba_accumulator_object       > > >();
 
    add_index<primary_index<license_type_index>>();
-   add_index<primary_index<license_request_index>>();
 
    add_index<primary_index<account_cycle_balance_index>>();
 
@@ -772,7 +768,6 @@ void database::init_genesis(const genesis_state_type& genesis_state)
 
    initialize_chain_authority("license_administrator", genesis_state.initial_license_administration_authority.owner_name);
    initialize_chain_authority("license_issuer", genesis_state.initial_license_issuing_authority.owner_name);
-   initialize_chain_authority("license_authenticator", genesis_state.initial_license_authentication_authority.owner_name);
    initialize_chain_authority("webasset_issuer", genesis_state.initial_webasset_issuing_authority.owner_name);
    initialize_chain_authority("webasset_authenticator", genesis_state.initial_webasset_authentication_authority.owner_name);
    initialize_chain_authority("cycle_issuer", genesis_state.initial_cycle_issuing_authority.owner_name);

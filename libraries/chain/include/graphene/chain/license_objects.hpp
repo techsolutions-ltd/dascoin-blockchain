@@ -93,32 +93,6 @@ namespace graphene { namespace chain {
     return lhs.amount >= rhs.amount;
   }
 
-  /**
-   * @class license_request_object
-   * @brief A pending request to grant a license to an account.
-   * @ingroup object
-   *
-   * This is an implementation detail.
-   */
-  class license_request_object : public graphene::db::abstract_object<license_request_object>
-  {
-    public:
-      static const uint8_t space_id = implementation_ids;
-      static const uint8_t type_id  = impl_license_request_object_type;
-
-      account_id_type license_issuer;  // Must be current license authority.
-
-      account_id_type account;
-      license_type_id_type license;
-      share_type amount;
-      frequency_type frequency_lock;
-      time_point_sec expiration;
-
-      extensions_type extensions;
-
-      void validate() const;
-  };
-
   ///////////////////////////////
   // MULTI INDEX CONTAINERS:   //
   ///////////////////////////////
@@ -140,39 +114,6 @@ namespace graphene { namespace chain {
   > license_type_multi_index_type;
 
   typedef generic_index<license_type_object, license_type_multi_index_type> license_type_index;
-
-  struct by_account;
-  struct by_expiration;
-  struct by_license_type_id;
-  struct by_issuer_id;
-  typedef multi_index_container<
-    license_request_object,
-    indexed_by<
-      ordered_unique< tag<by_id>,
-        member< object, object_id_type, &object::id >
-      >,
-      ordered_unique< tag<by_account>,
-        composite_key< license_request_object,
-          member< license_request_object, account_id_type, &license_request_object::account >,
-          member< object, object_id_type, &object::id>
-        >
-      >,
-      ordered_unique< tag<by_expiration>,
-        composite_key< license_request_object,
-          member< license_request_object, time_point_sec, &license_request_object::expiration >,
-          member< object, object_id_type, &object::id>
-        >
-      >,
-      ordered_non_unique< tag<by_issuer_id>,
-        member< license_request_object, account_id_type, &license_request_object::license_issuer >
-      >,
-      ordered_non_unique< tag<by_license_type_id>,
-        member< license_request_object, license_type_id_type, &license_request_object::license >
-      >
-    >
-  > license_request_multi_index_type;
-
-  typedef generic_index<license_request_object, license_request_multi_index_type> license_request_index;
 
 } }  // namespace graphene::chain
 
@@ -203,12 +144,3 @@ FC_REFLECT_DERIVED( graphene::chain::license_type_object, (graphene::db::object)
                     (extensions)
                   )
 
-FC_REFLECT_DERIVED( graphene::chain::license_request_object, (graphene::db::object),
-                    (license_issuer)
-                    (account)
-                    (license)
-                    (amount)
-                    (frequency_lock)
-                    (expiration)
-                    (extensions)
-                  )

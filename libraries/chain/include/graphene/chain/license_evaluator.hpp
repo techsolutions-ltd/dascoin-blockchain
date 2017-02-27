@@ -30,6 +30,7 @@ public:
   void_result do_apply(const operation_type& op);
 
 private:
+  account_id_type issuer_id_;
   const license_type_object* new_license_obj_ = nullptr;
   const account_object* account_obj_ = nullptr;
 };

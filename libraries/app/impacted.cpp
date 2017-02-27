@@ -156,7 +156,6 @@ struct get_impacted_account_visitor
    void operator()( const create_license_type_operation& op ) {}
 
    void operator()( const issue_license_operation& op ) {}
-   void operator()( const record_issue_license_operation& op ) {}  // TODO: check if this should be impacting an account.
    void operator()( const vesting_balance_create_operation& op )
    {
       _impacted.insert( op.owner );

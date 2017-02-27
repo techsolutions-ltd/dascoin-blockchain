@@ -47,13 +47,12 @@ void_result issue_license_evaluator::do_evaluate(const issue_license_operation& 
   const auto issuer_id = d.get_chain_authorities().license_issuer;
   const auto op_issuer_obj = op.license_issuer(d);
 
-  // First, check that the license issuer matches the current license issuing account:
+  // TODO: refactor this
   d.perform_chain_authority_check("license issuing", issuer_id, op_issuer_obj);
 
   const auto& account_obj = op.account(d);
   const auto& new_license_obj = op.license(d);
 
-  // For charter licenses: frequency lock cannot be zero:
   if ( new_license_obj.kind == license_kind::chartered || new_license_obj.kind == license_kind::promo )
   {
     FC_ASSERT( op.frequency != 0,
@@ -63,8 +62,10 @@ void_result issue_license_evaluator::do_evaluate(const issue_license_operation& 
              );
   }
 
-  // Licenses can only be issued to vault accounts:
-  FC_ASSERT( account_obj.is_vault(), "Account '${n}' is not a vault account", ("n", account_obj.name) );
+  FC_ASSERT( account_obj.is_vault(),
+             "Account '${n}' is not a vault account",
+             ("n", account_obj.name)
+           );
 
   // If the account has an active license, then we need to check if we can IMPROVE it:
   const auto active_lic_opt = account_obj.license_info.max_license();
@@ -79,6 +80,7 @@ void_result issue_license_evaluator::do_evaluate(const issue_license_operation& 
              );
   }
 
+  issuer_id_ = issuer_id;
   new_license_obj_ = &new_license_obj;
   account_obj_ = &account_obj;
   return {};
@@ -104,9 +106,16 @@ void_result issue_license_evaluator::do_apply(const issue_license_operation& op)
 
   auto kind = new_license_obj_->kind;
   if ( kind == license_kind::regular )
+  {
     d.issue_cycles(account_obj_->id, amount);
+  }
   else if ( kind == license_kind::chartered || kind == license_kind::promo )
+  {
     d.submit_cycles_to_queue(account_obj_->id, amount, op.frequency);
+    d.push_applied_operation(
+      record_submit_charter_license_cycles_operation(issuer_id_, account_obj_->id, amount, op.frequency)
+    );
+  }
 
   return {};
 

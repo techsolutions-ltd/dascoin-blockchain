@@ -12,11 +12,6 @@ namespace graphene { namespace chain {
     FC_ASSERT( name.size() <= GRAPHENE_MAX_ACCOUNT_NAME_LENGTH );
   }
 
-  void license_request_object::validate() const
-  {
-    FC_ASSERT( amount > 0 );
-  }
-
   optional<license_type_id_type> license_information::max_license() const
   {
     if ( history.empty() )

@@ -584,15 +584,6 @@ class database_api
       vector<optional<license_type_object>> get_license_types(const vector<license_type_id_type>& license_type_ids)const;
 
       /**
-       * @brief Get a list of license requests sorted by id.
-       * @param license_req_ids Id's of the requests to receive.
-       * @return The requests corresponding to the provided id's.
-       *
-       * This function has semantics identical to @ref get_objects.
-       */
-      vector<optional<license_request_object>> get_license_requests(const vector<license_request_id_type>& license_req_ids)const;
-
-      /**
        * @brief Get license types active on the blockchain by name.
        * @param lower_bound_symbol Lower bound of license type names to retrieve
        * @param limit Maximum number of license types to fetch (must not exceed 100)
@@ -617,20 +608,6 @@ class database_api
        * This function has semantics identical to @ref get_objects
        */
       vector<optional<license_type_object>> lookup_license_type_names(const vector<string>& names_or_ids)const;
-
-      /**
-       * @brief Get all license request objects on the blockchain by type.
-       * @param limit Maximum number of objects to fetch.
-       * @return The objects found.
-       */
-      vector<license_request_object> list_license_requests_by_type(uint32_t limit)const;
-
-      /**
-       * @brief Get all license request objects on the blockchain by expiration time.
-       * @param limit Maximum number of objects to fetch.
-       * @return The objects found.
-       */
-      vector<license_request_object> list_license_requests_by_expiration(uint32_t limit)const;
 
       /////////////
       // CYCLES: //
@@ -679,12 +656,6 @@ class database_api
       //////////////////////////
 
       /**
-       * @brief Get all license request objects, sorted by expiration.
-       * @return Vector of license request objects.
-       */
-      vector<license_request_object> get_all_license_requests() const;
-
-      /**
        * @brief Get all webasset issue request objects, sorted by expiration.
        * @return Vector of webasset issue request objects.
        */
@@ -721,7 +692,7 @@ FC_REFLECT( graphene::app::market_volume, (base)(quote)(base_volume)(quote_volum
 FC_REFLECT( graphene::app::market_trade, (date)(price)(amount)(value) );
 FC_REFLECT( graphene::app::cycle_agreement, (cycles)(frequency_lock) )
 
-FC_API(graphene::app::database_api,
+FC_API( graphene::app::database_api,
    // Objects
    (get_objects)
 
@@ -814,12 +785,9 @@ FC_API(graphene::app::database_api,
 
    // Licenses
    (get_license_types)
-   (get_license_requests)
    (list_license_types_by_name)
    (list_license_types_by_amount)
    (lookup_license_type_names)
-   (list_license_requests_by_type)
-   (list_license_requests_by_expiration)
 
    // Cycles
    (get_account_cycle_balance)
@@ -830,7 +798,6 @@ FC_API(graphene::app::database_api,
    (get_account_pi_level)
 
    // Requests
-   (get_all_license_requests)
    (get_all_webasset_issue_requests)
    (get_all_cycle_issue_requests)
    (get_all_wire_out_holders)

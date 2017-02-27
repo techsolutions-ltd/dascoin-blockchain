@@ -63,17 +63,6 @@ void database_fixture::issue_license_to_vault_account(const account_id_type vaul
 
 } FC_LOG_AND_RETHROW() }
 
-vector<license_request_object> database_fixture::get_license_issue_requests_by_expiration() const
-{ try {
-  vector<license_request_object> result;
-
-  const auto& idx = db.get_index_type<license_request_index>().indices().get<by_expiration>();
-  for ( auto req: idx )
-    result.emplace_back(req);
-
-  return result;
-} FC_LOG_AND_RETHROW() }
-
 vector<license_type_object> database_fixture::get_license_history(account_id_type account_id) const
 { try {
   vector<license_type_object> result;

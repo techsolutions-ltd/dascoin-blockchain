@@ -114,6 +114,7 @@ namespace graphene { namespace chain {
 
             create_license_type_operation,
             issue_license_operation,
+
             tether_accounts_operation,
             // update_pi_limits_operation,
             asset_create_issue_request_operation,
@@ -128,8 +129,6 @@ namespace graphene { namespace chain {
             submit_cycles_to_queue_operation,
 
             // Virtual operations below this point:
-
-            record_issue_license_operation,
 
             record_submit_reserve_cycles_to_queue_operation,
             record_submit_cycles_to_queue_operation,

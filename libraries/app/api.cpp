@@ -371,8 +371,6 @@ namespace graphene { namespace app {
                   break;
                  case impl_fba_accumulator_object_type:
                   break;              
-                 case impl_license_request_object_type:
-                  break;
                  case impl_issue_asset_request_object_type:
                   break;
                  case impl_wire_out_holder_object_type:

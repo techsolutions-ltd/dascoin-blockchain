@@ -319,7 +319,6 @@ struct database_fixture {
                                                   upgrade_multiplier_type return_multipliers);
    void issue_license_to_vault_account(const account_id_type vault_account_id, const license_type_id_type license_id,
                                        share_type bonus_percentage = 0, frequency_type frequency = 0);
-   vector<license_request_object> get_license_issue_requests_by_expiration() const;
    vector<license_type_object> get_license_history(account_id_type) const;
 
    // fix_cycles.cpp
@@ -337,7 +336,6 @@ struct database_fixture {
    const chain_parameters& get_chain_parameters() const;
    account_id_type get_license_administrator_id() const;
    account_id_type get_license_issuer_id() const;
-   account_id_type get_license_authenticator_id() const;
    account_id_type get_webasset_issuer_id() const;
    account_id_type get_webasset_authenticator_id() const;
    account_id_type get_cycle_issuer_id() const;

@@ -1498,14 +1498,6 @@ class wallet_api
        */
       vector<license_type_object> list_license_types_by_amount( const uint32_t lower_bound_amount, uint32_t limit )const;
 
-      /**
-       * List all license requests on the blockchain, sorted by expiration.
-       *
-       * @param limit Maximum number of requests to return.
-       * @return The list of request objects, ordered by expiration time.
-       */
-      vector<license_request_object> list_license_requests_by_expiration( uint32_t limit )const;
-
       ///////////////////////////////
       /// CYCLES:                 ///
       ///////////////////////////////
@@ -1540,12 +1532,6 @@ class wallet_api
        * @return Number of elements in the DASCoin queue.
        */
       uint32_t get_reward_queue_size() const;
-
-      /**
-       * @brief Get all license request objects, sorted by expiration.
-       * @return Vector of license request objects.
-       */
-      vector<license_request_object> get_all_license_requests() const;
 
       /**
        * @brief Get all webasset issue request objects, sorted by expiration.
@@ -1684,7 +1670,6 @@ FC_API( graphene::wallet::wallet_api,
         (list_assets)
         (list_license_types_by_name)
         (list_license_types_by_amount)
-        (list_license_requests_by_expiration)
         (import_key)
         (import_accounts)
         (import_account_keys)
@@ -1781,7 +1766,6 @@ FC_API( graphene::wallet::wallet_api,
         (get_order_book)
         (wire_out)
         // Requests:
-        (get_all_license_requests)
         (get_all_webasset_issue_requests)
         (get_all_cycle_issue_requests)
         (get_all_wire_out_holders)

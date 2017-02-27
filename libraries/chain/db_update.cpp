@@ -477,63 +477,6 @@ void database::update_withdraw_permissions()
       remove(*permit_index.begin());
 }
 
-void database::assign_licenses()
-{ try {
-  transaction_evaluation_state assign_context(this);
-  const auto& idx = get_index_type<license_request_index>().indices().get<by_expiration>();
-
-  while ( !idx.empty() && idx.begin()->expiration <= head_block_time() )
-  {
-    const auto& req = *idx.begin();
-
-    const auto& account_obj = req.account(*this);
-    const auto& new_license_obj = req.license(*this);
-
-    modify(account_obj, [&](account_object& a) {
-      auto& info = a.license_info;
-
-      // Add the license to the top of the history, so it becomes the new active license:
-      info.add_license(new_license_obj.id, req.amount, req.frequency_lock);
-
-      // Improve all the upgrades to match the new license:
-      info.balance_upgrade += new_license_obj.balance_upgrade;
-      info.requeue_upgrade += new_license_obj.requeue_upgrade;
-      info.return_upgrade += new_license_obj.return_upgrade;
-    });
-
-    // For regular licenses, increase the cycle balance by the requested amount:
-    if ( new_license_obj.kind == license_kind::regular )
-      issue_cycles(account_obj.id, req.amount);
-
-    // For auto submit licenses, submit a new license request with frequency locked:
-    else if ( new_license_obj.kind == license_kind::chartered || new_license_obj.kind == license_kind::promo )
-    {
-      create<reward_queue_object>([&](reward_queue_object& rqo){
-        rqo.account = req.account;
-        rqo.amount = req.amount;
-        rqo.frequency = req.frequency_lock;
-        rqo.time = head_block_time();
-      });
-
-      // Create a virtual operation:
-      record_submit_charter_license_cycles_operation vop;
-      vop.license_issuer = req.license_issuer;
-      vop.account = req.account;
-      vop.amount = req.amount;
-
-      push_applied_operation(vop);
-    }
-
-    record_issue_license_operation vop;
-    vop.license_authenticator = get_chain_authorities().license_authenticator;
-    vop.account = req.account;
-    vop.license = req.license;
-    push_applied_operation(vop);
-
-    remove(req);
-  }
-} FC_CAPTURE_AND_RETHROW() }
-
 void database::distribute_issue_requested_assets()
 { try {
   transaction_evaluation_state distribute_context(this);
@@ -584,10 +527,7 @@ void database::mint_dascoin_rewards()
       const auto& distribute = [this](account_id_type account_id, share_type amount){
         issue_asset(account_id, amount, get_dascoin_asset_id(), 0);
         // Emit a virtual op:
-        record_distribute_dascoin_operation vop;
-        vop.account = account_id;
-        vop.amount = amount;
-        push_applied_operation(vop);
+        push_applied_operation(record_distribute_dascoin_operation(account_id, amount));
       };
 
       const auto& el = *queue.begin();

@@ -516,6 +516,9 @@ namespace graphene { namespace chain {
 
      extensions_type extensions;
 
+     record_distribute_dascoin_operation() = default;
+     explicit record_distribute_dascoin_operation(account_id_type acc, share_type am): account(acc), amount(am) {}
+
      account_id_type fee_payer() const { return account; }
      share_type calculate_fee(const fee_parameters_type& k) const { return 0; }
      void validate() const { FC_ASSERT(false); }

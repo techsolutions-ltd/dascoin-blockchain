@@ -139,6 +139,10 @@ namespace graphene { namespace chain {
     share_type amount;
     frequency_type frequency_lock;
 
+    record_submit_charter_license_cycles_operation() = default;
+    record_submit_charter_license_cycles_operation(account_id_type i, account_id_type acc, share_type am, 
+        frequency_type f_l) : license_issuer(i), account(acc), amount(am), frequency_lock(f_l) {}
+
     extensions_type extensions;
 
     account_id_type fee_payer() const { return account; }

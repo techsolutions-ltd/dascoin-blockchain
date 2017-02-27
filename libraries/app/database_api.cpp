@@ -141,7 +141,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
 
       // Licenses:
       vector<optional<license_type_object>> get_license_types(const vector<license_type_id_type>& license_type_ids) const;
-      vector<optional<license_request_object>> get_license_requests(const vector<license_request_id_type>& license_req_ids)const;
+
 
       // Cycles:
       share_type get_account_cycle_balance(const account_id_type account_id) const;
@@ -1872,22 +1872,6 @@ vector<optional<license_type_object>> database_api_impl::get_license_types(const
    return result;
 }
 
-vector<optional<license_request_object>> database_api_impl::get_license_requests(const vector<license_request_id_type>& license_req_ids)const
-{
-   vector<optional<license_request_object>> result;
-   result.reserve(license_req_ids.size());
-   std::transform(license_req_ids.begin(), license_req_ids.end(), std::back_inserter(result),
-                  [this](license_request_id_type id) -> optional<license_request_object> {
-      if(auto o = _db.find(id))
-      {
-         subscribe_to_item( id );
-         return *o;
-      }
-      return {};
-   });
-   return result;
-}
-
 vector<license_type_object> database_api::list_license_types_by_name( const string& lower_bound_name,
                                                                       uint32_t limit ) const
 {
@@ -1910,21 +1894,6 @@ vector<optional<license_type_object>> database_api::lookup_license_type_names(co
 vector<optional<license_type_object>> database_api::get_license_types(const vector<license_type_id_type>& vec_ids) const
 {
    return my->get_license_types( vec_ids );
-}
-
-vector<optional<license_request_object>> database_api::get_license_requests(const vector<license_request_id_type>& vec_ids) const
-{
-   return my->get_license_requests( vec_ids );
-}
-
-vector<license_request_object> database_api::list_license_requests_by_type(uint32_t limit) const
-{
-   return my->list_objects<license_request_index, by_license_type_id>( limit );
-}
-
-vector<license_request_object> database_api::list_license_requests_by_expiration(uint32_t limit) const
-{
-   return my->list_objects<license_request_index, by_expiration>( limit );
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1995,11 +1964,6 @@ uint32_t database_api_impl::get_reward_queue_size() const
 // REQUESTS:                                                        //
 //                                                                  //
 //////////////////////////////////////////////////////////////////////
-
-vector<license_request_object> database_api::get_all_license_requests() const
-{
-   return my->list_all_objects<license_request_index, by_expiration>();
-}
 
 vector<issue_asset_request_object> database_api::get_all_webasset_issue_requests() const
 {

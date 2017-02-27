@@ -32,6 +32,11 @@ namespace graphene { namespace chain {
     share_type amount;
     frequency_type frequency_lock;
 
+    submit_reserve_cycles_to_queue_operation() = default;
+    explicit submit_reserve_cycles_to_queue_operation(account_id_type i, account_id_type acc, share_type am, 
+                                                      frequency_type f_l)
+        : issuer(i), account(acc), amount(am), frequency_lock(f_l) {}
+
     extensions_type extensions;
 
     account_id_type fee_payer() const { return issuer; }

@@ -401,6 +401,19 @@ void database_fixture::generate_blocks(fc::time_point_sec timestamp, bool miss_i
       generate_block(skip);
 }
 
+void database_fixture::push_op(const operation& op, bool gen_block)
+{
+  trx.operations.clear();
+  set_expiration(db, trx);
+  trx.operations.push_back(op);
+  trx.validate();
+  db.push_transaction(trx, ~0);
+  verify_asset_supplies(db);
+  trx.operations.clear();
+  if ( gen_block )
+        generate_block();
+}
+
 account_create_operation database_fixture::make_account(
    const account_kind kind,
    const account_id_type registrar,

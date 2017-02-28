@@ -68,7 +68,7 @@ void_result issue_license_evaluator::do_evaluate(const issue_license_operation& 
            );
 
   // If the account has an active license, then we need to check if we can IMPROVE it:
-  const auto active_lic_opt = account_obj.license_info.max_license();
+  const auto active_lic_opt = account_obj.license_info.max_license;
   if ( active_lic_opt.valid() )
   {
     const auto& active_license_obj = (*active_lic_opt)(d);
@@ -96,7 +96,7 @@ void_result issue_license_evaluator::do_apply(const issue_license_operation& op)
     auto& info = a.license_info;
 
     // Add the license to the top of the history, so it becomes the new active license:
-    info.add_license(op.license, amount, op.frequency_lock);
+    info.add_license(op.license, amount, op.frequency_lock, time_point_sec());
 
     // Improve all the upgrades to match the new license:
     info.balance_upgrade += new_license_obj_->balance_upgrade;

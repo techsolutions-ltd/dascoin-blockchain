@@ -72,7 +72,7 @@ object_id_type submit_cycles_to_queue_evaluator::do_apply(const submit_cycles_to
 
   // Detrmine the frequency. If the frequency lock is 0 on the license, then the frequency is the current chain
   // frequency:
-  frequency_type f = account_obj_->license_info.active_frequency_lock();
+  frequency_type f = account_obj_->license_info.frequency_lock;
   if ( f == 0 )
     f = d.get_dynamic_global_properties().frequency;
 

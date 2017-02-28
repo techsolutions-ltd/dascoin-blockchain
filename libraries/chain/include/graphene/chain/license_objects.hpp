@@ -13,30 +13,40 @@
 
 namespace graphene { namespace chain {
 
-  class license_information
+  struct license_information
   {
-    public:
-      struct license_history_record
-      {
-        license_type_id_type license;
-        share_type amount;
-        frequency_type frequency_lock;
+    struct license_history_record
+    {
+      license_type_id_type license;
+      share_type amount;
+      frequency_type frequency_lock;
+      time_point_sec activation_time;
 
-        license_history_record() = default;
-        license_history_record(license_type_id_type l, share_type a, frequency_type f) 
-          : license(l), amount(a), frequency_lock(f) {}
-      };
+      license_history_record() = default;
+      license_history_record(license_type_id_type license, share_type amount, frequency_type frequency_lock, 
+          time_point_sec activation_time) : 
+            license(license), 
+            amount(amount), 
+            frequency_lock(frequency_lock), 
+            activation_time(activation_time) {}
+    };
+    typedef vector<license_history_record> array_t;
 
-      optional<license_type_id_type> max_license() const;
-      frequency_type active_frequency_lock() const;
-      void add_license(license_type_id_type license_id, share_type amount,
-                       frequency_type frequency_lock);
+    array_t history;
+    optional<license_type_id_type> max_license;
+    frequency_type frequency_lock;
 
-      vector<license_history_record> history;
+    upgrade_type balance_upgrade;
+    upgrade_type requeue_upgrade;
+    upgrade_type return_upgrade;
 
-      upgrade_type balance_upgrade;
-      upgrade_type requeue_upgrade;
-      upgrade_type return_upgrade;
+    void add_license(license_type_id_type license_id, share_type amount, frequency_type f_lock,
+                      time_point_sec activation_time)
+    {
+      history.emplace_back(license_id, amount, f_lock, activation_time);
+      max_license = license_id;
+      frequency_lock = f_lock;
+    }
   };
 
   ///////////////////////////////
@@ -125,10 +135,13 @@ FC_REFLECT( graphene::chain::license_information::license_history_record,
             (license)
             (amount)
             (frequency_lock)
+            (activation_time)
           )
 
 FC_REFLECT( graphene::chain::license_information,
             (history)
+            (max_license)
+            (frequency_lock)
             (balance_upgrade)
             (requeue_upgrade)
             (return_upgrade)

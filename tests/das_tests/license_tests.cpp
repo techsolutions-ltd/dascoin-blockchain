@@ -16,6 +16,22 @@
 using namespace graphene::chain;
 using namespace graphene::chain::test;
 
+BOOST_FIXTURE_TEST_SUITE( dascoin_tests, database_fixture )
+
+BOOST_FIXTURE_TEST_SUITE( license_tests, database_fixture )
+
+BOOST_AUTO_TEST_CASE( regression_test_license_information_index )
+{ try {
+
+  db.create<license_information_object>([&](license_information_object& lio){});
+  db.create<license_information_object>([&](license_information_object& lio){});
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()
+
 /*BOOST_FIXTURE_TEST_SUITE( dascoin_tests, database_fixture )
 
 BOOST_FIXTURE_TEST_SUITE( license_tests, database_fixture )

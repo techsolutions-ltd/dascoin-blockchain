@@ -272,9 +272,9 @@ namespace graphene { namespace chain {
          special_authority active_special_authority = no_special_authority();
 
          /**
-          * All information regarding licenses.
+          * History of license purshases, max license, frequency lock and upgrades.
           */
-         license_information license_info;
+         optional<license_information_id_type> license_information;
 
          /**
           * Time the active license was set up on this account.
@@ -506,7 +506,7 @@ FC_REFLECT_DERIVED( graphene::chain::account_object, (graphene::db::object),
                     (cashback_vb)
                     (owner_special_authority)
                     (active_special_authority)
-                    (license_info)
+                    (license_information)
                     (active_license_issued_time)
                     (pi_level)
                     (limits)

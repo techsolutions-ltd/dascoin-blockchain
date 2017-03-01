@@ -26,8 +26,7 @@ namespace graphene { namespace chain {
     void_result do_evaluate(const operation_type& op);
     object_id_type do_apply(const operation_type& op);
 
-    const account_object* account_obj_ = nullptr;
-    const account_cycle_balance_object* balance_obj_ = nullptr;
+    const account_object* _account_obj = nullptr;
   };
 
 } }  // namespace graphene::chain

@@ -355,6 +355,11 @@ namespace graphene { namespace app {
                   for( const auto& a : aobj->owner.account_auths )
                      result.push_back( a.first );
                   break;
+               } case impl_license_information_object_type:{
+                  const auto& lio = dynamic_cast<const license_information_object*>(obj);
+                  assert( nullptr != lio );
+                  result.push_back( lio->account );
+                  break;
                } case impl_block_summary_object_type:
                   break;
                  case impl_account_transaction_history_object_type:

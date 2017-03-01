@@ -538,6 +538,8 @@ namespace graphene { namespace chain {
                                             upgrade_multiplier_type balance_multipliers,
                                             upgrade_multiplier_type requeue_multipliers,
                                             upgrade_multiplier_type return_multipliers);
+         optional<license_information_object> get_license_information(account_id_type account_id) const;
+         
 
    protected:
          //Mark pop_undo() as protected -- we do not want outside calling pop_undo(); it should call pop_block() instead

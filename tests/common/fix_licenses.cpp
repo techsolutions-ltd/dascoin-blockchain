@@ -42,22 +42,6 @@ const license_type_object& database_fixture::get_license_type(const string& name
 
 } FC_LOG_AND_RETHROW() }
 
-vector<license_type_object> database_fixture::get_license_history(account_id_type account_id) const
-{ try {
-  vector<license_type_object> result;
-  const auto& acc = account_id(db);
-  const auto& history = acc.license_info.history;
-  result.resize(history.size());
-
-  std::transform(history.begin(), history.end(), result.begin(),
-    [this](license_information::license_history_record rec) -> license_type_object {
-      return rec.license(db);
-    });
-
-  return result;
-
-} FC_LOG_AND_RETHROW() }
-
 const license_type_object& database_fixture::create_license_type(const string& kind, const string& name,
                                                                  share_type amount, 
                                                                  upgrade_multiplier_type balance_multipliers,

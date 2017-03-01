@@ -148,6 +148,9 @@ const uint8_t wire_out_holder_object::type_id;
 const uint8_t reward_queue_object::space_id;
 const uint8_t reward_queue_object::type_id;
 
+const uint8_t license_information_object::space_id;
+const uint8_t license_information_object::type_id;
+
 void database::initialize_genesis_transaction_state()
 {
   // Since this is the database initialization, skip checking signatures:
@@ -260,14 +263,11 @@ void database::initialize_indexes()
    add_index< primary_index< simple_index< fba_accumulator_object       > > >();
 
    add_index<primary_index<license_type_index>>();
-
    add_index<primary_index<account_cycle_balance_index>>();
-
    add_index<primary_index<issue_asset_request_index>>();
-
    add_index<primary_index<wire_out_holder_index>>();
-
    add_index<primary_index<reward_queue_index>>();
+   add_index<primary_index<license_information_index>>();
 }
 
 account_id_type database::initialize_chain_authority(const string& kind_name, const string& acc_name)

@@ -67,44 +67,61 @@ void_result issue_license_evaluator::do_evaluate(const issue_license_operation& 
              ("n", account_obj.name)
            );
 
-  // If the account has an active license, then we need to check if we can IMPROVE it:
-  const auto active_lic_opt = account_obj.license_info.max_license;
-  if ( active_lic_opt.valid() )
+  // If a license already exists, we can only improve it:
+  if ( account_obj.license_information.valid() )
   {
-    const auto& active_license_obj = (*active_lic_opt)(d);
-    FC_ASSERT( active_license_obj < new_license_obj,
+    const auto& license_information_obj = (*account_obj.license_information)(d);
+    const auto& max_license_obj = license_information_obj.max_license(d);
+
+    FC_ASSERT( max_license_obj < new_license_obj,
                "Cannot improve license on account ${a}, license ${l_old} is better than the active license ${l_act}",
                ("a", account_obj.name)
-               ("l_old", active_license_obj.name)
+               ("l_old", max_license_obj.name)
                ("l_new", new_license_obj.name)
              );
+    
+    _license_information_obj = &license_information_obj;
   }
 
-  issuer_id_ = issuer_id;
-  new_license_obj_ = &new_license_obj;
-  account_obj_ = &account_obj;
+  _issuer_id = issuer_id;
+  _account_obj = &account_obj;
+  _new_license_obj = &new_license_obj;
   return {};
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result issue_license_evaluator::do_apply(const issue_license_operation& op)
+object_id_type issue_license_evaluator::do_apply(const issue_license_operation& op)
 { try {
   auto& d = db();
-  share_type amount = detail::apply_percentage(new_license_obj_->amount, op.bonus_percentage);
+  share_type amount = detail::apply_percentage(_new_license_obj->amount, op.bonus_percentage);
+  license_information_id_type lic_info_id;
 
-  d.modify(*account_obj_, [&](account_object& a) {
-    auto& info = a.license_info;
+  if ( nullptr == _license_information_obj )
+  {
+    lic_info_id = d.create<license_information_object>([&](license_information_object& lio){
+      lio.add_license(op.license, amount, op.frequency_lock, time_point_sec());
+      lio.balance_upgrade += _new_license_obj->balance_upgrade;
+      lio.requeue_upgrade += _new_license_obj->requeue_upgrade;
+      lio.return_upgrade += _new_license_obj->return_upgrade;
+    }).id;
 
-    // Add the license to the top of the history, so it becomes the new active license:
-    info.add_license(op.license, amount, op.frequency_lock, time_point_sec());
+    d.modify(*_account_obj, [&](account_object& ao){
+      ao.license_information = lic_info_id;
+    });
+  }
+  else
+  {
+    lic_info_id = _license_information_obj->id;
 
-    // Improve all the upgrades to match the new license:
-    info.balance_upgrade += new_license_obj_->balance_upgrade;
-    info.requeue_upgrade += new_license_obj_->requeue_upgrade;
-    info.return_upgrade += new_license_obj_->return_upgrade;
-  });
+    d.modify(*_license_information_obj, [&](license_information_object& lio){
+      lio.add_license(op.license, amount, op.frequency_lock, time_point_sec());
+      lio.balance_upgrade += _new_license_obj->balance_upgrade;
+      lio.requeue_upgrade += _new_license_obj->requeue_upgrade;
+      lio.return_upgrade += _new_license_obj->return_upgrade;
+    });
+  }
 
-  auto kind = new_license_obj_->kind;
+  auto kind = _new_license_obj->kind;
   if ( kind == license_kind::regular )
   {
     d.issue_cycles(op.account, amount);
@@ -113,11 +130,11 @@ void_result issue_license_evaluator::do_apply(const issue_license_operation& op)
   {
     d.submit_cycles_to_queue(op.account, amount, op.frequency_lock);
     d.push_applied_operation(
-      record_submit_charter_license_cycles_operation(issuer_id_, op.account, amount, op.frequency_lock)
+      record_submit_charter_license_cycles_operation(_issuer_id, op.account, amount, op.frequency_lock)
     );
   }
 
-  return {};
+  return lic_info_id;
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 

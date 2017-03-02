@@ -608,6 +608,8 @@ class database_api
        */
       vector<optional<license_type_object>> lookup_license_type_names(const vector<string>& names_or_ids)const;
 
+      vector<optional<license_information_object>> get_license_information(const vector<account_id_type>& account_ids) const;
+
       /////////////
       // CYCLES: //
       /////////////
@@ -781,6 +783,7 @@ FC_API( graphene::app::database_api,
    (list_license_types_by_name)
    (list_license_types_by_amount)
    (lookup_license_type_names)
+   (get_license_information)
 
    // Cycles
    (get_account_cycle_balance)

@@ -28,6 +28,36 @@ BOOST_AUTO_TEST_CASE( regression_test_license_information_index )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( license_information_unit_test )
+{ try {
+  VAULT_ACTOR(vault);
+
+  time_point_sec issue_time = db.head_block_time();
+  do_op(issue_license_operation(get_license_issuer_id(), vault_id, get_license_type("standard-charter").id,
+        50, 200, issue_time));
+
+  BOOST_CHECK( vault.license_information.valid() );
+
+  const auto& license_information_obj = (*vault.license_information)(db);
+
+  BOOST_CHECK( license_information_obj.account == vault_id );
+  
+  const auto& license_history = license_information_obj.history;
+
+  BOOST_CHECK_EQUAL( license_history.size(), 1 );
+
+  const auto& license_record = license_history[0];
+
+  BOOST_CHECK( license_record.license == get_license_type("standard-charter").id );
+  BOOST_CHECK_EQUAL( license_record.amount.value, 150 );
+  BOOST_CHECK_EQUAL( license_record.base_amount.value, 100 );
+  BOOST_CHECK_EQUAL( license_record.bonus_percent.value, 50 );
+  BOOST_CHECK_EQUAL( license_record.frequency_lock.value, 200 );
+  BOOST_CHECK( license_record.activated_at == issue_time );
+  BOOST_CHECK( license_record.issued_on_blockchain == issue_time );
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

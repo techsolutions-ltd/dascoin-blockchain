@@ -23,16 +23,27 @@ namespace graphene { namespace chain {
       {
         license_type_id_type license;
         share_type amount;
+        share_type base_amount;
+        share_type bonus_percent;
         frequency_type frequency_lock;
-        time_point_sec activation_time;
+        time_point_sec activated_at;
+        time_point_sec issued_on_blockchain;
 
         license_history_record() = default;
-        license_history_record(license_type_id_type license, share_type amount, frequency_type frequency_lock, 
-            time_point_sec activation_time) : 
-              license(license), 
-              amount(amount), 
-              frequency_lock(frequency_lock), 
-              activation_time(activation_time) {}
+        explicit license_history_record(license_type_id_type license,
+                                        share_type amount,
+                                        share_type base_amount,
+                                        share_type bonus_percent,
+                                        frequency_type frequency_lock,
+                                        time_point_sec activated_at,
+                                        time_point_sec issued_on_blockchain)
+            : license(license),
+              amount(amount),
+              base_amount(base_amount),
+              bonus_percent(bonus_percent),
+              frequency_lock(frequency_lock),
+              activated_at(activated_at),
+              issued_on_blockchain(issued_on_blockchain) {}
       };
       typedef vector<license_history_record> array_t;
 
@@ -46,10 +57,12 @@ namespace graphene { namespace chain {
       upgrade_type requeue_upgrade;
       upgrade_type return_upgrade;
 
-      void add_license(license_type_id_type license_id, share_type amount, frequency_type f_lock,
-                        time_point_sec activation_time)
-      {
-        history.emplace_back(license_id, amount, f_lock, activation_time);
+      void add_license(license_type_id_type license_id, share_type amount, share_type base_amount,
+                       share_type bonus_percentage, frequency_type f_lock,
+                       time_point_sec activated_at,
+                       time_point_sec issued_on_blockchain) {
+        history.emplace_back(license_id, amount, base_amount, bonus_percentage, f_lock,
+                             activated_at, issued_on_blockchain);
         max_license = license_id;
         frequency_lock = f_lock;
       }
@@ -160,8 +173,10 @@ namespace graphene { namespace chain {
 FC_REFLECT( graphene::chain::license_information_object::license_history_record,
             (license)
             (amount)
+            (bonus_percent)
             (frequency_lock)
-            (activation_time)
+            (activated_at)
+            (issued_on_blockchain)
           )
 
 FC_REFLECT( graphene::chain::license_information_object,

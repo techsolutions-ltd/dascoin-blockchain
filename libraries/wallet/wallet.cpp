@@ -4395,6 +4395,11 @@ signed_transaction wallet_api::issue_license( const string& issuer, const string
    return my->issue_license( issuer, account, license, bonus_percentage, account_frequency, broadcast );
 }
 
+vector<optional<license_information_object>> wallet_api::get_license_information(const vector<account_id_type>& account_ids) const
+{
+   return my->_remote_db->get_license_information(account_ids);
+}
+
 share_type wallet_api::get_account_cycle_balance(const string& name_or_id) const
 {
    if( auto real_id = detail::maybe_id<account_id_type>(name_or_id) )

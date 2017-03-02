@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE( basic_chartered_license_to_queue_test )
                            share_type frequency_lock)
   {
     do_op(issue_license_operation(get_license_issuer_id(), account_id, get_license_type(license_name).id,
-        bonus_percentage, frequency_lock));
+        bonus_percentage, frequency_lock, db.head_block_time()));
   };
 
   VAULT_ACTORS((first)(second)(third)(fourth))

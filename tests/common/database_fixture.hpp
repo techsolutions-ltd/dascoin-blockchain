@@ -320,8 +320,6 @@ struct database_fixture {
                                                   upgrade_multiplier_type balance_multipliers,
                                                   upgrade_multiplier_type requeue_multipliers,
                                                   upgrade_multiplier_type return_multipliers);
-   vector<license_type_object> get_license_history(account_id_type) const;
-
    // fix_cycles.cpp
    share_type get_cycle_balance(const account_id_type owner) const;
    void adjust_cycles(const account_id_type id, const share_type amount);

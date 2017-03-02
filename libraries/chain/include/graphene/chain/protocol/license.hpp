@@ -59,13 +59,23 @@ namespace graphene { namespace chain {
     license_type_id_type license;             // The license to be granted.
     share_type bonus_percentage;              // The bonus multiplier of base license cycles.
     frequency_type frequency_lock;            // The frequency lock on this license, zero for none.
+    time_point_sec activated_at;              // Time point of activation.
 
     extensions_type extensions;
 
     issue_license_operation() = default;
-    explicit issue_license_operation(account_id_type i, account_id_type a, license_type_id_type l,
-                                     share_type b_p, frequency_type f)
-        : issuer(i), account(a), license(l), bonus_percentage(b_p), frequency_lock(f) {}
+    explicit issue_license_operation(account_id_type issuer,
+                                     account_id_type account,
+                                     license_type_id_type license,
+                                     share_type bonus_percentage,
+                                     frequency_type frequency_lock,
+                                     time_point_sec activated_at)
+        : issuer(issuer),
+          account(account),
+          license(license),
+          bonus_percentage(bonus_percentage),
+          frequency_lock(frequency_lock),
+          activated_at(activated_at) {}
 
     account_id_type fee_payer() const { return issuer; }
     void validate() const;
@@ -98,6 +108,7 @@ FC_REFLECT( graphene::chain::issue_license_operation,
             (license)
             (bonus_percentage)
             (frequency_lock)
+            (activated_at)
             (extensions)
           )
 

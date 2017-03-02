@@ -1498,6 +1498,8 @@ class wallet_api
        */
       vector<license_type_object> list_license_types_by_amount( const uint32_t lower_bound_amount, uint32_t limit )const;
 
+      vector<optional<license_information_object>> get_license_information(const vector<account_id_type>& account_ids) const;
+
       ///////////////////////////////
       /// CYCLES:                 ///
       ///////////////////////////////
@@ -1754,6 +1756,8 @@ FC_API( graphene::wallet::wallet_api,
         (receive_blind_transfer)
         // Licenses:
         (issue_license)
+        (get_license_information)
+
         // Cycles:
         (get_account_cycle_balance)
         (get_total_account_cycles)

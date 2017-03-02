@@ -716,6 +716,7 @@ void deprecate_annual_members( database& db )
    return;
 }
 
+// TODO: refactor this method completely!
 void database::perform_upgrades(const account_object& account)
 {
    share_type new_balance;
@@ -727,20 +728,11 @@ void database::perform_upgrades(const account_object& account)
       return;
 
    const auto& cycle_balance_obj = get_cycle_balance_object(account.id);
+   const auto& license_info_obj = (*account.license_information)(*this);
 
-   // Modify the account object, execute all upgrades and get the new amounts.
-   modify(account, [&](account_object& a){
-      new_balance = a.license_info.balance_upgrade(cycle_balance_obj.balance);
-      // TODO: do the same for remaining upgrades:
-      // requeue_amount = a.license_info.requeue_upgrade();
-      // return_amount = a.license_info.return_upgrade();
+   modify(license_info_obj, [&](license_information_object& lio) {
+      new_balance = lio.balance_upgrade(cycle_balance_obj.balance);
    });
-
-   // ilog( "Performing cycle upgrade on account '${n}': current cycle balance = ${b}, balance after upgrade: ${nb}",
-   //       ("n", account.name)
-   //       ("b", cycle_itr->balance)
-   //       ("nb", new_balance)
-   //     );
 
    // First, perform the balance_upgrade:
    modify(cycle_balance_obj, [&](account_cycle_balance_object& acb){

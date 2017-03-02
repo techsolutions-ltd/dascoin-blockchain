@@ -27,12 +27,13 @@ public:
   typedef issue_license_operation operation_type;
 
   void_result do_evaluate(const operation_type& op);
-  void_result do_apply(const operation_type& op);
+  object_id_type do_apply(const operation_type& op);
 
 private:
-  account_id_type issuer_id_;
-  const license_type_object* new_license_obj_ = nullptr;
-  const account_object* account_obj_ = nullptr;
+  account_id_type _issuer_id;
+  const account_object* _account_obj = nullptr;
+  const license_information_object* _license_information_obj = nullptr;
+  const license_type_object* _new_license_obj = nullptr;
 };
 
 } } // graphene::chain

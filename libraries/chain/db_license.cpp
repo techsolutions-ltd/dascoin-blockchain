@@ -27,4 +27,13 @@ object_id_type database::create_license_type(license_kind kind, const string& na
   }).id;
 }
 
+// TODO: create generic lookup method.
+optional<license_information_object> database::get_license_information(account_id_type account_id) const
+{
+   auto& index = get_index_type<license_information_index>().indices().get<by_account_id>();
+   auto itr = index.find(account_id);
+   if ( itr != index.end() ) return *itr;
+   return {};
+}
+
 } }  // namespace graphhene::chain

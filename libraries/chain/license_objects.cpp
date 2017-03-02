@@ -12,24 +12,4 @@ namespace graphene { namespace chain {
     FC_ASSERT( name.size() <= GRAPHENE_MAX_ACCOUNT_NAME_LENGTH );
   }
 
-  optional<license_type_id_type> license_information::max_license() const
-  {
-    if ( history.empty() )
-      return {};
-    return { history.back().license };
-  }
-
-  frequency_type license_information::active_frequency_lock() const
-  {
-    if ( history.empty() )
-      return 0;
-    return history.back().frequency_lock;
-  }
-
-  void license_information::add_license(license_type_id_type license_id, share_type amount,
-                                        frequency_type frequency_lock)
-  {
-    history.emplace_back(license_id, amount, frequency_lock);
-  }
-
 } } // namespace graphene::chain

@@ -47,7 +47,10 @@ void_result submit_cycles_to_queue_evaluator::do_evaluate(const submit_cycles_to
   const auto& balance_obj = d.get_cycle_balance_object(op.account);
 
   // Only vault accounts are allowed to submit cycles:
-  FC_ASSERT( account_obj.is_vault(), "Account '${n}' is not a vault account", ("n", account_obj.name) );
+  FC_ASSERT( account_obj.is_vault(),
+             "Account '${n}' is not a vault account",
+             ("n", account_obj.name)
+           );
 
   // Assure we have enough funds to submit:
   FC_ASSERT( balance_obj.balance >= op.amount,
@@ -57,8 +60,7 @@ void_result submit_cycles_to_queue_evaluator::do_evaluate(const submit_cycles_to
              ("b", balance_obj.balance)
            );
 
-  account_obj_ = &account_obj;
-  balance_obj_ = &balance_obj;
+  _account_obj = &account_obj;
   return {};
 
 } FC_CAPTURE_AND_RETHROW((op)) }
@@ -70,13 +72,13 @@ object_id_type submit_cycles_to_queue_evaluator::do_apply(const submit_cycles_to
   // Spend cycles, decrease balance and supply:
   d.reserve_cycles(op.account, op.amount);
 
-  // Detrmine the frequency. If the frequency lock is 0 on the license, then the frequency is the current chain
-  // frequency:
-  frequency_type f = account_obj_->license_info.active_frequency_lock();
-  if ( f == 0 )
-    f = d.get_dynamic_global_properties().frequency;
+  frequency_type frequency = 0;
+  if( _account_obj->license_information.valid() )
+    frequency = (*_account_obj->license_information)(d).frequency_lock;
+  if ( 0 == frequency )
+    frequency = d.get_dynamic_global_properties().frequency;
 
-  return d.submit_cycles_to_queue(op.account, op.amount, f).id;
+  return d.submit_cycles_to_queue(op.account, op.amount, frequency).id;
 
 } FC_CAPTURE_AND_RETHROW((op)) }
 

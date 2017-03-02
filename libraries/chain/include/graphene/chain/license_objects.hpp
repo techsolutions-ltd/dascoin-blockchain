@@ -13,30 +13,59 @@
 
 namespace graphene { namespace chain {
 
-  class license_information
+  class license_information_object : public graphene::db::abstract_object<license_information_object>
   {
     public:
+      static const uint8_t space_id = implementation_ids;
+      static const uint8_t type_id  = impl_license_information_object_type;
+
       struct license_history_record
       {
         license_type_id_type license;
         share_type amount;
+        share_type base_amount;
+        share_type bonus_percent;
         frequency_type frequency_lock;
+        time_point_sec activated_at;
+        time_point_sec issued_on_blockchain;
 
         license_history_record() = default;
-        license_history_record(license_type_id_type l, share_type a, frequency_type f) 
-          : license(l), amount(a), frequency_lock(f) {}
+        explicit license_history_record(license_type_id_type license,
+                                        share_type amount,
+                                        share_type base_amount,
+                                        share_type bonus_percent,
+                                        frequency_type frequency_lock,
+                                        time_point_sec activated_at,
+                                        time_point_sec issued_on_blockchain)
+            : license(license),
+              amount(amount),
+              base_amount(base_amount),
+              bonus_percent(bonus_percent),
+              frequency_lock(frequency_lock),
+              activated_at(activated_at),
+              issued_on_blockchain(issued_on_blockchain) {}
       };
+      typedef vector<license_history_record> array_t;
 
-      optional<license_type_id_type> max_license() const;
-      frequency_type active_frequency_lock() const;
-      void add_license(license_type_id_type license_id, share_type amount,
-                       frequency_type frequency_lock);
+      account_id_type account;
 
-      vector<license_history_record> history;
+      array_t history;
+      license_type_id_type max_license;
+      frequency_type frequency_lock;
 
       upgrade_type balance_upgrade;
       upgrade_type requeue_upgrade;
       upgrade_type return_upgrade;
+
+      void add_license(license_type_id_type license_id, share_type amount, share_type base_amount,
+                       share_type bonus_percentage, frequency_type f_lock,
+                       time_point_sec activated_at,
+                       time_point_sec issued_on_blockchain) {
+        history.emplace_back(license_id, amount, base_amount, bonus_percentage, f_lock,
+                             activated_at, issued_on_blockchain);
+        max_license = license_id;
+        frequency_lock = f_lock;
+      }
   };
 
   ///////////////////////////////
@@ -97,6 +126,26 @@ namespace graphene { namespace chain {
   // MULTI INDEX CONTAINERS:   //
   ///////////////////////////////
 
+  struct by_account_id;
+  typedef multi_index_container<
+    license_information_object,
+    indexed_by<
+      ordered_unique< 
+        tag<by_id>,
+        member<object, object_id_type, &object::id> 
+      >,
+      ordered_non_unique< 
+        tag<by_account_id>,
+          composite_key< license_information_object,
+              member< license_information_object, account_id_type, &license_information_object::account >,
+              member< object, object_id_type, &object::id >
+          >
+      >
+    >
+  > license_information_multi_index_type;
+
+  typedef generic_index<license_information_object, license_information_multi_index_type> license_information_index;
+
   struct by_name;
   struct by_amount;
   typedef multi_index_container<
@@ -121,14 +170,20 @@ namespace graphene { namespace chain {
 // REFLECTIONS:              //
 ///////////////////////////////
 
-FC_REFLECT( graphene::chain::license_information::license_history_record,
+FC_REFLECT( graphene::chain::license_information_object::license_history_record,
             (license)
             (amount)
+            (bonus_percent)
             (frequency_lock)
+            (activated_at)
+            (issued_on_blockchain)
           )
 
-FC_REFLECT( graphene::chain::license_information,
+FC_REFLECT( graphene::chain::license_information_object,
+            (account)
             (history)
+            (max_license)
+            (frequency_lock)
             (balance_upgrade)
             (requeue_upgrade)
             (return_upgrade)

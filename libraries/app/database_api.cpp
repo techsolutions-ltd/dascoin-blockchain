@@ -141,6 +141,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
 
       // Licenses:
       vector<optional<license_type_object>> get_license_types(const vector<license_type_id_type>& license_type_ids) const;
+      vector<optional<license_information_object>> get_license_information(const vector<account_id_type>& account_ids) const;
 
 
       // Cycles:
@@ -232,7 +233,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       }
 
       template<typename IdType, typename IndexType, typename IndexBy>
-      vector<optional<typename IndexType::object_type> > lookup_string_or_id(const vector<string>& str_or_id)const
+      vector<optional<typename IndexType::object_type> > lookup_string_or_id(const vector<string>& str_or_id) const
       {
          const auto& idx = _db.get_index_type<IndexType>().indices().get<IndexBy>();
          vector<optional<typename IndexType::object_type> > result;
@@ -242,10 +243,10 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
             if( !str_or_id.empty() && std::isdigit(str_or_id[0]) )
             {
                auto ptr = _db.find(variant(str_or_id).as<IdType>());
-               return ptr == nullptr? optional<typename IndexType::object_type>() : *ptr;
+               return ptr == nullptr ? optional<typename IndexType::object_type>() : *ptr;
             }
             auto itr = idx.find(str_or_id);
-            return itr == idx.end()? optional<typename IndexType::object_type>() : *itr;
+            return itr == idx.end() ? optional<typename IndexType::object_type>() : *itr;
          });
          return result;
       }
@@ -260,6 +261,20 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
          while( itr != idx.end() )
             result.emplace_back(*itr++);
 
+         return result;
+      }
+
+      template<typename IdType, typename IndexType, typename IndexBy>
+      vector<optional<typename IndexType::object_type>> fetch_optionals_from_ids(const vector<IdType>& ids) const
+      {
+         const auto& idx = _db.get_index_type<IndexType>().indices().get<IndexBy>();
+         vector<optional<typename IndexType::object_type> > result;
+         result.reserve(ids.size());
+         std::transform(ids.begin(), ids.end(), std::back_inserter(result),
+                        [this, &idx](IdType id) -> optional<typename IndexType::object_type> {
+            auto itr = idx.find(id);
+            return itr == idx.end() ? optional<typename IndexType::object_type>() : *itr;
+         });
          return result;
       }
 
@@ -1894,6 +1909,25 @@ vector<optional<license_type_object>> database_api::lookup_license_type_names(co
 vector<optional<license_type_object>> database_api::get_license_types(const vector<license_type_id_type>& vec_ids) const
 {
    return my->get_license_types( vec_ids );
+}
+
+vector<optional<license_information_object>> database_api::get_license_information(const vector<account_id_type>& account_ids) const
+{
+    return my->get_license_information(account_ids);
+}
+
+vector<optional<license_information_object>> database_api_impl::get_license_information(const vector<account_id_type>& account_ids) const
+{
+   vector<optional<license_information_object>> result;
+   result.reserve(account_ids.size());
+   std::transform(account_ids.begin(), account_ids.end(), std::back_inserter(result),
+                  [this](account_id_type id) -> optional<license_information_object> {
+      auto acc = _db.find(id);
+      if( acc && acc->license_information.valid() )
+         return {(*acc->license_information)(_db)};
+      return {};
+   });
+   return result;
 }
 
 //////////////////////////////////////////////////////////////////////

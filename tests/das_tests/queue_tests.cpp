@@ -26,6 +26,21 @@ BOOST_AUTO_TEST_CASE( convert_dascoin_cycles_test )
   BOOST_CHECK_EQUAL( amount.value, 9999 );
 }
 
+BOOST_AUTO_TEST_CASE(  update_queue_parameters_unit_test )
+{ try {
+
+  do_op(update_queue_parameters_operation(get_license_issuer_id(), {true}, {600}, 
+                                          {2000 * DASCOIN_DEFAULT_ASSET_PRECISION}));
+
+  const auto& params = get_chain_parameters();
+  BOOST_CHECK_EQUAL( params.enable_dascoin_queue, true );
+  BOOST_CHECK_EQUAL( params.reward_interval_time_seconds, 600 );
+  BOOST_CHECK_EQUAL( params.dascoin_reward_amount, 2000 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+  // TODO: handle negative cases
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_CASE( basic_submit_reserved_cycles_to_queue_test )
 { try {
   VAULT_ACTORS((first)(second)(third)(fourth))

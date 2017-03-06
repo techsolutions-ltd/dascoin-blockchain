@@ -47,6 +47,9 @@
 #include <graphene/chain/protocol/config.hpp>
 #include <graphene/chain/protocol/enum_reflect.hpp>
 
+// TODO: refactor this as a template method
+#define CHECK_AND_SET_OPT(val, opt)  if ( opt.valid() ) val = *opt
+
 namespace graphene { namespace chain {
    using namespace graphene::db;
 

@@ -267,6 +267,11 @@ struct get_impacted_account_visitor
    }
 
    void operator()( const record_distribute_dascoin_operation& op ) {}
+   
+   void operator()( const update_queue_parameters_operation& op )
+   {
+      _impacted.insert( op.issuer );
+   }
 
 };
 

@@ -112,6 +112,34 @@ namespace graphene { namespace chain {
     share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
 
+  struct update_queue_parameters_operation : public base_operation
+  {
+    struct fee_parameters_type {};  // No fees are paid for this operation.
+
+    asset fee;
+    account_id_type issuer;  // This MUST be the cycle issuer authority.
+
+    optional<bool> enable_dascoin_queue;
+    optional<uint32_t> reward_interval_time_seconds;
+    optional<uint32_t> dascoin_reward_amount;
+
+    update_queue_parameters_operation() = default;
+    explicit update_queue_parameters_operation(account_id_type issuer,
+      optional<bool> enable_dascoin_queue,
+      optional<uint32_t> reward_interval_time_seconds,
+      optional<uint32_t> dascoin_reward_amount) :
+        issuer(issuer),
+        enable_dascoin_queue(enable_dascoin_queue),
+        reward_interval_time_seconds(reward_interval_time_seconds),
+        dascoin_reward_amount(dascoin_reward_amount) {}
+
+    extensions_type extensions;
+
+    account_id_type fee_payer() const { return issuer; }
+    void validate() const;
+    share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+  };
+
 } }  // namespace graphene::chain
 
 ///////////////////////////////
@@ -154,4 +182,13 @@ FC_REFLECT( graphene::chain::record_submit_charter_license_cycles_operation,
             (amount)
             (frequency_lock)
             (extensions)
+          )
+
+FC_REFLECT( graphene::chain::update_queue_parameters_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::update_queue_parameters_operation,
+            (fee)
+            (issuer)
+            (enable_dascoin_queue)
+            (reward_interval_time_seconds)
+            (dascoin_reward_amount)
           )

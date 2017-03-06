@@ -1462,6 +1462,7 @@ class wallet_api
        * @param issuer            This MUST be the license issuing chain authority.
        * @param account           The account that will benefit the license.
        * @param license           The id of the license that will be granted to the account.
+       * @param bonus_percentage  Bonus percentage of license base cycles to be issued. Value must be greater than -100.
        * @param frequency         Frequency lock for this license.
        * @param broadcast         true if you wish to broadcast the transaction.
        * @return                  The signed version of the transaction.
@@ -1470,20 +1471,8 @@ class wallet_api
         const string& issuer,
         const string& account,
         const string& license,
+        share_type bonus_percentage,
         frequency_type frequency,
-        bool broadcast /* false */
-        );
-
-      /**
-       * Deny a license request. Only the license authentication authority can do this.
-       * @param  authenticator THis MUST be the license authentication authority.
-       * @param  req_id        The id of the request we want to deny.
-       * @param  broadcast     true if you wish to broadcast the transaction.
-       * @return               The signed version of the transaction.
-       */
-      signed_transaction deny_license_request(
-        const string& authenticator,
-        const string& req_id,
         bool broadcast /* false */
         );
 
@@ -1509,13 +1498,7 @@ class wallet_api
        */
       vector<license_type_object> list_license_types_by_amount( const uint32_t lower_bound_amount, uint32_t limit )const;
 
-      /**
-       * List all license requests on the blockchain, sorted by expiration.
-       *
-       * @param limit Maximum number of requests to return.
-       * @return The list of request objects, ordered by expiration time.
-       */
-      vector<license_request_object> list_license_requests_by_expiration( uint32_t limit )const;
+      vector<optional<license_information_object>> get_license_information(const vector<account_id_type>& account_ids) const;
 
       ///////////////////////////////
       /// CYCLES:                 ///
@@ -1527,6 +1510,8 @@ class wallet_api
        * @return         Cycle balance of the account.
        */
       share_type get_account_cycle_balance( const string& account )const;
+
+      vector<cycle_agreement> get_total_account_cycles(const string& account) const;
 
       order_book get_order_book( const string& base, const string& quote, unsigned limit = 50);
 
@@ -1551,22 +1536,10 @@ class wallet_api
       uint32_t get_reward_queue_size() const;
 
       /**
-       * @brief Get all license request objects, sorted by expiration.
-       * @return Vector of license request objects.
-       */
-      vector<license_request_object> get_all_license_requests() const;
-
-      /**
        * @brief Get all webasset issue request objects, sorted by expiration.
        * @return Vector of webasset issue request objects.
        */
       vector<issue_asset_request_object> get_all_webasset_issue_requests() const;
-
-      /**
-       * @brief Get all cycle issue requests, sorted by expiration.
-       * @return Vector of cycle issue request objects.
-       */
-      vector<cycle_issue_request_object> get_all_cycle_issue_requests() const;
 
       /**
        * @brief Get all wire out holder objects.
@@ -1693,7 +1666,6 @@ FC_API( graphene::wallet::wallet_api,
         (list_assets)
         (list_license_types_by_name)
         (list_license_types_by_amount)
-        (list_license_requests_by_expiration)
         (import_key)
         (import_accounts)
         (import_account_keys)
@@ -1784,15 +1756,15 @@ FC_API( graphene::wallet::wallet_api,
         (receive_blind_transfer)
         // Licenses:
         (issue_license)
-        (deny_license_request)
+        (get_license_information)
+
         // Cycles:
         (get_account_cycle_balance)
+        (get_total_account_cycles)
         (get_order_book)
         (wire_out)
         // Requests:
-        (get_all_license_requests)
         (get_all_webasset_issue_requests)
-        (get_all_cycle_issue_requests)
         (get_all_wire_out_holders)
         (get_reward_queue)
         (get_reward_queue_size)

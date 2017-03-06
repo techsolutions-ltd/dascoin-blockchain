@@ -291,11 +291,6 @@ namespace graphene { namespace chain {
          account_id_type initialize_chain_authority(const string& kind, const string& name);
 
          /**
-          * Distribute the initial cycles to accounts in the genesis_state.
-          */
-         void initialize_preissued_cycles(const genesis_state_type& genesis_state);
-
-         /**
           * Initialize the starting state of the chain from the provided genesis state.
           * @param genesis_state genesis.json file, may be embedded in the binary. If no genesis state
           *                      provided the default one will be used.
@@ -543,12 +538,8 @@ namespace graphene { namespace chain {
                                             upgrade_multiplier_type balance_multipliers,
                                             upgrade_multiplier_type requeue_multipliers,
                                             upgrade_multiplier_type return_multipliers);
-         void edit_license_type(license_type_id_type license_id, optional<string> name, optional<share_type> amount,
-                                optional<upgrade_multiplier_type> balance_multipliers,
-                                optional<upgrade_multiplier_type> requeue_multipliers,
-                                optional<upgrade_multiplier_type> return_multipliers);
-         void fulfill_license_request(const license_request_object& req);
-
+         optional<license_information_object> get_license_information(account_id_type account_id) const;
+         
 
    protected:
          //Mark pop_undo() as protected -- we do not want outside calling pop_undo(); it should call pop_block() instead
@@ -593,11 +584,16 @@ namespace graphene { namespace chain {
          void update_withdraw_permissions();
          bool check_for_blackswan( const asset_object& mia, bool enable_black_swan = true );
          void assign_licenses();
-         void distribute_issue_requested_cycles();
          void distribute_issue_requested_assets();
-         void deny_license_request(const license_request_object& req);
          void mint_dascoin_rewards();
          void reset_spending_limits();
+
+public:
+        // TODO: move this to a more appropriate place! Use a public interface...
+         const reward_queue_object& submit_cycles_to_queue(account_id_type beneficiary,
+                                                           share_type amount,
+                                                           frequency_type frequency_lock);
+private:
 
          ///Steps performed only at maintenance intervals
          ///@{

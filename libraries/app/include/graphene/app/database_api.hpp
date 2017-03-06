@@ -35,7 +35,6 @@
 #include <graphene/chain/chain_property_object.hpp>
 #include <graphene/chain/committee_member_object.hpp>
 #include <graphene/chain/confidential_object.hpp>
-#include <graphene/chain/cycle_objects.hpp>
 #include <graphene/chain/license_objects.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/operation_history_object.hpp>
@@ -109,6 +108,15 @@ struct market_trade
    double                     price;
    double                     amount;
    double                     value;
+};
+
+struct cycle_agreement
+{
+  share_type cycles;
+  frequency_type frequency_lock;
+
+  cycle_agreement() : cycles(0), frequency_lock(0) {}
+  cycle_agreement(share_type c, frequency_type f_l) : cycles(c), frequency_lock(f_l) {}
 };
 
 /**
@@ -575,15 +583,6 @@ class database_api
       vector<optional<license_type_object>> get_license_types(const vector<license_type_id_type>& license_type_ids)const;
 
       /**
-       * @brief Get a list of license requests sorted by id.
-       * @param license_req_ids Id's of the requests to receive.
-       * @return The requests corresponding to the provided id's.
-       *
-       * This function has semantics identical to @ref get_objects.
-       */
-      vector<optional<license_request_object>> get_license_requests(const vector<license_request_id_type>& license_req_ids)const;
-
-      /**
        * @brief Get license types active on the blockchain by name.
        * @param lower_bound_symbol Lower bound of license type names to retrieve
        * @param limit Maximum number of license types to fetch (must not exceed 100)
@@ -609,19 +608,7 @@ class database_api
        */
       vector<optional<license_type_object>> lookup_license_type_names(const vector<string>& names_or_ids)const;
 
-      /**
-       * @brief Get all license request objects on the blockchain by type.
-       * @param limit Maximum number of objects to fetch.
-       * @return The objects found.
-       */
-      vector<license_request_object> list_license_requests_by_type(uint32_t limit)const;
-
-      /**
-       * @brief Get all license request objects on the blockchain by expiration time.
-       * @param limit Maximum number of objects to fetch.
-       * @return The objects found.
-       */
-      vector<license_request_object> list_license_requests_by_expiration(uint32_t limit)const;
+      vector<optional<license_information_object>> get_license_information(const vector<account_id_type>& account_ids) const;
 
       /////////////
       // CYCLES: //
@@ -633,7 +620,9 @@ class database_api
        * @param  account_id ID of the account to check.
        * @return            Amount of cycles attached to the account.
        */
-      share_type get_account_cycle_balance(const account_id_type account_id)const;
+      share_type get_account_cycle_balance(const account_id_type account_id) const;
+
+      vector<cycle_agreement> get_total_account_cycles(account_id_type account_id) const;
 
       //////////////////////////
       // PI:                  //
@@ -668,22 +657,10 @@ class database_api
       //////////////////////////
 
       /**
-       * @brief Get all license request objects, sorted by expiration.
-       * @return Vector of license request objects.
-       */
-      vector<license_request_object> get_all_license_requests() const;
-
-      /**
        * @brief Get all webasset issue request objects, sorted by expiration.
        * @return Vector of webasset issue request objects.
        */
       vector<issue_asset_request_object> get_all_webasset_issue_requests() const;
-
-      /**
-       * @brief Get all cycle issue requests, sorted by expiration.
-       * @return Vector of cycle issue request objects.
-       */
-      vector<cycle_issue_request_object> get_all_cycle_issue_requests() const;
 
       /**
        * @brief Get all wire out holder objects.
@@ -708,8 +685,9 @@ FC_REFLECT( graphene::app::order_book, (base)(quote)(bids)(asks) );
 FC_REFLECT( graphene::app::market_ticker, (base)(quote)(latest)(lowest_ask)(highest_bid)(percent_change)(base_volume)(quote_volume) );
 FC_REFLECT( graphene::app::market_volume, (base)(quote)(base_volume)(quote_volume) );
 FC_REFLECT( graphene::app::market_trade, (date)(price)(amount)(value) );
+FC_REFLECT( graphene::app::cycle_agreement, (cycles)(frequency_lock) )
 
-FC_API(graphene::app::database_api,
+FC_API( graphene::app::database_api,
    // Objects
    (get_objects)
 
@@ -802,24 +780,21 @@ FC_API(graphene::app::database_api,
 
    // Licenses
    (get_license_types)
-   (get_license_requests)
    (list_license_types_by_name)
    (list_license_types_by_amount)
    (lookup_license_type_names)
-   (list_license_requests_by_type)
-   (list_license_requests_by_expiration)
+   (get_license_information)
 
    // Cycles
    (get_account_cycle_balance)
+   (get_total_account_cycles)
 
    // PI
    (get_account_limits)
    (get_account_pi_level)
 
    // Requests
-   (get_all_license_requests)
    (get_all_webasset_issue_requests)
-   (get_all_cycle_issue_requests)
    (get_all_wire_out_holders)
    (get_reward_queue)
    (get_reward_queue_size)

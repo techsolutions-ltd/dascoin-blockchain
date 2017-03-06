@@ -52,15 +52,17 @@ namespace graphene { namespace chain {
     */
    typedef fc::static_variant<
             transfer_operation,
+
             limit_order_create_operation,
             limit_order_cancel_operation,
             call_order_update_operation,
-            fill_order_operation,           // VIRTUAL
+
             account_create_operation,
             account_update_operation,
             account_whitelist_operation,
             account_upgrade_operation,
             account_transfer_operation,
+
             asset_create_operation,
             asset_update_operation,
             asset_update_bitasset_operation,
@@ -71,54 +73,80 @@ namespace graphene { namespace chain {
             asset_settle_operation,
             asset_global_settle_operation,
             asset_publish_feed_operation,
+
             witness_create_operation,
             witness_update_operation,
+
             proposal_create_operation,
             proposal_update_operation,
             proposal_delete_operation,
+
             withdraw_permission_create_operation,
             withdraw_permission_update_operation,
             withdraw_permission_claim_operation,
             withdraw_permission_delete_operation,
+
             committee_member_create_operation,
             committee_member_update_operation,
             committee_member_update_global_parameters_operation,
+
             vesting_balance_create_operation,
             vesting_balance_withdraw_operation,
+
             worker_create_operation,
+
             custom_operation,
             assert_operation,
+
             balance_claim_operation,
+
             override_transfer_operation,
+
             transfer_to_blind_operation,
             blind_transfer_operation,
             transfer_from_blind_operation,
-            asset_settle_cancel_operation,  // VIRTUAL
+
             asset_claim_fees_operation,
-            fba_distribute_operation,  // VIRTUAL
+
+            // Dascoin protocol operations:
+
             board_update_chain_authority_operation,
-            license_type_create_operation,
-            license_type_edit_operation,
-            license_type_delete_operation,
-            license_request_operation,
-            license_approve_operation,  // VIRTUAL
-            license_deny_operation,
+            update_queue_parameters_operation,
+
+            create_license_type_operation,
+            issue_license_operation,
+
             tether_accounts_operation,
+
             // update_pi_limits_operation,
+
             asset_create_issue_request_operation,
-            asset_distribute_completed_request_operation,  // VIRTUAL
             asset_deny_issue_request_operation,
+
             wire_out_operation,
             wire_out_complete_operation,
             wire_out_reject_operation,
+
             transfer_vault_to_wallet_operation,
             transfer_wallet_to_vault_operation,
-            cycle_issue_request_operation,
-            cycle_issue_deny_operation,
-            cycle_issue_complete_operation,  // VIRTUAL
-            upgrade_account_cycles_operation,  // VIRTUAL
-            submit_cycles_operation,
-            distribute_dascoin_operation  // VIRTUAL
+
+            submit_reserve_cycles_to_queue_operation,
+            submit_cycles_to_queue_operation,
+
+            // Virtual operations below this point:
+
+            record_submit_reserve_cycles_to_queue_operation,
+            record_submit_charter_license_cycles_operation,  //TODO: should we keep this op?
+
+            record_distribute_dascoin_operation,
+
+            asset_distribute_completed_request_operation,
+            upgrade_account_cycles_operation,
+
+            fba_distribute_operation,
+            asset_settle_cancel_operation,
+            fill_order_operation
+
          > operation;
 
    /// @} // operations group

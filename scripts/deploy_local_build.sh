@@ -63,8 +63,8 @@ remote_dir=""
 compress=false
 
 #Set fonts:
-# norm_font=`tput sgr0`
-# bold_font=`tput bold`
+norm_font=`tput sgr0`
+bold_font=`tput bold`
 # rev_font=`tput smso`
 
 # Describe usage of the script:
@@ -123,9 +123,16 @@ get_cmake_build_type
 build_name="$(git describe)_${config_name}_$(get_cmake_build_type)"
 build_dir="${target_dir}/${build_name}"
 
-step=0
+step=1
 
 echo "Deploying build ${build_name} to ${target_dir}:"
+
+echo "${step}) Removing any previous build ${build_name} and last_build link":
+rm -rf "${build_dir}"
+rm -rf "${target_dir}/last_build"
+echo "Done"
+echo
+step=$((${step}+1))
 
 echo "${step}) Copying ${config_name} configuration:"
 make_dir "${build_dir}"
@@ -170,7 +177,7 @@ if [ -n "${remote_dir}" ]; then
 fi
 
 echo "${step}) Creating symbolic link for last build"
-ln -fs ${build_dir} ${target_dir}/last_build
+ln -s "${build_dir}/" "${target_dir}/last_build"
 echo "Done"
 echo
 

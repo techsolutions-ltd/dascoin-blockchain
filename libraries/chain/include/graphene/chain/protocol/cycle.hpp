@@ -21,66 +21,25 @@ namespace graphene { namespace chain {
    * An authorized cycle issuing authority can request to issue a certain amount of cycles.
    * An independent authorized cycle authentication authority must inspect and approve this request.
    */
-  struct cycle_issue_request_operation : public base_operation
+  struct submit_reserve_cycles_to_queue_operation : public base_operation
   {
     struct fee_parameters_type {};  // No fees are paid for this operation.
 
     asset fee;
-    account_id_type cycle_issuer;  // This MUST be the cycle issuer authority.
+    account_id_type issuer;  // This MUST be the cycle issuer authority.
 
     account_id_type account;
     share_type amount;
+    frequency_type frequency_lock;
+
+    submit_reserve_cycles_to_queue_operation() = default;
+    explicit submit_reserve_cycles_to_queue_operation(account_id_type i, account_id_type acc, share_type am, 
+                                                      frequency_type f_l)
+        : issuer(i), account(acc), amount(am), frequency_lock(f_l) {}
 
     extensions_type extensions;
 
-    account_id_type fee_payer() const { return cycle_issuer; }
-    void validate() const;
-    share_type calculate_fee(const fee_parameters_type&) const { return 0; }
-  };
-
-  /**
-   * @brief Finalize issuing cycles to an account.
-   * @ingroup operations
-   *
-   * When the issue request expires, record the final issue of cycles to an account.
-   * NOTE: this is a virtual operation.
-   */
-  struct cycle_issue_complete_operation : public base_operation
-  {
-    struct fee_parameters_type {};  // No fees are paid for this operation.
-
-    asset fee;
-    account_id_type cycle_authenticator;  // This MUST be the cycle authenticator authority.
-
-    account_id_type account;
-    share_type amount;
-
-    extensions_type extensions;
-
-    account_id_type fee_payer() const { return cycle_authenticator; }
-    void validate() const;
-    share_type calculate_fee(const fee_parameters_type&) const { return 0; }
-  };
-
-  /**
-   * @brief Deny issuing cycles to an account.
-   * @ingroup operations
-   *
-   * An authorized cycle authentication authority can deny a cycle issuing request.
-   * NOTE: this is a virtual operation.
-   */
-  struct cycle_issue_deny_operation : public base_operation
-  {
-    struct fee_parameters_type {};  // No fees are paid for this operation.
-
-    asset fee;
-    account_id_type cycle_authenticator;  // This MUST be the cycle authenticator authority.
-
-    cycle_issue_request_id_type request;
-
-    extensions_type extensions;
-
-    account_id_type fee_payer() const { return cycle_authenticator; }
+    account_id_type fee_payer() const { return issuer; }
     void validate() const;
     share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
@@ -91,7 +50,7 @@ namespace graphene { namespace chain {
    *
    * A user can submit their cycles to the dascoin distribution queue where they await to be minted.
    */
-  struct submit_cycles_operation : public base_operation
+  struct submit_cycles_to_queue_operation : public base_operation
   {
     struct fee_parameters_type {};  // No fees are paid for this operation.
 
@@ -107,42 +66,129 @@ namespace graphene { namespace chain {
     share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
 
+  struct record_submit_reserve_cycles_to_queue_operation : public base_operation
+  {
+    struct fee_parameters_type {};  // Virtual operation.
+
+    asset fee;
+
+    account_id_type cycle_issuer;
+
+    account_id_type account;
+    share_type amount;
+    frequency_type frequency_lock;
+
+    record_submit_reserve_cycles_to_queue_operation() = default;
+    explicit record_submit_reserve_cycles_to_queue_operation(account_id_type c_i, account_id_type acc, share_type am,
+        frequency_type f_l) : cycle_issuer(c_i), amount(am), frequency_lock(f_l) {}
+
+    extensions_type extensions;
+
+    account_id_type fee_payer() const { return account; }
+    void validate() const { FC_ASSERT( false ); }
+    share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+  };
+
+  struct record_submit_charter_license_cycles_operation : public base_operation
+  {
+    struct fee_parameters_type {};  // Virtual operation.
+
+    asset fee;
+
+    account_id_type license_issuer;
+
+    account_id_type account;
+    share_type amount;
+    frequency_type frequency_lock;
+
+    record_submit_charter_license_cycles_operation() = default;
+    record_submit_charter_license_cycles_operation(account_id_type i, account_id_type acc, share_type am, 
+        frequency_type f_l) : license_issuer(i), account(acc), amount(am), frequency_lock(f_l) {}
+
+    extensions_type extensions;
+
+    account_id_type fee_payer() const { return account; }
+    void validate() const { FC_ASSERT( false ); }
+    share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+  };
+
+  struct update_queue_parameters_operation : public base_operation
+  {
+    struct fee_parameters_type {};  // No fees are paid for this operation.
+
+    asset fee;
+    account_id_type issuer;  // This MUST be the cycle issuer authority.
+
+    optional<bool> enable_dascoin_queue;
+    optional<uint32_t> reward_interval_time_seconds;
+    optional<uint32_t> dascoin_reward_amount;
+
+    update_queue_parameters_operation() = default;
+    explicit update_queue_parameters_operation(account_id_type issuer,
+      optional<bool> enable_dascoin_queue,
+      optional<uint32_t> reward_interval_time_seconds,
+      optional<uint32_t> dascoin_reward_amount) :
+        issuer(issuer),
+        enable_dascoin_queue(enable_dascoin_queue),
+        reward_interval_time_seconds(reward_interval_time_seconds),
+        dascoin_reward_amount(dascoin_reward_amount) {}
+
+    extensions_type extensions;
+
+    account_id_type fee_payer() const { return issuer; }
+    void validate() const;
+    share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+  };
+
 } }  // namespace graphene::chain
 
 ///////////////////////////////
 // REFLECTIONS:              //
 ///////////////////////////////
 
-FC_REFLECT( graphene::chain::cycle_issue_request_operation::fee_parameters_type, )
-FC_REFLECT( graphene::chain::cycle_issue_request_operation,
+FC_REFLECT( graphene::chain::submit_reserve_cycles_to_queue_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::submit_reserve_cycles_to_queue_operation,
+            (fee)
+            (issuer)
+            (account)
+            (amount)
+            (frequency_lock)
+            (extensions)
+          )
+
+FC_REFLECT( graphene::chain::submit_cycles_to_queue_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::submit_cycles_to_queue_operation,
+            (fee)
+            (account)
+            (amount)
+            (extensions)
+          )
+
+FC_REFLECT( graphene::chain::record_submit_reserve_cycles_to_queue_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::record_submit_reserve_cycles_to_queue_operation,
             (fee)
             (cycle_issuer)
             (account)
             (amount)
+            (frequency_lock)
             (extensions)
           )
 
-FC_REFLECT( graphene::chain::cycle_issue_complete_operation::fee_parameters_type, )
-FC_REFLECT( graphene::chain::cycle_issue_complete_operation,
+FC_REFLECT( graphene::chain::record_submit_charter_license_cycles_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::record_submit_charter_license_cycles_operation,
             (fee)
-            (cycle_authenticator)
+            (license_issuer)
             (account)
             (amount)
+            (frequency_lock)
             (extensions)
           )
 
-FC_REFLECT( graphene::chain::cycle_issue_deny_operation::fee_parameters_type, )
-FC_REFLECT( graphene::chain::cycle_issue_deny_operation,
+FC_REFLECT( graphene::chain::update_queue_parameters_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::update_queue_parameters_operation,
             (fee)
-            (cycle_authenticator)
-            (request)
-            (extensions)
-          )
-
-FC_REFLECT( graphene::chain::submit_cycles_operation::fee_parameters_type, )
-FC_REFLECT( graphene::chain::submit_cycles_operation,
-            (fee)
-            (account)
-            (amount)
-            (extensions)
+            (issuer)
+            (enable_dascoin_queue)
+            (reward_interval_time_seconds)
+            (dascoin_reward_amount)
           )

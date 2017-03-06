@@ -9,36 +9,35 @@
 
 namespace graphene { namespace chain {
 
-  class cycle_issue_request_evaluator : public evaluator<cycle_issue_request_evaluator>
+  class submit_reserve_cycles_to_queue_evaluator : public evaluator<submit_reserve_cycles_to_queue_evaluator>
   {
   public:
-    typedef cycle_issue_request_operation operation_type;
+    typedef submit_reserve_cycles_to_queue_operation operation_type;
 
     void_result do_evaluate(const operation_type& op);
     object_id_type do_apply(const operation_type& op);
   };
 
-  class cycle_issue_deny_evaluator : public evaluator<cycle_issue_deny_evaluator>
+  class submit_cycles_to_queue_evaluator : public evaluator<submit_cycles_to_queue_evaluator>
   {
   public:
-    typedef cycle_issue_deny_operation operation_type;
+    typedef submit_cycles_to_queue_operation operation_type;
 
     void_result do_evaluate(const operation_type& op);
     object_id_type do_apply(const operation_type& op);
 
-    const cycle_issue_request_object* request_ = nullptr;
+    const account_object* _account_obj = nullptr;
   };
 
-  class submit_cycles_evaluator : public evaluator<submit_cycles_evaluator>
+  class update_queue_parameters_evaluator : public evaluator<update_queue_parameters_evaluator>
   {
   public:
-    typedef submit_cycles_operation operation_type;
+    typedef update_queue_parameters_operation operation_type;
 
     void_result do_evaluate(const operation_type& op);
     object_id_type do_apply(const operation_type& op);
 
-    const account_object* account_obj_ = nullptr;
-    const account_cycle_balance_object* balance_obj_ = nullptr;
+    const global_property_object* _gpo = nullptr;
   };
 
 } }  // namespace graphene::chain

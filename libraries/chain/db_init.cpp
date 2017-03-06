@@ -34,7 +34,6 @@
 #include <graphene/chain/chain_property_object.hpp>
 #include <graphene/chain/committee_member_object.hpp>
 #include <graphene/chain/confidential_object.hpp>
-#include <graphene/chain/cycle_objects.hpp>
 #include <graphene/chain/fba_object.hpp>
 #include <graphene/chain/global_property_object.hpp>
 #include <graphene/chain/license_objects.hpp>
@@ -137,9 +136,6 @@ const uint8_t worker_object::type_id;
 const uint8_t license_type_object::space_id;
 const uint8_t license_type_object::type_id;
 
-const uint8_t license_request_object::space_id;
-const uint8_t license_request_object::type_id;
-
 const uint8_t account_cycle_balance_object::space_id;
 const uint8_t account_cycle_balance_object::type_id;
 
@@ -149,11 +145,11 @@ const uint8_t issue_asset_request_object::type_id;
 const uint8_t wire_out_holder_object::space_id;
 const uint8_t wire_out_holder_object::type_id;
 
-const uint8_t cycle_issue_request_object::space_id;
-const uint8_t cycle_issue_request_object::type_id;
-
 const uint8_t reward_queue_object::space_id;
 const uint8_t reward_queue_object::type_id;
+
+const uint8_t license_information_object::space_id;
+const uint8_t license_information_object::type_id;
 
 void database::initialize_genesis_transaction_state()
 {
@@ -207,11 +203,8 @@ void database::initialize_evaluators()
    register_evaluator<blind_transfer_evaluator>();
    register_evaluator<asset_claim_fees_evaluator>();
    register_evaluator<board_update_chain_authority_evaluator>();
-   register_evaluator<license_type_create_evaluator>();
-   register_evaluator<license_type_edit_evaluator>();
-   register_evaluator<license_type_delete_evaluator>();
-   register_evaluator<license_request_evaluator>();
-   register_evaluator<license_deny_evaluator>();
+   register_evaluator<create_license_type_evaluator>();
+   register_evaluator<issue_license_evaluator>();
    register_evaluator<tether_accounts_evaluator>();
    // register_evaluator<update_pi_limits_evaluator>();
    register_evaluator<asset_create_issue_request_evaluator>();
@@ -221,30 +214,9 @@ void database::initialize_evaluators()
    register_evaluator<wire_out_reject_evaluator>();
    register_evaluator<transfer_vault_to_wallet_evaluator>();
    register_evaluator<transfer_wallet_to_vault_evaluator>();
-   register_evaluator<cycle_issue_request_evaluator>();
-   register_evaluator<cycle_issue_deny_evaluator>();
-   register_evaluator<submit_cycles_evaluator>();
-}
-
-void database::initialize_preissued_cycles(const genesis_state_type& genesis_state)
-{
-  for( const auto& handout : genesis_state.initial_issued_cycles )
-  {
-      auto account_id = get_account_id(handout.owner_name);
-      auto cycle_auth_id = get_account_id(genesis_state.initial_cycle_authentication_authority.owner_name);
-
-      // Increase the balance:
-      adjust_cycle_balance(account_id, handout.amount);
-
-      // Execute the virtual operation:
-      cycle_issue_complete_operation vop;
-      vop.cycle_authenticator = cycle_auth_id;
-      vop.account = account_id;
-      vop.amount = handout.amount;
-      push_applied_operation(vop);
-
-     // TODO: increase the global supply of cycles!
-  }
+   register_evaluator<submit_reserve_cycles_to_queue_evaluator>();
+   register_evaluator<submit_cycles_to_queue_evaluator>();
+   register_evaluator<update_queue_parameters_evaluator>();
 }
 
 void database::initialize_indexes()
@@ -292,17 +264,11 @@ void database::initialize_indexes()
    add_index< primary_index< simple_index< fba_accumulator_object       > > >();
 
    add_index<primary_index<license_type_index>>();
-   add_index<primary_index<license_request_index>>();
-
    add_index<primary_index<account_cycle_balance_index>>();
-
    add_index<primary_index<issue_asset_request_index>>();
-
    add_index<primary_index<wire_out_holder_index>>();
-
-   add_index<primary_index<cycle_issue_request_index>>();
-
    add_index<primary_index<reward_queue_index>>();
+   add_index<primary_index<license_information_index>>();
 }
 
 account_id_type database::initialize_chain_authority(const string& kind_name, const string& acc_name)
@@ -775,7 +741,6 @@ void database::init_genesis(const genesis_state_type& genesis_state)
 
    initialize_chain_authority("license_administrator", genesis_state.initial_license_administration_authority.owner_name);
    initialize_chain_authority("license_issuer", genesis_state.initial_license_issuing_authority.owner_name);
-   initialize_chain_authority("license_authenticator", genesis_state.initial_license_authentication_authority.owner_name);
    initialize_chain_authority("webasset_issuer", genesis_state.initial_webasset_issuing_authority.owner_name);
    initialize_chain_authority("webasset_authenticator", genesis_state.initial_webasset_authentication_authority.owner_name);
    initialize_chain_authority("cycle_issuer", genesis_state.initial_cycle_issuing_authority.owner_name);
@@ -810,12 +775,9 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       create_license_type(license_kind::promo, "standard-promo", 100, {}, {}, {1});
       create_license_type(license_kind::promo, "manager-promo", 500, {}, {}, {1});
       create_license_type(license_kind::promo, "pro-promo", 2000, {}, {}, {1});
-      create_license_type(license_kind::promo, "executive-promo", 5000, {}, {}, {1,2});
+      create_license_type(license_kind::promo, "executive-promo", 5000, {}, {}, {});
       create_license_type(license_kind::promo, "president-promo", 25000, {}, {}, {1,2,4});
    }
-
-   // Hand out initial cycles, WebAssets and licenses:
-   initialize_preissued_cycles(genesis_state);
 
    // Set active witnesses
    modify(get_global_properties(), [&](global_property_object& p) {

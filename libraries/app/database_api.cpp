@@ -141,10 +141,12 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
 
       // Licenses:
       vector<optional<license_type_object>> get_license_types(const vector<license_type_id_type>& license_type_ids) const;
-      vector<optional<license_request_object>> get_license_requests(const vector<license_request_id_type>& license_req_ids)const;
+      vector<optional<license_information_object>> get_license_information(const vector<account_id_type>& account_ids) const;
+
 
       // Cycles:
-      share_type get_account_cycle_balance(const account_id_type account_id)const;
+      share_type get_account_cycle_balance(const account_id_type account_id) const;
+      vector<cycle_agreement> get_total_account_cycles(account_id_type id) const;
 
       // Queue:
       uint32_t get_reward_queue_size() const;
@@ -231,7 +233,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       }
 
       template<typename IdType, typename IndexType, typename IndexBy>
-      vector<optional<typename IndexType::object_type> > lookup_string_or_id(const vector<string>& str_or_id)const
+      vector<optional<typename IndexType::object_type> > lookup_string_or_id(const vector<string>& str_or_id) const
       {
          const auto& idx = _db.get_index_type<IndexType>().indices().get<IndexBy>();
          vector<optional<typename IndexType::object_type> > result;
@@ -241,10 +243,10 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
             if( !str_or_id.empty() && std::isdigit(str_or_id[0]) )
             {
                auto ptr = _db.find(variant(str_or_id).as<IdType>());
-               return ptr == nullptr? optional<typename IndexType::object_type>() : *ptr;
+               return ptr == nullptr ? optional<typename IndexType::object_type>() : *ptr;
             }
             auto itr = idx.find(str_or_id);
-            return itr == idx.end()? optional<typename IndexType::object_type>() : *itr;
+            return itr == idx.end() ? optional<typename IndexType::object_type>() : *itr;
          });
          return result;
       }
@@ -259,6 +261,20 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
          while( itr != idx.end() )
             result.emplace_back(*itr++);
 
+         return result;
+      }
+
+      template<typename IdType, typename IndexType, typename IndexBy>
+      vector<optional<typename IndexType::object_type>> fetch_optionals_from_ids(const vector<IdType>& ids) const
+      {
+         const auto& idx = _db.get_index_type<IndexType>().indices().get<IndexBy>();
+         vector<optional<typename IndexType::object_type> > result;
+         result.reserve(ids.size());
+         std::transform(ids.begin(), ids.end(), std::back_inserter(result),
+                        [this, &idx](IdType id) -> optional<typename IndexType::object_type> {
+            auto itr = idx.find(id);
+            return itr == idx.end() ? optional<typename IndexType::object_type>() : *itr;
+         });
          return result;
       }
 
@@ -1871,22 +1887,6 @@ vector<optional<license_type_object>> database_api_impl::get_license_types(const
    return result;
 }
 
-vector<optional<license_request_object>> database_api_impl::get_license_requests(const vector<license_request_id_type>& license_req_ids)const
-{
-   vector<optional<license_request_object>> result;
-   result.reserve(license_req_ids.size());
-   std::transform(license_req_ids.begin(), license_req_ids.end(), std::back_inserter(result),
-                  [this](license_request_id_type id) -> optional<license_request_object> {
-      if(auto o = _db.find(id))
-      {
-         subscribe_to_item( id );
-         return *o;
-      }
-      return {};
-   });
-   return result;
-}
-
 vector<license_type_object> database_api::list_license_types_by_name( const string& lower_bound_name,
                                                                       uint32_t limit ) const
 {
@@ -1911,19 +1911,23 @@ vector<optional<license_type_object>> database_api::get_license_types(const vect
    return my->get_license_types( vec_ids );
 }
 
-vector<optional<license_request_object>> database_api::get_license_requests(const vector<license_request_id_type>& vec_ids) const
+vector<optional<license_information_object>> database_api::get_license_information(const vector<account_id_type>& account_ids) const
 {
-   return my->get_license_requests( vec_ids );
+    return my->get_license_information(account_ids);
 }
 
-vector<license_request_object> database_api::list_license_requests_by_type(uint32_t limit) const
+vector<optional<license_information_object>> database_api_impl::get_license_information(const vector<account_id_type>& account_ids) const
 {
-   return my->list_objects<license_request_index, by_license_type_id>( limit );
-}
-
-vector<license_request_object> database_api::list_license_requests_by_expiration(uint32_t limit) const
-{
-   return my->list_objects<license_request_index, by_expiration>( limit );
+   vector<optional<license_information_object>> result;
+   result.reserve(account_ids.size());
+   std::transform(account_ids.begin(), account_ids.end(), std::back_inserter(result),
+                  [this](account_id_type id) -> optional<license_information_object> {
+      auto acc = _db.find(id);
+      if( acc && acc->license_information.valid() )
+         return {(*acc->license_information)(_db)};
+      return {};
+   });
+   return result;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1940,6 +1944,21 @@ share_type database_api::get_account_cycle_balance(const account_id_type id)cons
 share_type database_api_impl::get_account_cycle_balance(const account_id_type id)const
 {
    return _db.get_cycle_balance(id);
+}
+
+vector<cycle_agreement> database_api::get_total_account_cycles(account_id_type id) const
+{
+    return my->get_total_account_cycles(id);
+}
+
+vector<cycle_agreement> database_api_impl::get_total_account_cycles(account_id_type id) const
+{
+    vector<cycle_agreement> result;
+
+    // Free cycles have a frequency lock of 0:
+    result.emplace_back(_db.get_cycle_balance(id), 0);
+    // TODO: cycle submissions from queue.
+    return result;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1980,19 +1999,9 @@ uint32_t database_api_impl::get_reward_queue_size() const
 //                                                                  //
 //////////////////////////////////////////////////////////////////////
 
-vector<license_request_object> database_api::get_all_license_requests() const
-{
-   return my->list_all_objects<license_request_index, by_expiration>();
-}
-
 vector<issue_asset_request_object> database_api::get_all_webasset_issue_requests() const
 {
    return my->list_all_objects<issue_asset_request_index, by_expiration>();
-}
-
-vector<cycle_issue_request_object> database_api::get_all_cycle_issue_requests() const
-{
-   return my->list_all_objects<cycle_issue_request_index, by_expiration>();
 }
 
 vector<wire_out_holder_object> database_api::get_all_wire_out_holders() const

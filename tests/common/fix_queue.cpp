@@ -44,7 +44,7 @@ namespace graphene { namespace chain {
   void database_fixture::submit_cycles(account_id_type account_id, share_type amount)
   { try {
 
-    submit_cycles_operation op;
+    submit_cycles_to_queue_operation op;
     op.account = account_id;
     op.amount = amount;
 
@@ -86,5 +86,10 @@ namespace graphene { namespace chain {
     });
 
   } FC_LOG_AND_RETHROW() };
+
+  uint32_t database_fixture::get_reward_queue_size() const
+  {
+    return db.get_index_type<reward_queue_index>().indices().size();
+  }
 
 } }  // graphene::chain

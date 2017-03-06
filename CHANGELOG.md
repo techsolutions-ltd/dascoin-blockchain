@@ -1,13 +1,15 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](http://keepachangelog.com/) 
+The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 ### Added
+- Bonus percentage of cycles when issuing a license
 
 ### Changed
+- Fix preventing frequency lock being 0 when issuing a chartered or promo license
 - Updated scripts
 - Created scripts folder in project root
 

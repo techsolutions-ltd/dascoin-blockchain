@@ -56,11 +56,6 @@ account_id_type database_fixture::get_license_issuer_id() const
   return db.get_global_properties().authorities.license_issuer;
 }
 
-account_id_type database_fixture::get_license_authenticator_id() const
-{
-  return db.get_global_properties().authorities.license_authenticator;
-}
-
 account_id_type database_fixture::get_webasset_issuer_id() const
 {
   return db.get_global_properties().authorities.webasset_issuer;

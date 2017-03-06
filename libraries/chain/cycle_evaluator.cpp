@@ -82,4 +82,37 @@ object_id_type submit_cycles_to_queue_evaluator::do_apply(const submit_cycles_to
 
 } FC_CAPTURE_AND_RETHROW((op)) }
 
+void_result update_queue_parameters_evaluator::do_evaluate(const update_queue_parameters_operation& op)
+{ try {
+  const auto& d = db();
+  const auto& gpo = d.get_global_properties();
+  const auto& issuer_obj = op.issuer(d);
+
+  d.perform_chain_authority_check("license issuer", gpo.authorities.license_issuer, issuer_obj);
+
+  if ( op.reward_interval_time_seconds.valid()  )
+    FC_ASSERT( *op.reward_interval_time_seconds % gpo.parameters.block_interval == 0,
+               "Reward interval must be a multiple of the block interval ${bi}",
+               ("bi", gpo.parameters.block_interval)
+             );
+
+  _gpo = &gpo;
+  return {};
+
+} FC_CAPTURE_AND_RETHROW((op)) }
+
+object_id_type update_queue_parameters_evaluator::do_apply(const update_queue_parameters_operation& op)
+{ try {
+  auto& d = db();
+
+  d.modify(*_gpo, [&](global_property_object& gpo){
+    CHECK_AND_SET_OPT(gpo.parameters.enable_dascoin_queue, op.enable_dascoin_queue);
+    CHECK_AND_SET_OPT(gpo.parameters.reward_interval_time_seconds, op.reward_interval_time_seconds);
+    CHECK_AND_SET_OPT(gpo.parameters.dascoin_reward_amount, op.dascoin_reward_amount);
+  });
+
+  return _gpo->id;
+
+} FC_CAPTURE_AND_RETHROW((op)) }
+
 } }  // namespace graphene::chain

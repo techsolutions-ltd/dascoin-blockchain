@@ -29,4 +29,15 @@ namespace graphene { namespace chain {
     const account_object* _account_obj = nullptr;
   };
 
+  class update_queue_parameters_evaluator : public evaluator<update_queue_parameters_evaluator>
+  {
+  public:
+    typedef update_queue_parameters_operation operation_type;
+
+    void_result do_evaluate(const operation_type& op);
+    object_id_type do_apply(const operation_type& op);
+
+    const global_property_object* _gpo = nullptr;
+  };
+
 } }  // namespace graphene::chain

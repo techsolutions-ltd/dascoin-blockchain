@@ -111,6 +111,7 @@ namespace graphene { namespace chain {
             // Dascoin protocol operations:
 
             board_update_chain_authority_operation,
+            update_queue_parameters_operation,
 
             create_license_type_operation,
             issue_license_operation,

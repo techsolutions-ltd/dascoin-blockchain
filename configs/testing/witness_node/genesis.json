@@ -255,11 +255,9 @@
     "minimum_transfer_limit": 0,
     "maximum_transfer_limit": 100000,
     "limit_interval_elapse_time_seconds": 15,
-    "license_expiration_time_seconds": 15,
     "web_asset_request_expiration_time_seconds": 15,
-    "cycle_request_expiration_time_seconds": 15,
     "reward_interval_time_seconds": 30,
-    "dascoin_reward_amount": 2000,
+    "dascoin_reward_amount": 150000000,
     "enable_cycle_issuing": true,
     "enable_dascoin_queue": true,
     "extensions": []

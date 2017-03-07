@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## Unreleased
+### Added
+- get queue submissions with pos database_api call
+
 ## [0.0.2] - 2017-03-06
 - Bonus percentage of cycles when issuing a license
 - Removed requests for issuing licenses

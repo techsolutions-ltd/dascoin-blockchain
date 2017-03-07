@@ -149,6 +149,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<cycle_agreement> get_total_account_cycles(account_id_type id) const;
 
       // Queue:
+      vector<pair<uint32_t, reward_queue_object>> get_queue_submissions_with_pos(account_id_type account_id) const;
       uint32_t get_reward_queue_size() const;
 
       template<typename T>
@@ -1983,6 +1984,11 @@ optional<uint8_t> database_api::get_account_pi_level(const account_id_type id) c
 //                                                                  //
 //////////////////////////////////////////////////////////////////////
 
+vector<reward_queue_object> database_api::get_reward_queue() const
+{
+   return my->list_all_objects<reward_queue_index, by_time>();
+}
+
 uint32_t database_api::get_reward_queue_size() const
 {
    return my->get_reward_queue_size();
@@ -1991,6 +1997,29 @@ uint32_t database_api::get_reward_queue_size() const
 uint32_t database_api_impl::get_reward_queue_size() const
 {
    return _db.get_index_type<reward_queue_index>().indices().size();
+}
+
+vector<pair<uint32_t, reward_queue_object>> database_api::get_queue_submissions_with_pos(account_id_type account_id) const
+{
+    return my->get_queue_submissions_with_pos(account_id);
+}
+
+vector<pair<uint32_t, reward_queue_object>> database_api_impl::get_queue_submissions_with_pos(account_id_type account_id) const
+{
+    vector<pair<uint32_t, reward_queue_object>> result;
+
+    const auto& queue_multi_idx = _db.get_index_type<reward_queue_index>().indices();
+    const auto& account_idx = queue_multi_idx.get<by_account>();
+    const auto& time_idx = queue_multi_idx.get<by_time>();
+
+    const auto& range = account_idx.equal_range(account_id);
+    for ( auto it = range.first; it != range.second; ++it )
+    {
+        uint32_t pos = distance(time_idx.begin(), queue_multi_idx.project<by_time>(it));
+        result.emplace_back(pos, *it);
+    }
+
+    return result;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -2007,11 +2036,6 @@ vector<issue_asset_request_object> database_api::get_all_webasset_issue_requests
 vector<wire_out_holder_object> database_api::get_all_wire_out_holders() const
 {
    return my->list_all_objects<wire_out_holder_index, by_id>();
-}
-
-vector<reward_queue_object> database_api::get_reward_queue() const
-{
-   return my->list_all_objects<reward_queue_index, by_time>();
 }
 
 //////////////////////////////////////////////////////////////////////

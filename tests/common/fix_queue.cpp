@@ -92,4 +92,22 @@ namespace graphene { namespace chain {
     return db.get_index_type<reward_queue_index>().indices().size();
   }
 
+  vector<pair<uint32_t, reward_queue_object>> database_fixture::get_queue_submissions_with_pos(account_id_type account_id) const
+  {
+    vector<pair<uint32_t, reward_queue_object>> result;
+
+    const auto& queue_multi_idx = db.get_index_type<reward_queue_index>().indices();
+    const auto& account_idx = queue_multi_idx.get<by_account>();
+    const auto& time_idx = queue_multi_idx.get<by_time>();
+
+    const auto& range = account_idx.equal_range(account_id);
+    for ( auto it = range.first; it != range.second; ++it )
+    {
+        uint32_t pos = distance(time_idx.begin(), queue_multi_idx.project<by_time>(it));
+        result.emplace_back(pos, *it);
+    }
+
+    return result;
+  }
+
 } }  // graphene::chain

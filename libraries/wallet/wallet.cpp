@@ -4439,6 +4439,11 @@ vector<reward_queue_object> wallet_api::get_reward_queue() const
    return my->_remote_db->get_reward_queue();
 }
 
+vector<pair<uint32_t, reward_queue_object>> wallet_api::get_queue_submissions_with_pos(account_id_type account_id) const
+{
+   return my->_remote_db->get_queue_submissions_with_pos(account_id);
+}
+
 order_book wallet_api::get_order_book( const string& base, const string& quote, unsigned limit )
 {
    return( my->_remote_db->get_order_book( base, quote, limit ) );

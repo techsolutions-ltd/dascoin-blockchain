@@ -647,10 +647,18 @@ class database_api
       //////////////////////////
 
       /**
+       * @brief Return the entire reward queue.
+       * @return Vector of all reward queue objects.
+       */
+      vector<reward_queue_object> get_reward_queue() const;
+
+      /**
        * @brief Get the size of the DASCoin reward queue.
        * @return Number of elements in the DASCoin queue.
        */
       uint32_t get_reward_queue_size() const;
+
+      vector<pair<uint32_t, reward_queue_object>> get_queue_submissions_with_pos(account_id_type account_id) const;
 
       //////////////////////////
       // REQUESTS:            //
@@ -667,12 +675,6 @@ class database_api
        * @return Vector of wire out holder objects.
        */
       vector<wire_out_holder_object> get_all_wire_out_holders() const;
-
-      /**
-       * @brief Return the entire reward queue.
-       * @return Vector of all reward queue objects.
-       */
-      vector<reward_queue_object> get_reward_queue() const;
 
    private:
       std::shared_ptr< database_api_impl > my;
@@ -789,6 +791,11 @@ FC_API( graphene::app::database_api,
    (get_account_cycle_balance)
    (get_total_account_cycles)
 
+   // queue
+   (get_reward_queue)
+   (get_reward_queue_size)
+   (get_queue_submissions_with_pos)
+
    // PI
    (get_account_limits)
    (get_account_pi_level)
@@ -796,6 +803,5 @@ FC_API( graphene::app::database_api,
    // Requests
    (get_all_webasset_issue_requests)
    (get_all_wire_out_holders)
-   (get_reward_queue)
-   (get_reward_queue_size)
+
 )

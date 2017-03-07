@@ -1553,6 +1553,8 @@ class wallet_api
        */
       vector<reward_queue_object> get_reward_queue() const;
 
+      vector<pair<uint32_t, reward_queue_object>> get_queue_submissions_with_pos(account_id_type account_id) const;
+
       void dbg_make_uia(string creator, string symbol);
       void dbg_make_mia(string creator, string symbol);
       void dbg_push_blocks( std::string src_filename, uint32_t count );
@@ -1766,6 +1768,8 @@ FC_API( graphene::wallet::wallet_api,
         // Requests:
         (get_all_webasset_issue_requests)
         (get_all_wire_out_holders)
+        // Queue:
         (get_reward_queue)
         (get_reward_queue_size)
+        (get_queue_submissions_with_pos)
       )

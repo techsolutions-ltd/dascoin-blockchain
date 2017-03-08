@@ -140,9 +140,10 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<blinded_balance_object> get_blinded_balances( const flat_set<commitment_type>& commitments )const;
 
       // Licenses:
+      optional<license_type_object> get_license_type(license_type_id_type license_id) const;
+      vector<license_type_object> get_license_types() const;
       vector<optional<license_type_object>> get_license_types(const vector<license_type_id_type>& license_type_ids) const;
       vector<optional<license_information_object>> get_license_information(const vector<account_id_type>& account_ids) const;
-
 
       // Cycles:
       share_type get_account_cycle_balance(const account_id_type account_id) const;
@@ -1870,9 +1871,33 @@ vector<blinded_balance_object> database_api_impl::get_blinded_balances( const fl
 //                                                                  //
 //////////////////////////////////////////////////////////////////////
 
-// TODO: refactor these two into template functions.
+// TODO: refactor into template method.
+optional<license_type_object> database_api_impl::get_license_type(license_type_id_type license_id) const
+{
+  const auto& idx = _db.get_index_type<license_type_index>().indices().get<by_id>();
+  auto it = idx.find(license_id);
+  if ( it != idx.end() ) 
+    return {*it};
+  return {};
+}
 
-vector<optional<license_type_object>> database_api_impl::get_license_types(const vector<license_type_id_type>& license_type_ids)const
+optional<license_type_object> database_api::get_license_type(license_type_id_type license_id) const
+{
+  return my->get_license_type(license_id);
+}
+
+vector<license_type_object> database_api_impl::get_license_types() const
+{
+   const auto& idx = _db.get_index_type<license_type_index>().indices().get<by_id>();
+   return vector<license_type_object>(idx.begin(), idx.end());
+}
+
+vector<license_type_object> database_api::get_license_types() const
+{
+   return my->get_license_types();
+}
+
+vector<optional<license_type_object>> database_api_impl::get_license_types(const vector<license_type_id_type>& license_type_ids) const
 {
    vector<optional<license_type_object>> result;
    result.reserve(license_type_ids.size());
@@ -1905,11 +1930,6 @@ vector<license_type_object> database_api::list_license_types_by_amount( const ui
 vector<optional<license_type_object>> database_api::lookup_license_type_names(const vector<string>& names_or_ids)const
 {
    return my->lookup_string_or_id<license_type_id_type, license_type_index, by_name>( names_or_ids );
-}
-
-vector<optional<license_type_object>> database_api::get_license_types(const vector<license_type_id_type>& vec_ids) const
-{
-   return my->get_license_types( vec_ids );
 }
 
 vector<optional<license_information_object>> database_api::get_license_information(const vector<account_id_type>& account_ids) const

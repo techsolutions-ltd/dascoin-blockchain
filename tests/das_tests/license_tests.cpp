@@ -58,6 +58,15 @@ BOOST_AUTO_TEST_CASE( license_information_unit_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( get_license_types_unit_test )
+{ try {
+
+  auto lic_vec = get_license_types();
+
+  BOOST_CHECK_EQUAL( lic_vec.size(), 18 );
+  
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

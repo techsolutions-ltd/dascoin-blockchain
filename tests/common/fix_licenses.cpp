@@ -68,4 +68,10 @@ const license_type_object& database_fixture::create_license_type(const string& k
 
 } FC_LOG_AND_RETHROW() }
 
+vector<license_type_object> database_fixture::get_license_types() const
+{
+  const auto& idx = db.get_index_type<license_type_index>().indices().get<by_id>();
+  return vector<license_type_object>(idx.begin(), idx.end());
+}
+
 } }  // namespace graphene::chain

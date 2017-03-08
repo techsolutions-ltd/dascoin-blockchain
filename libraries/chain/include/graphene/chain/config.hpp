@@ -203,3 +203,11 @@
 #define DASCOIN_INITIAL_FREQUENCY (200)
 
 #define DASCOIN_MIN_DASCOIN_REWARD_AMOUNT (0)  // TODO: update to production values.
+
+/**
+ * Reserved object ids with special meaning:
+ */
+///@{
+/// Represents invalid or non-existant license
+#define DASCOIN_NULL_LICENSE (graphene::chain::license_type_id_type(0))
+///@}

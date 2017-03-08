@@ -61,6 +61,10 @@ namespace graphene { namespace chain {
 
     extensions_type extensions;
 
+    submit_cycles_to_queue_operation() = default;
+    submit_cycles_to_queue_operation(account_id_type account, share_type amount)
+      : account(account), amount(amount) {}
+
     account_id_type fee_payer() const { return account; }
     void validate() const;
     share_type calculate_fee(const fee_parameters_type&) const { return 0; }

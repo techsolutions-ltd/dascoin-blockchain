@@ -511,13 +511,29 @@ namespace graphene { namespace chain {
      struct fee_parameters_type {};  // No fees are paid for this operation.
      asset fee;
 
+     string origin;  // Formed from dascoin_origin_kind.
+     optional<license_type_id_type> license;  // Valid when origin is chartered.
      account_id_type account;
-     share_type amount;
+     share_type cycle_amount;
+     frequency_type frequency;
+     share_type reward_amount;
+     time_point_sec time;
 
      extensions_type extensions;
 
      record_distribute_dascoin_operation() = default;
-     explicit record_distribute_dascoin_operation(account_id_type acc, share_type am): account(acc), amount(am) {}
+     explicit record_distribute_dascoin_operation(
+         string origin, optional<license_type_id_type> license,
+         account_id_type account, share_type cycle_amount,
+         frequency_type frequency, share_type reward_amount,
+         time_point_sec time)
+         : origin(origin),
+           license(license),
+           account(account),
+           cycle_amount(cycle_amount),
+           frequency(frequency),
+           reward_amount(reward_amount),
+           time(time) {}
 
      account_id_type fee_payer() const { return account; }
      share_type calculate_fee(const fee_parameters_type& k) const { return 0; }
@@ -647,7 +663,12 @@ FC_REFLECT( graphene::chain::asset_deny_issue_request_operation,
 FC_REFLECT( graphene::chain::record_distribute_dascoin_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::record_distribute_dascoin_operation,
             (fee)
+            (origin)
+            (license)
             (account)
-            (amount)
+            (cycle_amount)
+            (frequency)
+            (reward_amount)
+            (time)
             (extensions)
           )

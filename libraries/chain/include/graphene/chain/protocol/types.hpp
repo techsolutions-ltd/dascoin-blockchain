@@ -129,6 +129,13 @@ namespace graphene { namespace chain {
       CHAIN_AUTHORITY_KIND_COUNT
    };
 
+   enum dascoin_origin_kind
+   {
+     user_submit = 0,
+     charter_license = 1,
+     reserve_cycles = 2
+   };
+
    enum asset_issuer_permission_flags
    {
       charge_market_fee     = 0x01, /**< an issuer-specified percentage of all market trades in this asset is paid to the issuer */
@@ -488,6 +495,12 @@ REFLECT_ENUM_CHECK( graphene::chain::chain_authority_kind,
                     (pi_validator)
                     (wire_out_handler)
                     (CHAIN_AUTHORITY_KIND_COUNT)
+                  )
+
+REFLECT_ENUM_CHECK( graphene::chain::dascoin_origin_kind,
+                    (user_submit)
+                    (charter_license)
+                    (reserve_cycles)
                   )
 
 FC_REFLECT( graphene::chain::public_key_type, (key_data) )

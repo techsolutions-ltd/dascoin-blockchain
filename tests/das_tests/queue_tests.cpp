@@ -41,6 +41,58 @@ BOOST_AUTO_TEST_CASE( update_queue_parameters_unit_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( issue_chartered_license_unit_test )
+{ try {
+  VAULT_ACTOR(first)
+
+  const auto lic_id = get_license_type("standard-charter").id;
+
+  do_op(issue_license_operation(get_license_issuer_id(), first_id, lic_id,
+      10, 200, db.head_block_time()));
+
+  auto pos_vec = get_queue_submissions_with_pos(first_id);
+  BOOST_CHECK_EQUAL( pos_vec.size(), 1 );
+
+  uint32_t pos;
+  reward_queue_object rqo;
+  std::tie(pos, rqo) = pos_vec[0];
+  BOOST_CHECK_EQUAL( pos, 0 );
+
+  BOOST_CHECK_EQUAL( rqo.origin, "charter_license" );
+  BOOST_CHECK( rqo.license.valid() );
+  BOOST_CHECK( *rqo.license == lic_id );
+  BOOST_CHECK( rqo.account == first_id );
+  BOOST_CHECK_EQUAL( rqo.amount.value, 110 );
+  BOOST_CHECK_EQUAL( rqo.frequency.value, 200 );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( submit_cycles_unit_test )
+{ try {
+  VAULT_ACTOR(first)
+
+  adjust_frequency(200);
+
+  adjust_cycles(first_id, 200);
+    
+  do_op(submit_cycles_to_queue_operation(first_id, 100));
+
+  auto pos_vec = get_queue_submissions_with_pos(first_id);
+  BOOST_CHECK_EQUAL( pos_vec.size(), 1 );
+
+  uint32_t pos;
+  reward_queue_object rqo;
+  std::tie(pos, rqo) = pos_vec[0];
+  BOOST_CHECK_EQUAL( pos, 0 );
+
+  BOOST_CHECK_EQUAL( rqo.origin, "user_submit" );
+  BOOST_CHECK( !rqo.license.valid() );
+  BOOST_CHECK( rqo.account == first_id );
+  BOOST_CHECK_EQUAL( rqo.amount.value, 100 );
+  BOOST_CHECK_EQUAL( rqo.frequency.value, 200 );
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_CASE( get_queue_submissions_with_pos_unit_test )
 { try {
   VAULT_ACTORS((first)(second)(third)(fourth))
@@ -63,6 +115,8 @@ BOOST_AUTO_TEST_CASE( get_queue_submissions_with_pos_unit_test )
   reward_queue_object rqo;
   std::tie(pos, rqo) = pos_vec[0];
   BOOST_CHECK_EQUAL( pos, 0 );
+  BOOST_CHECK_EQUAL( rqo.origin, "reserve_cycles" );
+  BOOST_CHECK( !rqo.license.valid() );
   BOOST_CHECK( rqo.account == first_id );
   BOOST_CHECK_EQUAL( rqo.amount.value, 100 );
   BOOST_CHECK_EQUAL( rqo.frequency.value, 200 );
@@ -70,6 +124,8 @@ BOOST_AUTO_TEST_CASE( get_queue_submissions_with_pos_unit_test )
 
   std::tie(pos, rqo) = pos_vec[1];
   BOOST_CHECK_EQUAL( pos, 1 );
+  BOOST_CHECK_EQUAL( rqo.origin, "reserve_cycles" );
+  BOOST_CHECK( !rqo.license.valid() );
   BOOST_CHECK( rqo.account == first_id );
   BOOST_CHECK_EQUAL( rqo.amount.value, 120 );
   BOOST_CHECK_EQUAL( rqo.frequency.value, 200 );
@@ -79,18 +135,24 @@ BOOST_AUTO_TEST_CASE( get_queue_submissions_with_pos_unit_test )
 
   std::tie(pos, rqo) = pos_vec[0];
   BOOST_CHECK_EQUAL( pos, 2 );
+  BOOST_CHECK_EQUAL( rqo.origin, "reserve_cycles" );
+  BOOST_CHECK( !rqo.license.valid() );
   BOOST_CHECK( rqo.account == second_id );
   BOOST_CHECK_EQUAL( rqo.amount.value, 200 );
   BOOST_CHECK_EQUAL( rqo.frequency.value, 200 );
 
   std::tie(pos, rqo) = pos_vec[1];
   BOOST_CHECK_EQUAL( pos, 3 );
+  BOOST_CHECK_EQUAL( rqo.origin, "reserve_cycles" );
+  BOOST_CHECK( !rqo.license.valid() );
   BOOST_CHECK( rqo.account == second_id );
   BOOST_CHECK_EQUAL( rqo.amount.value, 210 );
   BOOST_CHECK_EQUAL( rqo.frequency.value, 200 );
 
   std::tie(pos, rqo) = pos_vec[2];
   BOOST_CHECK_EQUAL( pos, 4 );
+  BOOST_CHECK_EQUAL( rqo.origin, "reserve_cycles" );
+  BOOST_CHECK( !rqo.license.valid() );
   BOOST_CHECK( rqo.account == second_id );
   BOOST_CHECK_EQUAL( rqo.amount.value, 220 );
   BOOST_CHECK_EQUAL( rqo.frequency.value, 200 );
@@ -100,6 +162,8 @@ BOOST_AUTO_TEST_CASE( get_queue_submissions_with_pos_unit_test )
 
   std::tie(pos, rqo) = pos_vec[0];
   BOOST_CHECK_EQUAL( pos, 5 );
+  BOOST_CHECK_EQUAL( rqo.origin, "reserve_cycles" );
+  BOOST_CHECK( !rqo.license.valid() );
   BOOST_CHECK( rqo.account == third_id );
   BOOST_CHECK_EQUAL( rqo.amount.value, 300 );
   BOOST_CHECK_EQUAL( rqo.frequency.value, 200 );
@@ -109,6 +173,8 @@ BOOST_AUTO_TEST_CASE( get_queue_submissions_with_pos_unit_test )
 
   std::tie(pos, rqo) = pos_vec[0];
   BOOST_CHECK_EQUAL( pos, 6 );
+  BOOST_CHECK_EQUAL( rqo.origin, "reserve_cycles" );
+  BOOST_CHECK( !rqo.license.valid() );
   BOOST_CHECK( rqo.account == fourth_id );
   BOOST_CHECK_EQUAL( rqo.amount.value, 400 );
   BOOST_CHECK_EQUAL( rqo.frequency.value, 200 );
@@ -117,8 +183,10 @@ BOOST_AUTO_TEST_CASE( get_queue_submissions_with_pos_unit_test )
 
 BOOST_AUTO_TEST_CASE( basic_submit_reserved_cycles_to_queue_test )
 { try {
-  VAULT_ACTORS((first)(second)(third)(fourth))
-  generate_block();
+  VAULT_ACTOR(first)
+  VAULT_ACTOR(second)
+  VAULT_ACTOR(third)
+  VAULT_ACTOR(fourth)
 
   adjust_dascoin_reward(500 * DASCOIN_DEFAULT_ASSET_PRECISION);
   adjust_frequency(200);

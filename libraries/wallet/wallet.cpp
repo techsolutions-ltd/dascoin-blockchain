@@ -2411,10 +2411,7 @@ public:
 
    optional<license_type_object> find_license_type(license_type_id_type id)const
    {
-      auto rec = _remote_db->get_license_types({id}).front();
-      if( rec )
-         _license_type_cache[id] = *rec;
-      return rec;
+      return _remote_db->get_license_type(id);
    }
 
    optional<license_type_object> find_license_type(string str_or_id)const
@@ -4378,14 +4375,9 @@ vector<blind_receipt> wallet_api::blind_history( string key_or_account )
 //                              //
 //////////////////////////////////
 
-vector<license_type_object> wallet_api::list_license_types_by_name(const string& lowerbound, uint32_t limit)const
+vector<license_type_object> wallet_api::get_license_types() const
 {
-   return my->_remote_db->list_license_types_by_name( lowerbound, limit );
-}
-
-vector<license_type_object> wallet_api::list_license_types_by_amount(const uint32_t lowerbound, uint32_t limit)const
-{
-   return my->_remote_db->list_license_types_by_amount( lowerbound, limit );
+   return my->_remote_db->get_license_types();
 }
 
 signed_transaction wallet_api::issue_license( const string& issuer, const string& account, const string& license,

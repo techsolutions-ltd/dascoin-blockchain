@@ -567,20 +567,12 @@ class database_api
        */
       vector<blinded_balance_object> get_blinded_balances( const flat_set<commitment_type>& commitments )const;
 
-      //////////////////////////
-      //                      //
-      //  LICENSES:           //
-      //                      //
-      //////////////////////////
+      //////////////
+      // Licenses //
+      //////////////
 
-      /**
-       * @brief Get a list of license types based on id's.
-       * @param license_type_ids Id's of the license types to retrieve.
-       * @return The license types corresponding to the provided id's.
-       *
-       * This function has semantics identical to @ref get_objects.
-       */
-      vector<optional<license_type_object>> get_license_types(const vector<license_type_id_type>& license_type_ids)const;
+      optional<license_type_object> get_license_type(license_type_id_type) const;
+      vector<license_type_object> get_license_types() const;
 
       /**
        * @brief Get license types active on the blockchain by name.
@@ -781,6 +773,7 @@ FC_API( graphene::app::database_api,
    (get_blinded_balances)
 
    // Licenses
+   (get_license_type)
    (get_license_types)
    (list_license_types_by_name)
    (list_license_types_by_amount)

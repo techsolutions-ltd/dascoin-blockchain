@@ -1476,27 +1476,7 @@ class wallet_api
         bool broadcast /* false */
         );
 
-      /** Lists all license types active on the blockchain, sorted by name.
-       *
-       * To list all license types, pass the empty string \c "" for the lowerbound to start
-       * at the beginning of the list, and iterate as necessary.
-       *
-       * @param lower_bound_name    The name of the first license type to include in the list.
-       * @param limit               The maximum number of license types to return (max: 100).
-       * @return                    List of license type objects, ordered by name.
-       */
-      vector<license_type_object> list_license_types_by_name( const string& lower_bound_name, uint32_t limit )const;
-
-      /** Lists all license types active on the blockchain, sorted by amount.
-       *
-       * To list all license types, pass the empty string \c "" for the lowerbound to start
-       * at the beginning of the list, and iterate as necessary.
-       *
-       * @param lower_bound_name    The name of the first license type to include in the list.
-       * @param limit               The maximum number of license types to return (max: 100).
-       * @return                    List of license type objects, ordered by amount.
-       */
-      vector<license_type_object> list_license_types_by_amount( const uint32_t lower_bound_amount, uint32_t limit )const;
+      vector<license_type_object> get_license_types() const;
 
       vector<optional<license_information_object>> get_license_information(const vector<account_id_type>& account_ids) const;
 
@@ -1666,8 +1646,7 @@ FC_API( graphene::wallet::wallet_api,
         (list_accounts)
         (list_account_balances)
         (list_assets)
-        (list_license_types_by_name)
-        (list_license_types_by_amount)
+        (get_license_types)
         (import_key)
         (import_accounts)
         (import_account_keys)

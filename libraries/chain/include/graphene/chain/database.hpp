@@ -587,12 +587,6 @@ namespace graphene { namespace chain {
          void distribute_issue_requested_assets();
          void mint_dascoin_rewards();
          void reset_spending_limits();
-
-public:
-        // TODO: move this to a more appropriate place! Use a public interface...
-         const reward_queue_object& submit_cycles_to_queue(account_id_type beneficiary,
-                                                           share_type amount,
-                                                           frequency_type frequency_lock);
 private:
 
          ///Steps performed only at maintenance intervals

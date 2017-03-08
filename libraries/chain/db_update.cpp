@@ -523,14 +523,9 @@ void database::mint_dascoin_rewards()
 
     while ( to_distribute > 0 && !queue.empty() )
     {
-      const auto& distribute = [this](account_id_type account_id, share_type amount){
-        issue_asset(account_id, amount, get_dascoin_asset_id(), 0);
-        // Emit a virtual op:
-        push_applied_operation(record_distribute_dascoin_operation(account_id, amount));
-      };
-
       const auto& el = *queue.begin();
-      account_id_type el_receiver_id = el.account;
+      account_id_type el_account_id = el.account;
+
       share_type el_dascoin_amount = cycles_to_dascoin(el.amount, el.frequency);
       if ( to_distribute >= el_dascoin_amount )
         remove(el);
@@ -542,7 +537,14 @@ void database::mint_dascoin_rewards()
           rqo.amount -= cycles;
         });
       }
-      distribute(el_receiver_id, el_dascoin_amount);
+
+      // TODO: refactor this call?
+      issue_asset(el_account_id, el_dascoin_amount, get_dascoin_asset_id(), 0);
+      // Emit a virtual operation:
+      push_applied_operation(record_distribute_dascoin_operation(el.origin, el.license, el_account_id,
+                                                                 el.amount, el.frequency, 
+                                                                 el_dascoin_amount, head_block_time()));
+
       to_distribute -= el_dascoin_amount;
     }
 
@@ -550,21 +552,6 @@ void database::mint_dascoin_rewards()
       dgpo.next_dascoin_reward_time = head_block_time() + params.reward_interval_time_seconds;
     });
   }
-
-} FC_CAPTURE_AND_RETHROW() }
-
-// TODO: move this to a more appropriate place!
-const reward_queue_object& database::submit_cycles_to_queue(account_id_type beneficiary,
-                                                            share_type amount, 
-                                                            frequency_type frequency_lock)
-{ try {
-
-  return create<reward_queue_object>([&](reward_queue_object& rqo){
-    rqo.account = beneficiary;
-    rqo.amount = amount;
-    rqo.frequency = frequency_lock;
-    rqo.time = head_block_time();
-  });
 
 } FC_CAPTURE_AND_RETHROW() }
 

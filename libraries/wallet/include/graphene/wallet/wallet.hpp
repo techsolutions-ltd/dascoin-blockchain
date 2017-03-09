@@ -1480,6 +1480,8 @@ class wallet_api
 
       vector<optional<license_information_object>> get_license_information(const vector<account_id_type>& account_ids) const;
 
+
+
       ///////////////////////////////
       /// CYCLES:                 ///
       ///////////////////////////////
@@ -1492,6 +1494,11 @@ class wallet_api
       share_type get_account_cycle_balance( const string& account )const;
 
       vector<cycle_agreement> get_total_account_cycles(const string& account) const;
+
+      signed_transaction update_queue_parameters(optional<bool> enable_dascoin_queue,
+                                                 optional<uint32_t> reward_interval_time_seconds,
+                                                 optional<uint32_t> dascoin_reward_amount,
+                                                 bool broadcast) const;
 
       order_book get_order_book( const string& base, const string& quote, unsigned limit = 50);
 
@@ -1743,6 +1750,7 @@ FC_API( graphene::wallet::wallet_api,
         (get_account_cycle_balance)
         (get_total_account_cycles)
         (get_order_book)
+        (update_queue_parameters)
         (wire_out)
         // Requests:
         (get_all_webasset_issue_requests)

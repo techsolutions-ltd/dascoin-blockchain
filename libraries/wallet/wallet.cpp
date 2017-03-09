@@ -2487,6 +2487,24 @@ public:
       return sign_transaction( tx, broadcast );
    }
 
+   signed_transaction update_queue_parameters(
+       optional<bool> enable_dascoin_queue,
+       optional<uint32_t> reward_interval_time_seconds,
+       optional<uint32_t> dascoin_reward_amount, bool broadcast) {
+     
+     auto issuer_id = _remote_db->get_global_properties().authorities.license_issuer;
+
+     signed_transaction tx;
+     tx.operations.push_back(update_queue_parameters_operation(
+         issuer_id, enable_dascoin_queue, reward_interval_time_seconds,
+         dascoin_reward_amount));
+     set_operation_fees(
+         tx, _remote_db->get_global_properties().parameters.current_fees);
+     tx.validate();
+
+     return sign_transaction(tx, broadcast);
+   }
+
    signed_transaction wire_out(const string& account_name, share_type amount, bool broadcast)
    {
       auto account = get_account(account_name);
@@ -4385,6 +4403,15 @@ signed_transaction wallet_api::issue_license( const string& issuer, const string
                                               bool broadcast )
 {
    return my->issue_license( issuer, account, license, bonus_percentage, account_frequency, broadcast );
+}
+
+signed_transaction wallet_api::update_queue_parameters(
+    optional<bool> enable_dascoin_queue,
+    optional<uint32_t> reward_interval_time_seconds,
+    optional<uint32_t> dascoin_reward_amount, bool broadcast) const {
+  return my->update_queue_parameters(enable_dascoin_queue,
+                                     reward_interval_time_seconds,
+                                     dascoin_reward_amount, broadcast);
 }
 
 vector<optional<license_information_object>> wallet_api::get_license_information(const vector<account_id_type>& account_ids) const

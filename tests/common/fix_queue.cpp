@@ -41,6 +41,15 @@ namespace graphene { namespace chain {
     });
   }
 
+  void database_fixture::toggle_reward_queue(bool state)
+  { try {
+
+    db.modify(get_global_properties(), [state](global_property_object& gpo){
+      gpo.parameters.enable_dascoin_queue = state;
+    });
+
+  } FC_LOG_AND_RETHROW() };
+
   void database_fixture::submit_cycles(account_id_type account_id, share_type amount)
   { try {
 
@@ -55,59 +64,5 @@ namespace graphene { namespace chain {
     db.push_transaction(trx, ~0);
 
   } FC_LOG_AND_RETHROW() };
-
-  vector<reward_queue_object> database_fixture::get_reward_queue_objects_by_time()
-  { try {
-
-    vector<reward_queue_object> result;
-    const auto& idx = db.get_index_type<reward_queue_index>().indices().get<by_time>();
-    for ( auto req: idx )
-      result.emplace_back(req);
-    return result;
-
-  } FC_LOG_AND_RETHROW() };
-
-  vector<reward_queue_object> database_fixture::get_reward_queue_objects_by_account(account_id_type account_id)
-  { try {
-
-    vector<reward_queue_object> result;
-    const auto& idx = db.get_index_type<reward_queue_index>().indices().get<by_account>();
-    for( auto itr = idx.find(boost::make_tuple(account_id)); itr != idx.end() && itr->account == account_id; itr++)
-      result.emplace_back(*itr);
-    return result;
-
-  } FC_LOG_AND_RETHROW() };
-
-  void database_fixture::toggle_reward_queue(bool state)
-  { try {
-
-    db.modify(get_global_properties(), [state](global_property_object& gpo){
-      gpo.parameters.enable_dascoin_queue = state;
-    });
-
-  } FC_LOG_AND_RETHROW() };
-
-  uint32_t database_fixture::get_reward_queue_size() const
-  {
-    return db.get_index_type<reward_queue_index>().indices().size();
-  }
-
-  vector<pair<uint32_t, reward_queue_object>> database_fixture::get_queue_submissions_with_pos(account_id_type account_id) const
-  {
-    vector<pair<uint32_t, reward_queue_object>> result;
-
-    const auto& queue_multi_idx = db.get_index_type<reward_queue_index>().indices();
-    const auto& account_idx = queue_multi_idx.get<by_account>();
-    const auto& time_idx = queue_multi_idx.get<by_time>();
-
-    const auto& range = account_idx.equal_range(account_id);
-    for ( auto it = range.first; it != range.second; ++it )
-    {
-        uint32_t pos = distance(time_idx.begin(), queue_multi_idx.project<by_time>(it));
-        result.emplace_back(pos, *it);
-    }
-
-    return result;
-  }
 
 } }  // graphene::chain

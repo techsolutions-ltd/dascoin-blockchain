@@ -4,6 +4,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include <graphene/chain/database.hpp>
+#include <graphene/chain/access_layer.hpp>
 #include <graphene/chain/exceptions.hpp>
 
 #include <graphene/chain/queue_objects.hpp>
@@ -50,7 +51,7 @@ BOOST_AUTO_TEST_CASE( issue_chartered_license_unit_test )
   do_op(issue_license_operation(get_license_issuer_id(), first_id, lic_id,
       10, 200, db.head_block_time()));
 
-  auto pos_vec = get_queue_submissions_with_pos(first_id);
+  auto pos_vec = _dal.get_queue_submissions_with_pos(first_id);
   BOOST_CHECK_EQUAL( pos_vec.size(), 1 );
 
   uint32_t pos;
@@ -77,7 +78,7 @@ BOOST_AUTO_TEST_CASE( submit_cycles_unit_test )
     
   do_op(submit_cycles_to_queue_operation(first_id, 100));
 
-  auto pos_vec = get_queue_submissions_with_pos(first_id);
+  auto pos_vec = _dal.get_queue_submissions_with_pos(first_id);
   BOOST_CHECK_EQUAL( pos_vec.size(), 1 );
 
   uint32_t pos;
@@ -108,7 +109,7 @@ BOOST_AUTO_TEST_CASE( get_queue_submissions_with_pos_unit_test )
 
   do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), fourth_id, 400, 200));
 
-  auto pos_vec = get_queue_submissions_with_pos(first_id);
+  auto pos_vec = _dal.get_queue_submissions_with_pos(first_id);
   BOOST_CHECK_EQUAL( pos_vec.size(), 2 );
 
   uint32_t pos;
@@ -130,7 +131,7 @@ BOOST_AUTO_TEST_CASE( get_queue_submissions_with_pos_unit_test )
   BOOST_CHECK_EQUAL( rqo.amount.value, 120 );
   BOOST_CHECK_EQUAL( rqo.frequency.value, 200 );
 
-  pos_vec = get_queue_submissions_with_pos(second_id);
+  pos_vec = _dal.get_queue_submissions_with_pos(second_id);
   BOOST_CHECK_EQUAL( pos_vec.size(), 3 );
 
   std::tie(pos, rqo) = pos_vec[0];
@@ -157,7 +158,7 @@ BOOST_AUTO_TEST_CASE( get_queue_submissions_with_pos_unit_test )
   BOOST_CHECK_EQUAL( rqo.amount.value, 220 );
   BOOST_CHECK_EQUAL( rqo.frequency.value, 200 );
 
-  pos_vec = get_queue_submissions_with_pos(third_id);
+  pos_vec = _dal.get_queue_submissions_with_pos(third_id);
   BOOST_CHECK_EQUAL( pos_vec.size(), 1 );
 
   std::tie(pos, rqo) = pos_vec[0];
@@ -168,7 +169,7 @@ BOOST_AUTO_TEST_CASE( get_queue_submissions_with_pos_unit_test )
   BOOST_CHECK_EQUAL( rqo.amount.value, 300 );
   BOOST_CHECK_EQUAL( rqo.frequency.value, 200 );
 
-  pos_vec = get_queue_submissions_with_pos(fourth_id);
+  pos_vec = _dal.get_queue_submissions_with_pos(fourth_id);
   BOOST_CHECK_EQUAL( pos_vec.size(), 1 );
 
   std::tie(pos, rqo) = pos_vec[0];
@@ -199,7 +200,7 @@ BOOST_AUTO_TEST_CASE( basic_submit_reserved_cycles_to_queue_test )
   // Queue looks like this:
   // 200 --> 400 --> 200 --> 600
 
-  BOOST_CHECK_EQUAL( get_reward_queue_size(), 4 );
+  BOOST_CHECK_EQUAL( _dal.get_reward_queue_size(), 4 );
 
   toggle_reward_queue(true);
 
@@ -214,14 +215,14 @@ BOOST_AUTO_TEST_CASE( basic_submit_reserved_cycles_to_queue_test )
   BOOST_CHECK_EQUAL( get_balance(third_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
   BOOST_CHECK_EQUAL( get_balance(fourth_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
 
-  BOOST_CHECK_EQUAL( get_reward_queue_size(), 1 );
+  BOOST_CHECK_EQUAL( _dal.get_reward_queue_size(), 1 );
 
   // Wait for the rest if the cycles to be distributed:
   generate_blocks(db.head_block_time() + fc::seconds(get_chain_parameters().reward_interval_time_seconds));
 
   BOOST_CHECK_EQUAL( get_balance(fourth_id, get_dascoin_asset_id()), 300 * DASCOIN_DEFAULT_ASSET_PRECISION );
 
-  BOOST_CHECK_EQUAL( get_reward_queue_size(), 0 );
+  BOOST_CHECK_EQUAL( _dal.get_reward_queue_size(), 0 );
 
 } FC_LOG_AND_RETHROW() }
 
@@ -246,7 +247,7 @@ BOOST_AUTO_TEST_CASE( basic_submit_cycles_to_queue_test )
   // Queue looks like this:
   // 200 --> 400 --> 200 --> 600
 
-  BOOST_CHECK_EQUAL( get_reward_queue_size(), 4 );
+  BOOST_CHECK_EQUAL( _dal.get_reward_queue_size(), 4 );
 
   // Wait for the cycles to be distributed:
   generate_blocks(db.head_block_time() + fc::seconds(get_chain_parameters().reward_interval_time_seconds));
@@ -259,14 +260,14 @@ BOOST_AUTO_TEST_CASE( basic_submit_cycles_to_queue_test )
   BOOST_CHECK_EQUAL( get_balance(third_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
   BOOST_CHECK_EQUAL( get_balance(fourth_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
 
-  BOOST_CHECK_EQUAL( get_reward_queue_size(), 1 );
+  BOOST_CHECK_EQUAL( _dal.get_reward_queue_size(), 1 );
 
   // Wait for the cycles to be distributed:
   generate_blocks(db.head_block_time() + fc::seconds(get_chain_parameters().reward_interval_time_seconds));
 
   BOOST_CHECK_EQUAL( get_balance(fourth_id, get_dascoin_asset_id()), 300 * DASCOIN_DEFAULT_ASSET_PRECISION );
 
-  BOOST_CHECK_EQUAL( get_reward_queue_size(), 0 );
+  BOOST_CHECK_EQUAL( _dal.get_reward_queue_size(), 0 );
 
 } FC_LOG_AND_RETHROW() }
 
@@ -293,7 +294,7 @@ BOOST_AUTO_TEST_CASE( basic_chartered_license_to_queue_test )
   // Queue looks like this:
   // 200 --> 400 --> 200 --> 600
 
-  BOOST_CHECK_EQUAL( get_reward_queue_size(), 4 );
+  BOOST_CHECK_EQUAL( _dal.get_reward_queue_size(), 4 );
 
   toggle_reward_queue(true);
 
@@ -308,7 +309,7 @@ BOOST_AUTO_TEST_CASE( basic_chartered_license_to_queue_test )
   BOOST_CHECK_EQUAL( get_balance(third_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
   BOOST_CHECK_EQUAL( get_balance(fourth_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
 
-  BOOST_CHECK_EQUAL( get_reward_queue_size(), 1 );
+  BOOST_CHECK_EQUAL( _dal.get_reward_queue_size(), 1 );
 
   // Wait for the rest if the cycles to be distributed:
   generate_blocks(db.head_block_time() + fc::seconds(get_chain_parameters().reward_interval_time_seconds));
@@ -318,7 +319,7 @@ BOOST_AUTO_TEST_CASE( basic_chartered_license_to_queue_test )
   BOOST_CHECK_EQUAL( get_balance(third_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
   BOOST_CHECK_EQUAL( get_balance(fourth_id, get_dascoin_asset_id()), 300 * DASCOIN_DEFAULT_ASSET_PRECISION );
 
-  BOOST_CHECK_EQUAL( get_reward_queue_size(), 0 );
+  BOOST_CHECK_EQUAL( _dal.get_reward_queue_size(), 0 );
 
 } FC_LOG_AND_RETHROW() }
 

@@ -50,19 +50,4 @@ namespace graphene { namespace chain {
 
   } FC_LOG_AND_RETHROW() };
 
-  void database_fixture::submit_cycles(account_id_type account_id, share_type amount)
-  { try {
-
-    submit_cycles_to_queue_operation op;
-    op.account = account_id;
-    op.amount = amount;
-
-    set_expiration(db, trx);
-    trx.operations.clear();
-    trx.operations.push_back(op);
-    trx.validate();
-    db.push_transaction(trx, ~0);
-
-  } FC_LOG_AND_RETHROW() };
-
 } }  // graphene::chain

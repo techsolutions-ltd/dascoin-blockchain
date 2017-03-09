@@ -317,12 +317,10 @@ struct database_fixture {
                                                   const public_key_type& key = public_key_type());
 
    // fix_licenses.cpp
-   const license_type_object& get_license_type(const string& name) const;
    const license_type_object& create_license_type(const string& kind, const string& name, share_type amount, 
                                                   upgrade_multiplier_type balance_multipliers,
                                                   upgrade_multiplier_type requeue_multipliers,
                                                   upgrade_multiplier_type return_multipliers);
-   vector<license_type_object> get_license_types() const;
 
    // fix_cycles.cpp
    share_type get_cycle_balance(const account_id_type owner) const;
@@ -376,7 +374,6 @@ struct database_fixture {
    // fix_queue.cpp
    void adjust_frequency(frequency_type f);
    void adjust_dascoin_reward(uint32_t amount);
-   void submit_cycles(account_id_type account_id, share_type amount);
    void toggle_reward_queue(bool state);
 };
 

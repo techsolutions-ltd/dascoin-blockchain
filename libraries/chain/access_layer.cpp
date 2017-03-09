@@ -10,6 +10,17 @@ global_property_object database_access_layer::get_global_properties() const
   return _db.get(global_property_id_type());
 }
 
+// License:
+optional<license_type_object> database_access_layer::get_license_type(string name) const
+{
+  return get_opt<string, license_type_index, by_name>(name);
+}
+
+vector<license_type_object> database_access_layer::get_license_types() const
+{
+  return get_all<license_type_index, by_id>();
+}
+
 uint32_t database_access_layer::get_reward_queue_size() const
 {
   return size<reward_queue_index>();

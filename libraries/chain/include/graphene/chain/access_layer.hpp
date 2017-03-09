@@ -6,6 +6,7 @@
 #include <graphene/chain/database.hpp>
 
 #include <fc/optional.hpp>
+#include <fc/string.hpp>
 
 #include <vector>
 
@@ -16,6 +17,7 @@ class global_property_object;
 class reward_queue_object;
 
 using fc::optional;
+using fc::string;
 
 class database_access_layer
 {
@@ -30,8 +32,8 @@ public:
     return _db.get_index_type<IndexType>().indices().size();
   }
 
-  template<typename IdType, typename IndexType, typename IndexBy>
-  optional<typename IndexType::object_type> get_opt(IdType id) const
+  template<typename QueryType, typename IndexType, typename IndexBy>
+  optional<typename IndexType::object_type> get_opt(QueryType id) const
   {
     const auto& idx = _db.get_index_type<IndexType>().indices().get<IndexBy>();
     auto it = idx.find(id);
@@ -49,6 +51,10 @@ public:
 
   // Global objects:
   global_property_object get_global_properties() const;
+
+  // License:
+  vector<license_type_object> get_license_types() const;
+  optional<license_type_object> get_license_type(string name) const;
 
   // Queue:
   uint32_t get_reward_queue_size() const;

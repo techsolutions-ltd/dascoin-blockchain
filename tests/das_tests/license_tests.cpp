@@ -32,8 +32,10 @@ BOOST_AUTO_TEST_CASE( license_information_unit_test )
 { try {
   VAULT_ACTOR(vault);
 
+  auto standard_charter = *(_dal.get_license_type("standard-charter"));
+
   time_point_sec issue_time = db.head_block_time();
-  do_op(issue_license_operation(get_license_issuer_id(), vault_id, get_license_type("standard-charter").id,
+  do_op(issue_license_operation(get_license_issuer_id(), vault_id, standard_charter.id,
         50, 200, issue_time));
 
   BOOST_CHECK( vault.license_information.valid() );
@@ -48,7 +50,7 @@ BOOST_AUTO_TEST_CASE( license_information_unit_test )
 
   const auto& license_record = license_history[0];
 
-  BOOST_CHECK( license_record.license == get_license_type("standard-charter").id );
+  BOOST_CHECK( license_record.license == standard_charter.id );
   BOOST_CHECK_EQUAL( license_record.amount.value, 150 );
   BOOST_CHECK_EQUAL( license_record.base_amount.value, 100 );
   BOOST_CHECK_EQUAL( license_record.bonus_percent.value, 50 );
@@ -61,9 +63,9 @@ BOOST_AUTO_TEST_CASE( license_information_unit_test )
 BOOST_AUTO_TEST_CASE( get_license_types_unit_test )
 { try {
 
-  auto lic_vec = get_license_types();
+  auto lic_vec = _dal.get_license_types();
 
-  BOOST_CHECK_EQUAL( lic_vec.size(), 18 );
+  BOOST_CHECK_EQUAL( lic_vec.size(), 19 );
   
 } FC_LOG_AND_RETHROW() }
 

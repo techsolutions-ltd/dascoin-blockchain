@@ -46,9 +46,9 @@ BOOST_AUTO_TEST_CASE( issue_chartered_license_unit_test )
 { try {
   VAULT_ACTOR(first)
 
-  const auto lic_id = get_license_type("standard-charter").id;
+  auto lic_typ = *(_dal.get_license_type("standard-charter"));
 
-  do_op(issue_license_operation(get_license_issuer_id(), first_id, lic_id,
+  do_op(issue_license_operation(get_license_issuer_id(), first_id, lic_typ.id,
       10, 200, db.head_block_time()));
 
   auto pos_vec = _dal.get_queue_submissions_with_pos(first_id);
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE( issue_chartered_license_unit_test )
 
   BOOST_CHECK_EQUAL( rqo.origin, "charter_license" );
   BOOST_CHECK( rqo.license.valid() );
-  BOOST_CHECK( *rqo.license == lic_id );
+  BOOST_CHECK( *rqo.license == lic_typ.id );
   BOOST_CHECK( rqo.account == first_id );
   BOOST_CHECK_EQUAL( rqo.amount.value, 110 );
   BOOST_CHECK_EQUAL( rqo.frequency.value, 200 );
@@ -239,10 +239,10 @@ BOOST_AUTO_TEST_CASE( basic_submit_cycles_to_queue_test )
   adjust_cycles(third_id, 200);
   adjust_cycles(fourth_id, 600);
 
-  submit_cycles(first_id, 200);
-  submit_cycles(second_id, 400);
-  submit_cycles(third_id, 200);
-  submit_cycles(fourth_id, 600);
+  push_op(submit_cycles_to_queue_operation(first_id, 200), false);
+  push_op(submit_cycles_to_queue_operation(second_id, 400), false);
+  push_op(submit_cycles_to_queue_operation(third_id, 200), false);
+  push_op(submit_cycles_to_queue_operation(fourth_id, 600), false);
 
   // Queue looks like this:
   // 200 --> 400 --> 200 --> 600
@@ -277,7 +277,8 @@ BOOST_AUTO_TEST_CASE( basic_chartered_license_to_queue_test )
   const auto& issue =  [&](account_id_type account_id, const string& license_name, share_type bonus_percentage, 
                            share_type frequency_lock)
   {
-    do_op(issue_license_operation(get_license_issuer_id(), account_id, get_license_type(license_name).id,
+    auto lic_typ = *(_dal.get_license_type(license_name));
+    do_op(issue_license_operation(get_license_issuer_id(), account_id, lic_typ.id,
         bonus_percentage, frequency_lock, db.head_block_time()));
   };
 

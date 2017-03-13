@@ -25,6 +25,8 @@
 #include <graphene/app/database_api.hpp>
 #include <graphene/chain/get_config.hpp>
 
+#include <graphene/chain/access_layer.hpp>
+
 #include <fc/bloom_filter.hpp>
 #include <fc/smart_ref_impl.hpp>
 
@@ -150,6 +152,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<cycle_agreement> get_total_account_cycles(account_id_type id) const;
 
       // Queue:
+      vector<reward_queue_object> get_reward_queue() const;
       vector<pair<uint32_t, reward_queue_object>> get_queue_submissions_with_pos(account_id_type account_id) const;
       uint32_t get_reward_queue_size() const;
 
@@ -298,6 +301,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       boost::signals2::scoped_connection                                                                                           _pending_trx_connection;
       map< pair<asset_id_type,asset_id_type>, std::function<void(const variant&)> >      _market_subscriptions;
       graphene::chain::database& _db;
+      database_access_layer _dal;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -311,7 +315,7 @@ database_api::database_api( graphene::chain::database& db )
 
 database_api::~database_api() {}
 
-database_api_impl::database_api_impl( graphene::chain::database& db ):_db(db)
+database_api_impl::database_api_impl( graphene::chain::database& db ): _db(db), _dal(db)
 {
    wlog("creating database api ${x}", ("x",int64_t(this)) );
    _change_connection = _db.changed_objects.connect([this](const vector<object_id_type>& ids) {
@@ -503,7 +507,7 @@ global_property_object database_api::get_global_properties()const
 
 global_property_object database_api_impl::get_global_properties()const
 {
-   return _db.get(global_property_id_type());
+  return _dal.get_global_properties();
 }
 
 fc::variant_object database_api::get_config()const
@@ -1871,14 +1875,9 @@ vector<blinded_balance_object> database_api_impl::get_blinded_balances( const fl
 //                                                                  //
 //////////////////////////////////////////////////////////////////////
 
-// TODO: refactor into template method.
 optional<license_type_object> database_api_impl::get_license_type(license_type_id_type license_id) const
 {
-  const auto& idx = _db.get_index_type<license_type_index>().indices().get<by_id>();
-  auto it = idx.find(license_id);
-  if ( it != idx.end() ) 
-    return {*it};
-  return {};
+  return _dal.get_opt<license_type_id_type, license_type_index, by_id>(license_id);
 }
 
 optional<license_type_object> database_api::get_license_type(license_type_id_type license_id) const
@@ -2004,9 +2003,14 @@ optional<uint8_t> database_api::get_account_pi_level(const account_id_type id) c
 //                                                                  //
 //////////////////////////////////////////////////////////////////////
 
+vector<reward_queue_object> database_api_impl::get_reward_queue() const
+{
+  return _dal.get_all<reward_queue_index, by_time>();
+}
+
 vector<reward_queue_object> database_api::get_reward_queue() const
 {
-   return my->list_all_objects<reward_queue_index, by_time>();
+   return my->get_reward_queue();
 }
 
 uint32_t database_api::get_reward_queue_size() const
@@ -2016,7 +2020,7 @@ uint32_t database_api::get_reward_queue_size() const
 
 uint32_t database_api_impl::get_reward_queue_size() const
 {
-   return _db.get_index_type<reward_queue_index>().indices().size();
+   return _dal.get_reward_queue_size();
 }
 
 vector<pair<uint32_t, reward_queue_object>> database_api::get_queue_submissions_with_pos(account_id_type account_id) const

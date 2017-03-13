@@ -33,15 +33,6 @@ using namespace graphene::chain::test;
 
 namespace graphene { namespace chain {
 
-const license_type_object& database_fixture::get_license_type(const string& name) const
-{ try {
-  const auto& idx = db.get_index_type<license_type_index>().indices().get<by_name>();
-  const auto itr = idx.find(name);
-  FC_ASSERT( itr != idx.end() );
-  return *itr;
-
-} FC_LOG_AND_RETHROW() }
-
 const license_type_object& database_fixture::create_license_type(const string& kind, const string& name,
                                                                  share_type amount, 
                                                                  upgrade_multiplier_type balance_multipliers,
@@ -67,11 +58,5 @@ const license_type_object& database_fixture::create_license_type(const string& k
   return db.get<license_type_object>( ptx.operation_results[0].get<object_id_type>() );
 
 } FC_LOG_AND_RETHROW() }
-
-vector<license_type_object> database_fixture::get_license_types() const
-{
-  const auto& idx = db.get_index_type<license_type_index>().indices().get<by_id>();
-  return vector<license_type_object>(idx.begin(), idx.end());
-}
 
 } }  // namespace graphene::chain

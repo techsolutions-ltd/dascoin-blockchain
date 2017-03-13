@@ -25,6 +25,7 @@
 
 #include <graphene/app/application.hpp>
 #include <graphene/chain/database.hpp>
+#include <graphene/chain/access_layer.hpp>
 #include <fc/io/json.hpp>
 #include <fc/smart_ref_impl.hpp>
 
@@ -158,6 +159,7 @@ struct database_fixture {
    graphene::app::application app;
    genesis_state_type genesis_state;
    chain::database &db;
+   database_access_layer _dal;
    signed_transaction trx;
    public_key_type committee_key;
    account_id_type committee_account;
@@ -315,12 +317,10 @@ struct database_fixture {
                                                   const public_key_type& key = public_key_type());
 
    // fix_licenses.cpp
-   const license_type_object& get_license_type(const string& name) const;
    const license_type_object& create_license_type(const string& kind, const string& name, share_type amount, 
                                                   upgrade_multiplier_type balance_multipliers,
                                                   upgrade_multiplier_type requeue_multipliers,
                                                   upgrade_multiplier_type return_multipliers);
-   vector<license_type_object> get_license_types() const;
 
    // fix_cycles.cpp
    share_type get_cycle_balance(const account_id_type owner) const;
@@ -374,13 +374,7 @@ struct database_fixture {
    // fix_queue.cpp
    void adjust_frequency(frequency_type f);
    void adjust_dascoin_reward(uint32_t amount);
-   void submit_cycles(account_id_type account_id, share_type amount);
-   vector<reward_queue_object> get_reward_queue_objects_by_time();
-   vector<reward_queue_object> get_reward_queue_objects_by_account(account_id_type account_id);
    void toggle_reward_queue(bool state);
-   uint32_t get_reward_queue_size() const;
-   vector<pair<uint32_t, reward_queue_object>> get_queue_submissions_with_pos(account_id_type account_id) const;
-
 };
 
 namespace test {

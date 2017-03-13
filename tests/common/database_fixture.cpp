@@ -121,7 +121,7 @@ void database_fixture::init_genesis_state()
 }
 
 database_fixture::database_fixture()
-   : app(), db( *app.chain_database() )
+   : app(), db( *app.chain_database() ), _dal(db)
 {
    try {
    int argc = boost::unit_test::framework::master_test_suite().argc;

@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE( submit_cycles_unit_test )
 
 } FC_LOG_AND_RETHROW() }
 
-BOOST_AUTO_TEST_CASE( get_queue_submissions_with_pos_unit_test )
+/*BOOST_AUTO_TEST_CASE( get_queue_submissions_with_pos_unit_test )
 { try {
   VAULT_ACTORS((first)(second)(third)(fourth))
 
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE( get_queue_submissions_with_pos_unit_test )
   BOOST_CHECK_EQUAL( rqo.amount.value, 400 );
   BOOST_CHECK_EQUAL( rqo.frequency.value, 200 );
 
-} FC_LOG_AND_RETHROW() }
+} FC_LOG_AND_RETHROW() }*/
 
 BOOST_AUTO_TEST_CASE( basic_submit_reserved_cycles_to_queue_test )
 { try {
@@ -239,10 +239,10 @@ BOOST_AUTO_TEST_CASE( basic_submit_cycles_to_queue_test )
   adjust_cycles(third_id, 200);
   adjust_cycles(fourth_id, 600);
 
-  push_op(submit_cycles_to_queue_operation(first_id, 200), false);
-  push_op(submit_cycles_to_queue_operation(second_id, 400), false);
-  push_op(submit_cycles_to_queue_operation(third_id, 200), false);
-  push_op(submit_cycles_to_queue_operation(fourth_id, 600), false);
+  do_op(submit_cycles_to_queue_operation(first_id, 200));
+  do_op(submit_cycles_to_queue_operation(second_id, 400));
+  do_op(submit_cycles_to_queue_operation(third_id, 200));
+  do_op(submit_cycles_to_queue_operation(fourth_id, 600));
 
   // Queue looks like this:
   // 200 --> 400 --> 200 --> 600

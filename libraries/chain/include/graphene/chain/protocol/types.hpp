@@ -448,6 +448,17 @@ namespace graphene { namespace chain {
       uint32_t v_num = 0;
    };
 
+  // Structs for serializing data:
+
+  struct cycle_agreement
+  {
+    share_type cycles;
+    frequency_type frequency_lock;
+
+    cycle_agreement() : cycles(0), frequency_lock(0) {}
+    cycle_agreement(share_type c, frequency_type f_l) : cycles(c), frequency_lock(f_l) {}
+  };
+
 } }  // namespace graphene::chain
 
 namespace fc
@@ -615,3 +626,5 @@ FC_REFLECT_ENUM( graphene::chain::cycle_policy_flags,
                )
 
 FC_REFLECT( graphene::chain::version, (v_num) )
+
+FC_REFLECT( graphene::chain::cycle_agreement, (cycles)(frequency_lock) )

@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE( submit_cycles_unit_test )
 
 } FC_LOG_AND_RETHROW() }
 
-BOOST_AUTO_TEST_CASE( get_queue_submissions_with_pos_unit_test )
+/*BOOST_AUTO_TEST_CASE( get_queue_submissions_with_pos_unit_test )
 { try {
   VAULT_ACTORS((first)(second)(third)(fourth))
 
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE( get_queue_submissions_with_pos_unit_test )
   BOOST_CHECK_EQUAL( rqo.amount.value, 400 );
   BOOST_CHECK_EQUAL( rqo.frequency.value, 200 );
 
-} FC_LOG_AND_RETHROW() }
+} FC_LOG_AND_RETHROW() }*/
 
 BOOST_AUTO_TEST_CASE( basic_submit_reserved_cycles_to_queue_test )
 { try {

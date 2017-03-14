@@ -110,15 +110,6 @@ struct market_trade
    double                     value;
 };
 
-struct cycle_agreement
-{
-  share_type cycles;
-  frequency_type frequency_lock;
-
-  cycle_agreement() : cycles(0), frequency_lock(0) {}
-  cycle_agreement(share_type c, frequency_type f_l) : cycles(c), frequency_lock(f_l) {}
-};
-
 /**
  * @brief The database_api class implements the RPC API for the chain database.
  *
@@ -603,40 +594,16 @@ class database_api
       vector<optional<license_information_object>> get_license_information(const vector<account_id_type>& account_ids) const;
 
       /////////////
-      // CYCLES: //
+      // Access  //
       /////////////
 
-      /**
-       * @brief Get the amount of cycles in an acount with the given ID. If the account has no cycle balance object,
-       * the method will return 0.
-       * @param  account_id ID of the account to check.
-       * @return            Amount of cycles attached to the account.
-       */
-      share_type get_account_cycle_balance(const account_id_type account_id) const;
+      share_type get_free_cycle_balance(account_id_type account_id) const;
+      vector<cycle_agreement> get_all_cycle_balances(account_id_type account_id) const;
+      share_type get_dascoin_balance(account_id_type id) const;
 
-      vector<cycle_agreement> get_total_account_cycles(account_id_type account_id) const;
-
-      //////////////////////////
-      // PI:                  //
-      //////////////////////////
-
-      /**
-       * @brief Get the vector of transfer limits for the account with the given ID.
-       * @param  account_id ID of the account to check.
-       * @return            Vector of transfer limits.
-       */
-      optional<limits_type> get_account_limits(const account_id_type id)const;
-
-      /**
-       * @brief Get the verified PI level for the account with the given ID.
-       * @param  account_id ID if the account to check.
-       * @return            Verified PI level of the account.
-       */
-      optional<uint8_t> get_account_pi_level(const account_id_type id) const;
-
-      //////////////////////////
-      // QUEUE:               //
-      //////////////////////////
+      vector<share_type> get_free_cycle_balances_for_accounts(vector<account_id_type> ids) const;
+      vector<vector<cycle_agreement>> get_all_cycle_balances_for_accounts(vector<account_id_type> ids) const;
+      vector<share_type> get_dascoin_balances_for_accounts(vector<account_id_type> ids) const;
 
       /**
        * @brief Return the entire reward queue.
@@ -679,7 +646,6 @@ FC_REFLECT( graphene::app::order_book, (base)(quote)(bids)(asks) );
 FC_REFLECT( graphene::app::market_ticker, (base)(quote)(latest)(lowest_ask)(highest_bid)(percent_change)(base_volume)(quote_volume) );
 FC_REFLECT( graphene::app::market_volume, (base)(quote)(base_volume)(quote_volume) );
 FC_REFLECT( graphene::app::market_trade, (date)(price)(amount)(value) );
-FC_REFLECT( graphene::app::cycle_agreement, (cycles)(frequency_lock) )
 
 FC_API( graphene::app::database_api,
    // Objects
@@ -780,18 +746,18 @@ FC_API( graphene::app::database_api,
    (lookup_license_type_names)
    (get_license_information)
 
-   // Cycles
-   (get_account_cycle_balance)
-   (get_total_account_cycles)
+   // Access
+   (get_free_cycle_balance)
+   (get_all_cycle_balances)
+   (get_dascoin_balance)
+   (get_free_cycle_balances_for_accounts)
+   (get_all_cycle_balances_for_accounts)
+   (get_dascoin_balances_for_accounts)
 
-   // queue
+   // Queue
    (get_reward_queue)
    (get_reward_queue_size)
    (get_queue_submissions_with_pos)
-
-   // PI
-   (get_account_limits)
-   (get_account_pi_level)
 
    // Requests
    (get_all_webasset_issue_requests)

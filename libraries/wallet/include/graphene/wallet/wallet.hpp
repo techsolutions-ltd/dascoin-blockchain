@@ -1493,7 +1493,7 @@ class wallet_api
        */
       share_type get_account_cycle_balance( const string& account )const;
 
-      vector<cycle_agreement> get_total_account_cycles(const string& account) const;
+      vector<cycle_agreement> get_full_cycle_balances(const string& account) const;
 
       signed_transaction update_queue_parameters(optional<bool> enable_dascoin_queue,
                                                  optional<uint32_t> reward_interval_time_seconds,
@@ -1748,7 +1748,7 @@ FC_API( graphene::wallet::wallet_api,
 
         // Cycles:
         (get_account_cycle_balance)
-        (get_total_account_cycles)
+        (get_full_cycle_balances)
         (get_order_book)
         (update_queue_parameters)
         (wire_out)

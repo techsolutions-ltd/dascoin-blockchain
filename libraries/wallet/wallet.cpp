@@ -4422,15 +4422,15 @@ vector<optional<license_information_object>> wallet_api::get_license_information
 share_type wallet_api::get_account_cycle_balance(const string& name_or_id) const
 {
    if( auto real_id = detail::maybe_id<account_id_type>(name_or_id) )
-      return my->_remote_db->get_account_cycle_balance(*real_id);
-   return my->_remote_db->get_account_cycle_balance(get_account(name_or_id).id);
+      return my->_remote_db->get_free_cycle_balance(*real_id);
+   return my->_remote_db->get_free_cycle_balance(get_account(name_or_id).id);
 }
 
-vector<cycle_agreement> wallet_api::get_total_account_cycles(const string& name_or_id) const
+vector<cycle_agreement> wallet_api::get_full_cycle_balances(const string& name_or_id) const
 {
    if( auto real_id = detail::maybe_id<account_id_type>(name_or_id) )
-      return my->_remote_db->get_total_account_cycles(*real_id);
-   return my->_remote_db->get_total_account_cycles(get_account(name_or_id).id);
+      return my->_remote_db->get_all_cycle_balances(*real_id);
+   return my->_remote_db->get_all_cycle_balances(get_account(name_or_id).id);
 }
 
 uint32_t wallet_api::get_reward_queue_size() const

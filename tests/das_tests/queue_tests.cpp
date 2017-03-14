@@ -232,22 +232,23 @@ BOOST_AUTO_TEST_CASE( basic_submit_cycles_to_queue_test )
 
   adjust_dascoin_reward(500 * DASCOIN_DEFAULT_ASSET_PRECISION);
   adjust_frequency(200);
-  toggle_reward_queue(true);
 
   adjust_cycles(first_id, 200);
   adjust_cycles(second_id, 400);
   adjust_cycles(third_id, 200);
   adjust_cycles(fourth_id, 600);
 
-  push_op(submit_cycles_to_queue_operation(first_id, 200), false);
-  push_op(submit_cycles_to_queue_operation(second_id, 400), false);
-  push_op(submit_cycles_to_queue_operation(third_id, 200), false);
-  push_op(submit_cycles_to_queue_operation(fourth_id, 600), false);
+  do_op(submit_cycles_to_queue_operation(first_id, 200));
+  do_op(submit_cycles_to_queue_operation(second_id, 400));
+  do_op(submit_cycles_to_queue_operation(third_id, 200));
+  do_op(submit_cycles_to_queue_operation(fourth_id, 600));
 
   // Queue looks like this:
   // 200 --> 400 --> 200 --> 600
 
   BOOST_CHECK_EQUAL( _dal.get_reward_queue_size(), 4 );
+
+  toggle_reward_queue(true);
 
   // Wait for the cycles to be distributed:
   generate_blocks(db.head_block_time() + fc::seconds(get_chain_parameters().reward_interval_time_seconds));

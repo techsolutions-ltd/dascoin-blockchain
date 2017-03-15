@@ -1,7 +1,10 @@
 #include <graphene/chain/access_layer.hpp>
 
 #include <graphene/chain/global_property_object.hpp>
+#include <graphene/chain/license_objects.hpp>
 #include <graphene/chain/queue_objects.hpp>
+
+#include <fc/smart_ref_impl.hpp>
 
 namespace graphene { namespace chain {
 

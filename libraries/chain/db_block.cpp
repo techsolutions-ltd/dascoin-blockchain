@@ -535,16 +535,11 @@ void database::_apply_block( const signed_block& next_block )
    update_maintenance_flag( maint_needed );
    update_witness_schedule();
 
-   // Handle completed license requests:
-   assign_licenses();
-   // Mint dascoin:
-   if ( global_props.parameters.enable_dascoin_queue )
-    mint_dascoin_rewards();
-   // Complete any issue request objects:
    distribute_issue_requested_assets();
-   distribute_issue_requested_cycles();
-   // Reset any daily limits if necessary:
    reset_spending_limits();
+
+   if ( global_props.parameters.enable_dascoin_queue )
+      mint_dascoin_rewards();
 
    if( !_node_property_object.debug_updates.empty() )
       apply_debug_updates();

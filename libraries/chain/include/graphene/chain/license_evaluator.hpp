@@ -3,8 +3,6 @@
  */
 #pragma once
 
-#include <graphene/chain/license_objects.hpp>
-#include <graphene/chain/account_object.hpp>
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/evaluator.hpp>
 #include <graphene/chain/exceptions.hpp>
@@ -12,56 +10,28 @@
 
 namespace graphene { namespace chain {
 
-class license_type_create_evaluator : public evaluator<license_type_create_evaluator>
+class create_license_type_evaluator : public evaluator<create_license_type_evaluator>
 {
 public:
-  typedef license_type_create_operation operation_type;
+  typedef create_license_type_operation operation_type;
 
-  void_result do_evaluate(const license_type_create_operation& op);
-  object_id_type do_apply(const license_type_create_operation& op);
+  void_result do_evaluate(const create_license_type_operation& op);
+  object_id_type do_apply(const create_license_type_operation& op);
 };
 
-class license_type_edit_evaluator : public evaluator<license_type_edit_evaluator>
+class issue_license_evaluator : public evaluator<issue_license_evaluator>
 {
 public:
-  typedef license_type_edit_operation operation_type;
+  typedef issue_license_operation operation_type;
 
-  void_result do_evaluate(const license_type_edit_operation& op);
-  void_result do_apply(const license_type_edit_operation& op);
-};
-
-class license_type_delete_evaluator : public evaluator<license_type_delete_evaluator>
-{
-public:
-  typedef license_type_delete_operation operation_type;
-
-  void_result do_evaluate(const license_type_delete_operation& op);
-  void_result do_apply(const license_type_delete_operation& op);
-};
-
-class license_request_evaluator : public evaluator<license_request_evaluator>
-{
-public:
-  typedef license_request_operation operation_type;
-
-  void_result do_evaluate(const license_request_operation& op);
-  object_id_type do_apply(const license_request_operation& op);
+  void_result do_evaluate(const operation_type& op);
+  object_id_type do_apply(const operation_type& op);
 
 private:
-  const account_object* account_obj_ = nullptr;
-};
-
-class license_deny_evaluator : public evaluator<license_deny_evaluator>
-{
-public:
-  typedef license_deny_operation operation_type;
-
-  void_result do_evaluate(const license_deny_operation& op);
-  void_result do_apply(const license_deny_operation& op);
-
-private:
-  const account_object* account_obj_ = nullptr;
-  const license_request_object* request_obj_ = nullptr;
+  account_id_type _issuer_id;
+  const account_object* _account_obj = nullptr;
+  const license_information_object* _license_information_obj = nullptr;
+  const license_type_object* _new_license_obj = nullptr;
 };
 
 } } // graphene::chain

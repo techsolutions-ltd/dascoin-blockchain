@@ -47,6 +47,9 @@
 #include <graphene/chain/protocol/config.hpp>
 #include <graphene/chain/protocol/enum_reflect.hpp>
 
+// TODO: refactor this as a template method
+#define CHECK_AND_SET_OPT(val, opt)  if ( opt.valid() ) val = *opt
+
 namespace graphene { namespace chain {
    using namespace graphene::db;
 
@@ -99,6 +102,7 @@ namespace graphene { namespace chain {
       regular = 0,
       chartered = 1,
       promo = 2,
+      none = 99,
       LICENSE_KIND_COUNT
    };
 
@@ -124,6 +128,13 @@ namespace graphene { namespace chain {
       pi_validator = 9,
       wire_out_handler = 10,
       CHAIN_AUTHORITY_KIND_COUNT
+   };
+
+   enum dascoin_origin_kind
+   {
+     user_submit = 0,
+     charter_license = 1,
+     reserve_cycles = 2
    };
 
    enum asset_issuer_permission_flags
@@ -233,12 +244,11 @@ namespace graphene { namespace chain {
       impl_special_authority_object_type,
       impl_buyback_object_type,
       impl_fba_accumulator_object_type,
-      impl_license_request_object_type,
       impl_account_cycle_balance_object_type,
       impl_issue_asset_request_object_type,
       impl_wire_out_holder_object_type,
-      impl_cycle_issue_request_object_type,
-      impl_reward_queue_object_type
+      impl_reward_queue_object_type,
+      impl_license_information_object_type
    };
 
    //typedef fc::unsigned_int            object_id_type;
@@ -295,12 +305,11 @@ namespace graphene { namespace chain {
    class special_authority_object;
    class buyback_object;
    class fba_accumulator_object;
-   class license_request_object;
    class account_cycle_balance_object;
    class issue_asset_request_object;
    class wire_out_holder_object;
-   class cycle_issue_request_object;
    class reward_queue_object;
+   class license_information_object;
 
    typedef object_id< implementation_ids, impl_global_property_object_type,  global_property_object>                    global_property_id_type;
    typedef object_id< implementation_ids, impl_dynamic_global_property_object_type,  dynamic_global_property_object>    dynamic_global_property_id_type;
@@ -323,10 +332,6 @@ namespace graphene { namespace chain {
    typedef object_id< implementation_ids, impl_fba_accumulator_object_type, fba_accumulator_object >                    fba_accumulator_id_type;
 
    typedef object_id<
-      implementation_ids, impl_license_request_object_type, license_request_object
-   > license_request_id_type;
-
-   typedef object_id<
       implementation_ids, impl_account_cycle_balance_object_type, account_cycle_balance_object
    > account_cycle_balance_id_type;
 
@@ -339,12 +344,12 @@ namespace graphene { namespace chain {
    > wire_out_holder_id_type;
 
    typedef object_id<
-      implementation_ids, impl_cycle_issue_request_object_type, cycle_issue_request_object
-   > cycle_issue_request_id_type;
-
-   typedef object_id<
       implementation_ids, impl_reward_queue_object_type, reward_queue_object
    > reward_queue_id_type;
+
+   typedef object_id<
+      implementation_ids, impl_license_information_object_type, license_information_object
+   > license_information_id_type;
 
    typedef fc::array<char, GRAPHENE_MAX_ASSET_SYMBOL_LENGTH>    symbol_type;
    typedef fc::ripemd160                                        block_id_type;
@@ -443,6 +448,17 @@ namespace graphene { namespace chain {
       uint32_t v_num = 0;
    };
 
+  // Structs for serializing data:
+
+  struct cycle_agreement
+  {
+    share_type cycles;
+    frequency_type frequency_lock;
+
+    cycle_agreement() : cycles(0), frequency_lock(0) {}
+    cycle_agreement(share_type c, frequency_type f_l) : cycles(c), frequency_lock(f_l) {}
+  };
+
 } }  // namespace graphene::chain
 
 namespace fc
@@ -468,6 +484,7 @@ REFLECT_ENUM_CHECK( graphene::chain::license_kind,
                     (regular)
                     (chartered)
                     (promo)
+                    (none)
                     (LICENSE_KIND_COUNT)
                   )
 
@@ -491,6 +508,12 @@ REFLECT_ENUM_CHECK( graphene::chain::chain_authority_kind,
                     (pi_validator)
                     (wire_out_handler)
                     (CHAIN_AUTHORITY_KIND_COUNT)
+                  )
+
+REFLECT_ENUM_CHECK( graphene::chain::dascoin_origin_kind,
+                    (user_submit)
+                    (charter_license)
+                    (reserve_cycles)
                   )
 
 FC_REFLECT( graphene::chain::public_key_type, (key_data) )
@@ -538,12 +561,11 @@ FC_REFLECT_ENUM( graphene::chain::impl_object_type,
                  (impl_special_authority_object_type)
                  (impl_buyback_object_type)
                  (impl_fba_accumulator_object_type)
-                 (impl_license_request_object_type)
                  (impl_account_cycle_balance_object_type)
                  (impl_issue_asset_request_object_type)
                  (impl_wire_out_holder_object_type)
-                 (impl_cycle_issue_request_object_type)
                  (impl_reward_queue_object_type)
+                 (impl_license_information_object_type)
                )
 
 FC_REFLECT_TYPENAME( graphene::chain::share_type )
@@ -576,13 +598,12 @@ FC_REFLECT_TYPENAME( graphene::chain::special_authority_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::buyback_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::fba_accumulator_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::license_type_id_type )
-FC_REFLECT_TYPENAME( graphene::chain::license_request_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::account_cycle_balance_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::issue_asset_request_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::wire_out_holder_id_type )
-FC_REFLECT_TYPENAME( graphene::chain::cycle_issue_request_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::reward_queue_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::upgrade_multiplier_type )
+FC_REFLECT_TYPENAME( graphene::chain::license_information_id_type )
 
 FC_REFLECT( graphene::chain::void_t, )
 
@@ -605,3 +626,5 @@ FC_REFLECT_ENUM( graphene::chain::cycle_policy_flags,
                )
 
 FC_REFLECT( graphene::chain::version, (v_num) )
+
+FC_REFLECT( graphene::chain::cycle_agreement, (cycles)(frequency_lock) )

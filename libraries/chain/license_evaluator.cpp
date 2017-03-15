@@ -3,13 +3,22 @@
  */
 #include <graphene/chain/license_evaluator.hpp>
 
+#include <graphene/chain/queue_objects.hpp>
+#include <graphene/chain/license_objects.hpp>
+#include <graphene/chain/account_object.hpp>
+
 namespace graphene { namespace chain {
 
-////////////////////////////
-// License type creation: //
-////////////////////////////
+namespace detail {
 
-void_result license_type_create_evaluator::do_evaluate(const license_type_create_operation& op)
+share_type apply_percentage(share_type val, share_type percent)
+{
+  return val + (val * percent / 100);
+};
+
+}  // namespace graphene::chain::detail
+
+void_result create_license_type_evaluator::do_evaluate(const create_license_type_operation& op)
 { try {
   const auto& d = db();
   const auto license_admin_id = d.get_global_properties().authorities.license_administrator;
@@ -21,166 +30,124 @@ void_result license_type_create_evaluator::do_evaluate(const license_type_create
 
 } FC_CAPTURE_AND_RETHROW((op)) }
 
-object_id_type license_type_create_evaluator::do_apply(const license_type_create_operation& op)
+object_id_type create_license_type_evaluator::do_apply(const create_license_type_operation& op)
 { try {
   using namespace graphene::chain::util;
   auto kind = convert_enum<license_kind>::from_string(op.kind);
 
-  return db().create_license_type(kind, op.name, op.amount, op.balance_multipliers, op.requeue_multipliers, 
+  return db().create_license_type(kind,
+                                  op.name, 
+                                  op.amount, 
+                                  op.balance_multipliers, 
+                                  op.requeue_multipliers, 
                                   op.return_multipliers);
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-///////////////////////////
-// License type editing: //
-///////////////////////////
-
-void_result license_type_edit_evaluator::do_evaluate(const license_type_edit_operation& op)
-{ try {
-  const auto& d = db();
-  const auto license_admin_id = d.get_global_properties().authorities.license_administrator;
-  const auto& op_admin_obj = op.admin(d);
-
-  d.perform_chain_authority_check("license administration", license_admin_id, op_admin_obj);
-
-  return {};
-
-}  FC_CAPTURE_AND_RETHROW((op)) }
-
-void_result license_type_edit_evaluator::do_apply(const license_type_edit_operation& op)
-{ try {
-
-  db().edit_license_type(op.license, op.name, op.amount, op.balance_multipliers, op.requeue_multipliers, 
-                         op.return_multipliers);
-  return {};
-
-} FC_CAPTURE_AND_RETHROW((op)) }
-
-////////////////////////////
-// License type deletion: //
-////////////////////////////
-
-void_result license_type_delete_evaluator::do_evaluate(const license_type_delete_operation& op)
-{ try {
-
-  // assert_license_authenticator( db(), op.license_authentication_account );
-  return void_result();
-
-} FC_CAPTURE_AND_RETHROW( (op) ) }
-
-void_result license_type_delete_evaluator::do_apply(const license_type_delete_operation& op)
-{ try {
-
-  // TODO: to do a meaningfull delete, all accounts with a license must have the license_id removed!
-  return void_result();
-
-} FC_CAPTURE_AND_RETHROW( (op) ) }
-
-////////////////////////////
-// License issue request: //
-////////////////////////////
-
-void_result license_request_evaluator::do_evaluate(const license_request_operation& op)
+void_result issue_license_evaluator::do_evaluate(const issue_license_operation& op)
 { try {
 
   const auto& d = db();
   const auto issuer_id = d.get_chain_authorities().license_issuer;
-  const auto op_issuer_obj = op.license_issuing_account(d);
+  const auto op_issuer_obj = op.issuer(d);
 
-  // First, check that the license issuer matches the current license issuing account:
+  // TODO: refactor this
   d.perform_chain_authority_check("license issuing", issuer_id, op_issuer_obj);
 
   const auto& account_obj = op.account(d);
   const auto& new_license_obj = op.license(d);
 
-  // Licenses can only be issued to vault accounts:
-  FC_ASSERT( account_obj.is_vault(), "Account '${n}' is not a vault account", ("n", account_obj.name) );
-
-  // Make sure that there is no pending license:
-  const auto& info = account_obj.license_info;
-  FC_ASSERT( !info.pending.valid(),
-             "Cannot issue license ${l_n} on account ${a}, license ${l_p} is pending",
-             ("l_n", new_license_obj.name)
-             ("a", account_obj.name)
-             ("l_p", (*info.pending).license(d).name)
-           );
-
-  // If the account has an active license, then we need to check if we can IMPROVE it:
-  const auto active_lic_opt = info.active_license();
-  if ( active_lic_opt.valid() )
+  if ( new_license_obj.kind == license_kind::chartered || new_license_obj.kind == license_kind::promo )
   {
-    const auto& active_license_obj = (*active_lic_opt)(d);
-    FC_ASSERT( active_license_obj < new_license_obj,
-               "Cannot improve license on account ${a}, license ${l_old} is better than the active license ${l_act}",
+    FC_ASSERT( op.frequency_lock != 0,
+               "Cannot issue license ${l_n} on account ${a}, frequency lock cannot be zero",
+               ("l_n", new_license_obj.name)
                ("a", account_obj.name)
-               ("l_old", active_license_obj.name)
-               ("l_new", new_license_obj.name)
              );
   }
 
-  account_obj_ = &account_obj;
+  FC_ASSERT( account_obj.is_vault(),
+             "Account '${n}' is not a vault account",
+             ("n", account_obj.name)
+           );
+
+  // If a license already exists, we can only improve it:
+  if ( account_obj.license_information.valid() )
+  {
+    const auto& license_information_obj = (*account_obj.license_information)(d);
+    const auto& max_license_obj = license_information_obj.max_license(d);
+
+    FC_ASSERT( max_license_obj < new_license_obj,
+               "Cannot improve license on account ${a}, license ${l_old} is better than the active license ${l_act}",
+               ("a", account_obj.name)
+               ("l_old", max_license_obj.name)
+               ("l_new", new_license_obj.name)
+             );
+    
+    _license_information_obj = &license_information_obj;
+  }
+
+  _issuer_id = issuer_id;
+  _account_obj = &account_obj;
+  _new_license_obj = &new_license_obj;
   return {};
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-object_id_type license_request_evaluator::do_apply(const license_request_operation& op)
+object_id_type issue_license_evaluator::do_apply(const issue_license_operation& op)
 { try {
   auto& d = db();
-  const auto& params = d.get_global_properties().parameters;
+  share_type amount = detail::apply_percentage(_new_license_obj->amount, op.bonus_percentage);
+  license_information_id_type lic_info_id;
 
-  // Create the new request object:
-  license_request_id_type req_id =  d.create<license_request_object>([&](license_request_object &req) {
-    req.license_issuing_account = op.license_issuing_account;
-    req.account = op.account;
-    req.license = op.license;
-    req.frequency = op.frequency;
-    req.expiration = d.head_block_time() + fc::seconds(params.license_expiration_time_seconds);
-  }).id;
+  if ( nullptr == _license_information_obj )
+  {
+    lic_info_id = d.create<license_information_object>([&](license_information_object& lio){
+      lio.account = op.account;
+      lio.add_license(op.license, amount, _new_license_obj->amount, op.bonus_percentage, op.frequency_lock, op.activated_at, d.head_block_time());
+      lio.balance_upgrade += _new_license_obj->balance_upgrade;
+      lio.requeue_upgrade += _new_license_obj->requeue_upgrade;
+      lio.return_upgrade += _new_license_obj->return_upgrade;
+    }).id;
 
-  // Update the pending license:
-  d.modify(*account_obj_, [&](account_object& a){
-    a.license_info.set_pending(op.license, req_id);
-  });
+    d.modify(*_account_obj, [&](account_object& ao){
+      ao.license_information = lic_info_id;
+    });
+  }
+  else
+  {
+    lic_info_id = _license_information_obj->id;
 
-  return req_id;
+    d.modify(*_license_information_obj, [&](license_information_object& lio){
+      lio.add_license(op.license, amount, _new_license_obj->amount, op.bonus_percentage, op.frequency_lock, op.activated_at, d.head_block_time());
+      lio.balance_upgrade += _new_license_obj->balance_upgrade;
+      lio.requeue_upgrade += _new_license_obj->requeue_upgrade;
+      lio.return_upgrade += _new_license_obj->return_upgrade;
+    });
+  }
 
-} FC_CAPTURE_AND_RETHROW( (op) ) }
+  auto kind = _new_license_obj->kind;
+  if ( kind == license_kind::regular )
+  {
+    d.issue_cycles(op.account, amount);
+  }
+  else if ( kind == license_kind::chartered || kind == license_kind::promo )
+  {
+    d.create<reward_queue_object>([&](reward_queue_object& rqo){
+      rqo.origin = fc::reflector<dascoin_origin_kind>::to_string(charter_license);
+      rqo.license = op.license;
+      rqo.account = op.account;
+      rqo.amount = amount;
+      rqo.frequency = op.frequency_lock;
+      rqo.time = d.head_block_time();
+    });
 
-/////////////////////////////
-// License request denial: //
-/////////////////////////////
+    d.push_applied_operation(
+      record_submit_charter_license_cycles_operation(_issuer_id, op.account, amount, op.frequency_lock)
+    );
+  }
 
-void_result license_deny_evaluator::do_evaluate(const license_deny_operation& op)
-{ try {
-  const auto& d = db();
-  const auto auth_id = d.get_chain_authorities().license_authenticator;
-  const auto& op_auth_obj = op.license_authentication_account(d);
-
-  d.perform_chain_authority_check("license authentication", auth_id, op_auth_obj);
-
-  const auto& request_obj = op.request(d);
-  const auto& account_obj = request_obj.account(d);
-  const auto& info = account_obj.license_info;
-
-  FC_ASSERT( (*info.pending).request == request_obj.id );
-  FC_ASSERT( (*info.pending).license == request_obj.license );
-
-  request_obj_ = &request_obj;
-  account_obj_ = &account_obj;
-  return {};
-
-} FC_CAPTURE_AND_RETHROW( (op) ) }
-
-void_result license_deny_evaluator::do_apply(const license_deny_operation& op)
-{ try {
-  auto& d = db();
-
-  d.modify(*account_obj_, [&](account_object& ao){
-    ao.license_info.clear_pending();
-  });
-  d.remove(*request_obj_);
-
-  return {};
+  return lic_info_id;
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 

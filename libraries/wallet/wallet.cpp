@@ -2411,10 +2411,7 @@ public:
 
    optional<license_type_object> find_license_type(license_type_id_type id)const
    {
-      auto rec = _remote_db->get_license_types({id}).front();
-      if( rec )
-         _license_type_cache[id] = *rec;
-      return rec;
+      return _remote_db->get_license_type(id);
    }
 
    optional<license_type_object> find_license_type(string str_or_id)const
@@ -2453,16 +2450,6 @@ public:
       return *opt;
    }
 
-   license_request_object get_license_request(string id_str)const
-   {
-      // TODO: fix this in a template method.
-      auto id_opt = maybe_id<license_request_id_type>( id_str );
-      FC_ASSERT( id_opt );
-      auto opt = _remote_db->get_license_requests({*id_opt}).front();
-      FC_ASSERT( opt );
-      return *opt;
-   }
-
    /**
     * Issue a license to an account. This will create the license request that can be denied by the license
     * authentication authority.  Only the license issuing authority can do this.
@@ -2476,6 +2463,7 @@ public:
       const string& issuer,
       const string& account,
       const string& license,
+      share_type bonus_percentage,
       frequency_type frequency,
       bool broadcast)
    {
@@ -2483,12 +2471,13 @@ public:
       auto beneficiary = get_account( account );
       auto new_license = get_license_type( license );
 
-      license_request_operation op;
+      issue_license_operation op;
 
-      op.license_issuing_account = issuer_account.id;
+      op.issuer = issuer_account.id;
       op.account = beneficiary.id;
       op.license = new_license.id;
-      op.frequency = frequency;
+      op.bonus_percentage = bonus_percentage;
+      op.frequency_lock = frequency;
 
       signed_transaction tx;
       tx.operations.push_back(op);
@@ -2498,21 +2487,22 @@ public:
       return sign_transaction( tx, broadcast );
    }
 
-   signed_transaction deny_license_request(const string& authenticator, const string& req_id, bool broadcast)
-   {
-      auto authenticator_account = this->get_account( authenticator );
-      auto request = get_license_request( req_id );
+   signed_transaction update_queue_parameters(
+       optional<bool> enable_dascoin_queue,
+       optional<uint32_t> reward_interval_time_seconds,
+       optional<uint32_t> dascoin_reward_amount, bool broadcast) {
+     
+     auto issuer_id = _remote_db->get_global_properties().authorities.license_issuer;
 
-      license_deny_operation op;
+     signed_transaction tx;
+     tx.operations.push_back(update_queue_parameters_operation(
+         issuer_id, enable_dascoin_queue, reward_interval_time_seconds,
+         dascoin_reward_amount));
+     set_operation_fees(
+         tx, _remote_db->get_global_properties().parameters.current_fees);
+     tx.validate();
 
-      op.license_authentication_account = authenticator_account.id;
-      op.request = request.id;
-
-      signed_transaction tx;
-      tx.operations.push_back( op );
-      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
-
-      return sign_transaction( tx, broadcast );
+     return sign_transaction(tx, broadcast);
    }
 
    signed_transaction wire_out(const string& account_name, share_type amount, bool broadcast)
@@ -2892,11 +2882,6 @@ vector<asset_reserved> wallet_api::list_account_balances(const string& id)
 vector<asset_object> wallet_api::list_assets(const string& lowerbound, uint32_t limit)const
 {
    return my->_remote_db->list_assets( lowerbound, limit );
-}
-
-vector<license_request_object> wallet_api::list_license_requests_by_expiration(uint32_t limit)const
-{
-   return my->_remote_db->list_license_requests_by_expiration( limit );
 }
 
 vector<operation_detail> wallet_api::get_account_history(string name, int limit)const
@@ -4408,32 +4393,44 @@ vector<blind_receipt> wallet_api::blind_history( string key_or_account )
 //                              //
 //////////////////////////////////
 
-vector<license_type_object> wallet_api::list_license_types_by_name(const string& lowerbound, uint32_t limit)const
+vector<license_type_object> wallet_api::get_license_types() const
 {
-   return my->_remote_db->list_license_types_by_name( lowerbound, limit );
-}
-
-vector<license_type_object> wallet_api::list_license_types_by_amount(const uint32_t lowerbound, uint32_t limit)const
-{
-   return my->_remote_db->list_license_types_by_amount( lowerbound, limit );
+   return my->_remote_db->get_license_types();
 }
 
 signed_transaction wallet_api::issue_license( const string& issuer, const string& account, const string& license,
-                                              frequency_type account_frequency, bool broadcast )
+                                              share_type bonus_percentage, frequency_type account_frequency,
+                                              bool broadcast )
 {
-   return my->issue_license( issuer, account, license, account_frequency, broadcast );
+   return my->issue_license( issuer, account, license, bonus_percentage, account_frequency, broadcast );
 }
 
-signed_transaction wallet_api::deny_license_request( const string& authenticator, const string& req_id, bool broadcast)
-{
-   return my->deny_license_request( authenticator, req_id, broadcast );
+signed_transaction wallet_api::update_queue_parameters(
+    optional<bool> enable_dascoin_queue,
+    optional<uint32_t> reward_interval_time_seconds,
+    optional<uint32_t> dascoin_reward_amount, bool broadcast) const {
+  return my->update_queue_parameters(enable_dascoin_queue,
+                                     reward_interval_time_seconds,
+                                     dascoin_reward_amount, broadcast);
 }
 
-share_type wallet_api::get_account_cycle_balance(const string& name_or_id)const
+vector<optional<license_information_object>> wallet_api::get_license_information(const vector<account_id_type>& account_ids) const
+{
+   return my->_remote_db->get_license_information(account_ids);
+}
+
+share_type wallet_api::get_account_cycle_balance(const string& name_or_id) const
 {
    if( auto real_id = detail::maybe_id<account_id_type>(name_or_id) )
-      return my->_remote_db->get_account_cycle_balance(*real_id);
-   return my->_remote_db->get_account_cycle_balance(get_account(name_or_id).id);
+      return my->_remote_db->get_free_cycle_balance(*real_id);
+   return my->_remote_db->get_free_cycle_balance(get_account(name_or_id).id);
+}
+
+vector<cycle_agreement> wallet_api::get_full_cycle_balances(const string& name_or_id) const
+{
+   if( auto real_id = detail::maybe_id<account_id_type>(name_or_id) )
+      return my->_remote_db->get_all_cycle_balances(*real_id);
+   return my->_remote_db->get_all_cycle_balances(get_account(name_or_id).id);
 }
 
 uint32_t wallet_api::get_reward_queue_size() const
@@ -4446,19 +4443,9 @@ signed_transaction wallet_api::wire_out(const string& account, share_type amount
    return my->wire_out(account, amount, broadcast);
 }
 
-vector<license_request_object> wallet_api::get_all_license_requests() const
-{
-   return my->_remote_db->get_all_license_requests();
-}
-
 vector<issue_asset_request_object> wallet_api::get_all_webasset_issue_requests() const
 {
    return my->_remote_db->get_all_webasset_issue_requests();
-}
-
-vector<cycle_issue_request_object> wallet_api::get_all_cycle_issue_requests() const
-{
-   return my->_remote_db->get_all_cycle_issue_requests();
 }
 
 vector<wire_out_holder_object> wallet_api::get_all_wire_out_holders() const
@@ -4469,6 +4456,11 @@ vector<wire_out_holder_object> wallet_api::get_all_wire_out_holders() const
 vector<reward_queue_object> wallet_api::get_reward_queue() const
 {
    return my->_remote_db->get_reward_queue();
+}
+
+vector<pair<uint32_t, reward_queue_object>> wallet_api::get_queue_submissions_with_pos(account_id_type account_id) const
+{
+   return my->_remote_db->get_queue_submissions_with_pos(account_id);
 }
 
 order_book wallet_api::get_order_book( const string& base, const string& quote, unsigned limit )

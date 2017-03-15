@@ -121,7 +121,7 @@ void database_fixture::init_genesis_state()
 }
 
 database_fixture::database_fixture()
-   : app(), db( *app.chain_database() )
+   : app(), db( *app.chain_database() ), _dal(db)
 {
    try {
    int argc = boost::unit_test::framework::master_test_suite().argc;
@@ -399,6 +399,19 @@ void database_fixture::generate_blocks(fc::time_point_sec timestamp, bool miss_i
    }
    while( db.head_block_time() < timestamp )
       generate_block(skip);
+}
+
+void database_fixture::push_op(const operation& op, bool gen_block)
+{
+  trx.operations.clear();
+  set_expiration(db, trx);
+  trx.operations.push_back(op);
+  trx.validate();
+  db.push_transaction(trx, ~0);
+  verify_asset_supplies(db);
+  trx.operations.clear();
+  if ( gen_block )
+        generate_block();
 }
 
 account_create_operation database_fixture::make_account(
@@ -1132,6 +1145,12 @@ void set_expiration( const database& db, transaction& tx )
    tx.set_reference_block(db.head_block_id());
    tx.set_expiration( db.head_block_time() + fc::seconds( params.block_interval * (params.maintenance_skip_slots + 1) * 3 ) );
    return;
+}
+
+void set_max_expiration(const database& db, transaction& tx)
+{
+   tx.set_reference_block(db.head_block_id());
+   tx.set_expiration( db.head_block_time() + GRAPHENE_DEFAULT_MAX_TIME_UNTIL_EXPIRATION );
 }
 
 bool _push_block( database& db, const signed_block& b, uint32_t skip_flags /* = 0 */ )

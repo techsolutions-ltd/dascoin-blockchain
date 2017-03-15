@@ -20,9 +20,9 @@ namespace graphene { namespace chain {
    * @brief create a license type object
    * @ingroup operations
    *
-   * An authorized license administration authority may define licenses to be distributed to users.
+   * Create a new type of license. Must be signed by the current license_administration authority.
    */
-  struct license_type_create_operation : public base_operation
+  struct create_license_type_operation : public base_operation
   {
      struct fee_parameters_type {};  // No fees are paid for this operation.
 
@@ -43,127 +43,42 @@ namespace graphene { namespace chain {
   };
 
   /**
-   * @brief edit a license type object
-   * @ingroup operations
-   *
-   * An authorized license administration authority may edit licenses to be distributed to users.
-   *
-   * WARNING: this operation is NOT RETROACTIVE!
-   */
-  struct license_type_edit_operation : public base_operation
-  {
-     struct fee_parameters_type {};  // No fees are paid for this operation.
-
-     asset fee;
-     license_type_id_type license;
-     account_id_type admin;
-
-     optional<string> name;
-     optional<share_type> amount;
-
-     optional<upgrade_multiplier_type> balance_multipliers;
-     optional<upgrade_multiplier_type> requeue_multipliers;
-     optional<upgrade_multiplier_type> return_multipliers;
-
-     account_id_type fee_payer() const { return admin; }
-     void validate() const;
-     share_type calculate_fee(const fee_parameters_type&) const { return 0; }
-  };
-
-  /**
-   * @brief delete a license type object
-   * @ingroup operations
-   *
-   * An authorized license authentication authority may delete an existing license given to users.
-   * Upon deletion, all license holders must revert to the default NO_LICENSE. Granted cycle balances are unaffected.
-   *
-   * WARNING: this operation is NOT RETROACTIVE!
-   */
-  struct license_type_delete_operation : public base_operation
-  {
-    struct fee_parameters_type {};  // No fees are paid for this operation.
-
-    asset fee;
-    account_id_type license_authentication_account;  // This MUST be the license authentication authority.
-
-    license_type_id_type license;
-
-    account_id_type fee_payer() const { return license_authentication_account; }
-    void validate() const;
-    share_type calculate_fee(const fee_parameters_type&) const { return 0; }
-  };
-
-  /**
    * @brief Request a license to be granted an account
    * @ingroup operations
    *
-   * An authorized license issuing authority may request a license to be granted to an account.
-   * An independent authorized license authentication authority must inspect and approve this request. Upon approval,
-   * the license is irredeemably granted to the account.
+   * Grant a license to an account. This operation must be signed by the current license_issuer authority.
    */
-  struct license_request_operation : public base_operation
+  struct issue_license_operation : public base_operation
   {
     struct fee_parameters_type {};  // No fees are paid for this operation.
 
     asset fee;
-    account_id_type license_issuing_account;  // This MUST be the license issuer authority.
+    account_id_type issuer;
 
     account_id_type account;                  // The account to benefit the license.
     license_type_id_type license;             // The license to be granted.
-    frequency_type frequency;                 // The frequency lock on this license, zero for none.
+    share_type bonus_percentage;              // The bonus multiplier of base license cycles.
+    frequency_type frequency_lock;            // The frequency lock on this license, zero for none.
+    time_point_sec activated_at;              // Time point of activation.
 
     extensions_type extensions;
 
-    account_id_type fee_payer() const { return license_issuing_account; }
+    issue_license_operation() = default;
+    explicit issue_license_operation(account_id_type issuer,
+                                     account_id_type account,
+                                     license_type_id_type license,
+                                     share_type bonus_percentage,
+                                     frequency_type frequency_lock,
+                                     time_point_sec activated_at)
+        : issuer(issuer),
+          account(account),
+          license(license),
+          bonus_percentage(bonus_percentage),
+          frequency_lock(frequency_lock),
+          activated_at(activated_at) {}
+
+    account_id_type fee_payer() const { return issuer; }
     void validate() const;
-    share_type calculate_fee(const fee_parameters_type&) const { return 0; }
-  };
-
-  /**
-   * @brief Approve a license grant to an account
-   * @ingroup operations
-   *
-   * An authorized license authentication authority may approve an existing request made by the license issuing
-   * authority. If such a request is approved the license is irrevocably granted to the account.
-   */
-  struct license_approve_operation : public base_operation
-  {
-    struct fee_parameters_type {};  // No fees are paid for this operation.
-
-    asset fee;
-    account_id_type license_authentication_account;  // This MUST be the license issuing authority.
-
-    account_id_type account;                  // The account to benefit the license.
-    license_type_id_type license;             // The license to be granted.
-
-    extensions_type   extensions;
-
-    account_id_type fee_payer() const { return license_authentication_account; }
-    void validate() const;
-    share_type calculate_fee(const fee_parameters_type&) const { return 0; }
-  };
-
-  /**
-   * @brief Deny a license grant to an account
-   * @ingroup operations
-   *
-   * An authorized license authentication authority may deny an existing request made by the license issuing
-   * authority. This operation is also applied if the request object expires.
-   *
-   * If the authorized license authentication authority does not deny the request, the request is automatically approved
-   * on expiration.
-   */
-  struct license_deny_operation : public base_operation
-  {
-    struct fee_parameters_type {};  // No fees are paid for this operation.
-
-    asset fee;
-    account_id_type license_authentication_account;  // This MUST be the license authentication authority.
-
-    license_request_id_type request;  // The license request we are denying.
-
-    account_id_type fee_payer() const { return license_authentication_account; }
-    void validate() const {}
     share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
 
@@ -173,8 +88,8 @@ namespace graphene { namespace chain {
 // REFLECTIONS:              //
 ///////////////////////////////
 
-FC_REFLECT( graphene::chain::license_type_create_operation::fee_parameters_type, )
-FC_REFLECT( graphene::chain::license_type_create_operation,
+FC_REFLECT( graphene::chain::create_license_type_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::create_license_type_operation,
             (fee)
             (admin)
             (name)
@@ -185,46 +100,15 @@ FC_REFLECT( graphene::chain::license_type_create_operation,
             (return_multipliers)
           )
 
-FC_REFLECT( graphene::chain::license_type_edit_operation::fee_parameters_type, )
-FC_REFLECT( graphene::chain::license_type_edit_operation,
+FC_REFLECT( graphene::chain::issue_license_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::issue_license_operation,
             (fee)
-            (license)
-            (admin)
-            (name)
-            (amount)
-            (balance_multipliers)
-            (requeue_multipliers)
-            (return_multipliers)
-          )
-FC_REFLECT( graphene::chain::license_type_delete_operation::fee_parameters_type, )
-FC_REFLECT( graphene::chain::license_type_delete_operation,
-            (fee)
-            (license_authentication_account)
-            (license)
-          )
-
-FC_REFLECT( graphene::chain::license_request_operation::fee_parameters_type, )
-FC_REFLECT( graphene::chain::license_request_operation,
-            (fee)
-            (license_issuing_account)
+            (issuer)
             (account)
             (license)
-            (frequency)
+            (bonus_percentage)
+            (frequency_lock)
+            (activated_at)
             (extensions)
           )
 
-FC_REFLECT( graphene::chain::license_approve_operation::fee_parameters_type, )
-FC_REFLECT( graphene::chain::license_approve_operation,
-            (fee)
-            (license_authentication_account)
-            (account)
-            (license)
-            (extensions)
-          )
-
-FC_REFLECT( graphene::chain::license_deny_operation::fee_parameters_type, )
-FC_REFLECT( graphene::chain::license_deny_operation,
-            (fee)
-            (license_authentication_account)
-            (request)
-          )

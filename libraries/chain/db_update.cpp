@@ -26,7 +26,6 @@
 #include <graphene/chain/db_with.hpp>
 
 #include <graphene/chain/asset_object.hpp>
-#include <graphene/chain/cycle_objects.hpp>
 #include <graphene/chain/global_property_object.hpp>
 #include <graphene/chain/hardfork.hpp>
 #include <graphene/chain/license_objects.hpp>
@@ -477,28 +476,6 @@ void database::update_withdraw_permissions()
       remove(*permit_index.begin());
 }
 
-void database::assign_licenses()
-{ try {
-  transaction_evaluation_state assign_context(this);
-  const auto& idx = get_index_type<license_request_index>().indices().get<by_expiration>();
-
-  while ( !idx.empty() && idx.begin()->expiration <= head_block_time() )
-  {
-    const auto& req = *idx.begin();
-    const auto& ca = get_chain_authorities();
-
-    fulfill_license_request(req);
-
-    license_approve_operation vop;
-    vop.license_authentication_account = ca.license_authenticator;
-    vop.account = req.account;
-    vop.license = req.license;
-    push_applied_operation(vop);
-
-    remove(req);
-  }
-} FC_CAPTURE_AND_RETHROW() }
-
 void database::distribute_issue_requested_assets()
 { try {
   transaction_evaluation_state distribute_context(this);
@@ -518,33 +495,6 @@ void database::distribute_issue_requested_assets()
 
     remove(req);
   }
-} FC_CAPTURE_AND_RETHROW() }
-
-void database::distribute_issue_requested_cycles()
-{ try {
-  transaction_evaluation_state distribute_context(this);
-  const auto& idx = get_index_type<cycle_issue_request_index>().indices().get<by_expiration>();
-
-  while (!idx.empty() && idx.begin()->expiration <= head_block_time())
-  {
-    const auto& req = *idx.begin();
-    adjust_cycle_balance(req.account, req.amount);
-
-    cycle_issue_complete_operation vop;
-    vop.cycle_authenticator = get_chain_authorities().cycle_authenticator;
-    vop.account = req.account;
-    vop.amount = req.amount;
-    push_applied_operation(vop);
-
-    remove(req);
-  }
-} FC_CAPTURE_AND_RETHROW() }
-
-void database::deny_license_request(const license_request_object& req)
-{ try {
-
-  remove(req);
-
 } FC_CAPTURE_AND_RETHROW() }
 
 void database::reset_spending_limits()
@@ -573,30 +523,33 @@ void database::mint_dascoin_rewards()
 
     while ( to_distribute > 0 && !queue.empty() )
     {
-      const auto& distribute = [this](account_id_type account_id, share_type amount){
-        issue_asset(account_id, amount, get_dascoin_asset_id(), 0);
-        // Emit a virtual op:
-        distribute_dascoin_operation vop;
-        vop.account = account_id;
-        vop.amount = amount;
-        push_applied_operation(vop);
-      };
-
       const auto& el = *queue.begin();
-      account_id_type el_receiver_id = el.account;
-      share_type el_dascoin_amount = cycles_to_dascoin(el.amount, el.frequency);
-      if ( to_distribute >= el_dascoin_amount )
+      share_type dascoin_amount = cycles_to_dascoin(el.amount, el.frequency);
+      if ( to_distribute >= dascoin_amount )
+      {
+        // TODO: refactor this call?
+        issue_asset(el.account, dascoin_amount, get_dascoin_asset_id(), 0);
+        // Emit a virtual operation:
+        push_applied_operation(record_distribute_dascoin_operation(el.origin, el.license, el.account,
+                                                                   el.amount, el.frequency, 
+                                                                   dascoin_amount, head_block_time()));
         remove(el);
+      }
       else
       {
-        el_dascoin_amount = to_distribute;
+        dascoin_amount = to_distribute;
+        // TODO: refactor this call?
+        issue_asset(el.account, dascoin_amount, get_dascoin_asset_id(), 0);
+        // Emit a virtual operation:
+        push_applied_operation(record_distribute_dascoin_operation(el.origin, el.license, el.account,
+                                                                   el.amount, el.frequency, 
+                                                                   dascoin_amount, head_block_time()));
         share_type cycles = dascoin_to_cycles(to_distribute, el.frequency);
         modify(el, [cycles](reward_queue_object& rqo){
           rqo.amount -= cycles;
         });
       }
-      distribute(el_receiver_id, el_dascoin_amount);
-      to_distribute -= el_dascoin_amount;
+      to_distribute -= dascoin_amount;
     }
 
     modify(dgpo, [&](dynamic_global_property_object& dgpo){
@@ -604,7 +557,7 @@ void database::mint_dascoin_rewards()
     });
   }
 
-
 } FC_CAPTURE_AND_RETHROW() }
+
 
 } }  // namespace database::chain

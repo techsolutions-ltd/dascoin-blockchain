@@ -25,6 +25,7 @@
 
 #include <graphene/app/application.hpp>
 #include <graphene/chain/database.hpp>
+#include <graphene/chain/access_layer.hpp>
 #include <fc/io/json.hpp>
 #include <fc/smart_ref_impl.hpp>
 
@@ -158,6 +159,7 @@ struct database_fixture {
    graphene::app::application app;
    genesis_state_type genesis_state;
    chain::database &db;
+   database_access_layer _dal;
    signed_transaction trx;
    public_key_type committee_key;
    account_id_type committee_account;
@@ -194,6 +196,9 @@ struct database_fixture {
     * @param timestamp target time to generate blocks until
     */
    void generate_blocks(fc::time_point_sec timestamp, bool miss_intermediate_blocks = true, uint32_t skip = ~0);
+   
+   void do_op(const operation& op) { push_op(op, true); }
+   void push_op(const operation& op, bool gen_block = false);
 
    account_create_operation make_account(
       const account_kind kind,
@@ -312,27 +317,14 @@ struct database_fixture {
                                                   const public_key_type& key = public_key_type());
 
    // fix_licenses.cpp
-   const license_type_object& get_license_type(const string& name) const;
    const license_type_object& create_license_type(const string& kind, const string& name, share_type amount, 
                                                   upgrade_multiplier_type balance_multipliers,
                                                   upgrade_multiplier_type requeue_multipliers,
                                                   upgrade_multiplier_type return_multipliers);
-   void edit_license_type(license_type_id_type license_id, optional<string> name, optional<share_type> amount,
-                          optional<upgrade_multiplier_type> balance_multipliers,
-                          optional<upgrade_multiplier_type> requeue_multipliers,
-                          optional<upgrade_multiplier_type> return_multipliers);
-   const license_request_object* issue_license_to_vault_account(const account_id_type vault_account_id,
-                                                                const license_type_id_type license_id,
-                                                                frequency_type frequency = 0);
-   vector<license_request_object> get_license_issue_requests_by_expiration() const;
-   vector<license_type_object> get_license_history(account_id_type) const;
 
    // fix_cycles.cpp
    share_type get_cycle_balance(const account_id_type owner) const;
    void adjust_cycles(const account_id_type id, const share_type amount);
-   const cycle_issue_request_object* issue_cycles(account_id_type receiver_id, share_type amount);
-   void deny_issue_cycles(cycle_issue_request_id_type request_id);
-   vector<cycle_issue_request_object> get_cycle_issue_request_objects_by_expiration() const;
 
    // fix_getter.cpp
    const global_property_object& get_global_properties() const;
@@ -340,7 +332,6 @@ struct database_fixture {
    const chain_parameters& get_chain_parameters() const;
    account_id_type get_license_administrator_id() const;
    account_id_type get_license_issuer_id() const;
-   account_id_type get_license_authenticator_id() const;
    account_id_type get_webasset_issuer_id() const;
    account_id_type get_webasset_authenticator_id() const;
    account_id_type get_cycle_issuer_id() const;
@@ -383,16 +374,13 @@ struct database_fixture {
    // fix_queue.cpp
    void adjust_frequency(frequency_type f);
    void adjust_dascoin_reward(uint32_t amount);
-   void submit_cycles(account_id_type account_id, share_type amount);
-   vector<reward_queue_object> get_reward_queue_objects_by_time();
-   vector<reward_queue_object> get_reward_queue_objects_by_account(account_id_type account_id);
    void toggle_reward_queue(bool state);
-
 };
 
 namespace test {
 /// set a reasonable expiration time for the transaction
 void set_expiration( const database& db, transaction& tx );
+void set_max_expiration(const database& db, transaction& tx);
 
 bool _push_block( database& db, const signed_block& b, uint32_t skip_flags = 0 );
 processed_transaction _push_transaction( database& db, const signed_transaction& tx, uint32_t skip_flags = 0 );

@@ -13,46 +13,59 @@
 
 namespace graphene { namespace chain {
 
-  class license_information
+  class license_information_object : public graphene::db::abstract_object<license_information_object>
   {
     public:
+      static const uint8_t space_id = implementation_ids;
+      static const uint8_t type_id  = impl_license_information_object_type;
+
       struct license_history_record
       {
         license_type_id_type license;
+        share_type amount;
+        share_type base_amount;
+        share_type bonus_percent;
         frequency_type frequency_lock;
+        time_point_sec activated_at;
+        time_point_sec issued_on_blockchain;
 
         license_history_record() = default;
-        license_history_record(license_type_id_type l, frequency_type f) : license(l), frequency_lock(f) {}
+        explicit license_history_record(license_type_id_type license,
+                                        share_type amount,
+                                        share_type base_amount,
+                                        share_type bonus_percent,
+                                        frequency_type frequency_lock,
+                                        time_point_sec activated_at,
+                                        time_point_sec issued_on_blockchain)
+            : license(license),
+              amount(amount),
+              base_amount(base_amount),
+              bonus_percent(bonus_percent),
+              frequency_lock(frequency_lock),
+              activated_at(activated_at),
+              issued_on_blockchain(issued_on_blockchain) {}
       };
+      typedef vector<license_history_record> array_t;
 
-      struct pending_license_record
-      {
-        license_type_id_type license;
-        license_request_id_type request;
+      account_id_type account;
 
-        pending_license_record() = default;
-        pending_license_record(license_type_id_type l, license_request_id_type r) : license(l), request(r) {}
-      };
-
-      optional<license_type_id_type> active_license() const;
-      frequency_type active_frequency_lock() const;
-      void add_license(license_type_id_type license_id, frequency_type frequency_lock = 0);
-
-      void set_pending(license_type_id_type license_id, license_request_id_type req)
-      {
-        pending = pending_license_record(license_id, req);
-      }
-      void clear_pending()
-      {
-        pending.reset();
-      }
-
-      vector<license_history_record> history;
-      optional<pending_license_record> pending;
+      array_t history;
+      license_type_id_type max_license;
+      frequency_type frequency_lock;
 
       upgrade_type balance_upgrade;
       upgrade_type requeue_upgrade;
       upgrade_type return_upgrade;
+
+      void add_license(license_type_id_type license_id, share_type amount, share_type base_amount,
+                       share_type bonus_percentage, frequency_type f_lock,
+                       time_point_sec activated_at,
+                       time_point_sec issued_on_blockchain) {
+        history.emplace_back(license_id, amount, base_amount, bonus_percentage, f_lock,
+                             activated_at, issued_on_blockchain);
+        max_license = license_id;
+        frequency_lock = f_lock;
+      }
   };
 
   ///////////////////////////////
@@ -109,33 +122,29 @@ namespace graphene { namespace chain {
     return lhs.amount >= rhs.amount;
   }
 
-  /**
-   * @class license_request_object
-   * @brief A pending request to grant a license to an account.
-   * @ingroup object
-   *
-   * This is an implementation detail.
-   */
-  class license_request_object : public graphene::db::abstract_object<license_request_object>
-  {
-    public:
-      static const uint8_t space_id = implementation_ids;
-      static const uint8_t type_id  = impl_license_request_object_type;
-
-      account_id_type license_issuing_account;  // This MUST be the license authentication authority.
-      account_id_type account;                  // The account to benefit the license.
-      license_type_id_type license;             // The license to be granted to the account.
-      time_point_sec expiration;                // Deadline for denial.
-      frequency_type frequency;                 // Account frequency lock to be applied.
-
-      extensions_type extensions;
-
-      void validate() const;
-  };
-
   ///////////////////////////////
   // MULTI INDEX CONTAINERS:   //
   ///////////////////////////////
+
+  struct by_account_id;
+  typedef multi_index_container<
+    license_information_object,
+    indexed_by<
+      ordered_unique< 
+        tag<by_id>,
+        member<object, object_id_type, &object::id> 
+      >,
+      ordered_non_unique< 
+        tag<by_account_id>,
+          composite_key< license_information_object,
+              member< license_information_object, account_id_type, &license_information_object::account >,
+              member< object, object_id_type, &object::id >
+          >
+      >
+    >
+  > license_information_multi_index_type;
+
+  typedef generic_index<license_information_object, license_information_multi_index_type> license_information_index;
 
   struct by_name;
   struct by_amount;
@@ -155,56 +164,26 @@ namespace graphene { namespace chain {
 
   typedef generic_index<license_type_object, license_type_multi_index_type> license_type_index;
 
-  struct by_account;
-  struct by_expiration;
-  struct by_license_type_id;
-  struct by_issuer_id;
-  typedef multi_index_container<
-    license_request_object,
-    indexed_by<
-      ordered_unique< tag<by_id>,
-        member< object, object_id_type, &object::id >
-      >,
-      ordered_unique< tag<by_account>,
-        composite_key< license_request_object,
-          member< license_request_object, account_id_type, &license_request_object::account >,
-          member< object, object_id_type, &object::id>
-        >
-      >,
-      ordered_unique< tag<by_expiration>,
-        composite_key< license_request_object,
-          member< license_request_object, time_point_sec, &license_request_object::expiration >,
-          member< object, object_id_type, &object::id>
-        >
-      >,
-      ordered_non_unique< tag<by_issuer_id>,
-        member< license_request_object, account_id_type, &license_request_object::license_issuing_account >
-      >,
-      ordered_non_unique< tag<by_license_type_id>,
-        member< license_request_object, license_type_id_type, &license_request_object::license >
-      >
-    >
-  > license_request_multi_index_type;
-
-  typedef generic_index<license_request_object, license_request_multi_index_type> license_request_index;
-
 } }  // namespace graphene::chain
 
 ///////////////////////////////
 // REFLECTIONS:              //
 ///////////////////////////////
 
-FC_REFLECT( graphene::chain::license_information::license_history_record,
+FC_REFLECT( graphene::chain::license_information_object::license_history_record,
             (license)
+            (amount)
+            (bonus_percent)
             (frequency_lock)
+            (activated_at)
+            (issued_on_blockchain)
           )
-FC_REFLECT( graphene::chain::license_information::pending_license_record,
-            (license)
-            (request)
-          )
-FC_REFLECT( graphene::chain::license_information,
+
+FC_REFLECT( graphene::chain::license_information_object,
+            (account)
             (history)
-            (pending)
+            (max_license)
+            (frequency_lock)
             (balance_upgrade)
             (requeue_upgrade)
             (return_upgrade)
@@ -220,11 +199,3 @@ FC_REFLECT_DERIVED( graphene::chain::license_type_object, (graphene::db::object)
                     (extensions)
                   )
 
-FC_REFLECT_DERIVED( graphene::chain::license_request_object, (graphene::db::object),
-                    (license_issuing_account)
-                    (account)
-                    (license)
-                    (expiration)
-                    (frequency)
-                    (extensions)
-                  )

@@ -83,6 +83,22 @@ BOOST_AUTO_TEST_CASE( get_license_types_unit_test )
   
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( get_license_type_names_ids_unit_test )
+{ try {
+
+  auto lic_vec = _dal.get_license_types();
+  auto names_ids = _dal.get_license_type_names_ids();
+
+  BOOST_CHECK_EQUAL( lic_vec.size(), names_ids.size() );
+
+  for (size_t i = 0; i < names_ids.size(); ++i)
+  {
+    BOOST_CHECK_EQUAL( names_ids[i].first, lic_vec[i].name );
+    BOOST_CHECK( names_ids[i].second == lic_vec[i].id );
+  }
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

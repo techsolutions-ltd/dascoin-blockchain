@@ -171,6 +171,8 @@ struct database_fixture {
    bool skip_key_index_test = false;
    uint32_t anon_acct_count;
 
+   static constexpr uint32_t apply_bonus(uint32_t value, uint32_t bonus);
+
    database_fixture();
    ~database_fixture();
 
@@ -384,6 +386,7 @@ void set_max_expiration(const database& db, transaction& tx);
 
 bool _push_block( database& db, const signed_block& b, uint32_t skip_flags = 0 );
 processed_transaction _push_transaction( database& db, const signed_transaction& tx, uint32_t skip_flags = 0 );
+
 }
 
 } }

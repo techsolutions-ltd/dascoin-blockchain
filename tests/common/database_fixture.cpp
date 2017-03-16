@@ -1137,6 +1137,11 @@ vector< operation_history_object > database_fixture::get_operation_history( acco
    return result;
 }
 
+constexpr uint32_t database_fixture::apply_bonus(uint32_t value, uint32_t bonus)
+{
+  return value + (value * bonus) / 100;
+}
+
 namespace test {
 
 void set_expiration( const database& db, transaction& tx )

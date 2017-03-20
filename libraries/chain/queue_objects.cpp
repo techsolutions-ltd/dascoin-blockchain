@@ -9,6 +9,7 @@ namespace graphene { namespace chain {
   {
     FC_ASSERT( amount > 0 );
     FC_ASSERT( frequency > 0 );
+    FC_ASSERT( comment.length() <= DASCOIN_MAX_COMMENT_LENGTH );
   }
 
 } }  // namespace graphene::chain

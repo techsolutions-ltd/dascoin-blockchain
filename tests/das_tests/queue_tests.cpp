@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE( issue_chartered_license_unit_test )
 
 } FC_LOG_AND_RETHROW() }
 
-BOOST_AUTO_TEST_CASE( submit_cycles_unit_test )
+BOOST_AUTO_TEST_CASE( submit_cycles_operation_test )
 { try {
   VAULT_ACTOR(first)
 
@@ -104,10 +104,10 @@ BOOST_AUTO_TEST_CASE( basic_submit_reserved_cycles_to_queue_test )
   adjust_dascoin_reward(500 * DASCOIN_DEFAULT_ASSET_PRECISION);
   adjust_frequency(200);
 
-  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), first_id, 200, 200));
-  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), second_id, 400, 200));
-  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), third_id, 200, 200));
-  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), fourth_id, 600, 200));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), first_id, 200, 200, ""));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), second_id, 400, 200, ""));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), third_id, 200, 200, ""));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), fourth_id, 600, 200, ""));
 
   // Queue looks like this:
   // 200 --> 400 --> 200 --> 600

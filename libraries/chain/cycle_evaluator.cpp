@@ -44,6 +44,7 @@ object_id_type submit_reserve_cycles_to_queue_evaluator::do_apply(const submit_r
     rqo.amount = op.amount;
     rqo.frequency = op.frequency_lock;
     rqo.time = d.head_block_time();
+    rqo.comment = op.comment;
   }).id;
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }

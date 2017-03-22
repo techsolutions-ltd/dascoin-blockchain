@@ -564,6 +564,7 @@ class database_api
 
       optional<license_type_object> get_license_type(license_type_id_type) const;
       vector<license_type_object> get_license_types() const;
+      vector<pair<string, license_type_id_type>> get_license_type_names_ids() const;
 
       /**
        * @brief Get license types active on the blockchain by name.
@@ -618,6 +619,9 @@ class database_api
       uint32_t get_reward_queue_size() const;
 
       vector<pair<uint32_t, reward_queue_object>> get_queue_submissions_with_pos(account_id_type account_id) const;
+
+      vector<vector<pair<uint32_t, reward_queue_object>>> 
+          get_queue_submissions_with_pos_for_accounts(vector<account_id_type> ids) const;
 
       //////////////////////////
       // REQUESTS:            //
@@ -741,6 +745,7 @@ FC_API( graphene::app::database_api,
    // Licenses
    (get_license_type)
    (get_license_types)
+   (get_license_type_names_ids)
    (list_license_types_by_name)
    (list_license_types_by_amount)
    (lookup_license_type_names)
@@ -758,6 +763,7 @@ FC_API( graphene::app::database_api,
    (get_reward_queue)
    (get_reward_queue_size)
    (get_queue_submissions_with_pos)
+   (get_queue_submissions_with_pos_for_accounts)
 
    // Requests
    (get_all_webasset_issue_requests)

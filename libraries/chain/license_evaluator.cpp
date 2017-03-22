@@ -78,9 +78,9 @@ void_result issue_license_evaluator::do_evaluate(const issue_license_operation& 
     const auto& max_license_obj = license_information_obj.max_license(d);
 
     FC_ASSERT( max_license_obj < new_license_obj,
-               "Cannot improve license on account ${a}, license ${l_old} is better than the active license ${l_act}",
+               "Cannot improve license '${l_max}' on account ${a}, new license '${l_new}' is not an improvement",
                ("a", account_obj.name)
-               ("l_old", max_license_obj.name)
+               ("l_max", max_license_obj.name)
                ("l_new", new_license_obj.name)
              );
     

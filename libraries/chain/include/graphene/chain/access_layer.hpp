@@ -39,6 +39,7 @@ public:
   vector<share_type> get_dascoin_balances_for_accounts(vector<account_id_type> ids) const;
 
   // License:
+  vector<pair<string, license_type_id_type>> get_license_type_names_ids() const;
   vector<license_type_object> get_license_types() const;
   optional<license_type_object> get_license_type(string name) const;
 

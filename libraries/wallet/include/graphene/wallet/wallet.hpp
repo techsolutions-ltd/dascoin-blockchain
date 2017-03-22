@@ -1477,6 +1477,8 @@ class wallet_api
         );
 
       vector<license_type_object> get_license_types() const;
+      vector<pair<string, license_type_id_type>> get_license_type_names_ids() const;
+
 
       vector<optional<license_information_object>> get_license_information(const vector<account_id_type>& account_ids) const;
 
@@ -1745,6 +1747,7 @@ FC_API( graphene::wallet::wallet_api,
         // Licenses:
         (issue_license)
         (get_license_information)
+        (get_license_type_names_ids)
 
         // Cycles:
         (get_account_cycle_balance)

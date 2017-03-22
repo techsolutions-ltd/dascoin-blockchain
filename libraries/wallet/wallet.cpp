@@ -4398,6 +4398,11 @@ vector<license_type_object> wallet_api::get_license_types() const
    return my->_remote_db->get_license_types();
 }
 
+vector<pair<string, license_type_id_type>> wallet_api::get_license_type_names_ids() const
+{
+   return my->_remote_db->get_license_type_names_ids();
+}
+
 signed_transaction wallet_api::issue_license( const string& issuer, const string& account, const string& license,
                                               share_type bonus_percentage, frequency_type account_frequency,
                                               bool broadcast )

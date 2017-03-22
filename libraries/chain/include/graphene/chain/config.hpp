@@ -211,3 +211,15 @@
 /// Represents invalid or non-existant license
 #define DASCOIN_NULL_LICENSE (graphene::chain::license_type_id_type(0))
 ///@}
+
+/**
+ * Base cycle values for license types
+ */
+///@{
+#define DASCOIN_BASE_STANDARD_CYCLES (1100)
+#define DASCOIN_BASE_MANAGER_CYCLES (5500)
+#define DASCOIN_BASE_PRO_CYCLES (24000)
+#define DASCOIN_BASE_EXECUTIVE_CYCLES (65000)
+#define DASCOIN_BASE_VICE_PRESIDENT_CYCLES (225000)
+#define DASCOIN_BASE_PRESIDENT_CYCLES (325000)
+///@?

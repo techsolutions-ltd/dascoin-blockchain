@@ -759,30 +759,24 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    });
 
    // Initialize licenses:
+   // NOTE: preserve the order of licenses to avoid breaking compatibility.    
    {
       // No license placeholder:
       FC_ASSERT( create_license_type(license_kind::none, "no-license", 0, {}, {}, {}) == DASCOIN_NULL_LICENSE );
 
-      create_license_type(license_kind::regular, "standard", 100, {2}, {}, {});
-      create_license_type(license_kind::regular, "manager", 500, {2}, {}, {});
-      create_license_type(license_kind::regular, "pro", 2000, {2}, {}, {});
-      create_license_type(license_kind::regular, "executive", 5000, {2,2}, {}, {});
-      create_license_type(license_kind::regular, "vice-president", 10000, {2,2}, {}, {});
-      create_license_type(license_kind::regular, "president", 25000, {2,2,2}, {}, {});
+      create_license_type(license_kind::regular, "standard", DASCOIN_BASE_STANDARD_CYCLES, {2}, {}, {});
+      create_license_type(license_kind::regular, "manager", DASCOIN_BASE_MANAGER_CYCLES, {2}, {}, {});
+      create_license_type(license_kind::regular, "pro", DASCOIN_BASE_PRO_CYCLES, {2}, {}, {});
+      create_license_type(license_kind::regular, "executive", DASCOIN_BASE_EXECUTIVE_CYCLES, {2,2}, {}, {});
+      create_license_type(license_kind::regular, "vice-president", DASCOIN_BASE_VICE_PRESIDENT_CYCLES, {2,2}, {}, {});
+      create_license_type(license_kind::regular, "president", DASCOIN_BASE_PRESIDENT_CYCLES, {2,2,2}, {}, {});
 
-      create_license_type(license_kind::chartered, "standard-charter", 100, {}, {1}, {});
-      create_license_type(license_kind::chartered, "manager-charter", 500, {}, {1}, {});
-      create_license_type(license_kind::chartered, "pro-charter", 2000, {}, {1}, {});
-      create_license_type(license_kind::chartered, "executive-charter", 5000, {}, {1,2}, {});
-      create_license_type(license_kind::chartered, "vice-president-charter", 10000, {1,2}, {}, {});
-      create_license_type(license_kind::chartered, "president-charter", 25000, {}, {1,2,4}, {});
-
-      create_license_type(license_kind::promo, "standard-promo", 100, {}, {}, {1});
-      create_license_type(license_kind::promo, "manager-promo", 500, {}, {}, {1});
-      create_license_type(license_kind::promo, "pro-promo", 2000, {}, {}, {1});
-      create_license_type(license_kind::promo, "executive-promo", 5000, {}, {}, {1,2});
-      create_license_type(license_kind::promo, "vice-president-promo", 10000, {}, {}, {1,2});
-      create_license_type(license_kind::promo, "president-promo", 25000, {}, {}, {1,2,4});
+      create_license_type(license_kind::chartered, "standard-charter", DASCOIN_BASE_STANDARD_CYCLES, {}, {1}, {});
+      create_license_type(license_kind::chartered, "manager-charter", DASCOIN_BASE_MANAGER_CYCLES, {}, {1}, {});
+      create_license_type(license_kind::chartered, "pro-charter", DASCOIN_BASE_PRO_CYCLES, {}, {1}, {});
+      create_license_type(license_kind::chartered, "executive-charter", DASCOIN_BASE_EXECUTIVE_CYCLES, {}, {1,2}, {});
+      create_license_type(license_kind::chartered, "vice-president-charter", DASCOIN_BASE_VICE_PRESIDENT_CYCLES, {1,2}, {}, {});
+      create_license_type(license_kind::chartered, "president-charter", DASCOIN_BASE_PRESIDENT_CYCLES, {}, {1,2,4}, {});
    }
 
    // Set active witnesses

@@ -28,15 +28,29 @@ BOOST_AUTO_TEST_CASE( regression_test_license_information_index )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( charter_license_type_value_test )
+{ try {
+
+  auto lic = *(_dal.get_license_type("standard-charter"));
+  BOOST_CHECK_EQUAL( lic.amount.value, DASCOIN_BASE_STANDARD_CYCLES );
+
+  lic = *(_dal.get_license_type("manager-charter"));
+  BOOST_CHECK_EQUAL( lic.amount.value, DASCOIN_BASE_MANAGER_CYCLES );
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_CASE( license_information_unit_test )
 { try {
   VAULT_ACTOR(vault);
 
   auto standard_charter = *(_dal.get_license_type("standard-charter"));
+  const share_type bonus_percent = 50;
+  const share_type frequency_lock = 200;
+  const time_point_sec issue_time = db.head_block_time();
+  const uint32_t amount = DASCOIN_BASE_STANDARD_CYCLES + (50 * DASCOIN_BASE_STANDARD_CYCLES) / 100;
 
-  time_point_sec issue_time = db.head_block_time();
   do_op(issue_license_operation(get_license_issuer_id(), vault_id, standard_charter.id,
-        50, 200, issue_time));
+        bonus_percent, frequency_lock, issue_time));
 
   BOOST_CHECK( vault.license_information.valid() );
 
@@ -51,8 +65,8 @@ BOOST_AUTO_TEST_CASE( license_information_unit_test )
   const auto& license_record = license_history[0];
 
   BOOST_CHECK( license_record.license == standard_charter.id );
-  BOOST_CHECK_EQUAL( license_record.amount.value, 150 );
-  BOOST_CHECK_EQUAL( license_record.base_amount.value, 100 );
+  BOOST_CHECK_EQUAL( license_record.amount.value, amount );
+  BOOST_CHECK_EQUAL( license_record.base_amount.value, DASCOIN_BASE_STANDARD_CYCLES );
   BOOST_CHECK_EQUAL( license_record.bonus_percent.value, 50 );
   BOOST_CHECK_EQUAL( license_record.frequency_lock.value, 200 );
   BOOST_CHECK( license_record.activated_at == issue_time );
@@ -65,8 +79,24 @@ BOOST_AUTO_TEST_CASE( get_license_types_unit_test )
 
   auto lic_vec = _dal.get_license_types();
 
-  BOOST_CHECK_EQUAL( lic_vec.size(), 19 );
+  BOOST_CHECK_EQUAL( lic_vec.size(), 13 );
   
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( get_license_type_names_ids_unit_test )
+{ try {
+
+  auto lic_vec = _dal.get_license_types();
+  auto names_ids = _dal.get_license_type_names_ids();
+
+  BOOST_CHECK_EQUAL( lic_vec.size(), names_ids.size() );
+
+  for (size_t i = 0; i < names_ids.size(); ++i)
+  {
+    BOOST_CHECK_EQUAL( names_ids[i].first, lic_vec[i].name );
+    BOOST_CHECK( names_ids[i].second == lic_vec[i].id );
+  }
+
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_SUITE_END()

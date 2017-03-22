@@ -85,6 +85,14 @@ vector<license_type_object> database_access_layer::get_license_types() const
   return get_all<license_type_index, by_id>();
 }
 
+vector<pair<string,license_type_id_type>> database_access_layer::get_license_type_names_ids() const
+{
+  vector<pair<string,license_type_id_type>> result;
+  for (const auto& lic : get_license_types())
+    result.emplace_back(lic.name, lic.id);
+  return result;
+}
+
 uint32_t database_access_layer::get_reward_queue_size() const
 {
   return size<reward_queue_index>();

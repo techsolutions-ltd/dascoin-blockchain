@@ -145,6 +145,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       optional<license_type_object> get_license_type(license_type_id_type license_id) const;
       vector<license_type_object> get_license_types() const;
       vector<optional<license_type_object>> get_license_types(const vector<license_type_id_type>& license_type_ids) const;
+      vector<pair<string, license_type_id_type>> get_license_type_names_ids() const;
       vector<optional<license_information_object>> get_license_information(const vector<account_id_type>& account_ids) const;
 
       // Access:
@@ -158,6 +159,8 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
 
       vector<reward_queue_object> get_reward_queue() const;
       vector<pair<uint32_t, reward_queue_object>> get_queue_submissions_with_pos(account_id_type account_id) const;
+      vector<vector<pair<uint32_t, reward_queue_object>>>
+          get_queue_submissions_with_pos_for_accounts(vector<account_id_type> ids) const;
       uint32_t get_reward_queue_size() const;
 
       template<typename T>
@@ -1900,6 +1903,16 @@ vector<license_type_object> database_api::get_license_types() const
    return my->get_license_types();
 }
 
+vector<pair<string, license_type_id_type>> database_api::get_license_type_names_ids() const
+{
+    return my->get_license_type_names_ids();
+}
+
+vector<pair<string, license_type_id_type>> database_api_impl::get_license_type_names_ids() const
+{
+    return _dal.get_license_type_names_ids();
+}
+
 vector<optional<license_type_object>> database_api_impl::get_license_types(const vector<license_type_id_type>& license_type_ids) const
 {
    vector<optional<license_type_object>> result;
@@ -2040,27 +2053,28 @@ uint32_t database_api_impl::get_reward_queue_size() const
    return _dal.get_reward_queue_size();
 }
 
-vector<pair<uint32_t, reward_queue_object>> database_api::get_queue_submissions_with_pos(account_id_type account_id) const
+vector<pair<uint32_t, reward_queue_object>>
+    database_api::get_queue_submissions_with_pos(account_id_type account_id) const
 {
     return my->get_queue_submissions_with_pos(account_id);
 }
 
-vector<pair<uint32_t, reward_queue_object>> database_api_impl::get_queue_submissions_with_pos(account_id_type account_id) const
+vector<pair<uint32_t, reward_queue_object>>
+    database_api_impl::get_queue_submissions_with_pos(account_id_type account_id) const
 {
-    vector<pair<uint32_t, reward_queue_object>> result;
+    _dal.get_queue_submissions_with_pos(account_id);
+}
 
-    const auto& queue_multi_idx = _db.get_index_type<reward_queue_index>().indices();
-    const auto& account_idx = queue_multi_idx.get<by_account>();
-    const auto& time_idx = queue_multi_idx.get<by_time>();
+vector<vector<pair<uint32_t, reward_queue_object>>>
+    database_api_impl::get_queue_submissions_with_pos_for_accounts(vector<account_id_type> ids) const
+{
+    return _dal.get_queue_submissions_with_pos_for_accounts(ids);
+}
 
-    const auto& range = account_idx.equal_range(account_id);
-    for ( auto it = range.first; it != range.second; ++it )
-    {
-        uint32_t pos = distance(time_idx.begin(), queue_multi_idx.project<by_time>(it));
-        result.emplace_back(pos, *it);
-    }
-
-    return result;
+vector<vector<pair<uint32_t, reward_queue_object>>>
+    database_api::get_queue_submissions_with_pos_for_accounts(vector<account_id_type> ids) const
+{
+    return my->get_queue_submissions_with_pos_for_accounts(ids);
 }
 
 //////////////////////////////////////////////////////////////////////

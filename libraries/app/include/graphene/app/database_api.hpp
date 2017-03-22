@@ -620,6 +620,9 @@ class database_api
 
       vector<pair<uint32_t, reward_queue_object>> get_queue_submissions_with_pos(account_id_type account_id) const;
 
+      vector<vector<pair<uint32_t, reward_queue_object>>> 
+          get_queue_submissions_with_pos_for_accounts(vector<account_id_type> ids) const;
+
       //////////////////////////
       // REQUESTS:            //
       //////////////////////////
@@ -760,6 +763,7 @@ FC_API( graphene::app::database_api,
    (get_reward_queue)
    (get_reward_queue_size)
    (get_queue_submissions_with_pos)
+   (get_queue_submissions_with_pos_for_accounts)
 
    // Requests
    (get_all_webasset_issue_requests)

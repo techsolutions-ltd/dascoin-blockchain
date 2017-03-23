@@ -61,6 +61,7 @@
 #include <fc/thread/scoped_lock.hpp>
 
 #include <graphene/app/api.hpp>
+#include <graphene/chain/access_layer.hpp>
 #include <graphene/chain/asset_object.hpp>
 #include <graphene/chain/protocol/fee_schedule.hpp>
 #include <graphene/utilities/git_revision.hpp>
@@ -4424,18 +4425,25 @@ vector<optional<license_information_object>> wallet_api::get_license_information
    return my->_remote_db->get_license_information(account_ids);
 }
 
-share_type wallet_api::get_account_cycle_balance(const string& name_or_id) const
+acc_id_share_t_res wallet_api::get_account_cycle_balance(const string& name_or_id) const
 {
    if( auto real_id = detail::maybe_id<account_id_type>(name_or_id) )
       return my->_remote_db->get_free_cycle_balance(*real_id);
    return my->_remote_db->get_free_cycle_balance(get_account(name_or_id).id);
 }
 
-vector<cycle_agreement> wallet_api::get_full_cycle_balances(const string& name_or_id) const
+acc_id_vec_cycle_agreement_res wallet_api::get_full_cycle_balances(const string& name_or_id) const
 {
    if( auto real_id = detail::maybe_id<account_id_type>(name_or_id) )
       return my->_remote_db->get_all_cycle_balances(*real_id);
    return my->_remote_db->get_all_cycle_balances(get_account(name_or_id).id);
+}
+
+acc_id_share_t_res wallet_api::get_dascoin_balance(const string& name_or_id) const
+{
+   if( auto real_id = detail::maybe_id<account_id_type>(name_or_id) )
+      return my->_remote_db->get_dascoin_balance(*real_id);
+   return my->_remote_db->get_dascoin_balance(get_account(name_or_id).id);
 }
 
 uint32_t wallet_api::get_reward_queue_size() const
@@ -4463,7 +4471,7 @@ vector<reward_queue_object> wallet_api::get_reward_queue() const
    return my->_remote_db->get_reward_queue();
 }
 
-vector<pair<uint32_t, reward_queue_object>> wallet_api::get_queue_submissions_with_pos(account_id_type account_id) const
+acc_id_queue_subs_w_pos_res wallet_api::get_queue_submissions_with_pos(account_id_type account_id) const
 {
    return my->_remote_db->get_queue_submissions_with_pos(account_id);
 }

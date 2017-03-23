@@ -448,54 +448,6 @@ namespace graphene { namespace chain {
       uint32_t v_num = 0;
    };
 
-  // Structs for serializing data:
-
-   struct acc_id_res {
-
-       acc_id_res() = delete;
-       acc_id_res(account_id_type account_id)
-           : account_id(account_id)
-       {
-       }
-
-       account_id_type account_id;
-   };
-
-   struct cycle_agreement {
-
-       cycle_agreement() = default;
-       cycle_agreement(share_type cycles, frequency_type frequency_lock)
-           : cycles(cycles)
-           , frequency_lock(frequency_lock)
-       {
-       }
-
-       share_type cycles = 0;
-       frequency_type frequency_lock = 0;
-   };
-
-   struct acc_id_share_t_res : public acc_id_res {
-
-       acc_id_share_t_res(account_id_type account_id, share_type result)
-           : acc_id_res(account_id)
-           , result(result)
-       {
-       }
-
-       share_type result = 0;
-   };
-
-   struct acc_id_cycle_agreement_res : public acc_id_res {
-
-       acc_id_cycle_agreement_res(account_id_type account_id, cycle_agreement agreement)
-           : acc_id_res(account_id)
-           , agreement(agreement)
-       {
-       }
-
-       cycle_agreement agreement;
-   };
-
 } }  // namespace graphene::chain
 
 namespace fc
@@ -663,9 +615,3 @@ FC_REFLECT_ENUM( graphene::chain::cycle_policy_flags,
                )
 
 FC_REFLECT( graphene::chain::version, (v_num) )
-
-FC_REFLECT( graphene::chain::cycle_agreement, (cycles)(frequency_lock) )
-
-FC_REFLECT( graphene::chain::acc_id_res, (account_id) )
-FC_REFLECT( graphene::chain::acc_id_share_t_res, (account_id)(result) )
-FC_REFLECT( graphene::chain::acc_id_cycle_agreement_res, (account_id)(agreement) )

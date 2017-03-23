@@ -18,21 +18,51 @@ BOOST_FIXTURE_TEST_SUITE( dascoin_tests, database_fixture )
 
 BOOST_FIXTURE_TEST_SUITE( access_layer_unit_tests, database_fixture )
 
+BOOST_AUTO_TEST_CASE( get_free_cycle_balance_non_existant_id_unit_test )
+{ try {
+  auto bogus_id = account_id_type(999999);
+
+  auto res = _dal.get_free_cycle_balance(bogus_id);
+  BOOST_CHECK( res.account_id == bogus_id );
+  BOOST_CHECK( !res.result.valid() );
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_CASE( get_free_cycle_balance_unit_test )
 { try {
   VAULT_ACTOR(vault)
 
+  auto res = _dal.get_free_cycle_balance(vault_id);
+  BOOST_CHECK( res.account_id == vault_id );
+  BOOST_CHECK_EQUAL( res.result->value, 0 );
+
   adjust_cycles(vault_id, 100);
 
-  BOOST_CHECK_EQUAL( _dal.get_free_cycle_balance(vault_id).value, 100 );
+  res = _dal.get_free_cycle_balance(vault_id);
+  BOOST_CHECK( res.account_id == vault_id );
+  BOOST_CHECK_EQUAL( res.result->value, 100 );
 
   adjust_cycles(vault_id, 300);
 
-  BOOST_CHECK_EQUAL( _dal.get_free_cycle_balance(vault_id).value, 400 );
+  res = _dal.get_free_cycle_balance(vault_id);
+  BOOST_CHECK( res.account_id == vault_id );
+  BOOST_CHECK_EQUAL( res.result->value, 400 );
 
   do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), vault_id, 200, 200, ""));
 
-  BOOST_CHECK_EQUAL( _dal.get_free_cycle_balance(vault_id).value, 400 );
+  res = _dal.get_free_cycle_balance(vault_id);
+  BOOST_CHECK( res.account_id == vault_id );
+  BOOST_CHECK_EQUAL( res.result->value, 400 );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( get_all_cycle_balances_non_existant_id_unit_test )
+{ try {
+  auto bogus_id = account_id_type(999999);
+
+  auto res = _dal.get_all_cycle_balances(bogus_id);
+  BOOST_CHECK( res.account_id == bogus_id );
+  BOOST_CHECK( !res.result.valid() );
 
 } FC_LOG_AND_RETHROW() }
 
@@ -42,7 +72,9 @@ BOOST_AUTO_TEST_CASE( get_all_cycle_balances_unit_test )
 
   adjust_cycles(vault_id, 100);
 
-  auto cycle_vec = _dal.get_all_cycle_balances(vault_id);
+  auto res = _dal.get_all_cycle_balances(vault_id);
+  BOOST_CHECK( res.account_id == vault_id );
+  auto cycle_vec = *res.result;
   BOOST_CHECK_EQUAL( cycle_vec.size(), 1 );
   BOOST_CHECK_EQUAL( cycle_vec[0].cycles.value, 100 );
   BOOST_CHECK_EQUAL( cycle_vec[0].frequency_lock.value, 0 );
@@ -52,7 +84,9 @@ BOOST_AUTO_TEST_CASE( get_all_cycle_balances_unit_test )
   do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), vault_id, 210, 200, ""));
   do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), vault_id, 220, 200, ""));
 
-  cycle_vec = _dal.get_all_cycle_balances(vault_id);
+  res = _dal.get_all_cycle_balances(vault_id);
+  BOOST_CHECK( res.account_id == vault_id );
+  cycle_vec = *res.result;
   BOOST_CHECK_EQUAL( cycle_vec.size(), 4 );
   BOOST_CHECK_EQUAL( cycle_vec[0].cycles.value, 1100 );
   BOOST_CHECK_EQUAL( cycle_vec[0].frequency_lock.value, 0 );
@@ -65,17 +99,29 @@ BOOST_AUTO_TEST_CASE( get_all_cycle_balances_unit_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( get_dascoin_balance_non_existant_id_unit_test )
+{ try {
+  auto bogus_id = account_id_type(999999);
+
+  auto res = _dal.get_dascoin_balance(bogus_id);
+  BOOST_CHECK( res.account_id == bogus_id );
+  BOOST_CHECK( !res.result.valid() );
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_CASE( get_dascoin_balances )
 { try {
   VAULT_ACTOR(vault)
 
   db.issue_asset(vault_id, 1000 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id(), 0);
 
-  BOOST_CHECK_EQUAL( _dal.get_dascoin_balance(vault_id).value, 1000 * DASCOIN_DEFAULT_ASSET_PRECISION );
+  auto res = _dal.get_dascoin_balance(vault_id);
+  BOOST_CHECK( res.account_id == vault_id );
+  BOOST_CHECK_EQUAL( res.result->value, 1000 * DASCOIN_DEFAULT_ASSET_PRECISION );
 
 } FC_LOG_AND_RETHROW() }
 
-BOOST_AUTO_TEST_CASE( get_free_cycle_balances_for_accounts_unit_test )
+/*BOOST_AUTO_TEST_CASE( get_free_cycle_balances_for_accounts_unit_test )
 { try {
   VAULT_ACTORS((first)(second)(third)(fourth))
 
@@ -316,7 +362,7 @@ BOOST_AUTO_TEST_CASE( get_queue_submissions_with_pos_for_accounts_unit_test )
   pos_vec = vec[3];
   BOOST_CHECK_EQUAL( pos_vec.size(), 0 );
 
-} FC_LOG_AND_RETHROW() }
+} FC_LOG_AND_RETHROW() }*/
 
 BOOST_AUTO_TEST_SUITE_END()
 

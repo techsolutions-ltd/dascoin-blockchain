@@ -149,17 +149,17 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<optional<license_information_object>> get_license_information(const vector<account_id_type>& account_ids) const;
 
       // Access:
-      share_type get_free_cycle_balance(account_id_type account_id) const;
-      vector<cycle_agreement> get_all_cycle_balances(account_id_type account_id) const;
-      share_type get_dascoin_balance(account_id_type id) const;
+      acc_id_share_t_res get_free_cycle_balance(account_id_type account_id) const;
+      acc_id_vec_cycle_agreement_res get_all_cycle_balances(account_id_type account_id) const;
+      acc_id_share_t_res get_dascoin_balance(account_id_type id) const;
 
-      vector<share_type> get_free_cycle_balances_for_accounts(vector<account_id_type> ids) const;
-      vector<vector<cycle_agreement>> get_all_cycle_balances_for_accounts(vector<account_id_type> ids) const;
-      vector<share_type> get_dascoin_balances_for_accounts(vector<account_id_type> ids) const;
+      vector<acc_id_share_t_res> get_free_cycle_balances_for_accounts(vector<account_id_type> ids) const;
+      vector<acc_id_vec_cycle_agreement_res> get_all_cycle_balances_for_accounts(vector<account_id_type> ids) const;
+      vector<acc_id_share_t_res> get_dascoin_balances_for_accounts(vector<account_id_type> ids) const;
 
       vector<reward_queue_object> get_reward_queue() const;
-      vector<pair<uint32_t, reward_queue_object>> get_queue_submissions_with_pos(account_id_type account_id) const;
-      vector<vector<pair<uint32_t, reward_queue_object>>>
+      acc_id_queue_subs_w_pos_res get_queue_submissions_with_pos(account_id_type account_id) const;
+      vector<acc_id_queue_subs_w_pos_res>
           get_queue_submissions_with_pos_for_accounts(vector<account_id_type> ids) const;
       uint32_t get_reward_queue_size() const;
 
@@ -1882,14 +1882,14 @@ vector<blinded_balance_object> database_api_impl::get_blinded_balances( const fl
 //                                                                  //
 //////////////////////////////////////////////////////////////////////
 
-optional<license_type_object> database_api_impl::get_license_type(license_type_id_type license_id) const
-{
-  return _dal.get_opt<license_type_id_type, license_type_index, by_id>(license_id);
-}
-
 optional<license_type_object> database_api::get_license_type(license_type_id_type license_id) const
 {
   return my->get_license_type(license_id);
+}
+
+optional<license_type_object> database_api_impl::get_license_type(license_type_id_type license_id) const
+{
+  return _dal.get_license_type(license_id);
 }
 
 vector<license_type_object> database_api_impl::get_license_types() const
@@ -1973,74 +1973,74 @@ vector<optional<license_information_object>> database_api_impl::get_license_info
 //                                                                  //
 //////////////////////////////////////////////////////////////////////
 
-share_type database_api::get_free_cycle_balance(const account_id_type id)const
+acc_id_share_t_res database_api::get_free_cycle_balance(const account_id_type id)const
 {
    return my->get_free_cycle_balance(id);
 }
 
-share_type database_api_impl::get_free_cycle_balance(const account_id_type id) const
+acc_id_share_t_res database_api_impl::get_free_cycle_balance(const account_id_type id) const
 {
    return _dal.get_free_cycle_balance(id);
 }
 
-vector<cycle_agreement> database_api::get_all_cycle_balances(account_id_type id) const
+acc_id_vec_cycle_agreement_res database_api::get_all_cycle_balances(account_id_type id) const
 {
     return my->get_all_cycle_balances(id);
 }
 
-vector<cycle_agreement> database_api_impl::get_all_cycle_balances(account_id_type id) const
+acc_id_vec_cycle_agreement_res database_api_impl::get_all_cycle_balances(account_id_type id) const
 {
     return _dal.get_all_cycle_balances(id);
 }
 
-share_type database_api::get_dascoin_balance(account_id_type id) const
+acc_id_share_t_res database_api::get_dascoin_balance(account_id_type id) const
 {
     return my->get_dascoin_balance(id);
 }
 
-share_type database_api_impl::get_dascoin_balance(account_id_type id) const
+acc_id_share_t_res database_api_impl::get_dascoin_balance(account_id_type id) const
 {
     return _dal.get_dascoin_balance(id);
 }
 
-vector<share_type> database_api::get_free_cycle_balances_for_accounts(vector<account_id_type> ids) const
+vector<acc_id_share_t_res> database_api::get_free_cycle_balances_for_accounts(vector<account_id_type> ids) const
 {
     return my->get_free_cycle_balances_for_accounts(ids);
 }
 
-vector<share_type> database_api_impl::get_free_cycle_balances_for_accounts(vector<account_id_type> ids) const
+vector<acc_id_share_t_res> database_api_impl::get_free_cycle_balances_for_accounts(vector<account_id_type> ids) const
 {
     return _dal.get_free_cycle_balances_for_accounts(ids);
 }
 
-vector<vector<cycle_agreement>> database_api::get_all_cycle_balances_for_accounts(vector<account_id_type> ids) const
+vector<acc_id_vec_cycle_agreement_res> database_api::get_all_cycle_balances_for_accounts(vector<account_id_type> ids) const
 {
     return my->get_all_cycle_balances_for_accounts(ids);
 }
 
-vector<vector<cycle_agreement>> database_api_impl::get_all_cycle_balances_for_accounts(vector<account_id_type> ids) const
+vector<acc_id_vec_cycle_agreement_res> database_api_impl::get_all_cycle_balances_for_accounts(vector<account_id_type> ids) const
 {
     return _dal.get_all_cycle_balances_for_accounts(ids);
 }
 
-vector<share_type> database_api::get_dascoin_balances_for_accounts(vector<account_id_type> ids) const
+vector<acc_id_share_t_res> database_api::get_dascoin_balances_for_accounts(vector<account_id_type> ids) const
 {
     return my->get_dascoin_balances_for_accounts(ids);
 }
 
-vector<share_type> database_api_impl::get_dascoin_balances_for_accounts(vector<account_id_type> ids) const
+vector<acc_id_share_t_res> database_api_impl::get_dascoin_balances_for_accounts(vector<account_id_type> ids) const
 {
     return _dal.get_dascoin_balances_for_accounts(ids);
-}
-
-vector<reward_queue_object> database_api_impl::get_reward_queue() const
-{
-  return _dal.get_all<reward_queue_index, by_time>();
 }
 
 vector<reward_queue_object> database_api::get_reward_queue() const
 {
    return my->get_reward_queue();
+}
+
+vector<reward_queue_object> database_api_impl::get_reward_queue() const
+{
+  return _dal.get_reward_queue();
 }
 
 uint32_t database_api::get_reward_queue_size() const
@@ -2053,28 +2053,26 @@ uint32_t database_api_impl::get_reward_queue_size() const
    return _dal.get_reward_queue_size();
 }
 
-vector<pair<uint32_t, reward_queue_object>>
-    database_api::get_queue_submissions_with_pos(account_id_type account_id) const
+acc_id_queue_subs_w_pos_res database_api::get_queue_submissions_with_pos(account_id_type account_id) const
 {
     return my->get_queue_submissions_with_pos(account_id);
 }
 
-vector<pair<uint32_t, reward_queue_object>>
-    database_api_impl::get_queue_submissions_with_pos(account_id_type account_id) const
+acc_id_queue_subs_w_pos_res database_api_impl::get_queue_submissions_with_pos(account_id_type account_id) const
 {
-    _dal.get_queue_submissions_with_pos(account_id);
+    return _dal.get_queue_submissions_with_pos(account_id);
 }
 
-vector<vector<pair<uint32_t, reward_queue_object>>>
-    database_api_impl::get_queue_submissions_with_pos_for_accounts(vector<account_id_type> ids) const
-{
-    return _dal.get_queue_submissions_with_pos_for_accounts(ids);
-}
-
-vector<vector<pair<uint32_t, reward_queue_object>>>
+vector<acc_id_queue_subs_w_pos_res>
     database_api::get_queue_submissions_with_pos_for_accounts(vector<account_id_type> ids) const
 {
     return my->get_queue_submissions_with_pos_for_accounts(ids);
+}
+
+vector<acc_id_queue_subs_w_pos_res>
+    database_api_impl::get_queue_submissions_with_pos_for_accounts(vector<account_id_type> ids) const
+{
+    return _dal.get_queue_submissions_with_pos_for_accounts(ids);
 }
 
 //////////////////////////////////////////////////////////////////////

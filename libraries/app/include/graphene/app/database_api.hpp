@@ -29,6 +29,8 @@
 
 #include <graphene/chain/database.hpp>
 
+#include <graphene/chain/access_layer.hpp>
+
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/asset_object.hpp>
 #include <graphene/chain/balance_object.hpp>
@@ -598,13 +600,13 @@ class database_api
       // Access  //
       /////////////
 
-      share_type get_free_cycle_balance(account_id_type account_id) const;
-      vector<cycle_agreement> get_all_cycle_balances(account_id_type account_id) const;
-      share_type get_dascoin_balance(account_id_type id) const;
+      acc_id_share_t_res get_free_cycle_balance(account_id_type account_id) const;
+      acc_id_vec_cycle_agreement_res get_all_cycle_balances(account_id_type account_id) const;
+      acc_id_share_t_res get_dascoin_balance(account_id_type id) const;
 
-      vector<share_type> get_free_cycle_balances_for_accounts(vector<account_id_type> ids) const;
-      vector<vector<cycle_agreement>> get_all_cycle_balances_for_accounts(vector<account_id_type> ids) const;
-      vector<share_type> get_dascoin_balances_for_accounts(vector<account_id_type> ids) const;
+      vector<acc_id_share_t_res> get_free_cycle_balances_for_accounts(vector<account_id_type> ids) const;
+      vector<acc_id_vec_cycle_agreement_res> get_all_cycle_balances_for_accounts(vector<account_id_type> ids) const;
+      vector<acc_id_share_t_res> get_dascoin_balances_for_accounts(vector<account_id_type> ids) const;
 
       /**
        * @brief Return the entire reward queue.
@@ -618,9 +620,8 @@ class database_api
        */
       uint32_t get_reward_queue_size() const;
 
-      vector<pair<uint32_t, reward_queue_object>> get_queue_submissions_with_pos(account_id_type account_id) const;
-
-      vector<vector<pair<uint32_t, reward_queue_object>>> 
+      acc_id_queue_subs_w_pos_res get_queue_submissions_with_pos(account_id_type account_id) const;
+      vector<acc_id_queue_subs_w_pos_res> 
           get_queue_submissions_with_pos_for_accounts(vector<account_id_type> ids) const;
 
       //////////////////////////

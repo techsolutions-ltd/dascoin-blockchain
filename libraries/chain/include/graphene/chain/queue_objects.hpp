@@ -34,6 +34,7 @@ namespace graphene { namespace chain {
       share_type amount;
       frequency_type frequency;
       time_point_sec time;
+      string comment;
 
       extensions_type extensions;
 

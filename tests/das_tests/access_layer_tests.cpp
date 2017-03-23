@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE( get_free_cycle_balance_unit_test )
 
   BOOST_CHECK_EQUAL( _dal.get_free_cycle_balance(vault_id).value, 400 );
 
-  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), vault_id, 200, 200));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), vault_id, 200, 200, ""));
 
   BOOST_CHECK_EQUAL( _dal.get_free_cycle_balance(vault_id).value, 400 );
 
@@ -48,9 +48,9 @@ BOOST_AUTO_TEST_CASE( get_all_cycle_balances_unit_test )
   BOOST_CHECK_EQUAL( cycle_vec[0].frequency_lock.value, 0 );
 
   adjust_cycles(vault_id, 1000);
-  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), vault_id, 200, 200));
-  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), vault_id, 210, 200));
-  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), vault_id, 220, 200));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), vault_id, 200, 200, ""));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), vault_id, 210, 200, ""));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), vault_id, 220, 200, ""));
 
   cycle_vec = _dal.get_all_cycle_balances(vault_id);
   BOOST_CHECK_EQUAL( cycle_vec.size(), 4 );
@@ -106,11 +106,11 @@ BOOST_AUTO_TEST_CASE( get_all_cycle_balances_for_accounts_unit_test )
   BOOST_CHECK_EQUAL( vec.size(), 0 );
 
   adjust_cycles( first_id, 100 );
-  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), first_id, 110, 200));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), first_id, 110, 200, ""));
 
   adjust_cycles( second_id, 200 );
 
-  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), third_id, 300, 200));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), third_id, 300, 200, ""));
 
   vec = _dal.get_all_cycle_balances_for_accounts({first_id, second_id, third_id, fourth_id});
 
@@ -167,16 +167,16 @@ BOOST_AUTO_TEST_CASE( get_queue_submissions_with_pos_unit_test )
 { try {
   VAULT_ACTORS((first)(second)(third)(fourth))
 
-  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), first_id, 100, 200));
-  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), first_id, 120, 200));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), first_id, 100, 200, "test1"));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), first_id, 120, 200, ""));
 
-  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), second_id, 200, 200));
-  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), second_id, 210, 200));
-  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), second_id, 220, 200));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), second_id, 200, 200, ""));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), second_id, 210, 200, ""));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), second_id, 220, 200, ""));
 
-  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), third_id, 300, 200));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), third_id, 300, 200, ""));
 
-  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), fourth_id, 400, 200));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), fourth_id, 400, 200, ""));
 
   auto pos_vec = _dal.get_queue_submissions_with_pos(first_id);
   BOOST_CHECK_EQUAL( pos_vec.size(), 2 );
@@ -191,6 +191,7 @@ BOOST_AUTO_TEST_CASE( get_queue_submissions_with_pos_unit_test )
   BOOST_CHECK_EQUAL( rqo.amount.value, 100 );
   BOOST_CHECK_EQUAL( rqo.frequency.value, 200 );
   // BOOST_CHECK( rqo.time == db.head_block_time() ); // TODO: this fails for some reason?
+  BOOST_CHECK( rqo.comment == "test1" );
 
   std::tie(pos, rqo) = pos_vec[1];
   BOOST_CHECK_EQUAL( pos, 1 );
@@ -260,12 +261,12 @@ BOOST_AUTO_TEST_CASE( get_queue_submissions_with_pos_for_accounts_unit_test )
   auto vec = _dal.get_queue_submissions_with_pos_for_accounts({});
   BOOST_CHECK_EQUAL( vec.size(), 0 );
 
-  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), first_id, 100, 200));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), first_id, 100, 200, ""));
 
-  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), second_id, 200, 200));
-  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), second_id, 210, 200));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), second_id, 200, 200, ""));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), second_id, 210, 200, ""));
 
-  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), third_id, 300, 200));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), third_id, 300, 200, ""));
 
   vec = _dal.get_queue_submissions_with_pos_for_accounts({first_id, second_id, third_id, fourth_id});
   BOOST_CHECK_EQUAL( vec.size(), 4 );

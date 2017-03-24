@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [0.0.5] - 2017-03-24
 ### Added
 - Submit reserved cycle balances to queue now has a string "comment" field
+
 ### Updated
 - Api calls for blances and queue with position now return structured objects
   - Each response has the "account_id" field

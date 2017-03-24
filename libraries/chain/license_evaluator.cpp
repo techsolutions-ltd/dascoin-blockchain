@@ -142,6 +142,7 @@ object_id_type issue_license_evaluator::do_apply(const issue_license_operation& 
       rqo.time = d.head_block_time();
     });
 
+    // TODO: should we use a virtual op here?
     d.push_applied_operation(
       record_submit_charter_license_cycles_operation(_issuer_id, op.account, amount, op.frequency_lock)
     );

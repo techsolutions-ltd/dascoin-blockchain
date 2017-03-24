@@ -31,11 +31,17 @@ namespace graphene { namespace chain {
     account_id_type account;
     share_type amount;
     frequency_type frequency_lock;
+    string comment;  // Comment the reason the cycles were submitted.
 
     submit_reserve_cycles_to_queue_operation() = default;
-    explicit submit_reserve_cycles_to_queue_operation(account_id_type i, account_id_type acc, share_type am, 
-                                                      frequency_type f_l)
-        : issuer(i), account(acc), amount(am), frequency_lock(f_l) {}
+    explicit submit_reserve_cycles_to_queue_operation(account_id_type issuer, account_id_type account,
+                                                      share_type amount, frequency_type frequency_lock,
+                                                      const string& comment)
+        : issuer(issuer)
+        , account(account)
+        , amount(amount)
+        , frequency_lock(frequency_lock)
+        , comment(comment) {}
 
     extensions_type extensions;
 
@@ -63,7 +69,8 @@ namespace graphene { namespace chain {
 
     submit_cycles_to_queue_operation() = default;
     submit_cycles_to_queue_operation(account_id_type account, share_type amount)
-      : account(account), amount(amount) {}
+        : account(account)
+        , amount(amount) {}
 
     account_id_type fee_payer() const { return account; }
     void validate() const;
@@ -81,12 +88,19 @@ namespace graphene { namespace chain {
     account_id_type account;
     share_type amount;
     frequency_type frequency_lock;
-
-    record_submit_reserve_cycles_to_queue_operation() = default;
-    explicit record_submit_reserve_cycles_to_queue_operation(account_id_type c_i, account_id_type acc, share_type am,
-        frequency_type f_l) : cycle_issuer(c_i), amount(am), frequency_lock(f_l) {}
+    string comment;  // Comment the reason the cycles were submitted.
 
     extensions_type extensions;
+
+    record_submit_reserve_cycles_to_queue_operation() = default;
+    explicit record_submit_reserve_cycles_to_queue_operation(account_id_type cycle_issuer, account_id_type account,
+                                                             share_type amount, frequency_type frequency_lock,
+                                                             const string& comment)
+        : cycle_issuer(cycle_issuer)
+        , amount(amount)
+        , frequency_lock(frequency_lock)
+        , comment(comment) {}
+
 
     account_id_type fee_payer() const { return account; }
     void validate() const { FC_ASSERT( false ); }
@@ -104,12 +118,16 @@ namespace graphene { namespace chain {
     account_id_type account;
     share_type amount;
     frequency_type frequency_lock;
+    
+    extensions_type extensions;
 
     record_submit_charter_license_cycles_operation() = default;
-    record_submit_charter_license_cycles_operation(account_id_type i, account_id_type acc, share_type am, 
-        frequency_type f_l) : license_issuer(i), account(acc), amount(am), frequency_lock(f_l) {}
-
-    extensions_type extensions;
+    record_submit_charter_license_cycles_operation(account_id_type license_issuer, account_id_type account,
+                                                   share_type amount, frequency_type frequency_lock)
+        : license_issuer(license_issuer)
+        , account(account)
+        , amount(amount)
+        , frequency_lock(frequency_lock) {}
 
     account_id_type fee_payer() const { return account; }
     void validate() const { FC_ASSERT( false ); }
@@ -157,6 +175,7 @@ FC_REFLECT( graphene::chain::submit_reserve_cycles_to_queue_operation,
             (account)
             (amount)
             (frequency_lock)
+            (comment)
             (extensions)
           )
 
@@ -175,6 +194,7 @@ FC_REFLECT( graphene::chain::record_submit_reserve_cycles_to_queue_operation,
             (account)
             (amount)
             (frequency_lock)
+            (comment)
             (extensions)
           )
 

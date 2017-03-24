@@ -51,14 +51,12 @@ BOOST_AUTO_TEST_CASE( issue_chartered_license_unit_test )
   do_op(issue_license_operation(get_license_issuer_id(), first_id, lic_typ.id,
       10, 200, db.head_block_time()));
 
-  auto pos_vec = _dal.get_queue_submissions_with_pos(first_id);
-  BOOST_CHECK_EQUAL( pos_vec.size(), 1 );
+  auto result_vec = *_dal.get_queue_submissions_with_pos(first_id).result;
+  BOOST_CHECK_EQUAL( result_vec.size(), 1 );
 
-  uint32_t pos;
-  reward_queue_object rqo;
-  std::tie(pos, rqo) = pos_vec[0];
-  BOOST_CHECK_EQUAL( pos, 0 );
+  BOOST_CHECK_EQUAL( result_vec[0].position, 0 );
 
+  auto rqo = result_vec[0].submission;
   BOOST_CHECK_EQUAL( rqo.origin, "charter_license" );
   BOOST_CHECK( rqo.license.valid() );
   BOOST_CHECK( *rqo.license == lic_typ.id );
@@ -78,14 +76,12 @@ BOOST_AUTO_TEST_CASE( submit_cycles_operation_test )
     
   do_op(submit_cycles_to_queue_operation(first_id, 100));
 
-  auto pos_vec = _dal.get_queue_submissions_with_pos(first_id);
-  BOOST_CHECK_EQUAL( pos_vec.size(), 1 );
+  auto result_vec = *_dal.get_queue_submissions_with_pos(first_id).result;
+  BOOST_CHECK_EQUAL( result_vec.size(), 1 );
 
-  uint32_t pos;
-  reward_queue_object rqo;
-  std::tie(pos, rqo) = pos_vec[0];
-  BOOST_CHECK_EQUAL( pos, 0 );
+  BOOST_CHECK_EQUAL( result_vec[0].position, 0 );
 
+  auto rqo = result_vec[0].submission;
   BOOST_CHECK_EQUAL( rqo.origin, "user_submit" );
   BOOST_CHECK( !rqo.license.valid() );
   BOOST_CHECK( rqo.account == first_id );

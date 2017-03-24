@@ -121,29 +121,33 @@ BOOST_AUTO_TEST_CASE( get_dascoin_balances )
 
 } FC_LOG_AND_RETHROW() }
 
-/*BOOST_AUTO_TEST_CASE( get_free_cycle_balances_for_accounts_unit_test )
+BOOST_AUTO_TEST_CASE( get_free_cycle_balances_for_accounts_unit_test )
 { try {
-  VAULT_ACTORS((first)(second)(third)(fourth))
+  VAULT_ACTORS((first)(second)(third))
+  auto bogus_id = account_id_type(99999999);
 
-  auto cycle_vec = _dal.get_free_cycle_balances_for_accounts({});
-
-  BOOST_CHECK_EQUAL( cycle_vec.size(), 0 );
-
-  adjust_cycles(first_id, 100);
   adjust_cycles(second_id, 200);
   adjust_cycles(third_id, 300);
 
-  cycle_vec = _dal.get_free_cycle_balances_for_accounts({first_id, second_id, third_id, fourth_id});
+  auto res_vec = _dal.get_free_cycle_balances_for_accounts({first_id, second_id, third_id, bogus_id});
 
-  BOOST_CHECK_EQUAL( cycle_vec.size(), 4 );
-  BOOST_CHECK_EQUAL( cycle_vec[0].value, 100 );
-  BOOST_CHECK_EQUAL( cycle_vec[1].value, 200 );
-  BOOST_CHECK_EQUAL( cycle_vec[2].value, 300 );
-  BOOST_CHECK_EQUAL( cycle_vec[3].value, 0 );
+  BOOST_CHECK_EQUAL( res_vec.size(), 4 );
+
+  BOOST_CHECK( res_vec[0].account_id == first_id );
+  BOOST_CHECK_EQUAL( res_vec[0].result->value, 0 );
+
+  BOOST_CHECK( res_vec[1].account_id == second_id );
+  BOOST_CHECK_EQUAL( res_vec[1].result->value, 200 );
+
+  BOOST_CHECK( res_vec[2].account_id == third_id );
+  BOOST_CHECK_EQUAL( res_vec[2].result->value, 300 );
+
+  BOOST_CHECK( res_vec[3].account_id == bogus_id );
+  BOOST_CHECK( !res_vec[3].result.valid() );
 
 } FC_LOG_AND_RETHROW() }
 
-BOOST_AUTO_TEST_CASE( get_all_cycle_balances_for_accounts_unit_test )
+/*BOOST_AUTO_TEST_CASE( get_all_cycle_balances_for_accounts_unit_test )
 { try {
   VAULT_ACTORS((first)(second)(third)(fourth))
 

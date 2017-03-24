@@ -147,6 +147,58 @@ BOOST_AUTO_TEST_CASE( get_free_cycle_balances_for_accounts_unit_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( get_all_cycle_balances_for_accounts_unit_test )
+{ try {
+  VAULT_ACTORS((zero)(somefree)(somequeue)(both))
+  auto bogus_id = account_id_type(99999);
+
+  adjust_cycles( somefree_id, 100 );
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), somequeue_id, 200, 200, ""));
+  adjust_cycles( both_id, 300 );
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), both_id, 310, 200, ""));
+
+  auto result_vec = _dal.get_all_cycle_balances_for_accounts({zero_id, somefree_id, somequeue_id, both_id, bogus_id});
+
+  BOOST_CHECK_EQUAL( result_vec.size(), 5 );
+
+  // Zero has balance of 0 with lock 0:
+  BOOST_CHECK( result_vec[0].account_id == zero_id );
+  auto agreement_vec = *result_vec[0].result;
+  BOOST_CHECK_EQUAL( agreement_vec.size(), 1 );
+  BOOST_CHECK_EQUAL( agreement_vec[0].cycles.value, 0 );
+  BOOST_CHECK_EQUAL( agreement_vec[0].frequency_lock.value, 0 );
+
+  // Somefree has balance of 100 with lock 0:
+  BOOST_CHECK( result_vec[1].account_id == somefree_id );
+  agreement_vec = *result_vec[1].result;
+  BOOST_CHECK_EQUAL( agreement_vec.size(), 1 );
+  BOOST_CHECK_EQUAL( agreement_vec[0].cycles.value, 100 );
+  BOOST_CHECK_EQUAL( agreement_vec[0].frequency_lock.value, 0 );
+
+  // Somequeue has balance of 0 with frequency lock 0 and balance 200 with lock 200:
+  BOOST_CHECK( result_vec[2].account_id == somequeue_id );
+  agreement_vec = *result_vec[2].result;
+  BOOST_CHECK_EQUAL( agreement_vec.size(), 2 );
+  BOOST_CHECK_EQUAL( agreement_vec[0].cycles.value, 0 );
+  BOOST_CHECK_EQUAL( agreement_vec[0].frequency_lock.value, 0 );
+  BOOST_CHECK_EQUAL( agreement_vec[1].cycles.value, 200 );
+  BOOST_CHECK_EQUAL( agreement_vec[1].frequency_lock.value, 200 );
+
+  // Both has balance of 300 with lock 0 and balance of 310 with lock 200:
+  BOOST_CHECK( result_vec[3].account_id == both_id );
+  agreement_vec = *result_vec[3].result;
+  BOOST_CHECK_EQUAL( agreement_vec.size(), 2 );
+  BOOST_CHECK_EQUAL( agreement_vec[0].cycles.value, 300 );
+  BOOST_CHECK_EQUAL( agreement_vec[0].frequency_lock.value, 0 );
+  BOOST_CHECK_EQUAL( agreement_vec[1].cycles.value, 310 );
+  BOOST_CHECK_EQUAL( agreement_vec[1].frequency_lock.value, 200 );
+
+  // Bogus does not have a result:
+  BOOST_CHECK( result_vec[4].account_id == bogus_id );
+  BOOST_CHECK( !result_vec[4].result.valid() );
+
+} FC_LOG_AND_RETHROW() }
+
 /*BOOST_AUTO_TEST_CASE( get_all_cycle_balances_for_accounts_unit_test )
 { try {
   VAULT_ACTORS((first)(second)(third)(fourth))

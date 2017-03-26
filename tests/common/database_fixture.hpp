@@ -375,7 +375,7 @@ struct database_fixture {
 
    // fix_queue.cpp
    void adjust_frequency(frequency_type f);
-   void adjust_dascoin_reward(uint32_t amount);
+   void adjust_dascoin_reward(share_type amount);
    void toggle_reward_queue(bool state);
 };
 

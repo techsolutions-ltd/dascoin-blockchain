@@ -143,13 +143,13 @@ namespace graphene { namespace chain {
 
     optional<bool> enable_dascoin_queue;
     optional<uint32_t> reward_interval_time_seconds;
-    optional<uint32_t> dascoin_reward_amount;
+    optional<share_type> dascoin_reward_amount;
 
     update_queue_parameters_operation() = default;
     explicit update_queue_parameters_operation(account_id_type issuer,
       optional<bool> enable_dascoin_queue,
       optional<uint32_t> reward_interval_time_seconds,
-      optional<uint32_t> dascoin_reward_amount) :
+      optional<share_type> dascoin_reward_amount) :
         issuer(issuer),
         enable_dascoin_queue(enable_dascoin_queue),
         reward_interval_time_seconds(reward_interval_time_seconds),

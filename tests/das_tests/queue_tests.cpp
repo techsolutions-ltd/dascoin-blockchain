@@ -11,6 +11,8 @@
 
 #include "../common/database_fixture.hpp"
 
+#include <cinttypes>
+
 using namespace graphene::chain;
 using namespace graphene::chain::test;
 
@@ -27,6 +29,17 @@ BOOST_AUTO_TEST_CASE( convert_dascoin_cycles_test )
   BOOST_CHECK_EQUAL( amount.value, 9999 );
 }
 
+BOOST_AUTO_TEST_CASE( dascoin_reward_amount_regression_test )
+{ try {
+
+  share_type amount = 600000 * DASCOIN_DEFAULT_ASSET_PRECISION;
+  BOOST_CHECK( amount > INT32_MAX );
+  BOOST_CHECK( amount < INT64_MAX );
+  BOOST_CHECK( amount == 600000 * DASCOIN_DEFAULT_ASSET_PRECISION );
+  do_op(update_queue_parameters_operation(get_license_issuer_id(), {true}, {600}, {amount}));
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_CASE( update_queue_parameters_unit_test )
 { try {
 
@@ -36,7 +49,7 @@ BOOST_AUTO_TEST_CASE( update_queue_parameters_unit_test )
   const auto& params = get_chain_parameters();
   BOOST_CHECK_EQUAL( params.enable_dascoin_queue, true );
   BOOST_CHECK_EQUAL( params.reward_interval_time_seconds, 600 );
-  BOOST_CHECK_EQUAL( params.dascoin_reward_amount, 2000 * DASCOIN_DEFAULT_ASSET_PRECISION );
+  BOOST_CHECK_EQUAL( params.dascoin_reward_amount.value, 2000 * DASCOIN_DEFAULT_ASSET_PRECISION );
 
   // TODO: handle negative cases
 
@@ -46,7 +59,7 @@ BOOST_AUTO_TEST_CASE( issue_chartered_license_unit_test )
 { try {
   VAULT_ACTOR(first)
 
-  auto lic_typ = *(_dal.get_license_type("standard-charter"));
+  auto lic_typ = *(_dal.get_license_type("standard_charter"));
 
   do_op(issue_license_operation(get_license_issuer_id(), first_id, lic_typ.id,
       10, 200, db.head_block_time()));
@@ -197,10 +210,10 @@ BOOST_AUTO_TEST_CASE( basic_chartered_license_to_queue_test )
   adjust_dascoin_reward(5000 * DASCOIN_DEFAULT_ASSET_PRECISION);
   adjust_frequency(200);
 
-  issue(first_id, "standard-charter", 100, 200);  // 1100 + 1 * 1100 = 2200 cycles
-  issue(second_id, "standard-charter", 300, 200);  // 1100 + 3 * 1100 = 4400 cycles
-  issue(third_id, "standard-charter", 100, 200);  // 1100 + 1 * 1100 = 2200 cycles
-  issue(fourth_id, "standard-charter", 500, 200);  // 1100 + 5 * 1100 = 6600 cycles
+  issue(first_id, "standard_charter", 100, 200);  // 1100 + 1 * 1100 = 2200 cycles
+  issue(second_id, "standard_charter", 300, 200);  // 1100 + 3 * 1100 = 4400 cycles
+  issue(third_id, "standard_charter", 100, 200);  // 1100 + 1 * 1100 = 2200 cycles
+  issue(fourth_id, "standard_charter", 500, 200);  // 1100 + 5 * 1100 = 6600 cycles
 
   // Queue looks like this:
   // 2200 --> 4400 --> 2200 --> 6600

@@ -34,7 +34,7 @@ namespace graphene { namespace chain {
     });
   }
 
-  void database_fixture::adjust_dascoin_reward(uint32_t amount)
+  void database_fixture::adjust_dascoin_reward(share_type amount)
   {
     db.modify(get_global_properties(), [amount](global_property_object& gpo){
       gpo.parameters.dascoin_reward_amount = amount;

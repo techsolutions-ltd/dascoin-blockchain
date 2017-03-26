@@ -152,10 +152,19 @@ struct get_impacted_account_visitor
       _impacted.insert( op.committee_member_account );
    }
    void operator()( const committee_member_update_global_parameters_operation& op ) {}
-   void operator()( const board_update_chain_authority_operation& op ) {}
+   
+   void operator()( const board_update_chain_authority_operation& op ) 
+   {
+      _impacted.insert( op.account );
+   }
+
    void operator()( const create_license_type_operation& op ) {}
 
-   void operator()( const issue_license_operation& op ) {}
+   void operator()( const issue_license_operation& op )
+   {
+      _impacted.insert( op.account );
+   }
+
    void operator()( const vesting_balance_create_operation& op )
    {
       _impacted.insert( op.owner );
@@ -249,7 +258,10 @@ struct get_impacted_account_visitor
       _impacted.insert( op.to_vault );
    }
 
-   void operator()( const submit_reserve_cycles_to_queue_operation& op ) {}
+   void operator()( const submit_reserve_cycles_to_queue_operation& op ) 
+   {
+      _impacted.insert( op.account );
+   }
 
    void operator()( const submit_cycles_to_queue_operation& op )
    {
@@ -266,12 +278,12 @@ struct get_impacted_account_visitor
       _impacted.insert( op.account );
    }
 
-   void operator()( const record_distribute_dascoin_operation& op ) {}
-   
-   void operator()( const update_queue_parameters_operation& op )
+   void operator()( const record_distribute_dascoin_operation& op )
    {
-      _impacted.insert( op.issuer );
+      _impacted.insert( op.account );
    }
+   
+   void operator()( const update_queue_parameters_operation& op ) {}
 
 };
 

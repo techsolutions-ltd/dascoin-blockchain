@@ -1501,7 +1501,7 @@ class wallet_api
 
       signed_transaction update_queue_parameters(optional<bool> enable_dascoin_queue,
                                                  optional<uint32_t> reward_interval_time_seconds,
-                                                 optional<uint32_t> dascoin_reward_amount,
+                                                 optional<share_type> dascoin_reward_amount,
                                                  bool broadcast) const;
 
       order_book get_order_book( const string& base, const string& quote, unsigned limit = 50);

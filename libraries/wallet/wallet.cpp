@@ -2491,7 +2491,7 @@ public:
    signed_transaction update_queue_parameters(
        optional<bool> enable_dascoin_queue,
        optional<uint32_t> reward_interval_time_seconds,
-       optional<uint32_t> dascoin_reward_amount, bool broadcast) {
+       optional<share_type> dascoin_reward_amount, bool broadcast) {
      
      auto issuer_id = _remote_db->get_global_properties().authorities.license_issuer;
 
@@ -4414,7 +4414,7 @@ signed_transaction wallet_api::issue_license( const string& issuer, const string
 signed_transaction wallet_api::update_queue_parameters(
     optional<bool> enable_dascoin_queue,
     optional<uint32_t> reward_interval_time_seconds,
-    optional<uint32_t> dascoin_reward_amount, bool broadcast) const {
+    optional<share_type> dascoin_reward_amount, bool broadcast) const {
   return my->update_queue_parameters(enable_dascoin_queue,
                                      reward_interval_time_seconds,
                                      dascoin_reward_amount, broadcast);

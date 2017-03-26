@@ -31,10 +31,10 @@ BOOST_AUTO_TEST_CASE( regression_test_license_information_index )
 BOOST_AUTO_TEST_CASE( charter_license_type_value_test )
 { try {
 
-  auto lic = *(_dal.get_license_type("standard-charter"));
+  auto lic = *(_dal.get_license_type("standard_charter"));
   BOOST_CHECK_EQUAL( lic.amount.value, DASCOIN_BASE_STANDARD_CYCLES );
 
-  lic = *(_dal.get_license_type("manager-charter"));
+  lic = *(_dal.get_license_type("manager_charter"));
   BOOST_CHECK_EQUAL( lic.amount.value, DASCOIN_BASE_MANAGER_CYCLES );
 
 } FC_LOG_AND_RETHROW() }
@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE( license_information_unit_test )
 { try {
   VAULT_ACTOR(vault);
 
-  auto standard_charter = *(_dal.get_license_type("standard-charter"));
+  auto standard_charter = *(_dal.get_license_type("standard_charter"));
   const share_type bonus_percent = 50;
   const share_type frequency_lock = 200;
   const time_point_sec issue_time = db.head_block_time();
@@ -134,11 +134,11 @@ BOOST_AUTO_TEST_CASE( issue_license_with_bonus_cycles )
     return (*account.license_info.pending).request(db);
   };
   
-  issue_license_to_vault_account(v100, "standard-charter", 0, frequency_lock);
-  issue_license_to_vault_account(v150, "standard-charter", 50, frequency_lock);
-  issue_license_to_vault_account(v50, "standard-charter", -50, frequency_lock);
-  GRAPHENE_CHECK_THROW( issue_license_to_vault_account(vzero, "standard-charter", -100, frequency_lock), fc::exception );
-  GRAPHENE_CHECK_THROW( issue_license_to_vault_account(vneg, "standard-charter", -200, frequency_lock), fc::exception );
+  issue_license_to_vault_account(v100, "standard_charter", 0, frequency_lock);
+  issue_license_to_vault_account(v150, "standard_charter", 50, frequency_lock);
+  issue_license_to_vault_account(v50, "standard_charter", -50, frequency_lock);
+  GRAPHENE_CHECK_THROW( issue_license_to_vault_account(vzero, "standard_charter", -100, frequency_lock), fc::exception );
+  GRAPHENE_CHECK_THROW( issue_license_to_vault_account(vneg, "standard_charter", -200, frequency_lock), fc::exception );
 
   BOOST_CHECK_EQUAL( get_pending_request(v100).amount.value, 100 );
   BOOST_CHECK_EQUAL( get_pending_request(v150).amount.value, 150 );
@@ -159,9 +159,9 @@ BOOST_AUTO_TEST_CASE( license_type_integrity_test )
   BOOST_CHECK( lic_obj.requeue_upgrade == upgrade_type() );
   BOOST_CHECK( lic_obj.return_upgrade == upgrade_type() );
 
-  lic_obj = get_license_type("standard-charter");
+  lic_obj = get_license_type("standard_charter");
 
-  BOOST_CHECK_EQUAL( lic_obj.name, "standard-charter" );
+  BOOST_CHECK_EQUAL( lic_obj.name, "standard_charter" );
   BOOST_CHECK_EQUAL( lic_obj.amount.value, 100 );
   BOOST_CHECK_EQUAL( lic_obj.kind, license_kind::chartered );
   BOOST_CHECK( lic_obj.balance_upgrade == upgrade_type() );
@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE( check_issue_frequency_lock_not_zero )
   issue_license_to_vault_account(vault_id, get_license_type("pro").id, 0, 0);
 
   // Charter license CANNOT have a frequency lock of 0:
-  GRAPHENE_REQUIRE_THROW( issue_license_to_vault_account(vault_id, get_license_type("pro-charter").id, 0, 0), fc::exception );
+  GRAPHENE_REQUIRE_THROW( issue_license_to_vault_account(vault_id, get_license_type("pro_charter").id, 0, 0), fc::exception );
 
   // Promo license CANNOT have a frequency lock of 0:
   GRAPHENE_REQUIRE_THROW( issue_license_to_vault_account(vault_id, get_license_type("pro-promo").id, 0, 0), fc::exception );
@@ -242,7 +242,7 @@ BOOST_AUTO_TEST_CASE( issue_license_test )
   check_pending(allguy, "standard");
 
   // Try and issue another license to stan:
-  GRAPHENE_REQUIRE_THROW( issue_license_to_vault_account(stan, "manager-charter", 0, 200), fc::exception );
+  GRAPHENE_REQUIRE_THROW( issue_license_to_vault_account(stan, "manager_charter", 0, 200), fc::exception );
 
   generate_blocks_until_license_approved();
 

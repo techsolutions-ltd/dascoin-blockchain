@@ -2,7 +2,25 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
-and this project adheres to [Semantic Versioning](http://semver.org/).  
+and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## [0.0.6] - 2017-03-26
+### Updated
+- Changed dascoin_reward_amount to share_type
+  - This fixes an overflow issue with reasonably large reward amounts
+  - Updated field with the same name in update_queue_parameters_operation
+- Changed hyphens in license names to underscores (eg. "pro_charter")
+- Fixed some operations not impacting account history
+
+## [0.0.5] - 2017-03-24
+### Added
+- Submit reserved cycle balances to queue now has a string "comment" field
+
+### Updated
+- Api calls for blances and queue with position now return structured objects
+  - Each response has the "account_id" field
+  - If the account is the response includes a "result" field
+  - For more information on response layout see access_layer.hpp
 
 ## [0.0.4] - 2017-03-22
 ### Updated:

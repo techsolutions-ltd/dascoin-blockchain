@@ -1,5 +1,5 @@
 {
-  "initial_timestamp": "2017-02-27T16:19:45",
+  "initial_timestamp": "2017-03-26T14:07:55",
   "max_core_supply": "1000000000000000",
   "max_dascoin_supply": "8800000000",
   "initial_parameters": {
@@ -220,13 +220,15 @@
           61,{}
         ],[
           62,{}
+        ],[
+          63,{}
         ]
       ],
       "scale": 10000
     },
-    "block_interval": 5,
-    "maintenance_interval": 300,
-    "maintenance_skip_slots": 3,
+    "block_interval": 6,
+    "maintenance_interval": 600,
+    "maintenance_skip_slots": 1,
     "committee_proposal_review_period": 1209600,
     "maximum_transaction_size": 2048,
     "maximum_block_size": 2048000000,
@@ -254,10 +256,10 @@
     "upgrade_event_interval_days": 120,
     "minimum_transfer_limit": 0,
     "maximum_transfer_limit": 100000,
-    "limit_interval_elapse_time_seconds": 15,
-    "web_asset_request_expiration_time_seconds": 15,
-    "reward_interval_time_seconds": 30,
-    "dascoin_reward_amount": 150000000,
+    "limit_interval_elapse_time_seconds": 86400,
+    "web_asset_request_expiration_time_seconds": 86400,
+    "reward_interval_time_seconds": 12,
+    "dascoin_reward_amount": 20000000,
     "enable_cycle_issuing": true,
     "enable_dascoin_queue": true,
     "extensions": []

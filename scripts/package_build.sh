@@ -97,6 +97,17 @@ echo "Done"
 echo
 step=$((${step}+1))
 
+echo "${step}) Copying the scripts:"
+scripts_dir="${target_dir}/scripts"
+mkdir -p ${scripts_dir}
+cp "clear.sh" "${scripts_dir}/"
+cp "run_node.sh" "${scripts_dir}/"
+cp "daemon_run_cli.sh" "${scripts_dir}/"
+# The unpack script is in the root directory:
+cp "unpack_build.sh" "${target_dir}/"
+echo "Done"
+echo
+step=$((${step}+1))
 
 echo "${step}) Copying packaged build to remote folder ${remote_dir}:"
 cp -r "${target_dir}" "${remote_dir}"

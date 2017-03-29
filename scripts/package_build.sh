@@ -20,10 +20,11 @@ __root="$(cd "$(dirname "${__dir}")" && pwd)"
 __script="$(basename ${BASH_SOURCE[0]})"
 
 # Default variables:
-build_dir="${__root}/build"
-config_dir="${__root}/configs"
+build_dir="${__dir}/../build"
+config_dir="${__dir}/../configs"
+scripts_dir="${__dir}/../scripts"
 config_name="testing"
-target_dir="${__root}"
+target_dir="${__dir}/.."
 remote_dir=""
 compress=false
 
@@ -74,6 +75,7 @@ echo
 echo "${step}) Making target directory ${target_dir}"
 mkdir -p "${target_dir}/bin"
 mkdir -p "${target_dir}/config"
+mkdir -p "${target_dir}/scripts"
 echo "Done"
 echo
 step=$((${step}+1))
@@ -98,19 +100,18 @@ echo
 step=$((${step}+1))
 
 echo "${step}) Copying the scripts:"
-scripts_dir="${target_dir}/scripts"
-mkdir -p ${scripts_dir}
-cp "clear.sh" "${scripts_dir}/"
-cp "run_node.sh" "${scripts_dir}/"
-cp "daemon_run_cli.sh" "${scripts_dir}/"
+scritps_target_dir="${target_dir}/scripts"
+cp "${scripts_dir}/clear.sh" "${scritps_target_dir}/"
+cp "${scripts_dir}/run_node.sh" "${scritps_target_dir}/"
+cp "${scripts_dir}/daemon_run_cli.sh" "${scritps_target_dir}/"
 # The unpack script is in the root directory:
-cp "unpack_build.sh" "${target_dir}/"
+cp "${scripts_dir}/unpack_build.sh" "${target_dir}/"
 echo "Done"
 echo
 step=$((${step}+1))
 
 echo "${step}) Copying packaged build to remote folder ${remote_dir}:"
-cp -r "${target_dir}" "${remote_dir}"
+cp -r "${target_dir}/" "${remote_dir}"
 rm -rf "${target_dir}"
 echo "Done"
 echo

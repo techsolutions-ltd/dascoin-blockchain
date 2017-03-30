@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.0.1] - 2017-03-30
+### Added
+- Production config
+- Unpack script for deployment
+
 ## [0.0.7] - 2017-03-28
 ### Updated
 - Fixed comment field in reward_queue_object not being reflected

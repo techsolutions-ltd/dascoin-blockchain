@@ -4,7 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [0.0.1] - 2017-03-30
+## [0.1.1] - 2017-03-30
+### Updated
+- Hotfix: license names with underscores
+- Fixed broken test harness
+
+## [0.1.0] - 2017-03-30
 ### Added
 - Production config
 - Unpack script for deployment

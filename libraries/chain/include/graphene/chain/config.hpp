@@ -43,12 +43,12 @@
 #define GRAPHENE_MIN_BLOCK_INTERVAL   1 /* seconds */
 #define GRAPHENE_MAX_BLOCK_INTERVAL  30 /* seconds */
 
-#define GRAPHENE_DEFAULT_BLOCK_INTERVAL  5 /* seconds */
+#define GRAPHENE_DEFAULT_BLOCK_INTERVAL  6 /* seconds */
 #define GRAPHENE_DEFAULT_MAX_TRANSACTION_SIZE 2048
-#define GRAPHENE_DEFAULT_MAX_BLOCK_SIZE  (GRAPHENE_DEFAULT_MAX_TRANSACTION_SIZE*GRAPHENE_DEFAULT_BLOCK_INTERVAL*200000)
-#define GRAPHENE_DEFAULT_MAX_TIME_UNTIL_EXPIRATION (60*5) // seconds,  aka: 5 minutes
-#define GRAPHENE_DEFAULT_MAINTENANCE_INTERVAL  (60*5) // seconds, aka: 5 minutes
-#define GRAPHENE_DEFAULT_MAINTENANCE_SKIP_SLOTS 3  // number of slots to skip for maintenance interval
+#define GRAPHENE_DEFAULT_MAX_BLOCK_SIZE  (static_cast<uint64_t>(GRAPHENE_DEFAULT_MAX_TRANSACTION_SIZE*GRAPHENE_DEFAULT_BLOCK_INTERVAL*200000ull))
+#define GRAPHENE_DEFAULT_MAX_TIME_UNTIL_EXPIRATION (60*5) // seconds, aka: 5 minutes
+#define GRAPHENE_DEFAULT_MAINTENANCE_INTERVAL  (24*60*60) // seconds, aka: 1 day
+#define GRAPHENE_DEFAULT_MAINTENANCE_SKIP_SLOTS 1  // number of slots to skip for maintenance interval
 
 #define GRAPHENE_MIN_UNDO_HISTORY 10
 #define GRAPHENE_MAX_UNDO_HISTORY 10000
@@ -171,16 +171,26 @@
 // hack for unit test
 #define GRAPHENE_FBA_STEALTH_DESIGNATED_ASSET (asset_id_type(1))
 
-#define GRAPHENE_LICENSE_ISSUE_DEFAULT_EXPIRATION_TIME (5*60)  // Five minutes. TODO: should be 24 hours.
-#define GRAPHENE_MAX_LICENSE_UPGRADE_COUNT (3)
-
+/**
+ * Maximum length of comments for operations:
+ */
 #define DASCOIN_MAX_COMMENT_LENGTH (128)
+
+/**
+ * Maximum length for the wire out memo:
+ */
+#define DASCOIN_MAXIMUM_INTERNAL_MEMO_LENGTH (128)
 
 #define DASCOIN_DEFAULT_MINIMUM_TRANSFER_LIMIT (0)
 #define DASCOIN_DEFAULT_MAXIMUM_TRANSFER_LIMIT (100000)
 
+/**
+ * Core system assets (i.e. Dascoin) should have the following precision:
+ */
+///@{
 #define DASCOIN_DEFAULT_ASSET_PRECISION_DIGITS (5)
 #define DASCOIN_DEFAULT_ASSET_PRECISION (static_cast<uint64_t>(10000))
+///@}
 
 #define DASCOIN_WEBASSET_SYMBOL "WEB"
 #define DASCOIN_WEB_ASSET_INDEX (1)
@@ -189,22 +199,36 @@
 #define DASCOIN_DEFAULT_WEB_ASSET_REQUEST_EXPIRATION_TIME_SECONDS (86400)
 #define DASCOIN_DEFAULT_CYCLE_REQUEST_EXPIRATION_TIME_SECONDS (86400)
 
-#define DASCOIN_DEFAULT_UPGRADE_EVENT_INTERVAL_DAYS (120)
-
-#define DASCOIN_MAXIMUM_INTERNAL_MEMO_LENGTH (120)
+/**
+ * Number of days between upgrade events:
+ */
+#define DASCOIN_DEFAULT_UPGRADE_EVENT_INTERVAL_DAYS (108)
 
 #define DASCOIN_DEFAULT_REWARD_INTERVAL_TIME_SECONDS (10*60)
 #define DASCOIN_DEFAULT_DASCOIN_REWARD_AMOUNT (2000 * DASCOIN_DEFAULT_ASSET_PRECISION)
 
+/**
+ * Dascoin asset parameters:
+ */
+///@{
 #define DASCOIN_DASCOIN_SYMBOL "DAS"
 #define DASCOIN_DASCOIN_INDEX (2)
-#define DASCOIN_MAX_DASCOIN_SUPPLY int64_t(8800000000ll)  // 8.8 billion
+#define DASCOIN_MAX_DASCOIN_SUPPLY int64_t(8800000000ll)
+///}@
 
+/**
+ * Frequency_type parameters:
+ */
+///@{
 #define DASCOIN_FREQUENCY_PRECISION_DIGITS (2)
-#define DASCOIN_FREQUENCY_PRECISION uint64_t(100)
+#define DASCOIN_FREQUENCY_PRECISION (static_cast<uint64_t>(100))
 #define DASCOIN_INITIAL_FREQUENCY (200)
+///@}
 
-#define DASCOIN_MIN_DASCOIN_REWARD_AMOUNT (0)  // TODO: update to production values.
+/**
+ *  Minimum dascoin reward amount:
+ */
+#define DASCOIN_MIN_DASCOIN_REWARD_AMOUNT (0)
 
 /**
  * Reserved object ids with special meaning:
@@ -215,7 +239,7 @@
 ///@}
 
 /**
- * Base cycle values for license types
+ * Base cycle values for license types:
  */
 ///@{
 #define DASCOIN_BASE_STANDARD_CYCLES (1100)
@@ -224,4 +248,4 @@
 #define DASCOIN_BASE_EXECUTIVE_CYCLES (65000)
 #define DASCOIN_BASE_VICE_PRESIDENT_CYCLES (225000)
 #define DASCOIN_BASE_PRESIDENT_CYCLES (325000)
-///@?
+///@}

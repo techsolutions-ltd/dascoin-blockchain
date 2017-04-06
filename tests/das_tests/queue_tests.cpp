@@ -247,6 +247,46 @@ BOOST_AUTO_TEST_CASE( basic_chartered_license_to_queue_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( historic_sum_eta_test )
+{ try {
+
+  VAULT_ACTORS((first)(second)(third)(fourth))
+
+  // No coins minted at the start:
+  BOOST_CHECK_EQUAL(get_dynamic_global_properties().total_dascoin_minted.value, 0);
+
+  // Submit four reserve batches of 100 Dascoin:
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), first_id, 200, 200, ""));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), second_id, 200, 200, ""));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), third_id, 200, 200, ""));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), fourth_id, 200, 200, ""));
+
+  // Check historic sums for all elements:
+  // Should be: minted = 0; first: 100; second 200; third 300; fourth 400;
+  BOOST_CHECK_EQUAL(get_dynamic_global_properties().total_dascoin_minted.value, 0);
+  auto queue = _dal.get_reward_queue();
+  BOOST_CHECK_EQUAL(queue[0].historic_sum.value, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  BOOST_CHECK_EQUAL(queue[1].historic_sum.value, 200 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  BOOST_CHECK_EQUAL(queue[2].historic_sum.value, 300 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  BOOST_CHECK_EQUAL(queue[3].historic_sum.value, 400 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+  // Adjust reward to 100 coin:
+  adjust_dascoin_reward(200 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  adjust_frequency(200);
+
+  // Wait for the first distribution interval:
+  toggle_reward_queue(true);
+  generate_blocks(db.head_block_time() + fc::seconds(get_chain_parameters().reward_interval_time_seconds));
+
+  // Check historic sums for all elements:
+  // Should be: minted = 200; third 300; fourth 400;
+  BOOST_CHECK_EQUAL(get_dynamic_global_properties().total_dascoin_minted.value, 200 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  queue = _dal.get_reward_queue();
+  BOOST_CHECK_EQUAL(queue[0].historic_sum.value, 300 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  BOOST_CHECK_EQUAL(queue[1].historic_sum.value, 400 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

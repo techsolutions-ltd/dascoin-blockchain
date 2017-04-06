@@ -133,15 +133,8 @@ object_id_type issue_license_evaluator::do_apply(const issue_license_operation& 
   }
   else if ( kind == license_kind::chartered || kind == license_kind::promo )
   {
-    d.create<reward_queue_object>([&](reward_queue_object& rqo){
-      rqo.origin = fc::reflector<dascoin_origin_kind>::to_string(charter_license);
-      rqo.license = op.license;
-      rqo.account = op.account;
-      rqo.amount = amount;
-      rqo.frequency = op.frequency_lock;
-      rqo.time = d.head_block_time();
-    });
-
+    auto origin = fc::reflector<dascoin_origin_kind>::to_string(charter_license);
+    d.push_queue_submission(origin, {op.license}, op.account, amount, op.frequency_lock, /* comment = */"");
     // TODO: should we use a virtual op here?
     d.push_applied_operation(
       record_submit_charter_license_cycles_operation(_issuer_id, op.account, amount, op.frequency_lock)

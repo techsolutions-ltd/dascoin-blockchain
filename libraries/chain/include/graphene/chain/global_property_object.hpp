@@ -114,6 +114,11 @@ namespace graphene { namespace chain {
          share_type total_cycles_issued = 0;
 
          /**
+          * Total Dascoin produced by the minting process.
+          */
+         share_type total_dascoin_minted = 0;
+
+         /**
           * The current global frequency:
           */
          frequency_type frequency;
@@ -178,6 +183,7 @@ FC_REFLECT_DERIVED( graphene::chain::dynamic_global_property_object, (graphene::
                     (recent_slots_filled)
                     (cycle_supply)
                     (total_cycles_issued)
+                    (total_dascoin_minted)
                     (frequency)
                     (dynamic_flags)
                     (last_irreversible_block_num)

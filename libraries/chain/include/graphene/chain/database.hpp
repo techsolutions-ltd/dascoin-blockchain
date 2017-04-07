@@ -681,4 +681,7 @@ private:
        }
    }
 
-} }
+   uint32_t get_time_on_queue(share_type historic_sum, share_type total_dascoin_minted, share_type reward_amount,
+                              uint32_t reward_interval);
+
+} }  // namespace graphene::chain

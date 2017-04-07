@@ -291,15 +291,17 @@ BOOST_AUTO_TEST_CASE( get_time_on_queue_test )
   VAULT_ACTORS((first)(second)(third)(fourth))
 
   // Create the following queue:
-  // 200 -> 200 -> 100 -> 300
-  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), first_id, 400, 200, "test"));
+  // Previuously minted: 400
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), first_id, 800, 200, "test"));
+
+  // 100 -> 200 -> 100 -> 300
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), first_id, 100, 200, "test"));
   do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), second_id, 400, 200, "test"));
   do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), third_id, 200, 200, "test"));
   do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), fourth_id, 600, 200, "test"));
 
   // Adjust reward to 100 coin:
   adjust_dascoin_reward(100 * DASCOIN_DEFAULT_ASSET_PRECISION);
-  adjust_frequency(200);
 
   const auto& dgpo = get_dynamic_global_properties();
   const auto& gpo = get_global_properties();
@@ -307,16 +309,25 @@ BOOST_AUTO_TEST_CASE( get_time_on_queue_test )
   auto reward_amount = gpo.parameters.dascoin_reward_amount;
   auto reward_interval = gpo.parameters.reward_interval_time_seconds;
 
+  // Wait for 4 intervals:
+  toggle_reward_queue(true);
+  generate_blocks(db.head_block_time() + fc::seconds(reward_interval));
+  generate_blocks(db.head_block_time() + fc::seconds(reward_interval));
+  generate_blocks(db.head_block_time() + fc::seconds(reward_interval));
+  generate_blocks(db.head_block_time() + fc::seconds(reward_interval));
+
+  BOOST_CHECK_EQUAL(dgpo.total_dascoin_minted.value, 400 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
   auto queue = _dal.get_reward_queue();
   vector<uint32_t> times;
   times.reserve(queue.size());
   for(const auto& el: queue)
     times.emplace_back(get_time_on_queue(el.historic_sum, dgpo.total_dascoin_minted, reward_amount, reward_interval));
 
-  BOOST_CHECK_EQUAL(times[0], 2 * reward_interval);
-  BOOST_CHECK_EQUAL(times[1], 4 * reward_interval);
-  BOOST_CHECK_EQUAL(times[2], 5 * reward_interval);
-  BOOST_CHECK_EQUAL(times[3], 8 * reward_interval);
+  BOOST_CHECK_EQUAL(times[0], 0);
+  BOOST_CHECK_EQUAL(times[1], 2 * reward_interval);
+  BOOST_CHECK_EQUAL(times[2], 3 * reward_interval);
+  BOOST_CHECK_EQUAL(times[3], 6 * reward_interval);
 
 } FC_LOG_AND_RETHROW() }
 

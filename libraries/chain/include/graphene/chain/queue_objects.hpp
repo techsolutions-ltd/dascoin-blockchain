@@ -35,6 +35,7 @@ namespace graphene { namespace chain {
       frequency_type frequency;
       time_point_sec time;
       string comment;
+      share_type historic_sum;
 
       extensions_type extensions;
 
@@ -85,4 +86,5 @@ FC_REFLECT_DERIVED( graphene::chain::reward_queue_object, (graphene::db::object)
                     (time)
                     (extensions)
                     (comment)
+                    (historic_sum)
                   )

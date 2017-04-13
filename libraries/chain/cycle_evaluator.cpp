@@ -35,17 +35,9 @@ void_result submit_reserve_cycles_to_queue_evaluator::do_evaluate(const submit_r
 
 object_id_type submit_reserve_cycles_to_queue_evaluator::do_apply(const submit_reserve_cycles_to_queue_operation& op)
 { try {
-  auto& d = db();
 
-  return d.create<reward_queue_object>([&](reward_queue_object& rqo){
-    rqo.origin = fc::reflector<dascoin_origin_kind>::to_string(reserve_cycles);
-    rqo.license = {};
-    rqo.account = op.account;
-    rqo.amount = op.amount;
-    rqo.frequency = op.frequency_lock;
-    rqo.time = d.head_block_time();
-    rqo.comment = op.comment;
-  }).id;
+  auto origin = fc::reflector<dascoin_origin_kind>::to_string(reserve_cycles);
+  return db().push_queue_submission(origin, /*license = */{}, op.account, op.amount, op.frequency_lock, op.comment);
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
@@ -87,14 +79,8 @@ object_id_type submit_cycles_to_queue_evaluator::do_apply(const submit_cycles_to
   if ( 0 == frequency )
     frequency = d.get_dynamic_global_properties().frequency;
 
-  return db().create<reward_queue_object>([&](reward_queue_object& rqo){
-    rqo.origin = fc::reflector<dascoin_origin_kind>::to_string(user_submit);
-    rqo.license = {};
-    rqo.account = op.account;
-    rqo.amount = op.amount;
-    rqo.frequency = frequency;
-    rqo.time = d.head_block_time();
-  }).id;
+  auto origin = fc::reflector<dascoin_origin_kind>::to_string(user_submit);
+  return d.push_queue_submission(origin, /* license = */{}, op.account, op.amount, frequency, "");
 
 } FC_CAPTURE_AND_RETHROW((op)) }
 

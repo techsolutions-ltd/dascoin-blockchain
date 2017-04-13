@@ -33,4 +33,5 @@
 #include "db_update.cpp"
 #include "db_witness_schedule.cpp"
 #include "db_license.cpp"
+#include "db_queue.cpp"
 #include "db_util.cpp"

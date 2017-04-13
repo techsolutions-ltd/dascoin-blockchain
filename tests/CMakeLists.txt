@@ -32,5 +32,6 @@ endif()
 file(GLOB DAS_SOURCES "das_tests/*.cpp")
 add_executable( das_test ${DAS_SOURCES} ${COMMON_SOURCES} )
 target_link_libraries( das_test graphene_chain graphene_app graphene_account_history graphene_egenesis_none fc ${PLATFORM_SPECIFIC_LIBS} )
+add_test(NAME das_test COMMAND das_test)
 
 add_subdirectory( generate_empty_blocks )

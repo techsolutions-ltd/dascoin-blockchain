@@ -24,6 +24,8 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     endif()
 endif()
 
+include(CMakeToolsHelpers OPTIONAL)
+
 list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules" )
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS "ON")
@@ -153,6 +155,8 @@ set(ENABLE_COVERAGE_TESTING FALSE CACHE BOOL "Build Graphene for code coverage a
 if(ENABLE_COVERAGE_TESTING)
     SET(CMAKE_CXX_FLAGS "--coverage ${CMAKE_CXX_FLAGS}")
 endif()
+
+enable_testing()
 
 add_subdirectory( libraries )
 add_subdirectory( programs )

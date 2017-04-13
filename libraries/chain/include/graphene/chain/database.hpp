@@ -540,6 +540,12 @@ namespace graphene { namespace chain {
                                             upgrade_multiplier_type return_multipliers);
          optional<license_information_object> get_license_information(account_id_type account_id) const;
          
+         //////////////////// db_queue.cpp ////////////////////
+
+         object_id_type push_queue_submission(const string& origin, optional<license_type_id_type> license,
+                                               account_id_type account, share_type amount, share_type frequency,
+                                               const string& comment);
+
 
    protected:
          //Mark pop_undo() as protected -- we do not want outside calling pop_undo(); it should call pop_block() instead
@@ -675,4 +681,7 @@ private:
        }
    }
 
-} }
+   uint32_t get_time_on_queue(share_type historic_sum, share_type total_dascoin_minted, share_type reward_amount,
+                              uint32_t reward_interval);
+
+} }  // namespace graphene::chain

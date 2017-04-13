@@ -247,6 +247,90 @@ BOOST_AUTO_TEST_CASE( basic_chartered_license_to_queue_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( historic_sum_test )
+{ try {
+  VAULT_ACTORS((first)(second)(third)(fourth))
+
+  // No coins minted at the start:
+  BOOST_CHECK_EQUAL(get_dynamic_global_properties().total_dascoin_minted.value, 0);
+
+  // Submit four reserve batches of 100 Dascoin:
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), first_id, 200, 200, ""));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), second_id, 200, 200, ""));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), third_id, 200, 200, ""));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), fourth_id, 200, 200, ""));
+
+  // Check historic sums for all elements:
+  // Should be: minted = 0; first: 100; second 200; third 300; fourth 400;
+  BOOST_CHECK_EQUAL(get_dynamic_global_properties().total_dascoin_minted.value, 0);
+  auto queue = _dal.get_reward_queue();
+  BOOST_CHECK_EQUAL(queue[0].historic_sum.value, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  BOOST_CHECK_EQUAL(queue[1].historic_sum.value, 200 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  BOOST_CHECK_EQUAL(queue[2].historic_sum.value, 300 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  BOOST_CHECK_EQUAL(queue[3].historic_sum.value, 400 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+  // Adjust reward to 100 coin:
+  adjust_dascoin_reward(200 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  adjust_frequency(200);
+
+  // Wait for the first distribution interval:
+  toggle_reward_queue(true);
+  generate_blocks(db.head_block_time() + fc::seconds(get_chain_parameters().reward_interval_time_seconds));
+
+  // Check historic sums for all elements:
+  // Should be: minted = 200; third 300; fourth 400;
+  BOOST_CHECK_EQUAL(get_dynamic_global_properties().total_dascoin_minted.value, 200 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  queue = _dal.get_reward_queue();
+  BOOST_CHECK_EQUAL(queue[0].historic_sum.value, 300 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  BOOST_CHECK_EQUAL(queue[1].historic_sum.value, 400 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( get_time_on_queue_test )
+{ try {
+  VAULT_ACTORS((first)(second)(third)(fourth))
+
+  // Create the following queue:
+  // Previuously minted: 400
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), first_id, 800, 200, "test"));
+
+  // 100 -> 200 -> 100 -> 300
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), first_id, 100, 200, "test"));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), second_id, 400, 200, "test"));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), third_id, 200, 200, "test"));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), fourth_id, 600, 200, "test"));
+
+  // Adjust reward to 100 coin:
+  adjust_dascoin_reward(100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+  const auto& dgpo = get_dynamic_global_properties();
+  const auto& gpo = get_global_properties();
+
+  auto reward_amount = gpo.parameters.dascoin_reward_amount;
+  auto reward_interval = gpo.parameters.reward_interval_time_seconds;
+
+  // Wait for 4 intervals:
+  toggle_reward_queue(true);
+  generate_blocks(db.head_block_time() + fc::seconds(reward_interval));
+  generate_blocks(db.head_block_time() + fc::seconds(reward_interval));
+  generate_blocks(db.head_block_time() + fc::seconds(reward_interval));
+  generate_blocks(db.head_block_time() + fc::seconds(reward_interval));
+
+  BOOST_CHECK_EQUAL(dgpo.total_dascoin_minted.value, 400 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+  auto queue = _dal.get_reward_queue();
+  vector<uint32_t> times;
+  times.reserve(queue.size());
+  for(const auto& el: queue)
+    times.emplace_back(get_time_on_queue(el.historic_sum, dgpo.total_dascoin_minted, reward_amount, reward_interval));
+
+  BOOST_CHECK_EQUAL(times[0], 0);
+  BOOST_CHECK_EQUAL(times[1], 2 * reward_interval);
+  BOOST_CHECK_EQUAL(times[2], 3 * reward_interval);
+  BOOST_CHECK_EQUAL(times[3], 6 * reward_interval);
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

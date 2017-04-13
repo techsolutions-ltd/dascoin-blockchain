@@ -40,14 +40,14 @@ function help {
     echo -e "-b  --Build directory. Default is ${build_dir}"
     echo -e "-c  --Configuration name. Default is ${config_name}"
     echo -e "-z  --Create a compressed build folder. Default is false"
-    echo -e "-s  --Copy the compressed build to a remote location. Activates -z"
     echo -e "-h  --Displays this message."\\n
     exit 1;
     }
 
-while getopts :r:zh flag; do
+while getopts :r:c:zh flag; do
   case ${flag} in
     h) help; exit;;
+    c) config_name=${OPTARG};;
     r) remote_dir=${OPTARG};;
     z) compress=true;;
     \?) echo "Unknown option: -$OPTARG" >&2; exit 2;;

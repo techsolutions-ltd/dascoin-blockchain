@@ -331,6 +331,51 @@ BOOST_AUTO_TEST_CASE( get_time_on_queue_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE(submission_number_test)
+{ try {
+  VAULT_ACTORS((first)(second)(third)(fourth))
+
+  BOOST_CHECK_EQUAL(db.get_dynamic_global_properties().last_minted_submission_num, 0);
+  BOOST_CHECK_EQUAL(db.get_dynamic_global_properties().max_queue_submission_num, 0);
+
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), first_id, 200, 200, "test"));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), second_id, 200, 200, "test"));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), third_id, 200, 200, "test"));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), fourth_id, 200, 200, "test"));
+
+  // Now we have 4 submissions on the queue, 0 minted:
+  auto last = db.get_dynamic_global_properties().last_minted_submission_num;
+  auto max = db.get_dynamic_global_properties().max_queue_submission_num;
+  BOOST_CHECK_EQUAL(last, 0);
+  BOOST_CHECK_EQUAL(max, 4);
+  BOOST_CHECK_EQUAL(_dal.get_reward_queue_size(), max-last);
+
+  auto queue = _dal.get_reward_queue();
+  BOOST_CHECK_EQUAL(queue[0].number, 1);
+  BOOST_CHECK_EQUAL(queue[1].number, 2);
+  BOOST_CHECK_EQUAL(queue[2].number, 3);
+  BOOST_CHECK_EQUAL(queue[3].number, 4);
+
+  // Mint two elements from the queue:
+  adjust_dascoin_reward(100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  toggle_reward_queue(true);
+  auto reward_interval = get_global_properties().parameters.reward_interval_time_seconds;
+  generate_blocks(db.head_block_time() + fc::seconds(reward_interval));
+  generate_blocks(db.head_block_time() + fc::seconds(reward_interval));
+
+  // Now we have 2 submissions on the queue, 2 minted:
+  last = db.get_dynamic_global_properties().last_minted_submission_num;
+  max = db.get_dynamic_global_properties().max_queue_submission_num;
+  BOOST_CHECK_EQUAL(last, 2);
+  BOOST_CHECK_EQUAL(max, 4);
+  BOOST_CHECK_EQUAL(_dal.get_reward_queue_size(), max-last);
+
+  queue = _dal.get_reward_queue();
+  BOOST_CHECK_EQUAL(queue[0].number, 3);
+  BOOST_CHECK_EQUAL(queue[1].number, 4);
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

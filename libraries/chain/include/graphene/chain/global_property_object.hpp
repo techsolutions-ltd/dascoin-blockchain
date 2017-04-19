@@ -119,6 +119,16 @@ namespace graphene { namespace chain {
          share_type total_dascoin_minted = 0;
 
          /**
+          * Last minted submission number.
+          */
+         uint64_t last_minted_submission_num = 0;
+
+         /**
+          * The largest submission number in the queue.
+          */
+         uint64_t max_queue_submission_num = 0;
+
+         /**
           * The current global frequency:
           */
          frequency_type frequency;
@@ -184,6 +194,8 @@ FC_REFLECT_DERIVED( graphene::chain::dynamic_global_property_object, (graphene::
                     (cycle_supply)
                     (total_cycles_issued)
                     (total_dascoin_minted)
+                    (last_minted_submission_num)
+                    (max_queue_submission_num)
                     (frequency)
                     (dynamic_flags)
                     (last_irreversible_block_num)

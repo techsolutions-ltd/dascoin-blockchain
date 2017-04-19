@@ -28,6 +28,7 @@ namespace graphene { namespace chain {
       static const uint8_t space_id = implementation_ids;
       static const uint8_t type_id = impl_reward_queue_object_type;
 
+      uint64_t number;  // The unique number of the submission in minting history.
       string origin;  // Formed from dascoin_origin_kind.
       optional<license_type_id_type> license;  // Valid when origin is chartered.
       account_id_type account;
@@ -78,6 +79,7 @@ namespace graphene { namespace chain {
 //////////////////////////////
 
 FC_REFLECT_DERIVED( graphene::chain::reward_queue_object, (graphene::db::object),
+                    (number)
                     (origin)
                     (license)
                     (account)

@@ -262,4 +262,28 @@ void tether_accounts_operation::validate()const
    FC_ASSERT( fee.amount >= 0 );
 }
 
+void change_public_keys_operation::validate() const
+{
+   FC_ASSERT(account != GRAPHENE_TEMP_ACCOUNT, "Illegal account id");
+   FC_ASSERT(fee.amount >= 0);
+   FC_ASSERT(account != account_id_type(), "Illegal account id");
+
+   bool has_action = (owner.valid() || active.valid());
+
+   FC_ASSERT(has_action);
+
+   if(owner)
+   {
+      FC_ASSERT(owner->num_auths() != 0);
+      FC_ASSERT(owner->address_auths.size() == 0);
+      FC_ASSERT(!owner->is_impossible(), "Cannot update an account with an imposible owner authority threshold");
+   }
+   if(active)
+   {
+      FC_ASSERT(active->num_auths() != 0);
+      FC_ASSERT(active->address_auths.size() == 0);
+      FC_ASSERT(!active->is_impossible(), "Cannot update an account with an imposible active authority threshold");
+   }
+}
+
 } } // graphene::chain

@@ -308,6 +308,14 @@ namespace graphene { namespace chain {
      {
      }
 
+     bool is_owner_update() const { return owner.valid(); }
+
+     void get_required_owner_authorities(flat_set<account_id_type>& a)const
+     { if(is_owner_update()) a.insert(account); }
+
+     void get_required_active_authorities(flat_set<account_id_type>& a)const
+     { if(!is_owner_update()) a.insert(account); }
+
      account_id_type fee_payer() const { return account; }
      void validate() const;
      share_type calculate_fee(const fee_parameters_type&) const { return 0; }

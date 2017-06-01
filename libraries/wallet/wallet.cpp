@@ -883,12 +883,23 @@ public:
       FC_ASSERT(_builder_transactions.count(handle));
       return _builder_transactions[handle];
    }
-   signed_transaction sign_builder_transaction(transaction_handle_type transaction_handle, bool broadcast = true)
-   {
-      FC_ASSERT(_builder_transactions.count(transaction_handle));
 
-      return _builder_transactions[transaction_handle] = sign_transaction(_builder_transactions[transaction_handle], broadcast);
+   signed_transaction sign_builder_transaction(transaction_handle_type transaction_handle,
+                                               optional<vector<string>> wif_keys, bool broadcast = true)
+   {
+       FC_ASSERT(_builder_transactions.count(transaction_handle), "No transaction to sign with handle '${h}'",
+                 ("h", transaction_handle));
+
+       auto& tx = _builder_transactions[transaction_handle];
+
+       if (wif_keys.valid() && !wif_keys->empty())
+           _builder_transactions[transaction_handle] = sign_transaction_with_keys(tx, *wif_keys, broadcast);
+       else
+           _builder_transactions[transaction_handle] = sign_transaction(tx, broadcast);
+
+       return _builder_transactions[transaction_handle];
    }
+
    signed_transaction propose_builder_transaction(
       transaction_handle_type handle,
       time_point_sec expiration = time_point::now() + fc::minutes(1),
@@ -3077,9 +3088,10 @@ transaction wallet_api::preview_builder_transaction(transaction_handle_type hand
    return my->preview_builder_transaction(handle);
 }
 
-signed_transaction wallet_api::sign_builder_transaction(transaction_handle_type transaction_handle, bool broadcast)
+signed_transaction wallet_api::sign_builder_transaction(transaction_handle_type transaction_handle,
+                                                        optional<vector<string>> wif_keys, bool broadcast)
 {
-   return my->sign_builder_transaction(transaction_handle, broadcast);
+    return my->sign_builder_transaction(transaction_handle, wif_keys, broadcast);
 }
 
 signed_transaction wallet_api::propose_builder_transaction(

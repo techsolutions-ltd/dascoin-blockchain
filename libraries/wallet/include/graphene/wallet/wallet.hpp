@@ -445,7 +445,8 @@ class wallet_api
       /**
        * @ingroup Transaction Builder API
        */
-      signed_transaction sign_builder_transaction(transaction_handle_type transaction_handle, bool broadcast = true);
+      signed_transaction sign_builder_transaction(transaction_handle_type transaction_handle,
+                                                  optional<vector<string>> wif_keys, bool broadcast = true);
       /**
        * @ingroup Transaction Builder API
        */

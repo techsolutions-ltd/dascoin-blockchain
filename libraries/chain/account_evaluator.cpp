@@ -463,4 +463,33 @@ void_result tether_accounts_evaluator::do_apply(const tether_accounts_operation&
 
 } FC_CAPTURE_AND_RETHROW((op)) }
 
+void_result change_public_keys_evaluator::do_evaluate(const change_public_keys_operation& op)
+{ try {
+   const auto& d = db();
+
+   _account_obj = &op.account(d);
+   return {};
+
+} FC_CAPTURE_AND_RETHROW((op)) }
+
+object_id_type change_public_keys_evaluator::do_apply(const change_public_keys_operation& op)
+{ try {
+
+   db().modify( *_account_obj, [&](account_object& ao){
+      if(op.owner)
+      {
+         ao.owner = *op.owner;
+         ao.top_n_control_flags = 0;  // Legacy bitshares flag.
+      }
+      if(op.active)
+      {
+         ao.active = *op.active;
+         ao.top_n_control_flags = 0;  // Legacy bitshares flag.
+      }
+   });
+
+   return {};
+
+} FC_CAPTURE_AND_RETHROW((op)) }
+
 } } // graphene::chain

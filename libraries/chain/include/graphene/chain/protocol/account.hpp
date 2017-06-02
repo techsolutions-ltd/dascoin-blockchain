@@ -286,6 +286,42 @@ namespace graphene { namespace chain {
       }
    };
 
+   struct change_public_keys_operation : public base_operation
+   {
+     struct fee_parameters_type {};
+     asset fee;
+
+     account_id_type account;
+     // New active authority. This can be updated by the current active authority.
+     optional<authority> active;
+     // New owner authority. If set, this operation requires owner authority to execute.
+     optional<authority> owner;
+
+     extensions_type extensions;
+
+     change_public_keys_operation() = default;
+     explicit change_public_keys_operation(account_id_type account, optional<authority> active,
+                                           optional<authority> owner)
+         : account(account)
+         , active(active)
+         , owner(owner)
+     {
+     }
+
+     bool is_owner_update() const { return owner.valid(); }
+
+     void get_required_owner_authorities(flat_set<account_id_type>& a)const
+     { if(is_owner_update()) a.insert(account); }
+
+     void get_required_active_authorities(flat_set<account_id_type>& a)const
+     { if(!is_owner_update()) a.insert(account); }
+
+     account_id_type fee_payer() const { return account; }
+     void validate() const;
+     share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+   };
+
+
    struct upgrade_account_cycles_operation : public base_operation
    {
      struct fee_parameters_type {};
@@ -379,4 +415,12 @@ FC_REFLECT( graphene::chain::upgrade_account_cycles_operation,
             (account)
             (description)
             (extensions)
+          )
+
+FC_REFLECT( graphene::chain::change_public_keys_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::change_public_keys_operation,
+            (fee)
+            (account)
+            (active)
+            (owner)
           )

@@ -515,6 +515,7 @@ void database::mint_dascoin_rewards()
 { try {
   const auto& params = get_global_properties().parameters;
   const auto& dgpo = get_dynamic_global_properties();
+  auto last_minted_number = dgpo.last_minted_submission_num;
 
   if ( dgpo.next_dascoin_reward_time <= head_block_time() )
   {
@@ -535,6 +536,7 @@ void database::mint_dascoin_rewards()
                                                                    el.amount, el.frequency, 
                                                                    dascoin_amount, head_block_time()));
         remove(el);
+        last_minted_number++;
       }
       else
       {
@@ -558,6 +560,7 @@ void database::mint_dascoin_rewards()
     modify(dgpo, [&](dynamic_global_property_object& dgpo){
       dgpo.next_dascoin_reward_time = head_block_time() + params.reward_interval_time_seconds;
       dgpo.total_dascoin_minted += total_distributed;
+      dgpo.last_minted_submission_num = last_minted_number;
     });
   }
 

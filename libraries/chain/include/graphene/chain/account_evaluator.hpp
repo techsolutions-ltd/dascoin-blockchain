@@ -81,4 +81,16 @@ public:
    const account_object* vault_account;
 };
 
+class change_public_keys_evaluator : public evaluator<change_public_keys_evaluator>
+{
+public:
+    typedef change_public_keys_operation operation_type;
+
+    void_result do_evaluate(const operation_type& op);
+    object_id_type do_apply(const operation_type& op);
+
+private:
+   const account_object* _account_obj = nullptr;
+};
+
 } } // graphene::chain

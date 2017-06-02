@@ -70,7 +70,13 @@ index& object_database::get_mutable_index(uint8_t space_id, uint8_t type_id)
 
 void object_database::flush()
 {
-//   ilog("Save object_database in ${d}", ("d", _data_dir));
+   if(!fc::exists(_data_dir))
+   {
+      ilog("Skipping flush, path '${d}' does not exist", ("d", _data_dir));
+      return;
+   }
+
+   ilog("Save object_database in ${d}", ("d", _data_dir));
    for( uint32_t space = 0; space < _index.size(); ++space )
    {
       fc::create_directories( _data_dir / "object_database" / fc::to_string(space) );

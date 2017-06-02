@@ -19,17 +19,25 @@ object_id_type database::push_queue_submission(const string& origin, optional<li
 {
     share_type historic_sum = 0;
     auto dascoin_amount = cycles_to_dascoin(amount, frequency);
+    const auto dgp = get_dynamic_global_properties();
 
     const auto& queue = get_index_type<reward_queue_index>().indices().get<by_time>();
     if (queue.size() == 0) {
-        historic_sum = get_dynamic_global_properties().total_dascoin_minted + dascoin_amount;
+        historic_sum = dgp.total_dascoin_minted + dascoin_amount;
     }
     else {
         const auto last_el_it = queue.rbegin();
         historic_sum = last_el_it->historic_sum + dascoin_amount;
     }
 
+    // Set submission number:
+    auto number = dgp.max_queue_submission_num + 1;
+    modify(dgp, [](dynamic_global_property_object& dgpo){
+        dgpo.max_queue_submission_num++;
+    });
+
     return create<reward_queue_object>([&](reward_queue_object& rqo) {
+               rqo.number = number;
                rqo.origin = origin;
                rqo.license = license;
                rqo.account = account;

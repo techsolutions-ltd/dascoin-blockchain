@@ -371,11 +371,19 @@ private:
    // second transaction slightly (bumping up the expiration time by
    // a second).  Keep track of recent transaction ids we've generated
    // so we can know if we need to do this
-   struct recently_generated_transaction_record
-   {
-      fc::time_point_sec generation_time;
-      graphene::chain::transaction_id_type transaction_id;
+   struct recently_generated_transaction_record {
+       fc::time_point_sec generation_time;
+       graphene::chain::transaction_id_type transaction_id;
+
+       recently_generated_transaction_record() = default;
+       explicit recently_generated_transaction_record(fc::time_point_sec generation_time,
+                                                      graphene::chain::transaction_id_type transaction_id)
+           : generation_time(generation_time)
+           , transaction_id(transaction_id)
+       {
+       }
    };
+
    struct timestamp_index{};
    typedef boost::multi_index_container<recently_generated_transaction_record,
                                         boost::multi_index::indexed_by<boost::multi_index::hashed_unique<boost::multi_index::member<recently_generated_transaction_record,
@@ -875,12 +883,23 @@ public:
       FC_ASSERT(_builder_transactions.count(handle));
       return _builder_transactions[handle];
    }
-   signed_transaction sign_builder_transaction(transaction_handle_type transaction_handle, bool broadcast = true)
-   {
-      FC_ASSERT(_builder_transactions.count(transaction_handle));
 
-      return _builder_transactions[transaction_handle] = sign_transaction(_builder_transactions[transaction_handle], broadcast);
+   signed_transaction sign_builder_transaction(transaction_handle_type transaction_handle,
+                                               optional<vector<string>> wif_keys, bool broadcast = true)
+   {
+       FC_ASSERT(_builder_transactions.count(transaction_handle), "No transaction to sign with handle '${h}'",
+                 ("h", transaction_handle));
+
+       auto& tx = _builder_transactions[transaction_handle];
+
+       if (wif_keys.valid() && !wif_keys->empty())
+           _builder_transactions[transaction_handle] = sign_transaction_with_keys(tx, *wif_keys, broadcast);
+       else
+           _builder_transactions[transaction_handle] = sign_transaction(tx, broadcast);
+
+       return _builder_transactions[transaction_handle];
    }
+
    signed_transaction propose_builder_transaction(
       transaction_handle_type handle,
       time_point_sec expiration = time_point::now() + fc::minutes(1),
@@ -1924,6 +1943,70 @@ public:
       }
 
       return tx;
+   }
+
+   void expire_recently_generated_transactions(fc::time_point_sec oldest_time)
+   {
+       // Since transactions include the head block id, we just need the index for keeping transactions unique
+       // when there are multiple transactions in the same block.  Choose a time period that should be at
+       // least one block long, even in the worst case.
+       auto oldest_transaction_record_iter =
+           _recently_generated_transactions.get<timestamp_index>().lower_bound(oldest_time);
+       auto begin_iter = _recently_generated_transactions.get<timestamp_index>().begin();
+       _recently_generated_transactions.get<timestamp_index>().erase(begin_iter, oldest_transaction_record_iter);
+   }
+
+   void broadcast_signed_transaction(signed_transaction tx)
+   {
+       try {
+           _remote_net_broadcast->broadcast_transaction(tx);
+       }
+       catch (const fc::exception& e) {
+           elog("Caught exception while broadcasting tx ${id}: ${e}",
+                ("id", tx.id().str())("e", e.to_detail_string()));
+           throw;
+       }
+   }
+
+   signed_transaction sign_transaction_with_keys(signed_transaction tx, vector<string> wif_keys, bool broadcast)
+   {
+       if (wif_keys.empty())
+           return tx;
+
+       auto dyn_props = get_dynamic_global_properties();
+       tx.set_reference_block(dyn_props.head_block_id);
+
+       // Expire all transactions generated in the last few minutes:
+       expire_recently_generated_transactions(dyn_props.time - fc::minutes(2));
+
+       uint32_t expiration_time_offset = 0;
+       for (;;) {
+           tx.set_expiration(dyn_props.time + fc::seconds(30 + expiration_time_offset));
+           tx.signatures.clear();
+
+           for (auto wif_key : wif_keys) {
+               auto pkey = wif_to_key(wif_key);
+               FC_ASSERT(pkey.valid(), "Malformed private key found in key list");
+               tx.sign(*pkey, _chain_id);
+           }
+
+           auto this_transaction_id = tx.id();
+           auto iter = _recently_generated_transactions.find(this_transaction_id);
+           if (iter == _recently_generated_transactions.end()) {
+               // Transaction is unique.
+               _recently_generated_transactions.insert(
+                   recently_generated_transaction_record(dyn_props.time, this_transaction_id));
+               break;
+           }
+
+           // Duplicate transaction has been generated, increment expiration time and re-sign it.
+           ++expiration_time_offset;
+       }
+
+       if (broadcast)
+           broadcast_signed_transaction(tx);
+
+       return tx;
    }
 
    signed_transaction sell_asset(string seller_account,
@@ -3005,9 +3088,10 @@ transaction wallet_api::preview_builder_transaction(transaction_handle_type hand
    return my->preview_builder_transaction(handle);
 }
 
-signed_transaction wallet_api::sign_builder_transaction(transaction_handle_type transaction_handle, bool broadcast)
+signed_transaction wallet_api::sign_builder_transaction(transaction_handle_type transaction_handle,
+                                                        optional<vector<string>> wif_keys, bool broadcast)
 {
-   return my->sign_builder_transaction(transaction_handle, broadcast);
+    return my->sign_builder_transaction(transaction_handle, wif_keys, broadcast);
 }
 
 signed_transaction wallet_api::propose_builder_transaction(
@@ -3449,7 +3533,16 @@ void wallet_api::set_wallet_filename(string wallet_filename)
 
 signed_transaction wallet_api::sign_transaction(signed_transaction tx, bool broadcast /* = false */)
 { try {
+
    return my->sign_transaction( tx, broadcast);
+
+} FC_CAPTURE_AND_RETHROW( (tx) ) }
+
+signed_transaction wallet_api::sign_transaction_with_keys(signed_transaction tx, std::vector<string> wif_keys, bool broadcast /* = false */)
+{ try {
+
+   return my->sign_transaction_with_keys(tx, wif_keys, broadcast);
+
 } FC_CAPTURE_AND_RETHROW( (tx) ) }
 
 operation wallet_api::get_prototype_operation(string operation_name)

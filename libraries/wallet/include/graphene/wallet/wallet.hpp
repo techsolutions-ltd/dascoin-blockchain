@@ -445,7 +445,8 @@ class wallet_api
       /**
        * @ingroup Transaction Builder API
        */
-      signed_transaction sign_builder_transaction(transaction_handle_type transaction_handle, bool broadcast = true);
+      signed_transaction sign_builder_transaction(transaction_handle_type transaction_handle,
+                                                  optional<vector<string>> wif_keys, bool broadcast = true);
       /**
        * @ingroup Transaction Builder API
        */
@@ -1386,6 +1387,8 @@ class wallet_api
        */
       signed_transaction sign_transaction(signed_transaction tx, bool broadcast = false);
 
+      signed_transaction sign_transaction_with_keys(signed_transaction tx, std::vector<string> wif_keys, bool broadcast = false);
+
       /** Returns an uninitialized object representing a given blockchain operation.
        *
        * This returns a default-initialized object of the given type; it can be used
@@ -1721,6 +1724,7 @@ FC_API( graphene::wallet::wallet_api,
         (save_wallet_file)
         (serialize_transaction)
         (sign_transaction)
+        (sign_transaction_with_keys)
         (get_prototype_operation)
         (propose_parameter_change)
         (propose_fee_change)

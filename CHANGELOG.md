@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.1.3] - 2017-06-02
+### Added
+- Change public keys operation
+- Cli wallet can sign transactions with a set of keys in WIF format
+
+### Updated
+- Fixed object_database being created in wrong folder on initial run
+
 ## [0.1.2] - 2017-04-13
 ### Added
 - Historic sum on queue

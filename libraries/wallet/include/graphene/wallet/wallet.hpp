@@ -39,7 +39,7 @@ namespace fc
 
 namespace graphene { namespace wallet {
 
-typedef uint16_t transaction_handle_type;
+typedef uint64_t transaction_handle_type;
 
 /**
  * This class takes a variant and turns it into an object

@@ -20,13 +20,23 @@ BOOST_FIXTURE_TEST_SUITE( dascoin_tests, database_fixture )
 
 BOOST_FIXTURE_TEST_SUITE( queue_tests, database_fixture )
 
+BOOST_AUTO_TEST_CASE( convert_dascoin_cycles_precision_test )
+{
+  auto amount = db.cycles_to_dascoin(10000, 200);
+  BOOST_CHECK_EQUAL(amount.value, 5000 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+  amount = db.dascoin_to_cycles(5000 * DASCOIN_DEFAULT_ASSET_PRECISION, 200);
+  BOOST_CHECK_EQUAL(amount.value, 10000);
+}
+
 BOOST_AUTO_TEST_CASE( convert_dascoin_cycles_test )
 {
+  // TODO: do not use hardcoded values.
   share_type amount = db.cycles_to_dascoin(10000, 300);
-  BOOST_CHECK_EQUAL( amount.value, 33333333 );
+  BOOST_CHECK_EQUAL(amount.value, 333333333);
 
-  amount = db.dascoin_to_cycles(33333333, 300);
-  BOOST_CHECK_EQUAL( amount.value, 9999 );
+  amount = db.dascoin_to_cycles(333333333, 300);
+  BOOST_CHECK_EQUAL(amount.value, 9999);
 }
 
 BOOST_AUTO_TEST_CASE( dascoin_reward_amount_regression_test )

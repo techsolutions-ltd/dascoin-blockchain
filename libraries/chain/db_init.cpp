@@ -77,6 +77,8 @@
 
 #include <boost/algorithm/string.hpp>
 
+#include <cmath>
+
 namespace graphene { namespace chain {
 
 // C++ requires that static class variables declared and initialized
@@ -405,6 +407,13 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       remove( acct );
    }
 
+   // TODO: use contexpr, do not perform asserts.
+   FC_ASSERT(DASCOIN_DEFAULT_ASSET_PRECISION == pow(10, DASCOIN_DEFAULT_ASSET_PRECISION_DIGITS), 
+             "Dascoin default asset precision is invalid, check config");
+
+   FC_ASSERT(DASCOIN_FIAT_ASSET_PRECISION == pow(10, DASCOIN_FIAT_ASSET_PRECISION_DIGITS),
+             "Fiat default asset precision is invalid, check config");
+
    // Create core asset;
    const asset_dynamic_data_object& core_dyn_asset =
       create<asset_dynamic_data_object>([&](asset_dynamic_data_object& a) {
@@ -435,7 +444,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
      create<asset_object>( [&]( asset_object& a ) {
          a.symbol = DASCOIN_WEBASSET_SYMBOL;
          a.options.max_supply = genesis_state.max_core_supply;  // TODO: this should remain 10 trillion?
-         a.precision = DASCOIN_DEFAULT_ASSET_PRECISION_DIGITS;
+         a.precision = DASCOIN_FIAT_ASSET_PRECISION_DIGITS;
          a.options.flags = WEB_ASSET_INITIAL_FLAGS;
          a.options.issuer_permissions = WEB_ASSET_ISSUER_PERMISSION_MASK;  // TODO: set the appropriate issuer permissions.
          a.issuer = GRAPHENE_NULL_ACCOUNT;

@@ -44,12 +44,13 @@ function help {
     exit 1;
     }
 
-while getopts :r:c:zh flag; do
+while getopts :r:c:z:bh flag; do
   case ${flag} in
     h) help; exit;;
     c) config_name=${OPTARG};;
     r) remote_dir=${OPTARG};;
     z) compress=true;;
+    b) build_dir=${OPTARG};;
     \?) echo "Unknown option: -$OPTARG" >&2; exit 2;;
     : ) echo "Missing option argument for -$OPTARG" >&2; exit 2;;
     * ) echo "Unimplemented option: -$OPTARG" >&2; exit 2;;

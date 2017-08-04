@@ -968,6 +968,19 @@ class wallet_api
                                      string memo,
                                      bool broadcast = false);
 
+      /** Issue webasset to an account's balance.
+       *
+       * @param to_account the name or id of the account to receive the webasset
+       * @param amount the amount to issue, in nominal units
+       * @param reserved reserved amount to issue, in nominal units
+       * @param broadcast true to broadcast the transaction on the network
+       * @returns the signed transaction issuing the webasset
+       */
+      signed_transaction issue_webasset(string to_account,
+                                        string amount,
+                                        string reserved,
+                                        bool broadcast = false);
+
       /** Update the core options on an asset.
        * There are a number of options which all assets in the network use. These options are
        * enumerated in the asset_object::asset_options struct. This command is used to update
@@ -1754,6 +1767,9 @@ FC_API( graphene::wallet::wallet_api,
         (issue_license)
         (get_license_information)
         (get_license_type_names_ids)
+
+        // Web assets:
+        (issue_webasset)
 
         // Cycles:
         (get_account_cycle_balance)

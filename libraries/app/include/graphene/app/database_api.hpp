@@ -615,6 +615,12 @@ class database_api
       vector<reward_queue_object> get_reward_queue() const;
 
       /**
+       * @brief Return a portion of the reward queue.
+       * @return Vector which represent a portion of that queue
+       */
+      vector<reward_queue_object> get_reward_queue_by_page(uint32_t from, uint32_t amount) const;
+
+      /**
        * @brief Get the size of the DASCoin reward queue.
        * @return Number of elements in the DASCoin queue.
        */
@@ -763,6 +769,7 @@ FC_API( graphene::app::database_api,
    // Queue
    (get_reward_queue)
    (get_reward_queue_size)
+   (get_reward_queue_by_page)
    (get_queue_submissions_with_pos)
    (get_queue_submissions_with_pos_for_accounts)
 

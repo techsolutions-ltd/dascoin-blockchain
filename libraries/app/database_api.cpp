@@ -158,6 +158,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<acc_id_share_t_res> get_dascoin_balances_for_accounts(vector<account_id_type> ids) const;
 
       vector<reward_queue_object> get_reward_queue() const;
+      vector<reward_queue_object> get_reward_queue_by_page(uint32_t from, uint32_t amount) const;
       acc_id_queue_subs_w_pos_res get_queue_submissions_with_pos(account_id_type account_id) const;
       vector<acc_id_queue_subs_w_pos_res>
           get_queue_submissions_with_pos_for_accounts(vector<account_id_type> ids) const;
@@ -2040,7 +2041,16 @@ vector<reward_queue_object> database_api::get_reward_queue() const
 
 vector<reward_queue_object> database_api_impl::get_reward_queue() const
 {
-  return _dal.get_reward_queue();
+   return _dal.get_reward_queue();
+}
+vector<reward_queue_object> database_api::get_reward_queue_by_page(uint32_t from, uint32_t amount) const
+{
+   return my->get_reward_queue_by_page(from, amount);
+}
+
+vector<reward_queue_object> database_api_impl::get_reward_queue_by_page(uint32_t from, uint32_t amount) const
+{
+   return _dal.get_reward_queue_by_page(from, amount);
 }
 
 uint32_t database_api::get_reward_queue_size() const

@@ -4597,6 +4597,11 @@ vector<reward_queue_object> wallet_api::get_reward_queue() const
    return my->_remote_db->get_reward_queue();
 }
 
+vector<reward_queue_object> wallet_api::get_reward_queue_by_page(uint32_t from, uint32_t amount) const
+{
+   return my->_remote_db->get_reward_queue_by_page(from, amount);
+}
+
 acc_id_queue_subs_w_pos_res wallet_api::get_queue_submissions_with_pos(account_id_type account_id) const
 {
    return my->_remote_db->get_queue_submissions_with_pos(account_id);

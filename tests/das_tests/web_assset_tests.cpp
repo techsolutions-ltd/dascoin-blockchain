@@ -59,6 +59,8 @@ BOOST_AUTO_TEST_CASE( web_asset_test )
 
   // Issue only reserved funds
   issue_request(rsrvd, 0, 100);
+  GRAPHENE_REQUIRE_THROW( issue_request(rsrvd, -10, 100), fc::exception );
+  GRAPHENE_REQUIRE_THROW( issue_request(rsrvd, 100, -10), fc::exception );
 
   BOOST_CHECK_EQUAL( get_asset_request_objects(wallet_id).size(), 1);
   BOOST_CHECK_EQUAL( get_asset_request_objects(vault_id).size(), 1);

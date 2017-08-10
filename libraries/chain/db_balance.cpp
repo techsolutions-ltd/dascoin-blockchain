@@ -163,7 +163,7 @@ void database::issue_asset(account_id_type account_id, share_type cash, asset_id
 void database::issue_asset(const account_balance_object& balance_obj, share_type cash, share_type reserved)
 { try {
 
-   if ( cash == 0 )
+   if ( cash == 0 && reserved == 0 ) // allow issuing of reserved balance only
      return;
 
    modify(balance_obj, [cash, reserved](account_balance_object& b) {
@@ -181,7 +181,7 @@ void database::issue_asset(const account_balance_object& balance_obj, share_type
 
 void database::adjust_balance(account_id_type account, asset delta, share_type reserved_delta)
 { try {
-   if( delta.amount == 0 )
+   if( delta.amount == 0 && reserved_delta == 0 ) // allow adjusting of reserved balance only
       return;
 
    auto& index = get_index_type<account_balance_index>().indices().get<by_account_asset>();

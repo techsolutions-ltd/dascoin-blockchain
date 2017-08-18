@@ -26,6 +26,8 @@ BOOST_AUTO_TEST_CASE( web_asset_test )
   generate_block();
   ACTOR(richguy);
   generate_block();
+  VAULT_ACTOR(rsrvd);
+  generate_block();
 
   const auto check_balances = [this](const account_object& account, share_type expected_cash,
                                      share_type expected_reserved)
@@ -55,6 +57,11 @@ BOOST_AUTO_TEST_CASE( web_asset_test )
   issue_request(richguy, 300, 300);
   issue_request(richguy, 100, 100);
 
+  // Issue only reserved funds
+  issue_request(rsrvd, 0, 100);
+  GRAPHENE_REQUIRE_THROW( issue_request(rsrvd, -10, 100), fc::exception );
+  GRAPHENE_REQUIRE_THROW( issue_request(rsrvd, 100, -10), fc::exception );
+
   BOOST_CHECK_EQUAL( get_asset_request_objects(wallet_id).size(), 1);
   BOOST_CHECK_EQUAL( get_asset_request_objects(vault_id).size(), 1);
   BOOST_CHECK_EQUAL( get_asset_request_objects(richguy_id).size(), 3);
@@ -64,6 +71,7 @@ BOOST_AUTO_TEST_CASE( web_asset_test )
   check_balances(wallet, 100, 100);
   check_balances(vault, 100, 100);
   check_balances(richguy, 1000, 1000);
+  check_balances(rsrvd, 0, 100);
 
   issue_request(richguy, 100, 0);
   BOOST_CHECK_EQUAL( get_asset_request_objects(richguy_id).size(), 1);

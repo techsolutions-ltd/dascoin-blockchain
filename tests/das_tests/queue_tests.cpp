@@ -399,6 +399,40 @@ BOOST_AUTO_TEST_CASE( update_global_frequency_unit_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE(get_queue_by_page_test)
+{ try {
+  VAULT_ACTORS((first)(second)(third)(fourth))
+
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), first_id, 200, 200, "test"));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), second_id, 200, 200, "test"));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), third_id, 200, 200, "test"));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), fourth_id, 200, 200, "test"));
+
+  // Now we have 4 submissions on the queue
+  // Get the first queue entry
+  auto queue = _dal.get_reward_queue_by_page(0, 1);
+  BOOST_CHECK_EQUAL(queue.size(), 1);
+  BOOST_CHECK_EQUAL(queue[0].number, 1);
+
+  // Get first two entries from the queue
+  queue = _dal.get_reward_queue_by_page(0, 2);
+  BOOST_CHECK_EQUAL(queue.size(), 2);
+  BOOST_CHECK_EQUAL(queue[0].number, 1);
+  BOOST_CHECK_EQUAL(queue[1].number, 2);
+
+  // Get the third entry
+  queue = _dal.get_reward_queue_by_page(2, 1);
+  BOOST_CHECK_EQUAL(queue.size(), 1);
+  BOOST_CHECK_EQUAL(queue[0].number, 3);
+
+  // Get from invalid position
+  GRAPHENE_REQUIRE_THROW(_dal.get_reward_queue_by_page(4, 2), fc::exception);
+
+  // Get invalid amount
+  GRAPHENE_REQUIRE_THROW(_dal.get_reward_queue_by_page(1, 5), fc::exception);
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

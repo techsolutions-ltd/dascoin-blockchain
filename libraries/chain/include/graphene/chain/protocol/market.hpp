@@ -52,6 +52,8 @@ namespace graphene { namespace chain {
       account_id_type seller;
       asset           amount_to_sell;
       asset           min_to_receive;
+      share_type      reserved_amount;
+      optional<account_id_type> account_to_credit;
 
       /// The order will be removed from the books if not filled by expiration
       /// Upon expiration, all unsold asset will be returned to seller
@@ -167,7 +169,7 @@ FC_REFLECT( graphene::chain::call_order_update_operation::fee_parameters_type, (
 FC_REFLECT( graphene::chain::fill_order_operation::fee_parameters_type,  )
 
 
-FC_REFLECT( graphene::chain::limit_order_create_operation,(fee)(seller)(amount_to_sell)(min_to_receive)(expiration)(fill_or_kill)(extensions))
+FC_REFLECT( graphene::chain::limit_order_create_operation,(fee)(seller)(amount_to_sell)(min_to_receive)(reserved_amount)(account_to_credit)(expiration)(fill_or_kill)(extensions))
 FC_REFLECT( graphene::chain::limit_order_cancel_operation,(fee)(fee_paying_account)(order)(extensions) )
 FC_REFLECT( graphene::chain::call_order_update_operation, (fee)(funding_account)(delta_collateral)(delta_debt)(extensions) )
 FC_REFLECT( graphene::chain::fill_order_operation, (fee)(order_id)(account_id)(pays)(receives) )

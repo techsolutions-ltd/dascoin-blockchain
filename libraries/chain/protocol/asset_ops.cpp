@@ -216,7 +216,11 @@ void asset_claim_fees_operation::validate()const
 void asset_create_issue_request_operation::validate() const
 {
    FC_ASSERT( fee.amount >= 0 );
-   FC_ASSERT( amount > 0 );
+   if(amount == 0)
+      FC_ASSERT( reserved_amount > 0);
+   if(reserved_amount == 0)
+      FC_ASSERT( amount > 0 );
+   FC_ASSERT( amount >= 0 && reserved_amount >= 0 );
 }
 
 void asset_deny_issue_request_operation::validate() const

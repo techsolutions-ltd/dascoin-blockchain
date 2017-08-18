@@ -65,6 +65,9 @@ namespace graphene { namespace chain {
     account_id_type account;
     share_type amount;
 
+    frequency_type frequency;
+    string comment;
+
     extensions_type extensions;
 
     submit_cycles_to_queue_operation() = default;
@@ -203,6 +206,8 @@ FC_REFLECT( graphene::chain::submit_cycles_to_queue_operation,
             (fee)
             (account)
             (amount)
+            (frequency)
+            (comment)
             (extensions)
           )
 

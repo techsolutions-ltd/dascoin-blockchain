@@ -220,6 +220,7 @@ void database::initialize_evaluators()
    register_evaluator<submit_cycles_to_queue_evaluator>();
    register_evaluator<update_queue_parameters_evaluator>();
    register_evaluator<change_public_keys_evaluator>();
+   register_evaluator<update_global_frequency_evaluator>();
 }
 
 void database::initialize_indexes()

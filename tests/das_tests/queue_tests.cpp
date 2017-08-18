@@ -386,6 +386,19 @@ BOOST_AUTO_TEST_CASE(submission_number_test)
 
 } FC_LOG_AND_RETHROW() }
 
+// TODO: move this test to a more appropriate location.
+BOOST_AUTO_TEST_CASE( update_global_frequency_unit_test )
+{ try {
+
+  do_op(update_global_frequency_operation(get_license_issuer_id(), 450));
+
+  auto frequency = db.get_dynamic_global_properties().frequency;
+  BOOST_CHECK_EQUAL( frequency.value, 450 );
+
+  // TODO: handle negative cases
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

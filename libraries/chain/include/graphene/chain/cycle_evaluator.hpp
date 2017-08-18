@@ -40,4 +40,13 @@ namespace graphene { namespace chain {
     const global_property_object* _gpo = nullptr;
   };
 
+  class update_global_frequency_evaluator : public evaluator<update_global_frequency_evaluator>
+  {
+    public:
+      typedef update_global_frequency_operation operation_type;
+
+      void_result do_evaluate(const operation_type& op);
+      void_result do_apply(const operation_type& op);
+  };
+
 } }  // namespace graphene::chain

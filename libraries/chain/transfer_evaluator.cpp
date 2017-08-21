@@ -123,7 +123,7 @@ void_result transfer_vault_to_wallet_evaluator::do_evaluate(const transfer_vault
 { try {
    const database& d = db();
 
-   // Check if we are transferring web assets:
+   // Check if we are transferring web assets or dascoin:
    // NOTE: this check must be modified to apply for every kind of web asset there is.
    FC_ASSERT ( op.asset_to_transfer.asset_id == d.get_web_asset_id() || op.asset_to_transfer.asset_id == d.get_dascoin_asset_id(),
                "Can only transfer web assets or dascoins" );

@@ -90,6 +90,16 @@ BOOST_AUTO_TEST_CASE( web_asset_test )
   check_balances(wallet, 50, 50);
   check_balances(vault, 150, 150);
 
+  // transfer only reserved webeuros
+  transfer_webasset_vault_to_wallet(vault_id, wallet_id, {0, 50});
+  check_balances(wallet, 50, 100);
+  check_balances(vault, 150, 100);
+
+  // transfer reserved webeuros from wallet to vault
+  transfer_webasset_wallet_to_vault(wallet_id, vault_id, {0, 50});
+  check_balances(wallet, 50, 50);
+  check_balances(vault, 150, 150);
+
   // Reject, not enough balance:
   GRAPHENE_REQUIRE_THROW( transfer_webasset_wallet_to_vault(wallet_id, vault_id, {1000,1100}), fc::exception );
 

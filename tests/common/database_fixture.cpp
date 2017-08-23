@@ -778,6 +778,7 @@ const limit_order_object* database_fixture::create_sell_order( const account_obj
    buy_order.seller = user.id;
    buy_order.amount_to_sell = amount;
    buy_order.min_to_receive = recv;
+   trx.operations.clear();
    trx.operations.push_back(buy_order);
    for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op);
    trx.validate();

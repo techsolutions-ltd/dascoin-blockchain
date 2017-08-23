@@ -29,7 +29,7 @@ void limit_order_create_operation::validate()const
 {
    FC_ASSERT( amount_to_sell.asset_id != min_to_receive.asset_id );
    FC_ASSERT( fee.amount >= 0 );
-   FC_ASSERT( amount_to_sell.amount > 0 );
+   FC_ASSERT( (amount_to_sell.amount > 0 && reserved_amount == 0) || (amount_to_sell.amount == 0 && reserved_amount > 0) );
    FC_ASSERT( min_to_receive.amount > 0 );
 }
 

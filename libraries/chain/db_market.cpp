@@ -301,12 +301,24 @@ bool database::fill_order( const limit_order_object& order, const asset& pays, c
 
    const account_object& seller = order.seller(*this);
    const asset_object& recv_asset = receives.asset_id(*this);
+   const account_object& receiver = order.account_to_credit.valid() ? (*order.account_to_credit)(*this) : seller;
 
    auto issuer_fees = pay_market_fees( recv_asset, receives );
-   pay_order( seller, receives - issuer_fees, pays );
+   // this line used to read:
+   // pay_order( seller, receives - issuer_fees, pays );
+   const auto& balances = seller.statistics(*this);
+   modify( balances, [&]( account_statistics_object& b ){
+       if( pays.asset_id == asset_id_type() )
+       {
+           b.total_core_in_orders -= pays.amount;
+       }
+   });
+   adjust_balance(receiver.get_id(), receives - issuer_fees);
 
    assert( pays.asset_id != receives.asset_id );
    push_applied_operation( fill_order_operation( order.id, order.seller, pays, receives, issuer_fees ) );
+   if (order.account_to_credit.valid())
+      push_applied_operation( transfer_wallet_to_vault_operation( seller.id, receiver.id, receives, 0 ) );
 
    // conditional because cheap integer comparison may allow us to avoid two expensive modify() and object lookups
    if( order.deferred_fee > 0 )

@@ -53,6 +53,8 @@ class limit_order_object : public abstract_object<limit_order_object>
       share_type       for_sale; ///< asset id is sell_price.base.asset_id
       price            sell_price;
       share_type       deferred_fee;
+      optional<account_id_type> account_to_credit;
+      bool             from_reserve; // does this come from reserved balance?
 
       pair<asset_id_type,asset_id_type> get_market()const
       {
@@ -200,7 +202,7 @@ typedef generic_index<force_settlement_object, force_settlement_object_multi_ind
 
 FC_REFLECT_DERIVED( graphene::chain::limit_order_object,
                     (graphene::db::object),
-                    (expiration)(seller)(for_sale)(sell_price)(deferred_fee)
+                    (expiration)(seller)(for_sale)(sell_price)(deferred_fee)(account_to_credit)(from_reserve)
                   )
 
 FC_REFLECT_DERIVED( graphene::chain::call_order_object, (graphene::db::object),

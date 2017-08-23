@@ -118,7 +118,9 @@ void database::cancel_order( const limit_order_object& order, bool create_virtua
          obj.total_core_in_orders -= refunded.amount;
       }
    });
-   adjust_balance(order.seller, refunded);
+   share_type reserved = order.from_reserve ? refunded.amount : 0;
+   const auto& zero_asset = asset{0, order.amount_for_sale().asset_id};
+   adjust_balance(order.seller, order.from_reserve ? zero_asset : refunded, reserved);
    adjust_balance(order.seller, order.deferred_fee);
 
    if( create_virtual_op )

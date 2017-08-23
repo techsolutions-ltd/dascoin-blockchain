@@ -115,6 +115,23 @@ void database_fixture::transfer_webasset_wallet_to_vault(account_id_type wallet_
 
 } FC_LOG_AND_RETHROW() }
 
+void database_fixture::transfer_dascoin_vault_to_wallet(account_id_type vault_id, account_id_type wallet_id,
+                                                        share_type amount)
+{ try {
+    transfer_vault_to_wallet_operation op;
+    op.from_vault = vault_id;
+    op.to_wallet = wallet_id;
+    op.asset_to_transfer = asset(amount, db.get_dascoin_asset_id());
+    op.reserved_to_transfer = 0;
+
+    set_expiration(db, trx);
+    trx.operations.clear();
+    trx.operations.push_back(op);
+    trx.validate();
+    db.push_transaction(trx, ~0);
+
+} FC_LOG_AND_RETHROW() }
+
 void database_fixture::deny_issue_request(issue_asset_request_id_type request_id)
 { try {
 

@@ -90,6 +90,16 @@ BOOST_AUTO_TEST_CASE( web_asset_test )
   check_balances(wallet, 50, 50);
   check_balances(vault, 150, 150);
 
+  // transfer only reserved webeuros
+  transfer_webasset_vault_to_wallet(vault_id, wallet_id, {0, 50});
+  check_balances(wallet, 50, 100);
+  check_balances(vault, 150, 100);
+
+  // transfer reserved webeuros from wallet to vault
+  transfer_webasset_wallet_to_vault(wallet_id, vault_id, {0, 50});
+  check_balances(wallet, 50, 50);
+  check_balances(vault, 150, 150);
+
   // Reject, not enough balance:
   GRAPHENE_REQUIRE_THROW( transfer_webasset_wallet_to_vault(wallet_id, vault_id, {1000,1100}), fc::exception );
 
@@ -99,6 +109,29 @@ BOOST_AUTO_TEST_CASE( web_asset_test )
   // Reject, arguments reversed:
   GRAPHENE_REQUIRE_THROW( transfer_webasset_wallet_to_vault(wallet_id, vault_id, {100,100}), fc::exception );
 
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( dascoin_test )
+{ try {
+  ACTOR(wallet);
+  generate_block();
+  VAULT_ACTOR(vault);
+  generate_block();
+
+  adjust_dascoin_reward(500 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  adjust_frequency(200);
+
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), vault_id, 200, 200, ""));
+  toggle_reward_queue(true);
+
+  // Wait for the cycles to be distributed:
+  generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
+  tether_accounts(wallet_id, vault_id);
+
+  // transfer 50 dascoin
+  transfer_dascoin_vault_to_wallet(vault_id, wallet_id, 50 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  BOOST_CHECK_EQUAL( get_balance(wallet_id, get_dascoin_asset_id()), 50 * DASCOIN_DEFAULT_ASSET_PRECISION );
+  BOOST_CHECK_EQUAL( get_balance(vault_id, get_dascoin_asset_id()), 50 * DASCOIN_DEFAULT_ASSET_PRECISION );
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_SUITE_END()

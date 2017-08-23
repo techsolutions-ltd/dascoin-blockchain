@@ -123,9 +123,10 @@ void_result transfer_vault_to_wallet_evaluator::do_evaluate(const transfer_vault
 { try {
    const database& d = db();
 
-   // Check if we are transferring web assets:
+   // Check if we are transferring web assets or dascoin:
    // NOTE: this check must be modified to apply for every kind of web asset there is.
-   FC_ASSERT ( op.asset_to_transfer.asset_id == d.get_web_asset_id(), "Can only transfer web assets" );
+   FC_ASSERT ( op.asset_to_transfer.asset_id == d.get_web_asset_id() || op.asset_to_transfer.asset_id == d.get_dascoin_asset_id(),
+               "Can only transfer web assets or dascoins" );
 
    // Check if the accounts exist:
    const account_object& from_acc_obj = op.from_vault(d);
@@ -147,8 +148,8 @@ void_result transfer_vault_to_wallet_evaluator::do_evaluate(const transfer_vault
             );
 
    // Get both balance objects:
-   const auto& from_balance_obj = d.get_balance_object(op.from_vault, d.get_web_asset_id());
-   const auto& to_balance_obj = d.get_balance_object(op.to_wallet, d.get_web_asset_id());
+   const auto& from_balance_obj = d.get_balance_object(op.from_vault, op.asset_to_transfer.asset_id);
+   const auto& to_balance_obj = d.get_balance_object(op.to_wallet, op.asset_to_transfer.asset_id);
 
    // Check if we have enough cash balance in the FROM account:
    FC_ASSERT( from_balance_obj.balance >= op.asset_to_transfer.amount,

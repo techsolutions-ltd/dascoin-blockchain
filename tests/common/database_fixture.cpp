@@ -225,7 +225,10 @@ void database_fixture::verify_asset_supplies( const database& db )
    share_type reported_core_in_orders;
 
    for( const account_balance_object& b : balance_index )
-      total_balances[b.asset_type] += b.balance;
+   {
+       total_balances[b.asset_type] += b.balance;
+       total_balances[b.asset_type] += b.reserved;
+   }
    for( const force_settlement_object& s : settle_index )
       total_balances[s.balance.asset_id] += s.balance.amount;
    for( const account_statistics_object& a : statistics_index )
@@ -764,20 +767,21 @@ digest_type database_fixture::digest( const transaction& tx )
    return tx.digest();
 }
 
-const limit_order_object*database_fixture::create_sell_order(account_id_type user, const asset& amount, const asset& recv)
+const limit_order_object*database_fixture::create_sell_order(account_id_type user, const asset& amount, const asset& recv, share_type reserved /* = 0 */)
 {
-   auto r =  create_sell_order(user(db), amount, recv);
+   auto r = create_sell_order(user(db), amount, recv, reserved);
    verify_asset_supplies(db);
    return r;
 }
 
-const limit_order_object* database_fixture::create_sell_order( const account_object& user, const asset& amount, const asset& recv )
+const limit_order_object* database_fixture::create_sell_order( const account_object& user, const asset& amount, const asset& recv, share_type reserved /* = 0 */ )
 {
    //wdump((amount)(recv));
    limit_order_create_operation buy_order;
    buy_order.seller = user.id;
    buy_order.amount_to_sell = amount;
    buy_order.min_to_receive = recv;
+   buy_order.reserved_amount = reserved;
    trx.operations.clear();
    trx.operations.push_back(buy_order);
    for( auto& op : trx.operations ) db.current_fee_schedule().set_fee(op);

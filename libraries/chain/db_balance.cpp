@@ -173,8 +173,8 @@ void database::issue_asset(const account_balance_object& balance_obj, share_type
 
    const auto& asset_obj = balance_obj.asset_type(*this);
    modify(asset_obj.dynamic_asset_data_id(*this), [&](asset_dynamic_data_object& data){
-        // TODO: reserved part factors in here as well.
-        data.current_supply += cash;
+      data.current_supply += cash;
+      data.current_supply += reserved;
    });
 
 } FC_CAPTURE_AND_RETHROW((cash)(reserved)) }

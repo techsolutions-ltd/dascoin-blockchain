@@ -98,7 +98,7 @@ object_id_type limit_order_create_evaluator::do_apply(const limit_order_create_o
 
    const auto& new_order_object = d.create<limit_order_object>([&](limit_order_object& obj){
        obj.seller   = _seller->id;
-       obj.for_sale = op.amount_to_sell.amount;
+       obj.for_sale = from_reserve ? op.reserved_amount : op.amount_to_sell.amount;
        obj.sell_price = op.get_price();
        obj.expiration = op.expiration;
        obj.deferred_fee = _deferred_fee;

@@ -17,6 +17,46 @@ BOOST_FIXTURE_TEST_SUITE( dascoin_tests, database_fixture )
 
 BOOST_FIXTURE_TEST_SUITE( exchange_unit_tests, database_fixture )
 
+BOOST_AUTO_TEST_CASE( successful_orders_test )
+{ try {
+    ACTOR(alice);
+    ACTOR(bobw);
+    VAULT_ACTOR(bob);
+
+    tether_accounts(bobw_id, bob_id);
+    issue_webasset(alice_id, 100, 100);
+    generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
+    share_type cash, reserved;
+    std::tie(cash, reserved) = get_web_asset_amounts(alice_id);
+
+    BOOST_CHECK_EQUAL( cash.value, 100 );
+    BOOST_CHECK_EQUAL( reserved.value, 100 );
+
+    adjust_dascoin_reward(500 * DASCOIN_DEFAULT_ASSET_PRECISION);
+    adjust_frequency(200);
+
+    set_expiration( db, trx );
+
+    do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), bob_id, 200, 200, ""));
+    toggle_reward_queue(true);
+
+    // Wait for the cycles to be distributed:
+    generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
+
+    BOOST_CHECK_EQUAL( get_balance(bob_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
+    transfer_dascoin_vault_to_wallet(bob_id, bobw_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+    // sell order from cash balance
+    create_sell_order(alice_id, asset{100, get_web_asset_id()}, asset{100, get_dascoin_asset_id()});
+
+    // sell order from reserved balance
+    create_sell_order(alice_id, asset{0, get_web_asset_id()}, asset{100, get_dascoin_asset_id()}, 100);
+
+    // sell order for dascoin from cash balance
+    create_sell_order(bobw_id, asset{1 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, asset{100, get_web_asset_id()});
+
+    } FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_CASE( order_not_enough_assets_test )
 { try {
     ACTOR(alice);
@@ -27,7 +67,6 @@ BOOST_AUTO_TEST_CASE( order_not_enough_assets_test )
     set_expiration( db, trx );
 
     // make a huge order that ought to fail
-    // fixme: this is wrong
     GRAPHENE_REQUIRE_THROW(create_sell_order(alice_id, asset{1000, get_web_asset_id()}, asset{100, get_dascoin_asset_id()}), fc::exception);
 
 } FC_LOG_AND_RETHROW() }
@@ -158,6 +197,51 @@ BOOST_AUTO_TEST_CASE( exchange_test )
 //    auto order_id = create_sell_order(alicew_id, asset{100, get_web_asset_id()}, asset{100 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()});
 //    create_sell_order(bobw_id, asset{50 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, asset{50, get_web_asset_id()});
 //    cancel_limit_order(*order_id);
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( account_to_credit_test )
+{ try {
+    ACTOR(alice);
+    ACTOR(bob);
+    VAULT_ACTOR(bobv);
+    VAULT_ACTOR(alicev);
+
+    tether_accounts(alice_id, alicev_id);
+    tether_accounts(bob_id, bobv_id);
+
+    do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), bobv_id, 200, 200, ""));
+    toggle_reward_queue(true);
+
+    // Wait for the cycles to be distributed:
+    generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
+    transfer_dascoin_vault_to_wallet(bobv_id, bob_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+    issue_webasset(alice_id, 100, 100);
+    generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
+
+    share_type cash, reserved;
+    std::tie(cash, reserved) = get_web_asset_amounts(alice_id);
+
+    // 100 cash, 100 reserved
+    BOOST_CHECK_EQUAL( cash.value, 100 );
+    BOOST_CHECK_EQUAL( reserved.value, 100 );
+
+    set_expiration( db, trx );
+    // this will fail - accounts not tethered
+    GRAPHENE_REQUIRE_THROW( do_op(limit_order_create_operation(alice_id, asset{0, get_web_asset_id()}, asset{100 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, 100,
+                                   bobv_id, db.head_block_time() + fc::seconds(60))), fc::exception );
+    // this will fail - not a vault account
+    GRAPHENE_REQUIRE_THROW( do_op(limit_order_create_operation(alice_id, asset{0, get_web_asset_id()}, asset{100 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, 100,
+                                   alice_id, db.head_block_time() + fc::seconds(60))), fc::exception );
+
+    do_op(limit_order_create_operation(alice_id, asset{0, get_web_asset_id()}, asset{100 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, 100,
+                                           alicev_id, db.head_block_time() + fc::seconds(60)));
+
+    create_sell_order(bob_id, asset{100 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, asset{100, get_web_asset_id()});
+
+    std::tie(cash, reserved) = get_web_asset_amounts(alice_id);
+
+    BOOST_CHECK_EQUAL( get_balance(alicev_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
 
 } FC_LOG_AND_RETHROW() }
 

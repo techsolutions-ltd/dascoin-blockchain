@@ -66,8 +66,11 @@ BOOST_AUTO_TEST_CASE( order_not_enough_assets_test )
     BOOST_CHECK_EQUAL( get_balance(alice_id, get_web_asset_id()), 100 );
     set_expiration( db, trx );
 
-    // make a huge order that ought to fail
+    // make a huge order from cash balance that ought to fail
     GRAPHENE_REQUIRE_THROW(create_sell_order(alice_id, asset{1000, get_web_asset_id()}, asset{100, get_dascoin_asset_id()}), fc::exception);
+
+    // make a huge order from reserve balance that ought to fail
+    GRAPHENE_REQUIRE_THROW(create_sell_order(alice_id, asset{0, get_web_asset_id()}, asset{100, get_dascoin_asset_id()}, 1000), fc::exception);
 
 } FC_LOG_AND_RETHROW() }
 
@@ -81,9 +84,9 @@ BOOST_AUTO_TEST_CASE( cancel_order_test )
     share_type cash, reserved;
     std::tie(cash, reserved) = get_web_asset_amounts(alice_id);
 
-    // 100 cash, 0 reserved
-    FC_ASSERT( cash == 100, "Invalid amount" );
-    FC_ASSERT( reserved == 100, "Invalid amount" );
+    // 100 cash, 100 reserved
+    BOOST_CHECK_EQUAL( cash.value, 100 );
+    BOOST_CHECK_EQUAL( reserved.value, 100 );
 
     set_expiration( db, trx );
 

@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE( successful_orders_test )
     // sell order for dascoin from cash balance
     create_sell_order(bobw_id, asset{1 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, asset{100, get_web_asset_id()});
 
-    } FC_LOG_AND_RETHROW() }
+} FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_CASE( order_not_enough_assets_test )
 { try {

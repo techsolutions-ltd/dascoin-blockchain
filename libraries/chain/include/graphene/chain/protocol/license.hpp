@@ -37,6 +37,22 @@ namespace graphene { namespace chain {
      upgrade_multiplier_type requeue_multipliers;
      upgrade_multiplier_type return_multipliers;
 
+     share_type eur_limit;
+
+     create_license_type_operation() = default;
+     explicit create_license_type_operation(const string& name, share_type amount, const string& kind,
+                                            const upgrade_multiplier_type& balance_multipliers,
+                                            const upgrade_multiplier_type& requeue_multipliers,
+                                            const upgrade_multiplier_type& return_multipliers, 
+                                            share_type eur_limit)
+         : name(name)
+         , amount(amount)
+         , kind(kind)
+         , balance_multipliers(balance_multipliers)
+         , requeue_multipliers(requeue_multipliers)
+         , return_multipliers(return_multipliers)
+         , eur_limit(eur_limit) {}
+
      account_id_type fee_payer() const { return admin; }
      void validate() const;
      share_type calculate_fee(const fee_parameters_type&) const { return 0; }
@@ -98,6 +114,7 @@ FC_REFLECT( graphene::chain::create_license_type_operation,
             (balance_multipliers)
             (requeue_multipliers)
             (return_multipliers)
+            (eur_limit)
           )
 
 FC_REFLECT( graphene::chain::issue_license_operation::fee_parameters_type, )

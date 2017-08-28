@@ -37,7 +37,8 @@ const license_type_object& database_fixture::create_license_type(const string& k
                                                                  share_type amount, 
                                                                  upgrade_multiplier_type balance_multipliers,
                                                                  upgrade_multiplier_type requeue_multipliers,
-                                                                 upgrade_multiplier_type return_multipliers)
+                                                                 upgrade_multiplier_type return_multipliers,
+                                                                 share_type eur_limit)
 { try {
   create_license_type_operation op;
   op.admin = get_license_administrator_id();

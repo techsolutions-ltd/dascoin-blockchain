@@ -539,7 +539,8 @@ namespace graphene { namespace chain {
          object_id_type create_license_type(license_kind kind, const string& name, share_type amount, 
                                             upgrade_multiplier_type balance_multipliers,
                                             upgrade_multiplier_type requeue_multipliers,
-                                            upgrade_multiplier_type return_multipliers);
+                                            upgrade_multiplier_type return_multipliers,
+                                            share_type eur_limit);
          optional<license_information_object> get_license_information(account_id_type account_id) const;
          
          //////////////////// db_queue.cpp ////////////////////

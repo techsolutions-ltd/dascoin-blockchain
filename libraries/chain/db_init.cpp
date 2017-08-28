@@ -773,21 +773,21 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    // NOTE: preserve the order of licenses to avoid breaking compatibility.    
    {
       // No license placeholder:
-      FC_ASSERT( create_license_type(license_kind::none, "no_license", 0, {}, {}, {}) == DASCOIN_NULL_LICENSE );
+      FC_ASSERT( create_license_type(license_kind::none, "no_license", 0, {}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_ADVOCATE) == DASCOIN_NULL_LICENSE );
 
-      create_license_type(license_kind::regular, "standard", DASCOIN_BASE_STANDARD_CYCLES, {2}, {}, {});
-      create_license_type(license_kind::regular, "manager", DASCOIN_BASE_MANAGER_CYCLES, {2}, {}, {});
-      create_license_type(license_kind::regular, "pro", DASCOIN_BASE_PRO_CYCLES, {2}, {}, {});
-      create_license_type(license_kind::regular, "executive", DASCOIN_BASE_EXECUTIVE_CYCLES, {2,2}, {}, {});
-      create_license_type(license_kind::regular, "vice_president", DASCOIN_BASE_VICE_PRESIDENT_CYCLES, {2,2}, {}, {});
-      create_license_type(license_kind::regular, "president", DASCOIN_BASE_PRESIDENT_CYCLES, {2,2,2}, {}, {});
+      create_license_type(license_kind::regular, "standard", DASCOIN_BASE_STANDARD_CYCLES, {2}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_STANDARD);
+      create_license_type(license_kind::regular, "manager", DASCOIN_BASE_MANAGER_CYCLES, {2}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_MANAGER);
+      create_license_type(license_kind::regular, "pro", DASCOIN_BASE_PRO_CYCLES, {2}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_PRO);
+      create_license_type(license_kind::regular, "executive", DASCOIN_BASE_EXECUTIVE_CYCLES, {2,2}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_EXECUTIVE);
+      create_license_type(license_kind::regular, "vice_president", DASCOIN_BASE_VICE_PRESIDENT_CYCLES, {2,2}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_VICE_PRESIDENT);
+      create_license_type(license_kind::regular, "president", DASCOIN_BASE_PRESIDENT_CYCLES, {2,2,2}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_PRESIDENT);
 
-      create_license_type(license_kind::chartered, "standard_charter", DASCOIN_BASE_STANDARD_CYCLES, {}, {1}, {});
-      create_license_type(license_kind::chartered, "manager_charter", DASCOIN_BASE_MANAGER_CYCLES, {}, {1}, {});
-      create_license_type(license_kind::chartered, "pro_charter", DASCOIN_BASE_PRO_CYCLES, {}, {1}, {});
-      create_license_type(license_kind::chartered, "executive_charter", DASCOIN_BASE_EXECUTIVE_CYCLES, {}, {1,2}, {});
-      create_license_type(license_kind::chartered, "vice_president_charter", DASCOIN_BASE_VICE_PRESIDENT_CYCLES, {1,2}, {}, {});
-      create_license_type(license_kind::chartered, "president_charter", DASCOIN_BASE_PRESIDENT_CYCLES, {}, {1,2,4}, {});
+      create_license_type(license_kind::chartered, "standard_charter", DASCOIN_BASE_STANDARD_CYCLES, {}, {1}, {}, DASCOIN_DEFAULT_EUR_LIMIT_STANDARD);
+      create_license_type(license_kind::chartered, "manager_charter", DASCOIN_BASE_MANAGER_CYCLES, {}, {1}, {}, DASCOIN_DEFAULT_EUR_LIMIT_MANAGER);
+      create_license_type(license_kind::chartered, "pro_charter", DASCOIN_BASE_PRO_CYCLES, {}, {1}, {}, DASCOIN_DEFAULT_EUR_LIMIT_PRO);
+      create_license_type(license_kind::chartered, "executive_charter", DASCOIN_BASE_EXECUTIVE_CYCLES, {}, {1,2}, {}, DASCOIN_DEFAULT_EUR_LIMIT_EXECUTIVE);
+      create_license_type(license_kind::chartered, "vice_president_charter", DASCOIN_BASE_VICE_PRESIDENT_CYCLES, {1,2}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_VICE_PRESIDENT);
+      create_license_type(license_kind::chartered, "president_charter", DASCOIN_BASE_PRESIDENT_CYCLES, {}, {1,2,4}, {}, DASCOIN_DEFAULT_EUR_LIMIT_PRESIDENT);
    }
 
    // Set active witnesses

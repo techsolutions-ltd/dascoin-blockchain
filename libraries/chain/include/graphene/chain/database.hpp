@@ -508,6 +508,8 @@ namespace graphene { namespace chain {
          bool fill_order( const call_order_object& order, const asset& pays, const asset& receives );
          bool fill_order( const force_settlement_object& settle, const asset& pays, const asset& receives );
 
+         void push_fill_order_operation( const fill_order_operation &fill_order, bool set_dascoin_price = true );
+
          bool check_call_orders( const asset_object& mia, bool enable_black_swan = true );
 
          // helpers to fill_order

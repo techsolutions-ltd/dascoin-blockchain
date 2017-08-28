@@ -318,7 +318,7 @@ bool database::fill_order( const limit_order_object& order, const asset& pays, c
    adjust_balance(receiver.get_id(), receives - issuer_fees);
 
    assert( pays.asset_id != receives.asset_id );
-   push_applied_operation( fill_order_operation( order.id, order.seller, pays, receives, issuer_fees ) );
+   push_fill_order_operation( fill_order_operation{ order.id, order.seller, pays, receives, issuer_fees } );
    if (order.account_to_credit.valid())
       push_applied_operation( transfer_wallet_to_vault_operation( seller.id, receiver.id, receives, 0 ) );
 
@@ -394,7 +394,7 @@ bool database::fill_order( const call_order_object& order, const asset& pays, co
    }
 
    assert( pays.asset_id != receives.asset_id );
-   push_applied_operation( fill_order_operation{ order.id, order.borrower, pays, receives, asset(0, pays.asset_id) } );
+   push_fill_order_operation( fill_order_operation{ order.id, order.borrower, pays, receives, asset(0, pays.asset_id) } );
 
    if( collateral_freed )
       remove( order );
@@ -420,7 +420,7 @@ bool database::fill_order(const force_settlement_object& settle, const asset& pa
    adjust_balance(settle.owner, receives - issuer_fees);
 
    assert( pays.asset_id != receives.asset_id );
-   push_applied_operation( fill_order_operation{ settle.id, settle.owner, pays, receives, issuer_fees } );
+   push_fill_order_operation( fill_order_operation{ settle.id, settle.owner, pays, receives, issuer_fees } );
 
    if (filled)
       remove(settle);
@@ -428,6 +428,22 @@ bool database::fill_order(const force_settlement_object& settle, const asset& pa
    return filled;
 } FC_CAPTURE_AND_RETHROW( (settle)(pays)(receives) ) }
 
+void database::push_fill_order_operation( const fill_order_operation &fill_order, bool set_dascoin_price /* = true */)
+{
+    push_applied_operation(fill_order);
+    if (set_dascoin_price)
+    {
+        // Update dascoin price only if market is DSC:WEBEUR.
+        if (fill_order.pays.asset_id == get_web_asset_id() && fill_order.receives.asset_id == get_dascoin_asset_id())
+        {
+            // This is the same as in market history.
+            price dsc_price = fill_order.pays / fill_order.receives;
+            modify(get_dynamic_global_properties(), [dsc_price](dynamic_global_property_object &dgpo) {
+                dgpo.last_dascoin_price = dsc_price;
+            });
+        }
+    }
+}
 /**
  *  Starting with the least collateralized orders, fill them if their
  *  call price is above the max(lowest bid,call_limit).

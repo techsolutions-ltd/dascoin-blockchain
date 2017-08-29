@@ -227,6 +227,36 @@ void database::adjust_balance(account_id_type account, asset delta, share_type r
 
 } FC_CAPTURE_AND_RETHROW( (account)(delta) ) }
 
+void database::adjust_balance_limit(const account_object& account, asset_id_type asset_id, share_type limit)
+{ try {
+   if ( limit <= 0 )
+   {
+      wlog("Warning: limit is set to ${limit}", ("limit", limit));
+      return;
+   }
+
+   auto& index = get_index_type<account_balance_index>().indices().get<by_account_asset>();
+   auto itr = index.find(boost::make_tuple(account.id, asset_id));
+   
+   if ( itr == index.end() )
+   {
+      wlog("Warning: account ${acc_id} has no balance for ${asset_id}", ("acc_id", account.id)("asset_id", asset_id));
+      return;
+   }
+
+   // FC_ASSERT( itr == index.end(),
+   //            "Error: Account ${acc_id} does not have a balance for asset ${asset_id}",
+   //            ("acc_id", account.id)
+   //            ("asset_id", asset_id)
+   //          );
+   
+   modify(*itr, [limit](account_balance_object& b) {
+      // TODO: set the spent amount here?
+      b.limit = limit;
+   });
+
+} FC_CAPTURE_AND_RETHROW( (account)(limit) ) }
+
 void database::adjust_cycle_balance(account_id_type account, share_type delta)
 { try {
 

@@ -120,6 +120,8 @@ namespace graphene { namespace chain {
          share_type spent = 0;  // Balance spent in limit interval.
          share_type spent_reserved = 0;  // Reserved balance spent in limit interval.
 
+         share_type limit;  // The limit used for transfers on this balance.
+
          asset get_balance() const { return asset(balance, asset_type); }
          asset get_reserved_balance() const { return asset(reserved, asset_type); }
          asset_reserved get_asset_reserved_balance() const { return asset_reserved(balance, reserved, asset_type); }
@@ -345,6 +347,11 @@ namespace graphene { namespace chain {
          {
             return kind == account_kind::vault;
          }
+         /// @return true if the account is a special account.
+         bool is_special()const
+         {
+            return kind == account_kind::special;
+         }
          /// @return true if the account is in this accounts parent list
          bool has_in_parents(account_id_type account)const
          {
@@ -355,6 +362,7 @@ namespace graphene { namespace chain {
          {
             return vault.find(account) != vault.end();
          }
+
 
          account_id_type get_id()const { return id; }
 
@@ -518,6 +526,7 @@ FC_REFLECT_DERIVED( graphene::chain::account_balance_object, (graphene::db::obje
                     (reserved)
                     (spent)
                     (spent_reserved)
+                    (limit)
                   )
 
 FC_REFLECT_DERIVED( graphene::chain::account_cycle_balance_object, (graphene::db::object),

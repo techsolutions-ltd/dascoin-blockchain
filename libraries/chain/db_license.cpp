@@ -38,11 +38,10 @@ optional<license_information_object> database::get_license_information(account_i
    return {};
 }
 
-optional<share_type> database::get_dascoin_limit(account_id_type account_id, price dascoin_price) const
+optional<share_type> database::get_dascoin_limit(const account_object& account, price dascoin_price) const
 {
   const auto ADVOCATE_EUR_LIMIT = get(DASCOIN_NULL_LICENSE).eur_limit;
   const auto DASCOIN_ASSET_ID = get_dascoin_asset_id();
-  const auto& account = get(account_id);
 
   const auto& get_limit_from_price = [DASCOIN_ASSET_ID](share_type eur_limit, price dascoin_price) -> share_type
   {

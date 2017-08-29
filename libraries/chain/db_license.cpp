@@ -15,7 +15,8 @@ namespace graphene { namespace chain {
 object_id_type database::create_license_type(license_kind kind, const string& name, share_type amount, 
                                    upgrade_multiplier_type balance_multipliers,
                                    upgrade_multiplier_type requeue_multipliers,
-                                   upgrade_multiplier_type return_multipliers)
+                                   upgrade_multiplier_type return_multipliers,
+                                   share_type eur_limit)
 {
   return create<license_type_object>([&](license_type_object& lto){
     lto.name = name;
@@ -24,6 +25,7 @@ object_id_type database::create_license_type(license_kind kind, const string& na
     lto.balance_upgrade.reset(balance_multipliers);
     lto.requeue_upgrade.reset(requeue_multipliers);
     lto.return_upgrade.reset(return_multipliers);
+    lto.eur_limit = eur_limit;
   }).id;
 }
 

@@ -40,7 +40,8 @@ object_id_type create_license_type_evaluator::do_apply(const create_license_type
                                   op.amount, 
                                   op.balance_multipliers, 
                                   op.requeue_multipliers, 
-                                  op.return_multipliers);
+                                  op.return_multipliers,
+                                  op.eur_limit);
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 

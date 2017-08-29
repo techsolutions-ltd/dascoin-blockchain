@@ -195,8 +195,8 @@ BOOST_AUTO_TEST_CASE( exchange_test )
 
     const auto &dgpo = get_dynamic_global_properties();
     const auto &dprice = dgpo.last_dascoin_price;
-    const price expected_price{ asset{1 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()},
-                                asset{10 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()} };
+    const price expected_price{ asset{10 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()},
+                                asset{1 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()} };
     BOOST_CHECK( dprice == expected_price );
 
     create_sell_order(alicew_id, asset{2 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()},
@@ -205,8 +205,8 @@ BOOST_AUTO_TEST_CASE( exchange_test )
                       asset{2 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()});
     const auto &dgpo2 = get_dynamic_global_properties();
     const auto &dprice2 = dgpo2.last_dascoin_price;
-    const price expected_price2{ asset{2 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()},
-                                 asset{10 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()} };
+    const price expected_price2{ asset{10 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()},
+                                 asset{2 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()}};
     BOOST_CHECK( dprice2 == expected_price2 );
 
 //    issue_assets(1000, 0, 1000, 0);

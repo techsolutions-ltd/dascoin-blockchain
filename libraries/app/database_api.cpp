@@ -1137,59 +1137,57 @@ market_ticker database_api_impl::get_ticker( const string& base, const string& q
    FC_ASSERT( assets[0], "Invalid base asset symbol: ${s}", ("s",base) );
    FC_ASSERT( assets[1], "Invalid quote asset symbol: ${s}", ("s",quote) );
 
-   auto base_id = assets[0]->id;
-   auto quote_id = assets[1]->id;
-
    market_ticker result;
-
    result.base = base;
    result.quote = quote;
-   result.base_volume = 0;
-   result.quote_volume = 0;
-   result.percent_change = 0;
+   result.latest = 0;
    result.lowest_ask = 0;
    result.highest_bid = 0;
-
-   // auto price_to_real = [&]( const share_type a, int p ) { return double( a.value ) / pow( 10, p ); };
+   result.percent_change = 0;
+   result.base_volume = 0;
+   result.quote_volume = 0;
 
    try {
-      if( base_id > quote_id ) std::swap(base_id, quote_id);
+      const fc::time_point_sec now = fc::time_point::now();
+      const fc::time_point_sec yesterday = fc::time_point_sec( now.sec_since_epoch() - 86400 );
+      const auto batch_size = 100;
 
-      uint32_t day = 86400;
-      auto now = fc::time_point_sec( fc::time_point::now() );
-      auto orders = get_order_book( base, quote, 1 );
-      auto trades = get_trade_history( base, quote, now, fc::time_point_sec( now.sec_since_epoch() - day ), 100 );
-
-      result.latest = trades[0].price;
-
-      for ( market_trade t: trades )
+      vector<market_trade> trades = get_trade_history( base, quote, now, yesterday, batch_size );
+      if( !trades.empty() )
       {
-         result.base_volume += t.value;
-         result.quote_volume += t.amount;
-      }
+         result.latest = trades[0].price;
 
-      while (trades.size() == 100)
-      {
-         trades = get_trade_history( base, quote, trades[99].date, fc::time_point_sec( now.sec_since_epoch() - day ), 100 );
-
-         for ( market_trade t: trades )
+         while( !trades.empty() )
          {
-            result.base_volume += t.value;
-            result.quote_volume += t.amount;
+            for( const market_trade& t: trades )
+            {
+               result.base_volume += t.value;
+               result.quote_volume += t.amount;
+            }
+
+            trades = get_trade_history( base, quote, trades.back().date, yesterday, batch_size );
+         }
+
+         const auto last_trade_yesterday = get_trade_history( base, quote, yesterday, fc::time_point_sec(), 1 );
+         if( !last_trade_yesterday.empty() )
+         {
+            const auto price_yesterday = last_trade_yesterday[0].price;
+            result.percent_change = ( (result.latest / price_yesterday) - 1 ) * 100;
          }
       }
-
-      trades = get_trade_history( base, quote, trades.back().date, fc::time_point_sec(), 1 );
-      result.percent_change = trades.size() > 0 ? ( ( result.latest / trades.back().price ) - 1 ) * 100 : 0;
-
-      //if (assets[0]->id == base_id)
+      else
       {
-         result.lowest_ask = orders.asks[0].price;
-         result.highest_bid = orders.bids[0].price;
+         const auto last_trade = get_trade_history( base, quote, now, fc::time_point_sec(), 1 );
+         if( !last_trade.empty() )
+            result.latest = last_trade[0].price;
       }
 
-      return result;
+      const auto orders = get_order_book( base, quote, 1 );
+      if( !orders.asks.empty() ) result.lowest_ask = orders.asks[0].price;
+      if( !orders.bids.empty() ) result.highest_bid = orders.bids[0].price;
    } FC_CAPTURE_AND_RETHROW( (base)(quote) )
+
+   return result;
 }
 
 market_volume database_api::get_24_volume( const string& base, const string& quote )const

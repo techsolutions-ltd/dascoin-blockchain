@@ -27,6 +27,7 @@
 #include <graphene/db/undo_database.hpp>
 
 #include <fc/log/logger.hpp>
+#include <fc/optional.hpp>
 
 #include <map>
 

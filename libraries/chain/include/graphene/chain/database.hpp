@@ -541,7 +541,18 @@ namespace graphene { namespace chain {
                                             upgrade_multiplier_type requeue_multipliers,
                                             upgrade_multiplier_type return_multipliers,
                                             share_type eur_limit);
+
          optional<license_information_object> get_license_information(account_id_type account_id) const;
+
+         /**
+          * Get the dascoin limit for the limit interval for an account.
+          * NOTE: this method requires a Dascoin price feed.
+          *
+          * @param account_id The ID of the account for which we are getting the limit.
+          * @param dascoin_price The price on the market used to calculate the limit.
+          * @return The limit for dascoin for vault accounts, nothing for other account types.
+          **/
+         optional<share_type> get_dascoin_limit(account_id_type account_id, price dascoin_price) const;
          
          //////////////////// db_queue.cpp ////////////////////
 

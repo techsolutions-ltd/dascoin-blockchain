@@ -580,7 +580,10 @@ void_result asset_create_issue_request_evaluator::do_evaluate(const asset_create
    FC_ASSERT ( o.asset_id == d.get_web_asset_id(), "Can only transfer web assets" );
 
    const auto& a = o.asset_id(d);
-   FC_ASSERT( a.is_dual_auth_issue(), "Cannot do a dual authority issue on a single issuer based asset" );
+   FC_ASSERT( a.is_dual_auth_issue(),
+              "Cannot do a dual authority issue on a single issuer based asset '{asset_id}'.",
+              ("asset_id", a.id) 
+            );
 
    const auto issuer_id = d.get_chain_authorities().webasset_issuer;
    const auto& op_issuer_obj = o.issuer(d);
@@ -595,23 +598,18 @@ void_result asset_create_issue_request_evaluator::do_evaluate(const asset_create
    const auto& asset_dyn_data = a.dynamic_asset_data_id(d);
    FC_ASSERT( (asset_dyn_data.current_supply + o.amount) <= a.options.max_supply );
 
-   return void_result();
+   return {};
 
 } FC_CAPTURE_AND_RETHROW((o)) }
 
 object_id_type asset_create_issue_request_evaluator::do_apply(const asset_create_issue_request_operation& o)
 { try {
-   auto& d = db();
-   const auto& params = d.get_global_properties().parameters;
 
-   return d.create<issue_asset_request_object>([&] (issue_asset_request_object &req) {
-     req.issuer = o.issuer;
-     req.receiver = o.receiver;
-     req.amount = o.amount;
-     req.asset_id = o.asset_id;
-     req.reserved_amount = o.reserved_amount;
-     req.expiration = d.head_block_time() + fc::seconds(params.web_asset_request_expiration_time_seconds);
-   }).id;
+   db().issue_asset(o.receiver, o.amount, o.asset_id, o.reserved_amount);
+
+   // TODO: figure out a way to do dual issuing for web assets (via hard fork?)
+
+   return {};
 
 } FC_CAPTURE_AND_RETHROW((o)) }
 

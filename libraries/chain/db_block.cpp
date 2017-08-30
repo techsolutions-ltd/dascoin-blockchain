@@ -535,7 +535,6 @@ void database::_apply_block( const signed_block& next_block )
    update_maintenance_flag( maint_needed );
    update_witness_schedule();
 
-   distribute_issue_requested_assets();
    reset_spending_limits();
 
    if ( global_props.parameters.enable_dascoin_queue )

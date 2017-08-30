@@ -251,8 +251,8 @@ void database::adjust_balance_limit(const account_object& account, asset_id_type
    //          );
    
    modify(*itr, [limit](account_balance_object& b) {
-      // TODO: set the spent amount here?
       b.limit = limit;
+      b.spent = 0;
    });
 
 } FC_CAPTURE_AND_RETHROW( (account)(limit) ) }

@@ -100,5 +100,45 @@ BOOST_AUTO_TEST_CASE( limit_reset_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( obey_limit_test )
+{ try {
+  ACTOR(wallet);
+  VAULT_ACTOR(vault);
+
+  tether_accounts(wallet_id, vault_id);
+
+  adjust_dascoin_reward(500 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  adjust_frequency(200);
+
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), vault_id, 200, 200, ""));
+  toggle_reward_queue(true);
+
+  // Wait for the cycles to be distributed:
+  generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
+
+  // Set limit to 10 dascoin
+  db.adjust_balance_limit(vault, get_dascoin_asset_id(), 10 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+  // This ought to pass
+  transfer_dascoin_vault_to_wallet(vault_id, wallet_id, 10 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+  // This will fail
+  GRAPHENE_REQUIRE_THROW( transfer_dascoin_vault_to_wallet(vault_id, wallet_id, 20 * DASCOIN_DEFAULT_ASSET_PRECISION), fc::exception );
+
+  // Wait for the limit interval to pass:
+  auto& dgp = db.get_dynamic_global_properties();
+  generate_blocks(dgp.next_spend_limit_reset + fc::seconds(10));
+
+  // Set limit to 20 dascoin
+  db.adjust_balance_limit(vault, get_dascoin_asset_id(), 20 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+  // Now this ought to pass
+  transfer_dascoin_vault_to_wallet(vault_id, wallet_id, 20 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+  // This will fail
+  GRAPHENE_REQUIRE_THROW( transfer_dascoin_vault_to_wallet(vault_id, wallet_id, 1 * DASCOIN_DEFAULT_ASSET_PRECISION), fc::exception );
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_SUITE_END()  // dascoin_tests::limit_tests
 BOOST_AUTO_TEST_SUITE_END()  // dascoin_tests

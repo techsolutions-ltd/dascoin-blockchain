@@ -504,6 +504,20 @@ void database::reset_spending_limits()
 
   if ( dgpo.next_spend_limit_reset >= head_block_time() )
   {
+    // Reset spending limit for each account:
+    const auto& account_idx = get_index_type<account_index>().indices().get<by_id>();
+    for ( const auto& account : account_idx )
+    {
+      // TODO: price should be a weekly average price, not the last price at the moment of sampling.
+      auto dsc_limit = get_dascoin_limit(account, dgpo.last_dascoin_price);
+      if ( dsc_limit.valid() )
+      {
+        // Set the limit on the account balance object:
+        adjust_balance_limit(account, get_dascoin_asset_id(), *dsc_limit);
+      }
+    }
+
+    // Set the time of the next limit reset:
     modify(dgpo, [&](dynamic_global_property_object& dgpo){
       dgpo.next_spend_limit_reset = head_block_time() + params.limit_interval_elapse_time_seconds;
     });

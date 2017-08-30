@@ -292,6 +292,10 @@ account_id_type database::initialize_chain_authority(const string& kind_name, co
 void database::init_genesis(const genesis_state_type& genesis_state)
 { try {
 
+   const auto DASCOIN_DEFAULT_START_PRICE = 
+      asset{DASCOIN_DEFAULT_STARTING_PRICE_BASE_AMOUNT, get_dascoin_asset_id()} 
+      / asset {DASCOIN_DEFAULT_STARTING_PRICE_QUOTE_AMOUNT, get_web_asset_id()}; 
+
    FC_ASSERT( genesis_state.initial_timestamp != time_point_sec(), "Must initialize genesis timestamp." );
    FC_ASSERT( genesis_state.initial_timestamp.sec_since_epoch() % GRAPHENE_DEFAULT_BLOCK_INTERVAL == 0,
               "Genesis timestamp must be divisible by GRAPHENE_DEFAULT_BLOCK_INTERVAL." );
@@ -522,6 +526,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       p.witness_budget = 0;
       p.recent_slots_filled = fc::uint128::max_value();
       p.frequency = genesis_state.initial_frequency;
+      p.last_dascoin_price = DASCOIN_DEFAULT_START_PRICE;
    });
 
    FC_ASSERT( (genesis_state.immutable_parameters.min_witness_count & 1) == 1, "min_witness_count must be odd" );

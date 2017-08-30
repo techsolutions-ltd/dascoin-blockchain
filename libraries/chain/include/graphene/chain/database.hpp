@@ -413,12 +413,6 @@ namespace graphene { namespace chain {
          void issue_asset(account_id_type account_id, share_type cash, asset_id_type asset_id, share_type reserved);
 
          /**
-          * @brief Get the set transfer limits for a given account.
-          * @param account_id_type The ID of the account.
-          */
-         optional<limits_type> get_account_limits(const account_id_type account)const;
-
-         /**
           * @brief Get the accounts verified personal information level.
           * @param  account The ID of the account we are checking.
           * @return         Level of the verified PI.

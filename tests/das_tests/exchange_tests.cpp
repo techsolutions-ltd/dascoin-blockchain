@@ -44,6 +44,10 @@ BOOST_AUTO_TEST_CASE( successful_orders_test )
     generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
 
     BOOST_CHECK_EQUAL( get_balance(bob_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+    // Set limit to 100 dascoin
+    db.adjust_balance_limit(bob, get_dascoin_asset_id(), 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
     transfer_dascoin_vault_to_wallet(bob_id, bobw_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
 
     // sell order from cash balance
@@ -176,6 +180,10 @@ BOOST_AUTO_TEST_CASE( exchange_test )
 
     tether_accounts(bobw_id, bob_id);
     tether_accounts(alicew_id, alice_id);
+
+    // Set limit to 100 dascoin
+    db.adjust_balance_limit(bob, get_dascoin_asset_id(), 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
     transfer_dascoin_vault_to_wallet(bob_id, bobw_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
     transfer_webasset_vault_to_wallet(alice_id, alicew_id, {1000, 100});
 
@@ -235,6 +243,10 @@ BOOST_AUTO_TEST_CASE( account_to_credit_test )
 
     // Wait for the cycles to be distributed:
     generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
+
+    // Set limit to 100 dascoin
+    db.adjust_balance_limit(bobv, get_dascoin_asset_id(), 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
     transfer_dascoin_vault_to_wallet(bobv_id, bob_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
     issue_webasset(alice_id, 100, 100);
     generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));

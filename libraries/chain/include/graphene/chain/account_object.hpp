@@ -118,16 +118,15 @@ namespace graphene { namespace chain {
          share_type        balance;
          share_type reserved = 0;
          share_type spent = 0;  // Balance spent in limit interval.
-         share_type spent_reserved = 0;  // Reserved balance spent in limit interval.
 
          share_type limit;  // The limit used for transfers on this balance.
 
-         asset get_balance() const { return asset(balance, asset_type); }
-         asset get_reserved_balance() const { return asset(reserved, asset_type); }
-         asset_reserved get_asset_reserved_balance() const { return asset_reserved(balance, reserved, asset_type); }
+         asset get_balance() const { return asset{balance, asset_type}; }
+         asset get_reserved_balance() const { return asset{reserved, asset_type}; }
+         asset_reserved get_asset_reserved_balance() const { return asset_reserved{balance, reserved, asset_type}; }
 
-         asset get_spent_balance() const { return asset(spent, asset_type); }
-         asset get_spent_reserved_balance() const { return asset(spent, asset_type); }
+         asset get_spent_balance() const { return asset{spent, asset_type}; }
+         asset get_limit() const { return asset{limit, asset_type}; }
 
          void  adjust_balance(const asset& delta);
    };
@@ -279,14 +278,9 @@ namespace graphene { namespace chain {
          optional<license_information_id_type> license_information;
 
          /**
-          * The level of verified persional information assigned to the account.
+          * The level of verified personal information assigned to the account.
           */
          uint8_t pi_level;
-
-         /**
-          * Limit levels defined to different transfer operations in the blockchain.
-          */
-         limits_type limits;
 
          /**
           * This flag is set when the top_n logic sets both authorities,
@@ -365,8 +359,6 @@ namespace graphene { namespace chain {
 
 
          account_id_type get_id()const { return id; }
-
-         share_type get_max_from_limit(const limit_kind kind) const;
    };
 
    /**
@@ -504,7 +496,6 @@ FC_REFLECT_DERIVED( graphene::chain::account_object, (graphene::db::object),
                     (active_special_authority)
                     (license_information)
                     (pi_level)
-                    (limits)
                     (top_n_control_flags)
                     (allowed_assets)
                     )
@@ -525,7 +516,6 @@ FC_REFLECT_DERIVED( graphene::chain::account_balance_object, (graphene::db::obje
                     (balance)
                     (reserved)
                     (spent)
-                    (spent_reserved)
                     (limit)
                   )
 

@@ -175,7 +175,7 @@ void_result transfer_vault_to_wallet_evaluator::do_evaluate(const transfer_vault
                  "Cash limit has been exceeded, ${spent}/${max} on account ${a}",
                  ("a",from_acc_obj.name)
                  ("spent",d.to_pretty_string(from_balance_obj.get_spent_balance()))
-                 ("max",d.to_pretty_string(asset(from_balance_obj.limit, d.get_web_asset_id())))
+                 ("max",d.to_pretty_string(asset(from_balance_obj.limit, op.asset_to_transfer.asset_id)))
                );
    }
 

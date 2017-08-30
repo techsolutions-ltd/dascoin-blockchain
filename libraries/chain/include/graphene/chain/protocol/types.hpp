@@ -106,14 +106,6 @@ namespace graphene { namespace chain {
       LICENSE_KIND_COUNT
    };
 
-   enum limit_kind
-   {
-      vault_to_wallet_webasset = 0,
-      vault_to_wallet_reserved_webasset = 1,
-      wallet_out_webasset = 2,
-      LIMIT_KIND_COUNT
-   };
-
    enum chain_authority_kind
    {
       no_authority = 0,
@@ -461,13 +453,6 @@ namespace fc
     void to_variant( const graphene::chain::version& v, variant& var );
     void from_variant( const variant& var, graphene::chain::version& v );
 }
-
-REFLECT_ENUM_CHECK( graphene::chain::limit_kind,
-                    (vault_to_wallet_webasset)
-                    (vault_to_wallet_reserved_webasset)
-                    (wallet_out_webasset)
-                    (LIMIT_KIND_COUNT)
-                  )
 
 REFLECT_ENUM_CHECK( graphene::chain::license_kind,
                     (regular)

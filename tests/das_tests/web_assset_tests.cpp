@@ -129,6 +129,9 @@ BOOST_AUTO_TEST_CASE( dascoin_test )
   generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
   tether_accounts(wallet_id, vault_id);
 
+  // Set limit to 100 dascoin
+  db.adjust_balance_limit(vault, get_dascoin_asset_id(), 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
   // transfer 50 dascoin
   transfer_dascoin_vault_to_wallet(vault_id, wallet_id, 50 * DASCOIN_DEFAULT_ASSET_PRECISION);
   BOOST_CHECK_EQUAL( get_balance(wallet_id, get_dascoin_asset_id()), 50 * DASCOIN_DEFAULT_ASSET_PRECISION );

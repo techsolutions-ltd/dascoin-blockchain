@@ -132,10 +132,6 @@ void_result transfer_vault_to_wallet_evaluator::do_evaluate(const transfer_vault
    const account_object& from_acc_obj = op.from_vault(d);
    const account_object& to_acc_obj = op.to_wallet(d);
 
-   // Get the limits:
-   share_type cash_limit = from_acc_obj.get_max_from_limit(limit_kind::vault_to_wallet_webasset);
-   share_type reserved_limit = from_acc_obj.get_max_from_limit(limit_kind::vault_to_wallet_reserved_webasset);
-
    // Must be VAULT --> WALLET:
    FC_ASSERT( from_acc_obj.is_vault(), "Source '${f}' must be a vault account", ("f", from_acc_obj.name) );
    FC_ASSERT( to_acc_obj.is_wallet(), "Destination '${t}' must be a wallet account", ("t", to_acc_obj.name) );
@@ -172,21 +168,16 @@ void_result transfer_vault_to_wallet_evaluator::do_evaluate(const transfer_vault
               ("balance",d.to_pretty_string(from_balance_obj.get_reserved_balance()))
             );
 
-   // Check if the cash part of the transfer would breach the cash limit:
-   FC_ASSERT( from_balance_obj.spent < cash_limit,
-              "Cash limit has been exceeded, ${spent}/${max} on account ${a}",
-              ("a",from_acc_obj.name)
-              ("spent",d.to_pretty_string(from_balance_obj.get_spent_balance()))
-              ("max",d.to_pretty_string(asset(cash_limit, d.get_web_asset_id())))
-            );
-
-   // Check if the reserved part of the transfer would breach the reserved limit:
-   FC_ASSERT( from_balance_obj.spent_reserved < reserved_limit,
-              "Reserved limit has been exceeded, ${spent}/${max} on account ${a}",
-              ("a",from_acc_obj.name)
-              ("spent",d.to_pretty_string(from_balance_obj.get_spent_reserved_balance()))
-              ("max",d.to_pretty_string(asset(reserved_limit, d.get_web_asset_id())))
-            );
+   // If dascoin is being transferred, check daily limit constraint:
+   if (op.asset_to_transfer.asset_id == d.get_dascoin_asset_id())
+   {
+      FC_ASSERT( from_balance_obj.spent + op.asset_to_transfer.amount <= from_balance_obj.limit,
+                 "Cash limit has been exceeded, ${spent}/${max} on account ${a}",
+                 ("a",from_acc_obj.name)
+                 ("spent",d.to_pretty_string(from_balance_obj.get_spent_balance()))
+                 ("max",d.to_pretty_string(asset(from_balance_obj.limit, d.get_web_asset_id())))
+               );
+   }
 
    from_balance_obj_ = &from_balance_obj;
    to_balance_obj_ = &to_balance_obj;

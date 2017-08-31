@@ -96,7 +96,16 @@ namespace graphene { namespace chain {
       upgrade_type requeue_upgrade;
       upgrade_type return_upgrade;
 
+      // The eur limit used parameter used for vault to wallet transfers in the system:
+      share_type eur_limit;
+
       extensions_type extensions;
+
+      license_type_object() = default;
+      explicit license_type_object(string name, share_type amount, license_kind kind, upgrade_type balance_upgrade,
+                                   upgrade_type requeue_upgrade, upgrade_type return_upgrade, share_type eur_limit)
+          : name(name), amount(amount), kind(kind), balance_upgrade(balance_upgrade), requeue_upgrade(requeue_upgrade), 
+            return_upgrade(return_upgrade), eur_limit(eur_limit) {}
 
       void validate() const;
   };
@@ -196,6 +205,7 @@ FC_REFLECT_DERIVED( graphene::chain::license_type_object, (graphene::db::object)
                     (balance_upgrade)
                     (requeue_upgrade)
                     (return_upgrade)
+                    (eur_limit)
                     (extensions)
                   )
 

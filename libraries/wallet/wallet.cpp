@@ -642,6 +642,11 @@ public:
       }
    }
 
+   asset_object get_web_asset() const
+   {
+       return *find_asset(DASCOIN_WEBASSET_SYMBOL);
+   }
+
    asset_object get_asset(asset_id_type id)const
    {
       auto opt = find_asset(id);
@@ -2139,6 +2144,29 @@ public:
       return sign_transaction(tx, broadcast);
    }
 
+   signed_transaction issue_webasset(string to_account, string amount, string reserved, bool broadcast)
+   {
+       const auto asset_obj = get_web_asset();
+
+       account_object to = get_account(to_account);
+
+       asset_create_issue_request_operation issue_op;
+       issue_op.issuer = asset_obj.issuer;
+       issue_op.receiver = to.id;
+       issue_op.amount =
+           asset_obj.amount_from_string(amount).amount;
+       issue_op.asset_id = asset_obj.id;
+       issue_op.reserved_amount =
+           asset_obj.amount_from_string(reserved).amount;
+
+       signed_transaction tx;
+       tx.operations.push_back(issue_op);
+       set_operation_fees(tx,_remote_db->get_global_properties().parameters.current_fees);
+       tx.validate();
+
+       return sign_transaction(tx, broadcast);
+   }
+
    std::map<string,std::function<string(fc::variant,const fc::variants&)>> get_result_formatters() const
    {
       std::map<string,std::function<string(fc::variant,const fc::variants&)> > m;
@@ -3329,6 +3357,11 @@ signed_transaction wallet_api::issue_asset(string to_account, string amount, str
                                            string memo, bool broadcast)
 {
    return my->issue_asset(to_account, amount, symbol, memo, broadcast);
+}
+
+signed_transaction wallet_api::issue_webasset(string to_account, string amount, string reserved, bool broadcast)
+{
+    return my->issue_webasset(to_account, amount, reserved, broadcast);
 }
 
 signed_transaction wallet_api::transfer(string from, string to, string amount,
@@ -4562,6 +4595,11 @@ vector<wire_out_holder_object> wallet_api::get_all_wire_out_holders() const
 vector<reward_queue_object> wallet_api::get_reward_queue() const
 {
    return my->_remote_db->get_reward_queue();
+}
+
+vector<reward_queue_object> wallet_api::get_reward_queue_by_page(uint32_t from, uint32_t amount) const
+{
+   return my->_remote_db->get_reward_queue_by_page(from, amount);
 }
 
 acc_id_queue_subs_w_pos_res wallet_api::get_queue_submissions_with_pos(account_id_type account_id) const

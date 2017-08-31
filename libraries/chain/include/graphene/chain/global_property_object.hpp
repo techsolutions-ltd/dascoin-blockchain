@@ -162,6 +162,11 @@ namespace graphene { namespace chain {
           */
          uint32_t total_upgrade_events = 0;
 
+         /**
+          * Last dascoin trade price on DSC:WEBEUR market.
+          */
+         price last_dascoin_price;
+
          enum dynamic_flag_bits
          {
             /**
@@ -203,6 +208,7 @@ FC_REFLECT_DERIVED( graphene::chain::dynamic_global_property_object, (graphene::
                     (next_spend_limit_reset)
                     (next_upgrade_event)
                     (total_upgrade_events)
+                    (last_dascoin_price)
                   )
 
 FC_REFLECT_DERIVED( graphene::chain::global_property_object, (graphene::db::object),

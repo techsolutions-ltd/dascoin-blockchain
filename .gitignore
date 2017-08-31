@@ -59,3 +59,10 @@ programs/cli_wallet/nuke_cli_wallet.sh
 
 .vscode/
 programs/cli_wallet/wallet.json\nprograms/witness_node/witness_node_data_dir/
+
+GPATH
+GRTAGS
+GSYMS
+GTAGS
+
+.idea/

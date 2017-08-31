@@ -145,6 +145,7 @@ class database_access_layer {
     // Queue:
     uint32_t get_reward_queue_size() const;
     vector<reward_queue_object> get_reward_queue() const;
+    vector<reward_queue_object> get_reward_queue_by_page(uint32_t from, uint32_t amount) const;
     acc_id_queue_subs_w_pos_res get_queue_submissions_with_pos(account_id_type account_id) const;
     vector<acc_id_queue_subs_w_pos_res> get_queue_submissions_with_pos_for_accounts(vector<account_id_type> ids) const;
 
@@ -179,6 +180,18 @@ class database_access_layer {
         return vector<typename IndexType::object_type>(idx.begin(), idx.end());
     }
 
+    template <typename IndexType, typename IndexBy>
+    vector<typename IndexType::object_type> get_range(uint32_t from, uint32_t amount) const
+    {
+        const auto& idx = _db.get_index_type<IndexType>().indices().get<IndexBy>();
+        FC_ASSERT(idx.size() > from, "Index out of bounds, index: ${from}, size: ${size}", ("from", from)("size", idx.size()));
+        FC_ASSERT(idx.size() - from >= amount, "Index out of bounds, amount: ${amount}, size: ${size}", ("amount", amount)("size", idx.size()));
+        auto start = idx.begin();
+        std::advance(start, from);
+        auto end = idx.begin();
+        std::advance(end, from + amount);
+        return vector<typename IndexType::object_type>(start, end);
+    }
     const database& _db;
 };
 }

@@ -117,4 +117,28 @@ object_id_type update_queue_parameters_evaluator::do_apply(const update_queue_pa
 
 } FC_CAPTURE_AND_RETHROW((op)) }
 
+void_result update_global_frequency_evaluator::do_evaluate(const update_global_frequency_operation& op)
+{ try {
+  const auto& d = db();
+  const auto& gpo = d.get_global_properties();
+  const auto& issuer_obj = op.authority(d);
+
+  d.perform_chain_authority_check("license issuer", gpo.authorities.license_issuer, issuer_obj);
+
+  return {};
+
+} FC_CAPTURE_AND_RETHROW((op)) }
+
+void_result update_global_frequency_evaluator::do_apply(const update_global_frequency_operation& op)
+{ try {
+  auto& d = db();
+
+  d.modify(d.get_dynamic_global_properties(), [&](dynamic_global_property_object& dgpo){
+    dgpo.frequency = op.frequency;
+  });
+
+  return {};
+
+} FC_CAPTURE_AND_RETHROW((op)) }
+
 } }  // namespace graphene::chain

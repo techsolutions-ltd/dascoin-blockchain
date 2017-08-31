@@ -353,6 +353,14 @@ namespace graphene { namespace chain {
          void adjust_balance(account_id_type account, asset delta, share_type reserved_delta = 0);
 
          /**
+          * Set the limit on the account balance. This limit is used for transfers ex. vault -> wallet.
+          * @param account Account whose limit should set.
+          * @param asset_id The ID of the asset for which balance the limit is being set.
+          * @param limit New limit.
+          */
+         void adjust_balance_limit(const account_object& account, asset_id_type asset_id, share_type limit);
+
+         /**
           * @brief Adjsut a particular account's cycle balance by a delta.
           * @param account ID of the account whose balance should be adjusted.
           * @param delta   Amount to adjust balance by.
@@ -403,12 +411,6 @@ namespace graphene { namespace chain {
           * @param reserved   Amount of reserved to issue.
           */
          void issue_asset(account_id_type account_id, share_type cash, asset_id_type asset_id, share_type reserved);
-
-         /**
-          * @brief Get the set transfer limits for a given account.
-          * @param account_id_type The ID of the account.
-          */
-         optional<limits_type> get_account_limits(const account_id_type account)const;
 
          /**
           * @brief Get the accounts verified personal information level.
@@ -508,6 +510,8 @@ namespace graphene { namespace chain {
          bool fill_order( const call_order_object& order, const asset& pays, const asset& receives );
          bool fill_order( const force_settlement_object& settle, const asset& pays, const asset& receives );
 
+         void push_fill_order_operation( const fill_order_operation &fill_order, bool set_dascoin_price = true );
+
          bool check_call_orders( const asset_object& mia, bool enable_black_swan = true );
 
          // helpers to fill_order
@@ -537,8 +541,20 @@ namespace graphene { namespace chain {
          object_id_type create_license_type(license_kind kind, const string& name, share_type amount, 
                                             upgrade_multiplier_type balance_multipliers,
                                             upgrade_multiplier_type requeue_multipliers,
-                                            upgrade_multiplier_type return_multipliers);
+                                            upgrade_multiplier_type return_multipliers,
+                                            share_type eur_limit);
+
          optional<license_information_object> get_license_information(account_id_type account_id) const;
+
+         /**
+          * Get the dascoin limit for the limit interval for an account.
+          * NOTE: this method requires a Dascoin price feed.
+          *
+          * @param account The account for which we are getting the limit.
+          * @param dascoin_price The price on the market used to calculate the limit.
+          * @return The limit for dascoin for vault accounts, nothing for other account types.
+          **/
+         optional<share_type> get_dascoin_limit(const account_object& account, price dascoin_price) const;
          
          //////////////////// db_queue.cpp ////////////////////
 

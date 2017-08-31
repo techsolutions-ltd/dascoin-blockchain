@@ -290,6 +290,11 @@ struct get_impacted_account_visitor
    
    void operator()( const update_queue_parameters_operation& op ) {}
 
+   void operator()( const update_global_frequency_operation& op )
+   {
+      _impacted.insert( op.authority );
+   }
+
 };
 
 void operation_get_impacted_accounts( const operation& op, flat_set<account_id_type>& result )

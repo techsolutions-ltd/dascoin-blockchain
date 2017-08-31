@@ -30,4 +30,9 @@ void update_queue_parameters_operation::validate() const
              );
 }
 
+void update_global_frequency_operation::validate() const
+{
+  FC_ASSERT( frequency > 0 );  // TODO: maximum frequency?
+}
+
 } } // namespace graphene::chain

@@ -65,6 +65,7 @@ const account_object& database_fixture::make_new_account_base(
 
    op.fee = db.current_fee_schedule().calculate_fee( op );
 
+   set_expiration( db, trx );
    trx.operations.clear();
    trx.operations.push_back(op);
    trx.validate();

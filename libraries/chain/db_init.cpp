@@ -77,6 +77,8 @@
 
 #include <boost/algorithm/string.hpp>
 
+#include <cmath>
+
 namespace graphene { namespace chain {
 
 // C++ requires that static class variables declared and initialized
@@ -218,6 +220,7 @@ void database::initialize_evaluators()
    register_evaluator<submit_cycles_to_queue_evaluator>();
    register_evaluator<update_queue_parameters_evaluator>();
    register_evaluator<change_public_keys_evaluator>();
+   register_evaluator<update_global_frequency_evaluator>();
 }
 
 void database::initialize_indexes()
@@ -288,6 +291,10 @@ account_id_type database::initialize_chain_authority(const string& kind_name, co
 
 void database::init_genesis(const genesis_state_type& genesis_state)
 { try {
+
+   const auto DASCOIN_DEFAULT_START_PRICE = 
+      asset{DASCOIN_DEFAULT_STARTING_PRICE_BASE_AMOUNT, get_dascoin_asset_id()} 
+      / asset {DASCOIN_DEFAULT_STARTING_PRICE_QUOTE_AMOUNT, get_web_asset_id()}; 
 
    FC_ASSERT( genesis_state.initial_timestamp != time_point_sec(), "Must initialize genesis timestamp." );
    FC_ASSERT( genesis_state.initial_timestamp.sec_since_epoch() % GRAPHENE_DEFAULT_BLOCK_INTERVAL == 0,
@@ -405,6 +412,13 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       remove( acct );
    }
 
+   // TODO: use contexpr, do not perform asserts.
+   FC_ASSERT(DASCOIN_DEFAULT_ASSET_PRECISION == pow(10, DASCOIN_DEFAULT_ASSET_PRECISION_DIGITS), 
+             "Dascoin default asset precision is invalid, check config");
+
+   FC_ASSERT(DASCOIN_FIAT_ASSET_PRECISION == pow(10, DASCOIN_FIAT_ASSET_PRECISION_DIGITS),
+             "Fiat default asset precision is invalid, check config");
+
    // Create core asset;
    const asset_dynamic_data_object& core_dyn_asset =
       create<asset_dynamic_data_object>([&](asset_dynamic_data_object& a) {
@@ -435,7 +449,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
      create<asset_object>( [&]( asset_object& a ) {
          a.symbol = DASCOIN_WEBASSET_SYMBOL;
          a.options.max_supply = genesis_state.max_core_supply;  // TODO: this should remain 10 trillion?
-         a.precision = DASCOIN_DEFAULT_ASSET_PRECISION_DIGITS;
+         a.precision = DASCOIN_FIAT_ASSET_PRECISION_DIGITS;
          a.options.flags = WEB_ASSET_INITIAL_FLAGS;
          a.options.issuer_permissions = WEB_ASSET_ISSUER_PERMISSION_MASK;  // TODO: set the appropriate issuer permissions.
          a.issuer = GRAPHENE_NULL_ACCOUNT;
@@ -512,6 +526,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       p.witness_budget = 0;
       p.recent_slots_filled = fc::uint128::max_value();
       p.frequency = genesis_state.initial_frequency;
+      p.last_dascoin_price = DASCOIN_DEFAULT_START_PRICE;
    });
 
    FC_ASSERT( (genesis_state.immutable_parameters.min_witness_count & 1) == 1, "min_witness_count must be odd" );
@@ -763,21 +778,21 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    // NOTE: preserve the order of licenses to avoid breaking compatibility.    
    {
       // No license placeholder:
-      FC_ASSERT( create_license_type(license_kind::none, "no_license", 0, {}, {}, {}) == DASCOIN_NULL_LICENSE );
+      FC_ASSERT( create_license_type(license_kind::none, "no_license", 0, {}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_ADVOCATE) == DASCOIN_NULL_LICENSE );
 
-      create_license_type(license_kind::regular, "standard", DASCOIN_BASE_STANDARD_CYCLES, {2}, {}, {});
-      create_license_type(license_kind::regular, "manager", DASCOIN_BASE_MANAGER_CYCLES, {2}, {}, {});
-      create_license_type(license_kind::regular, "pro", DASCOIN_BASE_PRO_CYCLES, {2}, {}, {});
-      create_license_type(license_kind::regular, "executive", DASCOIN_BASE_EXECUTIVE_CYCLES, {2,2}, {}, {});
-      create_license_type(license_kind::regular, "vice_president", DASCOIN_BASE_VICE_PRESIDENT_CYCLES, {2,2}, {}, {});
-      create_license_type(license_kind::regular, "president", DASCOIN_BASE_PRESIDENT_CYCLES, {2,2,2}, {}, {});
+      create_license_type(license_kind::regular, "standard", DASCOIN_BASE_STANDARD_CYCLES, {2}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_STANDARD);
+      create_license_type(license_kind::regular, "manager", DASCOIN_BASE_MANAGER_CYCLES, {2}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_MANAGER);
+      create_license_type(license_kind::regular, "pro", DASCOIN_BASE_PRO_CYCLES, {2}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_PRO);
+      create_license_type(license_kind::regular, "executive", DASCOIN_BASE_EXECUTIVE_CYCLES, {2,2}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_EXECUTIVE);
+      create_license_type(license_kind::regular, "vice_president", DASCOIN_BASE_VICE_PRESIDENT_CYCLES, {2,2}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_VICE_PRESIDENT);
+      create_license_type(license_kind::regular, "president", DASCOIN_BASE_PRESIDENT_CYCLES, {2,2,2}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_PRESIDENT);
 
-      create_license_type(license_kind::chartered, "standard_charter", DASCOIN_BASE_STANDARD_CYCLES, {}, {1}, {});
-      create_license_type(license_kind::chartered, "manager_charter", DASCOIN_BASE_MANAGER_CYCLES, {}, {1}, {});
-      create_license_type(license_kind::chartered, "pro_charter", DASCOIN_BASE_PRO_CYCLES, {}, {1}, {});
-      create_license_type(license_kind::chartered, "executive_charter", DASCOIN_BASE_EXECUTIVE_CYCLES, {}, {1,2}, {});
-      create_license_type(license_kind::chartered, "vice_president_charter", DASCOIN_BASE_VICE_PRESIDENT_CYCLES, {1,2}, {}, {});
-      create_license_type(license_kind::chartered, "president_charter", DASCOIN_BASE_PRESIDENT_CYCLES, {}, {1,2,4}, {});
+      create_license_type(license_kind::chartered, "standard_charter", DASCOIN_BASE_STANDARD_CYCLES, {}, {1}, {}, DASCOIN_DEFAULT_EUR_LIMIT_STANDARD);
+      create_license_type(license_kind::chartered, "manager_charter", DASCOIN_BASE_MANAGER_CYCLES, {}, {1}, {}, DASCOIN_DEFAULT_EUR_LIMIT_MANAGER);
+      create_license_type(license_kind::chartered, "pro_charter", DASCOIN_BASE_PRO_CYCLES, {}, {1}, {}, DASCOIN_DEFAULT_EUR_LIMIT_PRO);
+      create_license_type(license_kind::chartered, "executive_charter", DASCOIN_BASE_EXECUTIVE_CYCLES, {}, {1,2}, {}, DASCOIN_DEFAULT_EUR_LIMIT_EXECUTIVE);
+      create_license_type(license_kind::chartered, "vice_president_charter", DASCOIN_BASE_VICE_PRESIDENT_CYCLES, {1,2}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_VICE_PRESIDENT);
+      create_license_type(license_kind::chartered, "president_charter", DASCOIN_BASE_PRESIDENT_CYCLES, {}, {1,2,4}, {}, DASCOIN_DEFAULT_EUR_LIMIT_PRESIDENT);
    }
 
    // Set active witnesses

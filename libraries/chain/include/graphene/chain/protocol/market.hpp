@@ -52,6 +52,8 @@ namespace graphene { namespace chain {
       account_id_type seller;
       asset           amount_to_sell;
       asset           min_to_receive;
+      share_type      reserved_amount;
+      optional<account_id_type> account_to_credit;
 
       /// The order will be removed from the books if not filled by expiration
       /// Upon expiration, all unsold asset will be returned to seller
@@ -61,6 +63,17 @@ namespace graphene { namespace chain {
       bool fill_or_kill = false;
       extensions_type   extensions;
 
+      limit_order_create_operation() = default;
+      explicit limit_order_create_operation(account_id_type seller, asset amount_to_sell, asset min_to_receive, share_type reserved_amount,
+                                             optional<account_id_type> account_to_credit, time_point_sec expiration = time_point_sec::maximum())
+        : seller(seller),
+          amount_to_sell(amount_to_sell),
+          min_to_receive(min_to_receive),
+          reserved_amount(reserved_amount),
+          account_to_credit(account_to_credit),
+          expiration(expiration)
+      {}
+
       pair<asset_id_type,asset_id_type> get_market()const
       {
          return amount_to_sell.asset_id < min_to_receive.asset_id ?
@@ -69,7 +82,12 @@ namespace graphene { namespace chain {
       }
       account_id_type fee_payer()const { return seller; }
       void            validate()const;
-      price           get_price()const { return amount_to_sell / min_to_receive; }
+      price           get_price()const
+      {
+         if (reserved_amount > 0)
+            return asset{reserved_amount, amount_to_sell.asset_id} / min_to_receive;
+         return amount_to_sell / min_to_receive;
+      }
    };
 
 
@@ -167,7 +185,7 @@ FC_REFLECT( graphene::chain::call_order_update_operation::fee_parameters_type, (
 FC_REFLECT( graphene::chain::fill_order_operation::fee_parameters_type,  )
 
 
-FC_REFLECT( graphene::chain::limit_order_create_operation,(fee)(seller)(amount_to_sell)(min_to_receive)(expiration)(fill_or_kill)(extensions))
+FC_REFLECT( graphene::chain::limit_order_create_operation,(fee)(seller)(amount_to_sell)(min_to_receive)(reserved_amount)(account_to_credit)(expiration)(fill_or_kill)(extensions))
 FC_REFLECT( graphene::chain::limit_order_cancel_operation,(fee)(fee_paying_account)(order)(extensions) )
 FC_REFLECT( graphene::chain::call_order_update_operation, (fee)(funding_account)(delta_collateral)(delta_debt)(extensions) )
 FC_REFLECT( graphene::chain::fill_order_operation, (fee)(order_id)(account_id)(pays)(receives) )

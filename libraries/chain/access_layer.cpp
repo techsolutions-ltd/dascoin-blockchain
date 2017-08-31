@@ -123,6 +123,11 @@ vector<reward_queue_object> database_access_layer::get_reward_queue() const
     return get_all<reward_queue_index, by_time>();
 }
 
+vector<reward_queue_object> database_access_layer::get_reward_queue_by_page(uint32_t from, uint32_t amount) const
+{
+    return get_range<reward_queue_index, by_time>(from, amount);
+}
+
 acc_id_queue_subs_w_pos_res database_access_layer::get_queue_submissions_with_pos(account_id_type account_id) const
 {
     if (!get_opt<account_id_type, account_index, by_id>(account_id).valid())

@@ -163,7 +163,7 @@ void database::issue_asset(account_id_type account_id, share_type cash, asset_id
 void database::issue_asset(const account_balance_object& balance_obj, share_type cash, share_type reserved)
 { try {
 
-   if ( cash == 0 )
+   if ( cash == 0 && reserved == 0 ) // allow issuing of reserved balance only
      return;
 
    modify(balance_obj, [cash, reserved](account_balance_object& b) {
@@ -173,15 +173,15 @@ void database::issue_asset(const account_balance_object& balance_obj, share_type
 
    const auto& asset_obj = balance_obj.asset_type(*this);
    modify(asset_obj.dynamic_asset_data_id(*this), [&](asset_dynamic_data_object& data){
-        // TODO: reserved part factors in here as well.
-        data.current_supply += cash;
+      data.current_supply += cash;
+      data.current_supply += reserved;
    });
 
 } FC_CAPTURE_AND_RETHROW((cash)(reserved)) }
 
 void database::adjust_balance(account_id_type account, asset delta, share_type reserved_delta)
 { try {
-   if( delta.amount == 0 )
+   if( delta.amount == 0 && reserved_delta == 0 ) // allow adjusting of reserved balance only
       return;
 
    auto& index = get_index_type<account_balance_index>().indices().get<by_account_asset>();
@@ -227,6 +227,36 @@ void database::adjust_balance(account_id_type account, asset delta, share_type r
 
 } FC_CAPTURE_AND_RETHROW( (account)(delta) ) }
 
+void database::adjust_balance_limit(const account_object& account, asset_id_type asset_id, share_type limit)
+{ try {
+   if ( limit <= 0 )
+   {
+      wlog("Warning: limit is set to ${limit}", ("limit", limit));
+      return;
+   }
+
+   auto& index = get_index_type<account_balance_index>().indices().get<by_account_asset>();
+   auto itr = index.find(boost::make_tuple(account.id, asset_id));
+   
+   if ( itr == index.end() )
+   {
+      wlog("Warning: account ${acc_id} has no balance for ${asset_id}", ("acc_id", account.id)("asset_id", asset_id));
+      return;
+   }
+
+   // FC_ASSERT( itr == index.end(),
+   //            "Error: Account ${acc_id} does not have a balance for asset ${asset_id}",
+   //            ("acc_id", account.id)
+   //            ("asset_id", asset_id)
+   //          );
+   
+   modify(*itr, [limit](account_balance_object& b) {
+      b.limit = limit;
+      b.spent = 0;
+   });
+
+} FC_CAPTURE_AND_RETHROW( (account)(limit) ) }
+
 void database::adjust_cycle_balance(account_id_type account, share_type delta)
 { try {
 
@@ -251,15 +281,6 @@ void database::adjust_cycle_balance(account_id_type account, share_type delta)
    });
 
 } FC_CAPTURE_AND_RETHROW( (account)(delta) ) }
-
-optional<limits_type> database::get_account_limits(const account_id_type account) const
-{ try {
-   auto& index = get_index_type<account_index>().indices().get<by_id>();
-   auto itr = index.find(account);
-   if (itr != index.end())
-      return {itr->limits};
-   return {};
-} FC_CAPTURE_AND_RETHROW( (account) ) }
 
 optional<uint8_t> database::get_account_pi_level(const account_id_type account) const
 { try {

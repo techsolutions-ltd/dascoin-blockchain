@@ -20,13 +20,23 @@ BOOST_FIXTURE_TEST_SUITE( dascoin_tests, database_fixture )
 
 BOOST_FIXTURE_TEST_SUITE( queue_tests, database_fixture )
 
+BOOST_AUTO_TEST_CASE( convert_dascoin_cycles_precision_test )
+{
+  auto amount = db.cycles_to_dascoin(10000, 200);
+  BOOST_CHECK_EQUAL(amount.value, 5000 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+  amount = db.dascoin_to_cycles(5000 * DASCOIN_DEFAULT_ASSET_PRECISION, 200);
+  BOOST_CHECK_EQUAL(amount.value, 10000);
+}
+
 BOOST_AUTO_TEST_CASE( convert_dascoin_cycles_test )
 {
+  // TODO: do not use hardcoded values.
   share_type amount = db.cycles_to_dascoin(10000, 300);
-  BOOST_CHECK_EQUAL( amount.value, 33333333 );
+  BOOST_CHECK_EQUAL(amount.value, 333333333);
 
-  amount = db.dascoin_to_cycles(33333333, 300);
-  BOOST_CHECK_EQUAL( amount.value, 9999 );
+  amount = db.dascoin_to_cycles(333333333, 300);
+  BOOST_CHECK_EQUAL(amount.value, 9999);
 }
 
 BOOST_AUTO_TEST_CASE( dascoin_reward_amount_regression_test )
@@ -373,6 +383,53 @@ BOOST_AUTO_TEST_CASE(submission_number_test)
   queue = _dal.get_reward_queue();
   BOOST_CHECK_EQUAL(queue[0].number, 3);
   BOOST_CHECK_EQUAL(queue[1].number, 4);
+
+} FC_LOG_AND_RETHROW() }
+
+// TODO: move this test to a more appropriate location.
+BOOST_AUTO_TEST_CASE( update_global_frequency_unit_test )
+{ try {
+
+  do_op(update_global_frequency_operation(get_license_issuer_id(), 450));
+
+  auto frequency = db.get_dynamic_global_properties().frequency;
+  BOOST_CHECK_EQUAL( frequency.value, 450 );
+
+  // TODO: handle negative cases
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE(get_queue_by_page_test)
+{ try {
+  VAULT_ACTORS((first)(second)(third)(fourth))
+
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), first_id, 200, 200, "test"));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), second_id, 200, 200, "test"));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), third_id, 200, 200, "test"));
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), fourth_id, 200, 200, "test"));
+
+  // Now we have 4 submissions on the queue
+  // Get the first queue entry
+  auto queue = _dal.get_reward_queue_by_page(0, 1);
+  BOOST_CHECK_EQUAL(queue.size(), 1);
+  BOOST_CHECK_EQUAL(queue[0].number, 1);
+
+  // Get first two entries from the queue
+  queue = _dal.get_reward_queue_by_page(0, 2);
+  BOOST_CHECK_EQUAL(queue.size(), 2);
+  BOOST_CHECK_EQUAL(queue[0].number, 1);
+  BOOST_CHECK_EQUAL(queue[1].number, 2);
+
+  // Get the third entry
+  queue = _dal.get_reward_queue_by_page(2, 1);
+  BOOST_CHECK_EQUAL(queue.size(), 1);
+  BOOST_CHECK_EQUAL(queue[0].number, 3);
+
+  // Get from invalid position
+  GRAPHENE_REQUIRE_THROW(_dal.get_reward_queue_by_page(4, 2), fc::exception);
+
+  // Get invalid amount
+  GRAPHENE_REQUIRE_THROW(_dal.get_reward_queue_by_page(1, 5), fc::exception);
 
 } FC_LOG_AND_RETHROW() }
 

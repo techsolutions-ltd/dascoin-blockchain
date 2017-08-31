@@ -968,6 +968,19 @@ class wallet_api
                                      string memo,
                                      bool broadcast = false);
 
+      /** Issue webasset to an account's balance.
+       *
+       * @param to_account the name or id of the account to receive the webasset
+       * @param amount the amount to issue, in nominal units
+       * @param reserved reserved amount to issue, in nominal units
+       * @param broadcast true to broadcast the transaction on the network
+       * @returns the signed transaction issuing the webasset
+       */
+      signed_transaction issue_webasset(string to_account,
+                                        string amount,
+                                        string reserved,
+                                        bool broadcast = false);
+
       /** Update the core options on an asset.
        * There are a number of options which all assets in the network use. These options are
        * enumerated in the asset_object::asset_options struct. This command is used to update
@@ -1547,7 +1560,13 @@ class wallet_api
        */
       vector<reward_queue_object> get_reward_queue() const;
 
-      acc_id_queue_subs_w_pos_res get_queue_submissions_with_pos(account_id_type account_id) const;
+    /**
+     * @brief Return a part of the reward queue.
+     * @return Vector of reward queue objects.
+     */
+    vector<reward_queue_object> get_reward_queue_by_page(uint32_t from, uint32_t amount) const;
+
+    acc_id_queue_subs_w_pos_res get_queue_submissions_with_pos(account_id_type account_id) const;
 
       void dbg_make_uia(string creator, string symbol);
       void dbg_make_mia(string creator, string symbol);
@@ -1755,6 +1774,9 @@ FC_API( graphene::wallet::wallet_api,
         (get_license_information)
         (get_license_type_names_ids)
 
+        // Web assets:
+        (issue_webasset)
+
         // Cycles:
         (get_account_cycle_balance)
         (get_full_cycle_balances)
@@ -1767,6 +1789,7 @@ FC_API( graphene::wallet::wallet_api,
         (get_all_wire_out_holders)
         // Queue:
         (get_reward_queue)
+        (get_reward_queue_by_page)
         (get_reward_queue_size)
         (get_queue_submissions_with_pos)
       )

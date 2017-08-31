@@ -110,6 +110,14 @@ namespace graphene { namespace chain {
 
       extensions_type   extensions;
 
+      transfer_wallet_to_vault_operation() = default;
+      explicit transfer_wallet_to_vault_operation(account_id_type from_wallet, account_id_type to_vault, asset asset_to_transfer,
+                                                  share_type reserved_to_transfer)
+         : from_wallet(from_wallet),
+           to_vault(to_vault),
+           asset_to_transfer(asset_to_transfer),
+           reserved_to_transfer(reserved_to_transfer)
+         {}
       account_id_type fee_payer()const { return from_wallet; }
       void            validate()const;
       share_type      calculate_fee(const fee_parameters_type& k)const { return 0; }

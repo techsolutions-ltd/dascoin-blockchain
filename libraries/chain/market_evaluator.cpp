@@ -47,6 +47,18 @@ void_result limit_order_create_evaluator::do_evaluate(const limit_order_create_o
    _sell_asset    = &op.amount_to_sell.asset_id(d);
    _receive_asset = &op.min_to_receive.asset_id(d);
 
+   FC_ASSERT( _seller->is_wallet(), "Error: seller needs to be a wallet account, id: ${id}", ("id", _seller->id) );
+   if (op.account_to_credit.valid())
+   {
+      auto account_to_credit_id = *op.account_to_credit;
+      _account_to_credit = &account_to_credit_id(d);
+      FC_ASSERT( _account_to_credit->is_vault(), "Error: account to credit needs to be a vault account, id: ${id}", ("id", _account_to_credit->id) );
+      FC_ASSERT( _seller->has_in_vault(_account_to_credit->id),
+                 "Error: seller account and account to credit need to be tethered, seller: ${seller}, account_to_credit: ${acc_credit}",
+                 ("seller", _seller->id)
+                 ("acc_credit", _account_to_credit->id)
+               );
+   }
    if( _sell_asset->options.whitelist_markets.size() )
       FC_ASSERT( _sell_asset->options.whitelist_markets.find(_receive_asset->id) != _sell_asset->options.whitelist_markets.end() );
    if( _sell_asset->options.blacklist_markets.size() )
@@ -58,7 +70,7 @@ void_result limit_order_create_evaluator::do_evaluate(const limit_order_create_o
    FC_ASSERT( d.get_balance( *_seller, *_sell_asset ) >= op.amount_to_sell, "insufficient balance",
               ("balance",d.get_balance(*_seller,*_sell_asset))("amount_to_sell",op.amount_to_sell) );
 
-   return void_result();
+   return {};
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
 void limit_order_create_evaluator::pay_fee()
@@ -71,25 +83,30 @@ void limit_order_create_evaluator::pay_fee()
 
 object_id_type limit_order_create_evaluator::do_apply(const limit_order_create_operation& op)
 { try {
-   const auto& seller_stats = _seller->statistics(db());
-   db().modify(seller_stats, [&](account_statistics_object& bal) {
+   auto& d = db();
+   const auto& seller_stats = _seller->statistics(d);
+   // todo: figure out what to with core assets in total_core_in_orders
+   d.modify(seller_stats, [&](account_statistics_object& bal) {
          if( op.amount_to_sell.asset_id == asset_id_type() )
          {
             bal.total_core_in_orders += op.amount_to_sell.amount;
          }
    });
 
-   db().adjust_balance(op.seller, -op.amount_to_sell);
+   d.adjust_balance(op.seller, -op.amount_to_sell, -op.reserved_amount);
+   bool from_reserve = op.reserved_amount > 0;
 
-   const auto& new_order_object = db().create<limit_order_object>([&](limit_order_object& obj){
+   const auto& new_order_object = d.create<limit_order_object>([&](limit_order_object& obj){
        obj.seller   = _seller->id;
-       obj.for_sale = op.amount_to_sell.amount;
+       obj.for_sale = from_reserve ? op.reserved_amount : op.amount_to_sell.amount;
        obj.sell_price = op.get_price();
        obj.expiration = op.expiration;
        obj.deferred_fee = _deferred_fee;
+       obj.account_to_credit = op.account_to_credit;
+       obj.from_reserve = from_reserve;
    });
    limit_order_id_type order_id = new_order_object.id; // save this because we may remove the object by filling it
-   bool filled = db().apply_order(new_order_object);
+   bool filled = d.apply_order(new_order_object);
 
    FC_ASSERT( !op.fill_or_kill || filled );
 

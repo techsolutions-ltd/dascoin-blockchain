@@ -834,22 +834,12 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
 
    } fee_helper(*this, gpo);
 
-   struct perform_upgrades_helper
-   {
-      database& d;
-
-      perform_upgrades_helper(database& d) : d(d) {}
-
-      void operator()(const account_object& a) { d.perform_upgrades(a); }
-
-   } upgrades_helper(*this);
-
    auto next_upgrade_event = get<dynamic_global_property_object>(dynamic_global_property_id_type()).next_upgrade_event;
    auto total_upgrade_events = get<dynamic_global_property_object>(dynamic_global_property_id_type()).total_upgrade_events;
    if ( next_upgrade_event <= head_block_time() )
    {
       // Perform upgrades on each account:
-      perform_helpers<account_index, by_name>(std::tie(tally_helper, fee_helper, upgrades_helper));
+      perform_helpers<account_index, by_name>(std::tie(tally_helper, fee_helper));
       // Set the next upgrade interval:
       next_upgrade_event = head_block_time() + fc::days(gpo.parameters.upgrade_event_interval_days);
       total_upgrade_events++;

@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.1.4] - 2017-08-31
+### Added
+ - New operation: update global frequency
+ - Pagination in get reward queue
+ - Limit orders can be made with reserved balance
+ - Limit orders from reserve can credit a tethered vault account
+ - License types track EUR transfer limits
+ - Last DSC:WEBEUR price is tracked in dynamic global properties
+ - Initial/default DSC:WEBEUR can be set as a constant
+
+### Updated
+ - Fixed not producing blocks on upgrade event
+ - Fix get_ticker crash when no trades are present
+ - Fix transfers of only reserve balances
+ - Daily limits on transfer vault to wallet use last dascoin price
+ - WEBEUR is issued directly (no pending requests)
+ - Canceled limit orders can return balance to reserve
+ - Fixed constraints on transfers
+ - General code cleanup, removing unused features
+
 ## [0.1.3] - 2017-06-02
 ### Added
 - Change public keys operation

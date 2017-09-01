@@ -34,6 +34,7 @@ void update_queue_parameters_operation::validate() const
 void update_global_frequency_operation::validate() const
 {
   FC_ASSERT( frequency > 0 );  // TODO: maximum frequency?
+  FC_ASSERT( comment.length() <= DASCOIN_MAX_COMMENT_LENGTH );
 }
 
 void issue_free_cycles_operation::validate() const

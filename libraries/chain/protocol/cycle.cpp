@@ -16,6 +16,7 @@ void submit_reserve_cycles_to_queue_operation::validate() const
 void submit_cycles_to_queue_operation::validate() const
 {
   FC_ASSERT( amount > 0 );
+  FC_ASSERT( frequency > 0 );
 }
 
 void update_queue_parameters_operation::validate() const

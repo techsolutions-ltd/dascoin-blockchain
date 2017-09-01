@@ -96,8 +96,14 @@ BOOST_AUTO_TEST_CASE( submit_cycles_operation_test )
   adjust_frequency(200);
 
   adjust_cycles(first_id, 200);
-    
-  do_op(submit_cycles_to_queue_operation(first_id, 100));
+  
+  // Error: wrong frequency.
+  GRAPHENE_REQUIRE_THROW(
+    do_op(submit_cycles_to_queue_operation(first_id, 100, 730, "TEST")),
+    fc::exception
+  );
+
+  do_op(submit_cycles_to_queue_operation(first_id, 100, 200, "TEST"));
 
   auto result_vec = *_dal.get_queue_submissions_with_pos(first_id).result;
   BOOST_CHECK_EQUAL( result_vec.size(), 1 );
@@ -169,10 +175,10 @@ BOOST_AUTO_TEST_CASE( basic_submit_cycles_to_queue_test )
   adjust_cycles(third_id, 200);
   adjust_cycles(fourth_id, 600);
 
-  do_op(submit_cycles_to_queue_operation(first_id, 200));
-  do_op(submit_cycles_to_queue_operation(second_id, 400));
-  do_op(submit_cycles_to_queue_operation(third_id, 200));
-  do_op(submit_cycles_to_queue_operation(fourth_id, 600));
+  do_op(submit_cycles_to_queue_operation(first_id, 200, 200, "TEST"));
+  do_op(submit_cycles_to_queue_operation(second_id, 400, 200, "TEST"));
+  do_op(submit_cycles_to_queue_operation(third_id, 200, 200, "TEST"));
+  do_op(submit_cycles_to_queue_operation(fourth_id, 600, 200, "TEST"));
 
   // Queue looks like this:
   // 200 --> 400 --> 200 --> 600

@@ -35,4 +35,11 @@ void update_global_frequency_operation::validate() const
   FC_ASSERT( frequency > 0 );  // TODO: maximum frequency?
 }
 
+void issue_free_cycles_operation::validate() const
+{
+  FC_ASSERT( amount > 0 );  // TODO: maximum amount?
+  FC_ASSERT( origin < cycle_origin_kind::CYCLE_ORIGIN_KIND_COUNT );
+  FC_ASSERT( comment.length() <= DASCOIN_MAX_COMMENT_LENGTH );
+}
+
 } } // namespace graphene::chain

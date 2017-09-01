@@ -141,4 +141,36 @@ void_result update_global_frequency_evaluator::do_apply(const update_global_freq
 
 } FC_CAPTURE_AND_RETHROW((op)) }
 
+void_result issue_free_cycles_evaluator::do_evaluate(const issue_free_cycles_operation& op)
+{ try {
+
+  const auto& d = db();
+  const auto& authority_obj = op.authority(d);
+  const auto cycle_issuer_id = d.get_chain_authorities().cycle_issuer;
+
+  // Make sure that this is the current license issuer:
+  d.perform_chain_authority_check("cycle issuing", cycle_issuer_id, authority_obj);
+
+  const auto& account_obj = op.account(d);
+  const auto& cycle_balance_obj = d.get_cycle_balance_object(op.account);
+
+  FC_ASSERT( account_obj.is_vault(),
+             "Account '${name}' must be a vault account",
+             ("name", account_obj.name)
+           );
+
+  _cycle_balance_obj = &cycle_balance_obj;
+  return {};
+
+} FC_CAPTURE_AND_RETHROW((op)) }
+
+void_result issue_free_cycles_evaluator::do_apply(const issue_free_cycles_operation& op)
+{ try {
+
+  db().issue_cycles(*_cycle_balance_obj, op.amount);
+
+  return {};
+
+} FC_CAPTURE_AND_RETHROW((op)) }
+
 } }  // namespace graphene::chain

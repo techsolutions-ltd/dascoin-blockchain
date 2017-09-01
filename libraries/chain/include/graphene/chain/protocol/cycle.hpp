@@ -184,6 +184,34 @@ namespace graphene { namespace chain {
     share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
 
+  struct issue_free_cycles_operation : public base_operation
+  {
+    struct fee_parameters_type{};
+
+    asset fee;
+
+    account_id_type authority;
+
+    uint8_t origin;
+    account_id_type account;
+    share_type amount;
+    string comment;
+
+    extensions_type extensions;
+
+    issue_free_cycles_operation() = default;
+    explicit issue_free_cycles_operation(account_id_type authority, uint8_t origin, account_id_type account,
+                                         share_type amount, const string& comment)
+        : authority(authority)
+        , origin(origin)
+        , amount(amount)
+        , comment(comment) {}
+
+    account_id_type fee_payer() const { return authority; }
+    void validate() const;
+    share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+  };
+
 } }  // namespace graphene::chain
 
 ///////////////////////////////
@@ -246,4 +274,14 @@ FC_REFLECT( graphene::chain::update_global_frequency_operation,
             (fee)
             (authority)
             (frequency)
+          )
+
+FC_REFLECT( graphene::chain::issue_free_cycles_operation:: fee_parameters_type, )
+FC_REFLECT( graphene::chain::issue_free_cycles_operation,
+            (fee)
+            (authority)
+            (origin)
+            (amount)
+            (comment)
+            (extensions)
           )

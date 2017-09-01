@@ -126,7 +126,16 @@ namespace graphene { namespace chain {
    {
      user_submit = 0,
      charter_license = 1,
-     reserve_cycles = 2
+     reserve_cycles = 2,
+     DASCOIN_ORIGIN_KIND_COUNT
+   };
+
+   enum cycle_origin_kind
+   {
+     upgrade = 0,
+     admin = 1,
+     unknown = 2,
+     CYCLE_ORIGIN_KIND_COUNT
    };
 
    enum asset_issuer_permission_flags
@@ -488,6 +497,14 @@ REFLECT_ENUM_CHECK( graphene::chain::dascoin_origin_kind,
                     (user_submit)
                     (charter_license)
                     (reserve_cycles)
+                    (DASCOIN_ORIGIN_KIND_COUNT)
+                  )
+
+REFLECT_ENUM_CHECK( graphene::chain::cycle_origin_kind,
+                    (upgrade)
+                    (admin)
+                    (unknown)
+                    (CYCLE_ORIGIN_KIND_COUNT)
                   )
 
 FC_REFLECT( graphene::chain::public_key_type, (key_data) )

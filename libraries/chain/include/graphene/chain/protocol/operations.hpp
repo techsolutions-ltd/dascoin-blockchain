@@ -137,6 +137,8 @@ namespace graphene { namespace chain {
 
             update_global_frequency_operation,
 
+            issue_free_cycles_operation,
+
             // Virtual operations below this point:
 
             record_submit_reserve_cycles_to_queue_operation,  // TODO: should we keep this op?

@@ -61,6 +61,15 @@ void_result submit_cycles_to_queue_evaluator::do_evaluate(const submit_cycles_to
              ("b", balance_obj.balance)
            );
 
+  // Make sure that the frequency matches the global frequency:
+  const auto GLOB_FREQUENCY = d.get_dynamic_global_properties().frequency;
+  FC_ASSERT( op.frequency == GLOB_FREQUENCY,
+             "Submit frequency ${op_f} must be equal to global frequency ${glob_f}",
+             // This hack should display the frequency with decimals, eg. 2.50 instead of 250.
+             ("op_f", asset(op.frequency, d.get_web_asset_id()))
+             ("glob_f", asset(GLOB_FREQUENCY, d.get_web_asset_id()))
+           );
+
   _account_obj = &account_obj;
   return {};
 
@@ -72,15 +81,9 @@ object_id_type submit_cycles_to_queue_evaluator::do_apply(const submit_cycles_to
 
   // Spend cycles, decrease balance and supply:
   d.reserve_cycles(op.account, op.amount);
-
-  frequency_type frequency = 0;
-  if( _account_obj->license_information.valid() )
-    frequency = (*_account_obj->license_information)(d).frequency_lock;
-  if ( 0 == frequency )
-    frequency = d.get_dynamic_global_properties().frequency;
-
   auto origin = fc::reflector<dascoin_origin_kind>::to_string(user_submit);
-  return d.push_queue_submission(origin, /* license = */{}, op.account, op.amount, frequency, "");
+  return d.push_queue_submission(origin, /* license = */{}, op.account, op.amount, 
+                                 op.frequency, op.comment);
 
 } FC_CAPTURE_AND_RETHROW((op)) }
 

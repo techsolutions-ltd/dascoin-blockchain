@@ -175,12 +175,16 @@ namespace graphene { namespace chain {
     asset fee;
     account_id_type authority;  // This MUST be the current license issuer authority.
     frequency_type frequency;
+    string comment;
 
     extensions_type extensions;
 
     update_global_frequency_operation() = default;
-    explicit update_global_frequency_operation(account_id_type authority, frequency_type frequency) :
-      authority(authority), frequency(frequency) {}
+    explicit update_global_frequency_operation(account_id_type authority, frequency_type frequency, 
+                                               const string& comment)
+      : authority(authority),
+        frequency(frequency),
+        comment(comment) {}
 
     account_id_type fee_payer() const { return authority; }
     void validate() const;

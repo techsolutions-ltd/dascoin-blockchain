@@ -396,7 +396,7 @@ BOOST_AUTO_TEST_CASE(submission_number_test)
 BOOST_AUTO_TEST_CASE( update_global_frequency_unit_test )
 { try {
 
-  do_op(update_global_frequency_operation(get_license_issuer_id(), 450));
+  do_op(update_global_frequency_operation(get_license_issuer_id(), 450, "TEST"));
 
   auto frequency = db.get_dynamic_global_properties().frequency;
   BOOST_CHECK_EQUAL( frequency.value, 450 );

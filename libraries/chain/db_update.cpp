@@ -502,7 +502,7 @@ void database::reset_spending_limits()
   const auto& params = get_global_properties().parameters;
   const auto& dgpo = get_dynamic_global_properties();
 
-  if ( dgpo.next_spend_limit_reset >= head_block_time() )
+  if ( dgpo.next_spend_limit_reset <= head_block_time() )
   {
     // Reset spending limit for each account:
     const auto& account_idx = get_index_type<account_index>().indices().get<by_id>();
@@ -519,7 +519,7 @@ void database::reset_spending_limits()
 
     // Set the time of the next limit reset:
     modify(dgpo, [&](dynamic_global_property_object& dgpo){
-      dgpo.next_spend_limit_reset = head_block_time() + params.limit_interval_elapse_time_seconds;
+      dgpo.next_spend_limit_reset = head_block_time() + fc::seconds(params.limit_interval_elapse_time_seconds);
     });
   }
 

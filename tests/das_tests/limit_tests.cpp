@@ -17,6 +17,29 @@ using namespace graphene::chain::test;
 BOOST_FIXTURE_TEST_SUITE( dascoin_tests, database_fixture )
 BOOST_FIXTURE_TEST_SUITE( limit_tests, database_fixture )
 
+BOOST_AUTO_TEST_CASE( set_next_spend_limit_reset_test )
+{ try {
+
+  // Determine the starting conditions - the first reset time:
+  const auto START_LIMIT_RESET_TIME = db.get_dynamic_global_properties().next_spend_limit_reset;
+  const auto LIMIT_INTERVAL_SECS = db.get_global_properties().parameters.limit_interval_elapse_time_seconds;
+
+  // Get to the next time the limit is reset:
+  generate_blocks(db.head_block_time() + fc::seconds(LIMIT_INTERVAL_SECS));
+
+  // Make sure the new reset time is greater:
+  const auto NEW_LIMIT_RESET_TIME = db.get_dynamic_global_properties().next_spend_limit_reset;
+  BOOST_CHECK( NEW_LIMIT_RESET_TIME == START_LIMIT_RESET_TIME + fc::seconds(LIMIT_INTERVAL_SECS) );
+
+  // Generate a single block:
+  generate_block();
+
+  // Make sure the limit reset time stays the same:
+  const auto LIMIT_RESET_TIME_AFTER_BLOCK = db.get_dynamic_global_properties().next_spend_limit_reset;
+  BOOST_CHECK( LIMIT_RESET_TIME_AFTER_BLOCK == NEW_LIMIT_RESET_TIME );
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_CASE( get_dascoin_limit_unit_test )
 { try {
   const share_type WEB_AMOUNT = 10 * DASCOIN_FIAT_ASSET_PRECISION;

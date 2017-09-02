@@ -119,6 +119,7 @@ namespace graphene { namespace chain {
          share_type reserved = 0;
          share_type spent = 0;  // Balance spent in limit interval.
 
+         share_type eur_limit;  // The limit in euros for this balance.
          share_type limit;  // The limit used for transfers on this balance.
 
          asset get_balance() const { return asset{balance, asset_type}; }
@@ -516,6 +517,7 @@ FC_REFLECT_DERIVED( graphene::chain::account_balance_object, (graphene::db::obje
                     (balance)
                     (reserved)
                     (spent)
+                    (eur_limit)
                     (limit)
                   )
 

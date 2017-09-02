@@ -163,9 +163,14 @@ namespace graphene { namespace chain {
          uint32_t total_upgrade_events = 0;
 
          /**
-          * Last dascoin trade price on DSC:WEBEUR market.
+          * Last dascoin trade price on the DSC:WEBEUR market.
           */
          price last_dascoin_price;
+
+         /**
+          * Last daily dascoin trade price on the DSC:WEBEUR market.
+          */
+         price last_daily_dascoin_price;
 
          enum dynamic_flag_bits
          {

@@ -528,6 +528,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       p.recent_slots_filled = fc::uint128::max_value();
       p.frequency = genesis_state.initial_frequency;
       p.last_dascoin_price = DASCOIN_DEFAULT_START_PRICE;
+      p.last_daily_dascoin_price = DASCOIN_DEFAULT_START_PRICE;
    });
 
    FC_ASSERT( (genesis_state.immutable_parameters.min_witness_count & 1) == 1, "min_witness_count must be odd" );

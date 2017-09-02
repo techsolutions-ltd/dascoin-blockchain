@@ -167,4 +167,22 @@ share_type database_fixture::get_asset_current_supply(asset_id_type asset_id)
 
 } FC_LOG_AND_RETHROW() }
 
+void database_fixture::set_last_dascoin_price(price val)
+{ try {
+
+  db.modify(get_dynamic_global_properties(), [val](dynamic_global_property_object& dgpo){
+    dgpo.last_dascoin_price = val;
+  });
+
+} FC_LOG_AND_RETHROW() }
+
+void database_fixture::set_last_daily_dascoin_price(price val)
+{ try {
+
+  db.modify(get_dynamic_global_properties(), [val](dynamic_global_property_object& dgpo){
+    dgpo.last_daily_dascoin_price = val;
+  });
+
+} FC_LOG_AND_RETHROW() }
+
 } }  // namespace graphene::chain

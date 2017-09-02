@@ -364,6 +364,8 @@ struct database_fixture {
    vector<issue_asset_request_object> get_asset_request_objects(account_id_type account_id);
    share_type get_asset_current_supply(asset_id_type asset_id);
    share_type get_web_asset_current_supply() { return get_asset_current_supply(get_web_asset_id()); }
+   void set_last_dascoin_price(price val);
+   void set_last_daily_dascoin_price(price val);
 
    // fix_pi_limits.cpp
    void update_pi_limits(account_id_type account_id, uint8_t level, limits_type new_limits);

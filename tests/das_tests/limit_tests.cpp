@@ -107,6 +107,7 @@ BOOST_AUTO_TEST_CASE( limit_reset_test )
 
   // Check if limit is properly set:
   const auto& balance_start = db.get_balance_object(vault_id, DASCOIN_ASSET_ID);
+  BOOST_CHECK_NE( balance_start.limit.value, 0 );
   BOOST_CHECK_EQUAL( balance_start.limit.value, expected_limit.value );
 
   // Change the limit:
@@ -120,6 +121,32 @@ BOOST_AUTO_TEST_CASE( limit_reset_test )
   // Check the limit again:
   const auto& balance_reset = db.get_balance_object(vault_id, DASCOIN_ASSET_ID);
   BOOST_CHECK_EQUAL( balance_reset.limit.value, expected_limit.value );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( daily_dascoin_price_test )
+{ try {
+  const auto DSC_ID = get_dascoin_asset_id();
+  const auto WEBEUR_ID = get_web_asset_id();
+
+  BOOST_CHECK_EQUAL(
+    db.get_dynamic_global_properties().last_dascoin_price.to_real(),
+    db.get_dynamic_global_properties().last_daily_dascoin_price.to_real()
+  );
+  
+  set_last_dascoin_price(asset(1, DSC_ID) / asset(999999, WEBEUR_ID));
+
+  BOOST_CHECK_NE(
+    db.get_dynamic_global_properties().last_dascoin_price.to_real(),
+    db.get_dynamic_global_properties().last_daily_dascoin_price.to_real()
+  );
+
+  generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
+
+  BOOST_CHECK_EQUAL(
+    db.get_dynamic_global_properties().last_dascoin_price.to_real(),
+    db.get_dynamic_global_properties().last_daily_dascoin_price.to_real()
+  );
 
 } FC_LOG_AND_RETHROW() }
 

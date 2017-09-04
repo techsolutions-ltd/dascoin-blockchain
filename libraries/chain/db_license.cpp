@@ -40,19 +40,19 @@ optional<license_information_object> database::get_license_information(account_i
 
 optional<share_type> database::get_dascoin_limit(const account_object& account, price dascoin_price) const
 {
-  const auto ADVOCATE_EUR_LIMIT = get(DASCOIN_NULL_LICENSE).eur_limit;
-  const auto DASCOIN_ASSET_ID = get_dascoin_asset_id();
+  const auto advocate_eur_limit = DASCOIN_DEFAULT_EUR_LIMIT_ADVOCATE;
+  const auto webeur_asset_it = get_web_asset_id();
 
-  const auto& get_limit_from_price = [DASCOIN_ASSET_ID](share_type eur_limit, price dascoin_price) -> share_type
+  const auto& get_limit_from_price = [webeur_asset_it](share_type eur_limit, price dascoin_price) -> share_type
   {
-    auto res = asset{eur_limit, DASCOIN_ASSET_ID} * dascoin_price;
+    auto res = asset{eur_limit, webeur_asset_it} * dascoin_price;
     return res.amount;
   };
 
   if ( !account.is_vault() )
     return {};
 
-  auto result = get_limit_from_price(ADVOCATE_EUR_LIMIT, dascoin_price);
+  auto result = get_limit_from_price(advocate_eur_limit, dascoin_price);
 
   if ( account.license_information.valid() )
   {

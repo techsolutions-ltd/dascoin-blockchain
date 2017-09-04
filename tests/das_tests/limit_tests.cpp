@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE( get_dascoin_limit_unit_test )
 
   // For a vault advocate. return limit based on advocate eur_limit:
   VAULT_ACTOR(advocate);
-  const asset ADVOCATE_EUR_LIMIT = asset(DASCOIN_DEFAULT_EUR_LIMIT_ADVOCATE, get_dascoin_asset_id());
+  const asset ADVOCATE_EUR_LIMIT = asset(DASCOIN_DEFAULT_EUR_LIMIT_ADVOCATE, get_web_asset_id());
   expected_limit = (ADVOCATE_EUR_LIMIT * DASCOIN_PRICE).amount;
   returned_limit = db.get_dascoin_limit(advocate, DASCOIN_PRICE);
   BOOST_CHECK(returned_limit.valid());
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE( get_dascoin_limit_unit_test )
         bonus_percent, frequency_lock, issue_time));
   BOOST_CHECK( president.license_information.valid() );
 
-  const asset PRESIDENT_EUR_LIMIT = asset(DASCOIN_DEFAULT_EUR_LIMIT_PRESIDENT, get_dascoin_asset_id());
+  const asset PRESIDENT_EUR_LIMIT = asset(DASCOIN_DEFAULT_EUR_LIMIT_PRESIDENT, get_web_asset_id());
   expected_limit = (PRESIDENT_EUR_LIMIT * DASCOIN_PRICE).amount;
   returned_limit = db.get_dascoin_limit(president, DASCOIN_PRICE);
   BOOST_CHECK(returned_limit.valid());
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE( limit_reset_test )
 
   auto& dgp = db.get_dynamic_global_properties();
   const asset ADVOCATE_EUR_LIMIT = 
-    {_dal.get_license_type("no_license")->eur_limit, DASCOIN_ASSET_ID};
+    {_dal.get_license_type("no_license")->eur_limit, get_web_asset_id()};
   share_type expected_limit = (ADVOCATE_EUR_LIMIT * dgp.last_dascoin_price).amount;
 
   // Check if limit is properly set:

@@ -64,4 +64,12 @@ optional<share_type> database::get_dascoin_limit(const account_object& account, 
   return {result};
 }
 
+share_type database::get_eur_limit(const optional<license_information_object> &license_info) const
+{
+  if (!license_info.valid())
+    return DASCOIN_DEFAULT_EUR_LIMIT_ADVOCATE;
+  const auto& license_type = get(license_info->max_license);
+  return license_type.eur_limit;
+}
+
 } }  // namespace graphhene::chain

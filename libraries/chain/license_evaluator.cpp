@@ -142,6 +142,13 @@ object_id_type issue_license_evaluator::do_apply(const issue_license_operation& 
     );
   }
 
+  const auto& dgpo = d.get_dynamic_global_properties();
+  const auto limit = d.get_dascoin_limit(*_account_obj, dgpo.last_daily_dascoin_price);
+  if (limit.valid())
+  {
+      d.adjust_balance_limit(*_account_obj, d.get_dascoin_asset_id(), *limit);
+  }
+
   return lic_info_id;
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }

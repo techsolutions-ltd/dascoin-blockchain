@@ -513,7 +513,7 @@ void database::reset_spending_limits()
       if ( dsc_limit.valid() )
       {
         // Set the limit on the account balance object:
-        adjust_balance_limit(account, get_dascoin_asset_id(), *dsc_limit);
+        adjust_balance_limit(account, get_dascoin_asset_id(), *dsc_limit, true);
       }
     }
 

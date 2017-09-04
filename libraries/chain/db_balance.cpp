@@ -227,7 +227,7 @@ void database::adjust_balance(account_id_type account, asset delta, share_type r
 
 } FC_CAPTURE_AND_RETHROW( (account)(delta) ) }
 
-void database::adjust_balance_limit(const account_object& account, asset_id_type asset_id, share_type limit)
+void database::adjust_balance_limit(const account_object& account, asset_id_type asset_id, share_type limit, bool reset_spent /* = false */)
 { try {
    if ( limit <= 0 )
    {
@@ -250,9 +250,10 @@ void database::adjust_balance_limit(const account_object& account, asset_id_type
    //            ("asset_id", asset_id)
    //          );
    
-   modify(*itr, [limit](account_balance_object& b) {
+   modify(*itr, [limit, reset_spent](account_balance_object& b) {
       b.limit = limit;
-      b.spent = 0;
+      if (reset_spent)
+         b.spent = 0;
    });
 
 } FC_CAPTURE_AND_RETHROW( (account)(limit) ) }

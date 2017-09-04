@@ -356,9 +356,10 @@ namespace graphene { namespace chain {
           * Set the limit on the account balance. This limit is used for transfers ex. vault -> wallet.
           * @param account Account whose limit should set.
           * @param asset_id The ID of the asset for which balance the limit is being set.
+          * @param reset_spent Should we reset the spent amount or not
           * @param limit New limit.
           */
-         void adjust_balance_limit(const account_object& account, asset_id_type asset_id, share_type limit);
+         void adjust_balance_limit(const account_object& account, asset_id_type asset_id, share_type limit, bool reset_spent = false);
 
          /**
           * @brief Adjsut a particular account's cycle balance by a delta.

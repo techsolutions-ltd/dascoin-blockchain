@@ -254,7 +254,7 @@
 ///@}
 
 /**
- * Eur limits for transfering vault to wallet:
+ * Eur limits for transferring vault to wallet:
  */
 ///@{
 #define DASCOIN_DEFAULT_EUR_LIMIT_ADVOCATE (static_cast<share_type>(1.13 * DASCOIN_FIAT_ASSET_PRECISION))

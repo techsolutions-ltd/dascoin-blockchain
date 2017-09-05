@@ -159,5 +159,29 @@ vector<acc_id_queue_subs_w_pos_res>
     return result;
 }
 
+optional<vault_info_res> database_access_layer::get_vault_info(account_id_type vault_id) const
+{
+    const auto& account = get_opt<account_id_type, account_index, by_id>(vault_id);
+
+    // TODO: re-evaluate this, should we throw an error here?
+    if (!account.valid() || !account->is_vault())
+        return {};
+
+    const auto& webeur_balance = _db.get_balance_object(vault_id, _db.get_web_asset_id());
+    const auto& dascoin_balance = _db.get_balance_object(vault_id, _db.get_dascoin_asset_id());
+    const auto& free_cycle_balance = _db.get_cycle_balance(vault_id);
+    const auto& license_information = _db.get_license_information(vault_id);
+    const auto& eur_limit = _db.get_eur_limit(license_information);
+
+    return vault_info_res{webeur_balance.balance,
+                          webeur_balance.reserved,
+                          dascoin_balance.balance,
+                          free_cycle_balance,
+                          dascoin_balance.limit,
+                          eur_limit,
+                          dascoin_balance.spent,
+                          license_information};
+}
+
 }  // namespace chain
 }  // namespace graphene

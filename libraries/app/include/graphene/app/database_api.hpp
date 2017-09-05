@@ -646,6 +646,13 @@ class database_api
        */
       vector<wire_out_holder_object> get_all_wire_out_holders() const;
 
+      /**
+       * @brief Get vault information
+       * @param vault_id
+       * @return vault_info_res (optional)
+       */
+      optional<vault_info_res> get_vault_info(account_id_type vault_id) const;
+
    private:
       std::shared_ptr< database_api_impl > my;
 };
@@ -777,4 +784,6 @@ FC_API( graphene::app::database_api,
    (get_all_webasset_issue_requests)
    (get_all_wire_out_holders)
 
+   // Vaults
+   (get_vault_info)
 )

@@ -164,6 +164,8 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
           get_queue_submissions_with_pos_for_accounts(vector<account_id_type> ids) const;
       uint32_t get_reward_queue_size() const;
 
+      optional<vault_info_res> get_vault_info(account_id_type vault_id) const;
+
       template<typename T>
       void subscribe_to_item( const T& i )const
       {
@@ -2097,6 +2099,16 @@ vector<issue_asset_request_object> database_api::get_all_webasset_issue_requests
 vector<wire_out_holder_object> database_api::get_all_wire_out_holders() const
 {
    return my->list_all_objects<wire_out_holder_index, by_id>();
+}
+
+optional<vault_info_res> database_api::get_vault_info(account_id_type vault_id) const
+{
+    return my->get_vault_info(vault_id);
+}
+
+optional<vault_info_res> database_api_impl::get_vault_info(account_id_type vault_id) const
+{
+    return _dal.get_vault_info(vault_id);
 }
 
 //////////////////////////////////////////////////////////////////////

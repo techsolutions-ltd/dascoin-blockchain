@@ -111,6 +111,36 @@ struct acc_id_queue_subs_w_pos_res : public acc_id_res {
     result_t result;
 };
 
+struct vault_info_res {
+    share_type cash_balance;
+    share_type reserved_balance;
+    share_type dascoin_balance;
+    share_type free_cycle_balance;
+    share_type dascoin_limit;
+    share_type eur_limit;
+    share_type spent;
+    optional<license_information_object> license_information;
+
+    vault_info_res() = default;
+    explicit vault_info_res(share_type cash_balance,
+        share_type reserved_balance,
+        share_type dascoin_balance,
+        share_type free_cycle_balance,
+        share_type dascoin_limit,
+        share_type eur_limit,
+        share_type spent,
+        optional<license_information_object> license_information)
+    : cash_balance(cash_balance),
+      reserved_balance(reserved_balance),
+      dascoin_balance(dascoin_balance),
+      free_cycle_balance(free_cycle_balance),
+      dascoin_limit(dascoin_limit),
+      eur_limit(eur_limit),
+      spent(spent),
+      license_information(license_information) {}
+
+};
+
 class database;
 class global_property_object;
 class reward_queue_object;
@@ -148,6 +178,9 @@ class database_access_layer {
     vector<reward_queue_object> get_reward_queue_by_page(uint32_t from, uint32_t amount) const;
     acc_id_queue_subs_w_pos_res get_queue_submissions_with_pos(account_id_type account_id) const;
     vector<acc_id_queue_subs_w_pos_res> get_queue_submissions_with_pos_for_accounts(vector<account_id_type> ids) const;
+
+    // Vaults:
+    optional<vault_info_res> get_vault_info(account_id_type vault_id) const;
 
   private:
     template <typename IndexType>
@@ -206,3 +239,13 @@ FC_REFLECT_DERIVED(graphene::chain::acc_id_vec_cycle_agreement_res, (graphene::c
 
 FC_REFLECT(graphene::chain::sub_w_pos, (position)(submission))
 FC_REFLECT_DERIVED(graphene::chain::acc_id_queue_subs_w_pos_res, (graphene::chain::acc_id_res), (result))
+
+FC_REFLECT(graphene::chain::vault_info_res,
+           (cash_balance)
+           (reserved_balance)
+           (dascoin_balance)
+           (free_cycle_balance)
+           (dascoin_limit)
+           (eur_limit)
+           (spent)
+           (license_information))

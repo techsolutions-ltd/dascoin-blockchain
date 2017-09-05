@@ -190,5 +190,78 @@ BOOST_AUTO_TEST_CASE( obey_limit_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( get_vault_info_unit_test )
+{ try {
+  ACTOR(wallet)
+  VAULT_ACTOR(vault)
+
+  tether_accounts(wallet_id, vault_id);
+
+  auto res = _dal.get_vault_info(vault_id);
+  BOOST_CHECK( res.valid() );
+  BOOST_CHECK_EQUAL( res->eur_limit.value, DASCOIN_DEFAULT_EUR_LIMIT_ADVOCATE.value );
+  BOOST_CHECK_EQUAL( res->cash_balance.value, 0 );
+  BOOST_CHECK_EQUAL( res->reserved_balance.value, 0 );
+  BOOST_CHECK_EQUAL( res->dascoin_balance.value, 0 );
+  BOOST_CHECK_EQUAL( res->free_cycle_balance.value, 0 );
+  BOOST_CHECK_EQUAL( res->spent.value, 0 );
+  BOOST_CHECK( !res->license_information.valid() );
+
+  const auto& dgpo = db.get_dynamic_global_properties();
+  const auto& dascoin_price = dgpo.last_dascoin_price;
+  asset dascoin_limit = asset{DASCOIN_DEFAULT_EUR_LIMIT_ADVOCATE, db.get_web_asset_id()} * dascoin_price;
+
+  BOOST_CHECK_EQUAL( res->dascoin_limit.value, dascoin_limit.amount.value );
+
+  auto executive = *(_dal.get_license_type("executive"));
+  time_point_sec issue_time = db.head_block_time();
+
+  do_op(issue_license_operation(get_license_issuer_id(), vault_id, executive.id,
+                                0, DASCOIN_INITIAL_FREQUENCY, issue_time));
+
+  do_op(submit_cycles_to_queue_operation(vault_id, 1000, DASCOIN_INITIAL_FREQUENCY, "test"));
+
+  adjust_dascoin_reward(500 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  toggle_reward_queue(true);
+  generate_blocks(db.head_block_time() + fc::hours(24));
+
+  // Transfer 0.25 dascoin, we will have 0.25 in spent
+  transfer_dascoin_vault_to_wallet(vault_id, wallet_id, 0.25 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  dascoin_limit = asset{DASCOIN_DEFAULT_EUR_LIMIT_EXECUTIVE, db.get_web_asset_id()} * dascoin_price;
+
+  res = _dal.get_vault_info(vault_id);
+  BOOST_CHECK( res.valid() );
+  BOOST_CHECK_EQUAL( res->dascoin_balance.value, db.cycles_to_dascoin(1000, DASCOIN_INITIAL_FREQUENCY).value - 0.25 * DASCOIN_DEFAULT_ASSET_PRECISION );
+  // We spent 1000 cycles
+  BOOST_CHECK_EQUAL( res->free_cycle_balance.value, DASCOIN_BASE_EXECUTIVE_CYCLES - 1000 );
+  BOOST_CHECK_EQUAL( res->spent.value, 0.25 * DASCOIN_DEFAULT_ASSET_PRECISION );
+  BOOST_CHECK_EQUAL( res->dascoin_limit.value, dascoin_limit.amount.value );
+  BOOST_CHECK_EQUAL( res->eur_limit.value, static_cast<share_type>(DASCOIN_DEFAULT_EUR_LIMIT_EXECUTIVE).value );
+  BOOST_CHECK( res->license_information.valid() );
+
+  auto president = *(_dal.get_license_type("president"));
+  issue_time = db.head_block_time();
+
+  // Increase license to president, we should get new limit
+  do_op(issue_license_operation(get_license_issuer_id(), vault_id, president.id,
+                                0, DASCOIN_INITIAL_FREQUENCY, issue_time));
+
+  dascoin_limit = asset{DASCOIN_DEFAULT_EUR_LIMIT_PRESIDENT, db.get_web_asset_id()} * dascoin_price;
+  res = _dal.get_vault_info(vault_id);
+  BOOST_CHECK( res.valid() );
+  // Spent remains the same:
+  BOOST_CHECK_EQUAL( res->spent.value, 0.25 * DASCOIN_DEFAULT_ASSET_PRECISION );
+  BOOST_CHECK_EQUAL( res->eur_limit.value, static_cast<share_type>(DASCOIN_DEFAULT_EUR_LIMIT_PRESIDENT).value );
+  BOOST_CHECK_EQUAL( res->dascoin_limit.value, dascoin_limit.amount.value );
+
+  // Wait for 24 hrs so spent is reset
+  generate_blocks(db.head_block_time() + fc::hours(24));
+  res = _dal.get_vault_info(vault_id);
+  BOOST_CHECK( res.valid() );
+  // Spent remains the same:
+  BOOST_CHECK_EQUAL( res->spent.value, 0 );
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_SUITE_END()  // dascoin_tests::limit_tests
 BOOST_AUTO_TEST_SUITE_END()  // dascoin_tests

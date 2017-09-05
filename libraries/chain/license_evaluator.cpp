@@ -28,7 +28,7 @@ void_result create_license_type_evaluator::do_evaluate(const create_license_type
 
   return {};
 
-} FC_CAPTURE_AND_RETHROW((op)) }
+} FC_CAPTURE_AND_RETHROW( (op) ) }
 
 object_id_type create_license_type_evaluator::do_apply(const create_license_type_operation& op)
 { try {
@@ -58,7 +58,7 @@ void_result edit_license_type_evaluator::do_evaluate(const edit_license_type_ope
 
   return {};
 
-} FC_CAPTURE_AND_RETHROW((op)) }
+} FC_CAPTURE_AND_RETHROW( (op) ) }
 
 void_result edit_license_type_evaluator::do_apply(const edit_license_type_operation& op)
 { try {

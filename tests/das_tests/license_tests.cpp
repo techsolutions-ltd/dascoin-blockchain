@@ -99,6 +99,37 @@ BOOST_AUTO_TEST_CASE( get_license_type_names_ids_unit_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( edit_license_type_test )
+{ try {
+
+    const auto& lic = _dal.get_license_type("standard");
+    BOOST_CHECK(lic.valid());
+    const auto& lic_id = lic->id;
+
+    // Try to set license's name to a name which is longer than 64 chars:
+    GRAPHENE_REQUIRE_THROW( do_op(edit_license_type_operation(get_license_administrator_id(), lic_id,
+                                 "0123456789012345678901234567890123456789012345678901234567890123456789", 200, 10)), fc::exception );
+
+    // Try to set license's name to an empty string:
+    GRAPHENE_REQUIRE_THROW( do_op(edit_license_type_operation(get_license_administrator_id(), lic_id, "", 200, 10)), fc::exception );
+
+    // Try to set license's amount to 0:
+    GRAPHENE_REQUIRE_THROW( do_op(edit_license_type_operation(get_license_administrator_id(), lic_id, "x", 0, 10)), fc::exception );
+
+    // Try to set license's eur limit to 0:
+    GRAPHENE_REQUIRE_THROW( do_op(edit_license_type_operation(get_license_administrator_id(), lic_id, "x", 200, 0)), fc::exception );
+
+    // Set name to 'standard_plus', amount to 200 and euro limit to 10:
+    do_op(edit_license_type_operation(get_license_administrator_id(), lic_id, "standard_plus", 200, 10));
+
+    const auto& lic_plus = _dal.get_license_type("standard_plus");
+    BOOST_CHECK(lic_plus.valid());
+
+    BOOST_CHECK_EQUAL( lic_plus->amount.value, 200 );
+    BOOST_CHECK_EQUAL( lic_plus->eur_limit.value, 10 );
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

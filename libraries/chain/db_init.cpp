@@ -222,6 +222,7 @@ void database::initialize_evaluators()
    register_evaluator<change_public_keys_evaluator>();
    register_evaluator<update_global_frequency_evaluator>();
    register_evaluator<issue_free_cycles_evaluator>();
+   register_evaluator<edit_license_type_evaluator>();
 }
 
 void database::initialize_indexes()

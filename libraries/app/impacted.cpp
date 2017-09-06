@@ -160,6 +160,8 @@ struct get_impacted_account_visitor
 
    void operator()( const create_license_type_operation& op ) {}
 
+   void operator()( const edit_license_type_operation& op ) {}
+
    void operator()( const issue_license_operation& op )
    {
       _impacted.insert( op.account );

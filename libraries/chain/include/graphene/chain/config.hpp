@@ -254,7 +254,7 @@
 ///@}
 
 /**
- * Eur limits for transfering vault to wallet:
+ * Eur limits for transferring vault to wallet:
  */
 ///@{
 #define DASCOIN_DEFAULT_EUR_LIMIT_ADVOCATE (static_cast<share_type>(1.13 * DASCOIN_FIAT_ASSET_PRECISION))
@@ -273,4 +273,11 @@
 ///@{
 #define DASCOIN_DEFAULT_STARTING_PRICE_BASE_AMOUNT (1 * DASCOIN_DEFAULT_ASSET_PRECISION)
 #define DASCOIN_DEFAULT_STARTING_PRICE_QUOTE_AMOUNT (100 * DASCOIN_FIAT_ASSET_PRECISION)
+///@}
+
+/**
+ * Max license name length
+ */
+///@{
+#define DASCOIN_MAX_LICENSE_NAME_LEN (64)
 ///@}

@@ -58,6 +58,33 @@ namespace graphene { namespace chain {
      share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
 
+  struct edit_license_type_operation : public base_operation
+  {
+     struct fee_parameters_type {};  // No fees are paid for this operation.
+
+     asset fee;
+     account_id_type authority;
+     license_type_id_type license_type;
+
+     optional<string> name;
+     optional<share_type> amount;
+     optional<share_type> eur_limit;
+
+     edit_license_type_operation() = default;
+
+     account_id_type fee_payer() const { return authority; }
+     explicit edit_license_type_operation(account_id_type authority, license_type_id_type license_type,
+                                          optional<string> name, optional<share_type> amount, optional<share_type> eur_limit)
+         : authority(authority)
+         , license_type(license_type)
+         , name(name)
+         , amount(amount)
+         , eur_limit(eur_limit) {}
+
+     void validate() const;
+     share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+  };
+
   /**
    * @brief Request a license to be granted an account
    * @ingroup operations
@@ -117,6 +144,16 @@ FC_REFLECT( graphene::chain::create_license_type_operation,
             (eur_limit)
           )
 
+FC_REFLECT( graphene::chain::edit_license_type_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::edit_license_type_operation,
+            (fee)
+            (authority)
+            (license_type)
+            (name)
+            (amount)
+            (eur_limit)
+          )
+
 FC_REFLECT( graphene::chain::issue_license_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::issue_license_operation,
             (fee)
@@ -128,4 +165,3 @@ FC_REFLECT( graphene::chain::issue_license_operation,
             (activated_at)
             (extensions)
           )
-

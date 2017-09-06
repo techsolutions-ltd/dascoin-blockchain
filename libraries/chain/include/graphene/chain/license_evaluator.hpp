@@ -19,6 +19,18 @@ public:
   object_id_type do_apply(const create_license_type_operation& op);
 };
 
+class edit_license_type_evaluator : public evaluator<edit_license_type_evaluator>
+{
+public:
+  typedef edit_license_type_operation operation_type;
+
+  void_result do_evaluate(const edit_license_type_operation& op);
+  void_result do_apply(const edit_license_type_operation& op);
+
+private:
+  const license_type_object* _license_object;
+};
+
 class issue_license_evaluator : public evaluator<issue_license_evaluator>
 {
 public:

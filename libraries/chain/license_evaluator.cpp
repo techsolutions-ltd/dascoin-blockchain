@@ -28,7 +28,7 @@ void_result create_license_type_evaluator::do_evaluate(const create_license_type
 
   return {};
 
-} FC_CAPTURE_AND_RETHROW((op)) }
+} FC_CAPTURE_AND_RETHROW( (op) ) }
 
 object_id_type create_license_type_evaluator::do_apply(const create_license_type_operation& op)
 { try {
@@ -42,6 +42,44 @@ object_id_type create_license_type_evaluator::do_apply(const create_license_type
                                   op.requeue_multipliers, 
                                   op.return_multipliers,
                                   op.eur_limit);
+
+} FC_CAPTURE_AND_RETHROW( (op) ) }
+
+void_result edit_license_type_evaluator::do_evaluate(const edit_license_type_operation& op)
+{ try {
+  const auto& d = db();
+  const auto license_admin_id = d.get_global_properties().authorities.license_administrator;
+  const auto& op_admin_obj = op.authority(d);
+
+  d.perform_chain_authority_check("license administration", license_admin_id, op_admin_obj);
+
+  const auto& license_object = op.license_type(d);
+  _license_object = &license_object;
+
+  return {};
+
+} FC_CAPTURE_AND_RETHROW( (op) ) }
+
+void_result edit_license_type_evaluator::do_apply(const edit_license_type_operation& op)
+{ try {
+  auto& d = db();
+
+  d.modify(*_license_object, [op](license_type_object &obj){
+     if (op.name.valid())
+     {
+         obj.name = *op.name;
+     }
+     if (op.amount.valid())
+     {
+         obj.amount = *op.amount;
+     }
+     if (op.eur_limit.valid())
+     {
+         obj.eur_limit = *op.eur_limit;
+     }
+  });
+
+  return {};
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 

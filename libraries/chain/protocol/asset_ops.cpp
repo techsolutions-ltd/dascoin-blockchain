@@ -221,6 +221,7 @@ void asset_create_issue_request_operation::validate() const
    if(reserved_amount == 0)
       FC_ASSERT( amount > 0 );
    FC_ASSERT( amount >= 0 && reserved_amount >= 0 );
+   FC_ASSERT( unique_id.length() > 0 ); // TODO: check for max length
 }
 
 void asset_deny_issue_request_operation::validate() const

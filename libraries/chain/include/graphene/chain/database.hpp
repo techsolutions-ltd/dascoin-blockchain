@@ -566,6 +566,9 @@ namespace graphene { namespace chain {
                                                const string& comment);
 
 
+         bool check_unique_issued_id(const string& unique_id, asset_id_type asset_id) const;
+
+
    protected:
          //Mark pop_undo() as protected -- we do not want outside calling pop_undo(); it should call pop_block() instead
          void pop_undo() { object_database::pop_undo(); }

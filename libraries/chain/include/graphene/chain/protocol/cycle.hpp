@@ -283,7 +283,7 @@ FC_REFLECT( graphene::chain::update_global_frequency_operation,
             (frequency)
           )
 
-FC_REFLECT( graphene::chain::issue_free_cycles_operation:: fee_parameters_type, )
+FC_REFLECT( graphene::chain::issue_free_cycles_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::issue_free_cycles_operation,
             (fee)
             (authority)

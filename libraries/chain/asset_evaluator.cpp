@@ -577,7 +577,7 @@ void_result asset_create_issue_request_evaluator::do_evaluate(const asset_create
 
    // Check if we are transferring web assets:
    // NOTE: this check must be modified to apply for every kind of web asset there is.
-   FC_ASSERT ( o.asset_id == d.get_web_asset_id(), "Can only transfer web assets" );
+   FC_ASSERT ( o.asset_id == d.get_web_asset_id(), "Can only issue web assets" );
 
    const auto& a = o.asset_id(d);
    FC_ASSERT( a.is_dual_auth_issue(),

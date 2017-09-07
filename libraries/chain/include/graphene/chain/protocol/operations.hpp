@@ -114,7 +114,6 @@ namespace graphene { namespace chain {
             update_queue_parameters_operation,
 
             create_license_type_operation,
-            edit_license_type_operation,
             issue_license_operation,
 
             tether_accounts_operation,
@@ -139,6 +138,7 @@ namespace graphene { namespace chain {
             update_global_frequency_operation,
 
             issue_free_cycles_operation,
+            edit_license_type_operation,
 
             // Virtual operations below this point:
 

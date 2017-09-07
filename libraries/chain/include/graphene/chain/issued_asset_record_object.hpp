@@ -14,7 +14,7 @@ namespace chain {
 
   using graphene::db::abstract_object;
 
-  class issued_asset_record_object :  public abstract_object<issued_asset_record_object>
+  class issued_asset_record_object : public abstract_object<issued_asset_record_object>
   {
     public:
       static const uint8_t space_id = implementation_ids;

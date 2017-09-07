@@ -159,9 +159,21 @@ BOOST_AUTO_TEST_CASE( issued_asset_record_object_created_test )
 
   const auto created_record = issue_webasset("NL1", wallet_id, 100, 100);
   BOOST_CHECK( created_record != nullptr );
+  BOOST_CHECK_EQUAL( created_record->unique_id, "NL1" );
+  BOOST_CHECK( created_record->issuer == get_webasset_issuer_id() );
+  BOOST_CHECK( created_record->receiver == wallet_id );
+  BOOST_CHECK( created_record->asset_type == get_web_asset_id() );
+  BOOST_CHECK_EQUAL( created_record->amount.value, 100 );
+  BOOST_CHECK_EQUAL( created_record->reserved.value, 100 );
 
-  auto fetched_record = _dal.get_issued_asset_record("NL1", get_web_asset_id());
+  const auto fetched_record = _dal.get_issued_asset_record("NL1", get_web_asset_id());
   BOOST_CHECK( fetched_record.valid() );
+  BOOST_CHECK_EQUAL( fetched_record->unique_id, "NL1" );
+  BOOST_CHECK( fetched_record->issuer == get_webasset_issuer_id() );
+  BOOST_CHECK( fetched_record->receiver == wallet_id );
+  BOOST_CHECK( fetched_record->asset_type == get_web_asset_id() );
+  BOOST_CHECK_EQUAL( fetched_record->amount.value, 100 );
+  BOOST_CHECK_EQUAL( fetched_record->reserved.value, 100 );
 
   GRAPHENE_REQUIRE_THROW( issue_webasset("NL1", wallet_id, 100, 100), fc::exception );
 

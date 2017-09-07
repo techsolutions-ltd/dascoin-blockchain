@@ -29,16 +29,20 @@ namespace chain {
       share_type amount;
       share_type reserved;
 
+      string comment;
+
       issued_asset_record_object() = default;
       explicit issued_asset_record_object(const string& unique_id, account_id_type issuer,
                                           account_id_type receiver, asset_id_type asset_type,
-                                          share_type amount, share_type reserved)
+                                          share_type amount, share_type reserved,
+                                          const string& comment)
                : unique_id(unique_id),
                  issuer(issuer),
                  receiver(receiver),
                  asset_type(asset_type),
                  amount(amount),
-                 reserved(reserved) {}
+                 reserved(reserved),
+                 comment(comment) {}
 
       void validate() const;
   };
@@ -83,4 +87,5 @@ FC_REFLECT( graphene::chain::issued_asset_record_object,
             (asset_type)
             (amount)
             (reserved)
+            (comment)
           )

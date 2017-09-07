@@ -41,15 +41,17 @@ asset database_fixture::web_asset(share_type amount)
   return asset(amount, get_web_asset_id());
 }
 
-const issue_asset_request_object* database_fixture::issue_webasset(account_id_type receiver_id, share_type cash,
-                                                                   share_type reserved)
+const issue_asset_request_object* database_fixture::issue_webasset(const string& unique_id, account_id_type receiver_id,
+                                                                   share_type cash, share_type reserved)
 { try {
   asset_create_issue_request_operation op;
+  op.unique_id = unique_id;
   op.issuer = get_webasset_issuer_id();
   op.receiver = receiver_id;
   op.amount = cash;
   op.asset_id =  get_web_asset_id();
   op.reserved_amount = reserved;
+  op.comment = "TEST_ISSUE_WEB_ASSET";
 
   signed_transaction tx;
   set_expiration(db, tx);

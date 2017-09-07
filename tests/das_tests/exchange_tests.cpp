@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE( successful_orders_test )
     VAULT_ACTOR(bob);
 
     tether_accounts(bobw_id, bob_id);
-    issue_webasset(alice_id, 100, 100);
+    issue_webasset("1", alice_id, 100, 100);
     generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
     share_type cash, reserved;
     std::tie(cash, reserved) = get_web_asset_amounts(alice_id);
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE( order_not_enough_assets_test )
 { try {
     ACTOR(alice);
 
-    issue_webasset(alice_id, 100, 100);
+    issue_webasset("1", alice_id, 100, 100);
     generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
     BOOST_CHECK_EQUAL( get_balance(alice_id, get_web_asset_id()), 100 );
     set_expiration( db, trx );
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE( cancel_order_test )
 { try {
     ACTOR(alice);
 
-    issue_webasset(alice_id, 100, 100);
+    issue_webasset("1", alice_id, 100, 100);
     generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
 
     share_type cash, reserved;
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE( exchange_test )
     const auto issue_assets = [&, this](share_type web_assets, share_type web_assets_reserved, share_type expected_web_assets, share_type web_assets_reserved_expected)
     {
         set_expiration( db, trx );
-        issue_webasset(alice_id, web_assets, web_assets_reserved);
+        issue_webasset("1", alice_id, web_assets, web_assets_reserved);
 
         adjust_dascoin_reward(500 * DASCOIN_DEFAULT_ASSET_PRECISION);
         adjust_frequency(200);
@@ -248,7 +248,7 @@ BOOST_AUTO_TEST_CASE( account_to_credit_test )
     db.adjust_balance_limit(bobv, get_dascoin_asset_id(), 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
 
     transfer_dascoin_vault_to_wallet(bobv_id, bob_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
-    issue_webasset(alice_id, 100, 100);
+    issue_webasset("1", alice_id, 100, 100);
     generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
 
     share_type cash, reserved;

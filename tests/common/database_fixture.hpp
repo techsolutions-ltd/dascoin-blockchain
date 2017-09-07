@@ -352,7 +352,7 @@ struct database_fixture {
 
    // fix_web_assets.cpp
    asset web_asset(share_type amount);
-   const issue_asset_request_object* issue_webasset(const string& unique_id, account_id_type receiver_id, 
+   const issued_asset_record_object* issue_webasset(const string& unique_id, account_id_type receiver_id, 
                                                     share_type cash, share_type reserved);
    void deny_issue_request(issue_asset_request_id_type request_id);
    std::pair<share_type, share_type> get_web_asset_amounts(account_id_type owner_id);

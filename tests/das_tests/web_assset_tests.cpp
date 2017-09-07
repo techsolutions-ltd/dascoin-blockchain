@@ -153,5 +153,19 @@ BOOST_AUTO_TEST_CASE( issued_asset_record_object_index_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( issued_asset_record_object_created_test )
+{ try {
+  ACTOR(wallet);
+
+  const auto created_record = issue_webasset("NL1", wallet_id, 100, 100);
+  BOOST_CHECK( created_record != nullptr );
+
+  auto fetched_record = _dal.get_issued_asset_record("NL1", get_web_asset_id());
+  BOOST_CHECK( fetched_record.valid() );
+
+  GRAPHENE_REQUIRE_THROW( issue_webasset("NL1", wallet_id, 100, 100), fc::exception );
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_SUITE_END() // dascoin_tests::web_asset_tests
 BOOST_AUTO_TEST_SUITE_END() // dascoin_tests

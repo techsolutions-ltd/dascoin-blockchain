@@ -10,6 +10,7 @@
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/asset_object.hpp>
 #include <graphene/chain/license_objects.hpp>
+#include <graphene/chain/issued_asset_record_object.hpp>
 
 #include "../common/database_fixture.hpp"
 
@@ -136,6 +137,20 @@ BOOST_AUTO_TEST_CASE( dascoin_test )
   transfer_dascoin_vault_to_wallet(vault_id, wallet_id, 50 * DASCOIN_DEFAULT_ASSET_PRECISION);
   BOOST_CHECK_EQUAL( get_balance(wallet_id, get_dascoin_asset_id()), 50 * DASCOIN_DEFAULT_ASSET_PRECISION );
   BOOST_CHECK_EQUAL( get_balance(vault_id, get_dascoin_asset_id()), 50 * DASCOIN_DEFAULT_ASSET_PRECISION );
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( issued_asset_record_object_index_test )
+{ try {
+
+  db.create<issued_asset_record_object>([&](issued_asset_record_object& o){
+    o.unique_id = "1";
+    o.asset_type = get_web_asset_id();
+  });
+  db.create<issued_asset_record_object>([&](issued_asset_record_object& o){
+    o.unique_id = "2";
+    o.asset_type = get_web_asset_id();
+  });
+
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_SUITE_END() // dascoin_tests::web_asset_tests

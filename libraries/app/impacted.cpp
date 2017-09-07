@@ -238,18 +238,22 @@ struct get_impacted_account_visitor
       _impacted.insert( op.pi_validator );
    }
 
-   void operator()( const asset_create_issue_request_operation& op ) {}
+   void operator()( const asset_create_issue_request_operation& op )
+   {
+      _impacted.insert( op.issuer );
+      _impacted.insert( op.receiver );
+   }
 
    void operator()( const asset_distribute_completed_request_operation& op )
    {
-      _impacted.insert(op.receiver);
+      _impacted.insert( op.receiver );
    }
 
    void operator()( const asset_deny_issue_request_operation& op ) {}
 
    void operator()( const wire_out_operation& op )
    {
-      _impacted.insert(op.account);
+      _impacted.insert( op.account );
    }
 
    void operator()( const wire_out_complete_operation& op ) {}

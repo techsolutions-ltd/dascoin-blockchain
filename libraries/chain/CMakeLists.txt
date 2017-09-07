@@ -101,6 +101,7 @@ add_library( graphene_chain
 
              queue_objects.cpp
              license_objects.cpp
+             issued_asset_record_object.cpp
              wire_object.cpp
              wire_evaluator.cpp
              cycle_evaluator.cpp

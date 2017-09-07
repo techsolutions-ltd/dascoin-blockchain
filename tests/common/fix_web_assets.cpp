@@ -13,6 +13,7 @@
 #include <graphene/chain/protocol/asset_ops.hpp>
 #include <graphene/chain/protocol/wire.hpp>
 #include <graphene/chain/wire_object.hpp>
+#include <graphene/chain/issued_asset_record_object.hpp>
 // #include <graphene/chain/account_object.hpp>
 // #include <graphene/chain/committee_member_object.hpp>
 // #include <graphene/chain/fba_object.hpp>
@@ -41,15 +42,17 @@ asset database_fixture::web_asset(share_type amount)
   return asset(amount, get_web_asset_id());
 }
 
-const issue_asset_request_object* database_fixture::issue_webasset(account_id_type receiver_id, share_type cash,
-                                                                   share_type reserved)
+const issued_asset_record_object* database_fixture::issue_webasset(const string& unique_id, account_id_type receiver_id,
+                                                                   share_type cash, share_type reserved)
 { try {
   asset_create_issue_request_operation op;
+  op.unique_id = unique_id;
   op.issuer = get_webasset_issuer_id();
   op.receiver = receiver_id;
   op.amount = cash;
   op.asset_id =  get_web_asset_id();
   op.reserved_amount = reserved;
+  op.comment = "TEST_ISSUE_WEB_ASSET";
 
   signed_transaction tx;
   set_expiration(db, tx);
@@ -58,7 +61,7 @@ const issue_asset_request_object* database_fixture::issue_webasset(account_id_ty
   processed_transaction ptx = db.push_transaction(tx, ~0);
   tx.clear();
 
-  return db.find<issue_asset_request_object>(ptx.operation_results[0].get<object_id_type>());
+  return db.find<issued_asset_record_object>(ptx.operation_results[0].get<object_id_type>());
 
 } FC_LOG_AND_RETHROW() }
 

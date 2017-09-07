@@ -32,6 +32,7 @@
 #include <graphene/utilities/key_conversion.hpp>
 #include <graphene/chain/protocol/fee_schedule.hpp>
 #include <graphene/chain/confidential_object.hpp>
+#include <graphene/chain/issued_asset_record_object.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/transaction_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
@@ -359,6 +360,12 @@ namespace graphene { namespace app {
                   const auto& lio = dynamic_cast<const license_information_object*>(obj);
                   assert( nullptr != lio );
                   result.push_back( lio->account );
+                  break;
+               } case impl_issued_asset_record_object_type:{
+                  const auto& iaro = dynamic_cast<const issued_asset_record_object*>(obj);
+                  assert( nullptr != iaro );
+                  result.push_back( iaro->issuer );
+                  result.push_back( iaro->receiver );
                   break;
                } case impl_block_summary_object_type:
                   break;

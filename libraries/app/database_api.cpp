@@ -27,6 +27,8 @@
 
 #include <graphene/chain/access_layer.hpp>
 
+#include <graphene/chain/issued_asset_record_object.hpp>
+
 #include <fc/bloom_filter.hpp>
 #include <fc/smart_ref_impl.hpp>
 
@@ -95,9 +97,12 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<vesting_balance_object> get_vesting_balances( account_id_type account_id )const;
 
       // Assets
+      asset_id_type get_web_asset_id() const;
       vector<optional<asset_object>> get_assets(const vector<asset_id_type>& asset_ids)const;
       vector<asset_object>           list_assets(const string& lower_bound_symbol, uint32_t limit)const;
-      vector<optional<asset_object>> lookup_asset_symbols(const vector<string>& symbols_or_ids)const;
+      vector<optional<asset_object>> lookup_asset_symbols(const vector<string>& symbols_or_ids) const;
+      optional<asset_object> lookup_asset_symbol(const string& symbol_or_id) const;
+      optional<issued_asset_record_object> get_issued_asset_record(const string& unique_id, asset_id_type asset_id) const;
 
       // Markets / feeds
       vector<limit_order_object>         get_limit_orders(asset_id_type a, asset_id_type b, uint32_t limit)const;
@@ -944,6 +949,11 @@ vector<vesting_balance_object> database_api_impl::get_vesting_balances( account_
 //                                                                  //
 //////////////////////////////////////////////////////////////////////
 
+asset_id_type database_api_impl::get_web_asset_id() const
+{
+    return _db.get_web_asset_id();
+}
+
 vector<optional<asset_object>> database_api::get_assets(const vector<asset_id_type>& asset_ids)const
 {
    return my->get_assets( asset_ids );
@@ -985,6 +995,24 @@ vector<asset_object> database_api_impl::list_assets(const string& lower_bound_sy
       result.emplace_back(*itr++);
 
    return result;
+}
+
+optional<asset_object> database_api::lookup_asset_symbol(const string& symbol_or_id) const
+{
+   return my->lookup_asset_symbol( symbol_or_id );
+}
+
+// TODO: combine, refactor, remove lambda.
+optional<asset_object> database_api_impl::lookup_asset_symbol(const string& symbol_or_id) const
+{
+    const auto& assets_by_symbol = _db.get_index_type<asset_index>().indices().get<by_symbol>();
+    if( !symbol_or_id.empty() && std::isdigit(symbol_or_id[0]) )
+    {
+        auto ptr = _db.find(variant(symbol_or_id).as<asset_id_type>());
+        return ptr == nullptr ? optional<asset_object>{} : *ptr;
+    }
+    auto itr = assets_by_symbol.find(symbol_or_id);
+    return itr == assets_by_symbol.end() ? optional<asset_object>{} : *itr;
 }
 
 vector<optional<asset_object>> database_api::lookup_asset_symbols(const vector<string>& symbols_or_ids)const
@@ -1239,6 +1267,29 @@ market_volume database_api_impl::get_24_volume( const string& base, const string
 
       return result;
    } FC_CAPTURE_AND_RETHROW( (base)(quote) )
+}
+
+ optional<issued_asset_record_object>
+ database_api_impl::get_issued_asset_record(const string& unique_id, asset_id_type asset_id) const
+ {
+     return _dal.get_issued_asset_record(unique_id, asset_id);
+ }
+
+bool database_api::check_issued_asset(const string& unique_id, const string& asset) const
+{
+    const auto res = my->lookup_asset_symbol(asset);
+    if ( res.valid() )
+    {
+        const auto record =  my->get_issued_asset_record(unique_id, res->id);
+        return record.valid();
+    }
+    return false;
+}
+
+bool database_api::check_issued_webeur(const string& unique_id) const
+{
+    const auto web_id = my->get_web_asset_id();
+    return my->get_issued_asset_record(unique_id, web_id).valid();
 }
 
 order_book database_api::get_order_book( const string& base, const string& quote, unsigned limit )const

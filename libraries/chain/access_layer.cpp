@@ -3,6 +3,7 @@
 #include <graphene/chain/global_property_object.hpp>
 #include <graphene/chain/license_objects.hpp>
 #include <graphene/chain/queue_objects.hpp>
+#include <graphene/chain/issued_asset_record_object.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 
@@ -181,6 +182,17 @@ optional<vault_info_res> database_access_layer::get_vault_info(account_id_type v
                           eur_limit,
                           dascoin_balance.spent,
                           license_information};
+}
+
+// TODO: 
+optional<issued_asset_record_object>
+database_access_layer::get_issued_asset_record(const string& unique_id, asset_id_type asset_id) const
+{
+    const auto& idx = _db.get_index_type<issued_asset_record_index>().indices().get<by_unique_id_asset>();
+    auto it = idx.find(boost::make_tuple(unique_id, asset_id));
+    if (it != idx.end())
+        return {*it};
+    return {};
 }
 
 }  // namespace chain

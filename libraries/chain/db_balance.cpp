@@ -26,6 +26,7 @@
 
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/asset_object.hpp>
+#include <graphene/chain/issued_asset_record_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
 #include <graphene/chain/witness_object.hpp>
 
@@ -398,6 +399,13 @@ void database::deposit_witness_pay(const witness_object& wit, share_type amount)
    }
 
    return;
+}
+
+// TODO: refactor into template method.
+bool database::check_unique_issued_id(const string& unique_id, asset_id_type asset_id) const
+{
+   const auto& idx = get_index_type<issued_asset_record_index>().indices().get<by_unique_id_asset>();
+   return idx.find(boost::make_tuple(unique_id, asset_id)) == idx.end();
 }
 
 } }

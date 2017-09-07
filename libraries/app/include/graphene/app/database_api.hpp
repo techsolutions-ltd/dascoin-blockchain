@@ -317,12 +317,21 @@ class database_api
 
       /**
        * @brief Get a list of assets by symbol
-       * @param asset_symbols Symbols or stringified IDs of the assets to retrieve
+       * @param symbols_or_ids Symbols or stringified IDs of the assets to retrieve
        * @return The assets corresponding to the provided symbols or IDs
        *
        * This function has semantics identical to @ref get_objects
        */
-      vector<optional<asset_object>> lookup_asset_symbols(const vector<string>& symbols_or_ids)const;
+      vector<optional<asset_object>> lookup_asset_symbols(const vector<string>& symbols_or_ids) const;
+
+      /**
+       * @brief Get an asset by symbol
+       * @param symbols_or_id Symbol or stringified ID of the asset to retrieve
+       * @return The asset corresponding to the provided symbol or ID
+       *
+       * This function has semantics identical to @ref get_objects
+       */
+      optional<asset_object> lookup_asset_symbol(const string& symbols_or_id) const;
 
       /////////////////////
       // Markets / feeds //
@@ -414,7 +423,20 @@ class database_api
        */
       vector<market_trade> get_trade_history( const string& base, const string& quote, fc::time_point_sec start, fc::time_point_sec stop, unsigned limit = 100 )const;
 
+      /**
+       * @brief Check if an asset issue with the corresponding unique was completed on the chain.
+       * @param unique_id The unique indentifier string for a single issue
+       * @param asset The name or id of the asset.
+       * @return True if the issue has been completed, false otherwise.
+       **/
+      bool check_issued_asset(const string& unique_id, const string& asset) const;
 
+      /**
+       * @brief Check if a webeur issue with the corresponding unique was completed on the chain.
+       * @param unique_id The unique indentifier string for a single issue
+       * @return True if the issue has been completed, false otherwise.
+       **/
+      bool check_issued_webeur(const string& unique_id) const;
 
       ///////////////
       // Witnesses //
@@ -711,6 +733,7 @@ FC_API( graphene::app::database_api,
    (get_assets)
    (list_assets)
    (lookup_asset_symbols)
+   (lookup_asset_symbol)
 
    // Markets / feeds
    (get_order_book)
@@ -723,6 +746,8 @@ FC_API( graphene::app::database_api,
    (get_ticker)
    (get_24_volume)
    (get_trade_history)
+   (check_issued_asset)
+   (check_issued_webeur)
 
    // Witnesses
    (get_witnesses)

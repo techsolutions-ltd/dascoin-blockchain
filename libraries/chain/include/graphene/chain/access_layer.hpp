@@ -179,6 +179,9 @@ class database_access_layer {
     acc_id_queue_subs_w_pos_res get_queue_submissions_with_pos(account_id_type account_id) const;
     vector<acc_id_queue_subs_w_pos_res> get_queue_submissions_with_pos_for_accounts(vector<account_id_type> ids) const;
 
+    // Requests:
+    optional<issued_asset_record_object> get_issued_asset_record(const string& unique_id, asset_id_type asset_id) const;
+
     // Vaults:
     optional<vault_info_res> get_vault_info(account_id_type vault_id) const;
 

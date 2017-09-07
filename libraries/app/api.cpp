@@ -366,6 +366,7 @@ namespace graphene { namespace app {
                   assert( nullptr != iaro );
                   result.push_back( iaro->issuer );
                   result.push_back( iaro->receiver );
+                  break;
                } case impl_block_summary_object_type:
                   break;
                  case impl_account_transaction_history_object_type:

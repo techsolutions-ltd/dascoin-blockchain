@@ -184,6 +184,19 @@ optional<vault_info_res> database_access_layer::get_vault_info(account_id_type v
                           license_information};
 }
 
+// TODO: combine, refactor, remove lambda.
+optional<asset_object> database_access_layer::lookup_asset_symbol(const string& symbol_or_id) const
+{
+    const auto& assets_by_symbol = _db.get_index_type<asset_index>().indices().get<by_symbol>();
+    if( !symbol_or_id.empty() && std::isdigit(symbol_or_id[0]) )
+    {
+        auto ptr = _db.find(variant(symbol_or_id).as<asset_id_type>());
+        return ptr == nullptr ? optional<asset_object>{} : *ptr;
+    }
+    auto itr = assets_by_symbol.find(symbol_or_id);
+    return itr == assets_by_symbol.end() ? optional<asset_object>{} : *itr;
+}
+
 vector<optional<asset_object>> database_access_layer::lookup_asset_symbols(const vector<string>& symbols_or_ids) const
 {
     const auto& assets_by_symbol = _db.get_index_type<asset_index>().indices().get<by_symbol>();

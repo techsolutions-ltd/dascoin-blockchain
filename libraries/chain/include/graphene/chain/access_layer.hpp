@@ -186,6 +186,7 @@ class database_access_layer {
     optional<vault_info_res> get_vault_info(account_id_type vault_id) const;
 
     // Assets:
+    optional<asset_object> lookup_asset_symbol(const string& symbol_or_id) const;
     vector<optional<asset_object>> lookup_asset_symbols(const vector<string>& symbols_or_ids) const;
 
   private:

@@ -122,7 +122,7 @@ struct vault_info_res {
     optional<license_information_object> license_information;
 
     vault_info_res() = default;
-    vault_info_res(share_type cash_balance,
+    explicit vault_info_res(share_type cash_balance,
         share_type reserved_balance,
         share_type dascoin_balance,
         share_type free_cycle_balance,
@@ -146,7 +146,7 @@ struct acc_id_vault_info_res : public acc_id_res {
     using result_t = optional<vault_info_res>;
 
     acc_id_vault_info_res() = default;
-    acc_id_vault_info_res(account_id_type account_id, result_t result = {})
+    explicit acc_id_vault_info_res(account_id_type account_id, result_t result = {})
         : acc_id_res(account_id), result(result) {}
 
     result_t result;

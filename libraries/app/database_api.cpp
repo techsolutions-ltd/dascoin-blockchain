@@ -1022,7 +1022,7 @@ vector<optional<asset_object>> database_api::lookup_asset_symbols(const vector<s
 
 vector<optional<asset_object>> database_api_impl::lookup_asset_symbols(const vector<string>& symbols_or_ids)const
 {
-   return _dal.lookup_asset_symbols(symbols_or_ids);
+   return _dal.lookup_asset_symbols( symbols_or_ids );
 }
 
 //////////////////////////////////////////////////////////////////////

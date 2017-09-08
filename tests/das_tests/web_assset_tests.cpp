@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE( check_issued_webeur_test )
 { try {
   ACTOR(wallet);
 
-  const auto created_record = issue_webasset("NL1", wallet_id, 100, 100);
+  auto created_record = issue_webasset("NL1", wallet_id, 100, 100);
   BOOST_CHECK( created_record != nullptr );
   bool found = _dal.check_issued_webeur("NL1");
   BOOST_CHECK( found );
@@ -191,6 +191,14 @@ BOOST_AUTO_TEST_CASE( check_issued_webeur_test )
   // This was never issued:
   found = _dal.check_issued_webeur("FOO");
   BOOST_CHECK( !found );
+
+  // Issue another one, different unique id:
+  created_record = issue_webasset("NL2", wallet_id, 100, 100);
+  BOOST_CHECK( created_record != nullptr );
+
+  // The first one should still be reachable:
+  found = _dal.check_issued_webeur("NL1");
+  BOOST_CHECK( found );
 
 } FC_LOG_AND_RETHROW() }
 

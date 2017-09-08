@@ -207,7 +207,7 @@ vector<optional<asset_object>> database_access_layer::lookup_asset_symbols(const
                        if( !symbol_or_id.empty() && std::isdigit(symbol_or_id[0]) )
                        {
                            auto ptr = _db.find(variant(symbol_or_id).as<asset_id_type>());
-                           return ptr == nullptr? optional<asset_object>() : *ptr;
+                           return ptr == nullptr ? optional<asset_object>() : *ptr;
                        }
                        auto itr = assets_by_symbol.find(symbol_or_id);
                        return itr == assets_by_symbol.end() ? optional<asset_object>() : *itr;

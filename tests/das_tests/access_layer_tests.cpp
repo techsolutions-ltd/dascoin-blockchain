@@ -199,6 +199,23 @@ BOOST_AUTO_TEST_CASE( get_all_cycle_balances_for_accounts_unit_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( lookup_asset_symbol_unit_test )
+{ try {
+  const auto& symbol = _dal.lookup_asset_symbol("1.3.1");
+  BOOST_CHECK( symbol.valid() );
+
+  const auto& symbol2 = _dal.lookup_asset_symbol("WEBEUR");
+  BOOST_CHECK( symbol2.valid() );
+
+  // Non existing assets here:
+  const auto& symbol3 = _dal.lookup_asset_symbol("FOO");
+  BOOST_CHECK( !symbol3.valid() );
+
+  const auto& symbol4 = _dal.lookup_asset_symbol("1.3.4");
+  BOOST_CHECK( !symbol4.valid() );
+
+} FC_LOG_AND_RETHROW() }
+
 /*BOOST_AUTO_TEST_CASE( get_all_cycle_balances_for_accounts_unit_test )
 { try {
   VAULT_ACTORS((first)(second)(third)(fourth))

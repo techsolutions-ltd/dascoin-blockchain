@@ -184,6 +184,17 @@ optional<vault_info_res> database_access_layer::get_vault_info(account_id_type v
                           license_information};
 }
 
+// TODO: like, seriously, refactor with template method.
+vector<acc_id_vault_info_res> database_access_layer::get_vaults_info(vector<account_id_type> vault_ids) const
+{
+    vector<acc_id_vault_info_res> result;
+    result.reserve(vault_ids.size());
+    for (auto id : vault_ids) {
+        result.emplace_back(acc_id_vault_info_res{id, get_vault_info(id)});
+    }
+    return result;
+}
+
 // TODO: combine, refactor, remove lambda.
 optional<asset_object> database_access_layer::lookup_asset_symbol(const string& symbol_or_id) const
 {

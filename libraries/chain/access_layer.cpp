@@ -210,7 +210,7 @@ vector<optional<asset_object>> database_access_layer::lookup_asset_symbols(const
                            return ptr == nullptr? optional<asset_object>() : *ptr;
                        }
                        auto itr = assets_by_symbol.find(symbol_or_id);
-                       return itr == assets_by_symbol.end()? optional<asset_object>() : *itr;
+                       return itr == assets_by_symbol.end() ? optional<asset_object>() : *itr;
                    });
     return result;
 }

@@ -188,6 +188,8 @@ class database_access_layer {
     // Assets:
     optional<asset_object> lookup_asset_symbol(const string& symbol_or_id) const;
     vector<optional<asset_object>> lookup_asset_symbols(const vector<string>& symbols_or_ids) const;
+    bool check_issued_asset(const string& unique_id, const string& asset) const;
+    bool check_issued_webeur(const string& unique_id) const;
 
   private:
     template <typename IndexType>

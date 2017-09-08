@@ -215,6 +215,23 @@ vector<optional<asset_object>> database_access_layer::lookup_asset_symbols(const
     return result;
 }
 
+bool database_access_layer::check_issued_asset(const string& unique_id, const string& asset) const
+{
+    const auto res = lookup_asset_symbol(asset);
+    if ( res.valid() )
+    {
+        const auto record = get_issued_asset_record(unique_id, res->id);
+        return record.valid();
+    }
+    return false;
+}
+
+bool database_access_layer::check_issued_webeur(const string& unique_id) const
+{
+    const auto web_id = _db.get_web_asset_id();
+    return get_issued_asset_record(unique_id, web_id).valid();
+}
+
 // TODO:
 optional<issued_asset_record_object>
 database_access_layer::get_issued_asset_record(const string& unique_id, asset_id_type asset_id) const

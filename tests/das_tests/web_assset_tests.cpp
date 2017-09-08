@@ -179,5 +179,30 @@ BOOST_AUTO_TEST_CASE( issued_asset_record_object_created_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( check_issued_webeur_test )
+{ try {
+  ACTOR(wallet);
+
+  const auto created_record = issue_webasset("NL1", wallet_id, 100, 100);
+  BOOST_CHECK( created_record != nullptr );
+  bool found = _dal.check_issued_webeur("NL1");
+  BOOST_CHECK( found );
+
+  // This was never issued:
+  found = _dal.check_issued_webeur("FOO");
+  BOOST_CHECK( !found );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( check_unique_id_when_issueing_webeur_test )
+{ try {
+  ACTOR(wallet);
+  issue_webasset("NL1", wallet_id, 100, 100);
+
+  // This will fail, unique id needs to be really unique:
+  GRAPHENE_REQUIRE_THROW( issue_webasset("NL1", wallet_id, 100, 100), fc::exception );
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_SUITE_END() // dascoin_tests::web_asset_tests
 BOOST_AUTO_TEST_SUITE_END() // dascoin_tests

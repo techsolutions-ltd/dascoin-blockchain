@@ -103,6 +103,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<optional<asset_object>> lookup_asset_symbols(const vector<string>& symbols_or_ids) const;
       optional<asset_object> lookup_asset_symbol(const string& symbol_or_id) const;
       optional<issued_asset_record_object> get_issued_asset_record(const string& unique_id, asset_id_type asset_id) const;
+      bool check_issued_asset(const string& unique_id, const string& asset) const;
 
       // Markets / feeds
       vector<limit_order_object>         get_limit_orders(asset_id_type a, asset_id_type b, uint32_t limit)const;
@@ -1256,10 +1257,15 @@ market_volume database_api_impl::get_24_volume( const string& base, const string
 
 bool database_api::check_issued_asset(const string& unique_id, const string& asset) const
 {
-    const auto res = my->lookup_asset_symbol(asset);
+    return my->check_issued_asset(unique_id, asset);
+}
+
+bool database_api_impl::check_issued_asset(const string& unique_id, const string& asset) const
+{
+    const auto res = lookup_asset_symbol(asset);
     if ( res.valid() )
     {
-        const auto record = my->get_issued_asset_record(unique_id, res->id);
+        const auto record = get_issued_asset_record(unique_id, res->id);
         return record.valid();
     }
     return false;

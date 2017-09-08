@@ -1259,7 +1259,7 @@ bool database_api::check_issued_asset(const string& unique_id, const string& ass
     const auto res = my->lookup_asset_symbol(asset);
     if ( res.valid() )
     {
-        const auto record =  my->get_issued_asset_record(unique_id, res->id);
+        const auto record = my->get_issued_asset_record(unique_id, res->id);
         return record.valid();
     }
     return false;

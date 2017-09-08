@@ -520,7 +520,10 @@ void database::reset_spending_limits()
     // Set the time of the next limit reset:
     modify(dgpo, [&](dynamic_global_property_object& dgpo){
       dgpo.last_daily_dascoin_price = dgpo.last_dascoin_price;
-      dgpo.next_spend_limit_reset = head_block_time() + fc::seconds(params.limit_interval_elapse_time_seconds);
+      uint32_t now_sec = fc::time_point::now().sec_since_epoch();
+      uint32_t next_interval = (now_sec / params.limit_interval_elapse_time_seconds) *
+                                params.limit_interval_elapse_time_seconds + params.limit_interval_elapse_time_seconds;
+      dgpo.next_spend_limit_reset = fc::time_point_sec(next_interval);
     });
   }
 

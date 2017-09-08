@@ -187,31 +187,17 @@ optional<vault_info_res> database_access_layer::get_vault_info(account_id_type v
 // TODO: combine, refactor, remove lambda.
 optional<asset_object> database_access_layer::lookup_asset_symbol(const string& symbol_or_id) const
 {
-    const auto& assets_by_symbol = _db.get_index_type<asset_index>().indices().get<by_symbol>();
-    if( !symbol_or_id.empty() && std::isdigit(symbol_or_id[0]) )
-    {
-        auto ptr = _db.find(variant(symbol_or_id).as<asset_id_type>());
-        return ptr == nullptr ? optional<asset_object>{} : *ptr;
-    }
-    auto itr = assets_by_symbol.find(symbol_or_id);
-    return itr == assets_by_symbol.end() ? optional<asset_object>{} : *itr;
+    return get_asset_symbol(_db.get_index_type<asset_index>(), symbol_or_id);
 }
 
 vector<optional<asset_object>> database_access_layer::lookup_asset_symbols(const vector<string>& symbols_or_ids) const
 {
-    const auto& assets_by_symbol = _db.get_index_type<asset_index>().indices().get<by_symbol>();
+    const auto& assets_by_symbol = _db.get_index_type<asset_index>();
     vector<optional<asset_object>> result;
     result.reserve(symbols_or_ids.size());
     std::transform(symbols_or_ids.begin(), symbols_or_ids.end(), std::back_inserter(result),
-                   [this, &assets_by_symbol](const string& symbol_or_id) -> optional<asset_object> {
-                       if( !symbol_or_id.empty() && std::isdigit(symbol_or_id[0]) )
-                       {
-                           auto ptr = _db.find(variant(symbol_or_id).as<asset_id_type>());
-                           return ptr == nullptr ? optional<asset_object>() : *ptr;
-                       }
-                       auto itr = assets_by_symbol.find(symbol_or_id);
-                       return itr == assets_by_symbol.end() ? optional<asset_object>() : *itr;
-                   });
+                   std::bind(&database_access_layer::get_asset_symbol, this, std::ref(assets_by_symbol), std::placeholders::_1));
+
     return result;
 }
 
@@ -230,6 +216,18 @@ bool database_access_layer::check_issued_webeur(const string& unique_id) const
 {
     const auto web_id = _db.get_web_asset_id();
     return get_issued_asset_record(unique_id, web_id).valid();
+}
+
+optional<asset_object> database_access_layer::get_asset_symbol(const asset_index &index, const string& symbol_or_id) const
+{
+    const auto& asset_by_symbol = index.indices().get<by_symbol>();
+    if( !symbol_or_id.empty() && std::isdigit(symbol_or_id[0]) )
+    {
+        auto ptr = _db.find(variant(symbol_or_id).as<asset_id_type>());
+        return ptr == nullptr ? optional<asset_object>{} : *ptr;
+    }
+    auto itr = asset_by_symbol.find(symbol_or_id);
+    return itr == asset_by_symbol.end() ? optional<asset_object>{} : *itr;
 }
 
 // TODO:

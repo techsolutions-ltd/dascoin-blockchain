@@ -192,6 +192,8 @@ class database_access_layer {
     bool check_issued_webeur(const string& unique_id) const;
 
   private:
+    optional<asset_object> get_asset_symbol(const asset_index &index, const string& symbol_or_id) const;
+
     template <typename IndexType>
     uint32_t size() const
     {

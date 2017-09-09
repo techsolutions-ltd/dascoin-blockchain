@@ -231,6 +231,36 @@ BOOST_AUTO_TEST_CASE( lookup_asset_symbols_unit_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( get_vaults_info_unit_test )
+{ try {
+  ACTOR(wallet)
+  VAULT_ACTOR(vault1)
+  VAULT_ACTOR(vault2)
+  VAULT_ACTOR(vault3)
+
+  auto bogus_id = account_id_type(999999);
+
+  auto w = _dal.get_vault_info(vault1_id);
+  auto v1 = _dal.get_vault_info(vault1_id);
+  auto v2 = _dal.get_vault_info(vault2_id);
+  auto v3 = _dal.get_vault_info(vault3_id);
+
+  auto res = _dal.get_vaults_info({bogus_id, wallet_id, vault1_id, vault2_id, vault3_id});
+
+  BOOST_CHECK_EQUAL( res.size(), 5 );
+
+  BOOST_CHECK( res[0].account_id == bogus_id );
+  BOOST_CHECK( !res[0].result.valid() );
+
+  BOOST_CHECK( res[1].account_id == wallet_id );
+  BOOST_CHECK( !res[1].result.valid() );
+
+  BOOST_CHECK( res[2].account_id == vault1_id );
+  BOOST_CHECK( res[2].result.valid() );
+  BOOST_CHECK( res[2].result->eur_limit == v1->eur_limit );
+
+} FC_LOG_AND_RETHROW () }
+
 /*BOOST_AUTO_TEST_CASE( get_all_cycle_balances_for_accounts_unit_test )
 { try {
   VAULT_ACTORS((first)(second)(third)(fourth))

@@ -523,7 +523,11 @@ void database::reset_spending_limits()
       uint32_t now_sec = fc::time_point::now().sec_since_epoch();
       uint32_t next_interval = (now_sec / params.limit_interval_elapse_time_seconds) *
                                 params.limit_interval_elapse_time_seconds + params.limit_interval_elapse_time_seconds;
-      dgpo.next_spend_limit_reset = fc::time_point_sec(next_interval);
+      // Move to the next interval if the current calculation returns the same point as the previous one:
+      if (fc::time_point_sec(dgpo.next_spend_limit_reset) == fc::time_point_sec(next_interval))
+        dgpo.next_spend_limit_reset = fc::time_point_sec(next_interval) + params.limit_interval_elapse_time_seconds;
+      else
+        dgpo.next_spend_limit_reset = fc::time_point_sec(next_interval);
     });
   }
 

@@ -138,7 +138,6 @@ struct vault_info_res {
       eur_limit(eur_limit),
       spent(spent),
       license_information(license_information) {}
-
 };
 
 struct acc_id_vault_info_res : public acc_id_res {

@@ -248,6 +248,17 @@ class database_access_layer {
         std::advance(end, from + amount);
         return vector<typename IndexType::object_type>(start, end);
     }
+
+    template <typename ReturnType>
+    vector<ReturnType> get_balance(const vector<account_id_type> &ids, std::function<ReturnType(account_id_type)> getter) const
+    {
+        vector<ReturnType> result;
+        result.reserve(ids.size());
+        for (auto id : ids)
+            result.emplace_back(getter(id));
+        return result;
+    }
+
     const database& _db;
 };
 }

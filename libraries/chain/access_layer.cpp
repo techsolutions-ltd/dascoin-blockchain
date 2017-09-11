@@ -61,36 +61,24 @@ acc_id_vec_cycle_agreement_res database_access_layer::get_all_cycle_balances(acc
     return {id, {result}};
 }
 
-// TODO: refactor with template method.
 vector<acc_id_share_t_res>
     database_access_layer::get_free_cycle_balances_for_accounts(vector<account_id_type> ids) const
 {
-    vector<acc_id_share_t_res> result;
-    result.reserve(ids.size());
-    for (auto id : ids)
-        result.emplace_back(get_free_cycle_balance(id));
-    return result;
+    return get_balance<acc_id_share_t_res>(ids, std::bind(&database_access_layer::get_free_cycle_balance,
+                                                          this, std::placeholders::_1));
 }
 
-// TODO: refactor with template method.
 vector<acc_id_vec_cycle_agreement_res>
     database_access_layer::get_all_cycle_balances_for_accounts(vector<account_id_type> ids) const
 {
-    vector<acc_id_vec_cycle_agreement_res> result;
-    result.reserve(ids.size());
-    for (auto id : ids)
-        result.emplace_back(get_all_cycle_balances(id));
-    return result;
+    return get_balance<acc_id_vec_cycle_agreement_res>(ids, std::bind(&database_access_layer::get_all_cycle_balances,
+                                                                       this, std::placeholders::_1));
 }
 
-// TODO: refactor with template method.
 vector<acc_id_share_t_res> database_access_layer::get_dascoin_balances_for_accounts(vector<account_id_type> ids) const
 {
-    vector<acc_id_share_t_res> result;
-    result.reserve(ids.size());
-    for (auto id : ids)
-        result.emplace_back(get_dascoin_balance(id));
-    return result;
+    return get_balance<acc_id_share_t_res>(ids, std::bind(&database_access_layer::get_dascoin_balance,
+                                                          this, std::placeholders::_1));
 }
 
 // License:
@@ -149,15 +137,11 @@ acc_id_queue_subs_w_pos_res database_access_layer::get_queue_submissions_with_po
     return {account_id, {result}};
 }
 
-// TODO: refactor with template method.
 vector<acc_id_queue_subs_w_pos_res>
     database_access_layer::get_queue_submissions_with_pos_for_accounts(vector<account_id_type> ids) const
 {
-    vector<acc_id_queue_subs_w_pos_res> result;
-    result.reserve(ids.size());
-    for (auto id : ids)
-        result.emplace_back(get_queue_submissions_with_pos(id));
-    return result;
+    return get_balance<acc_id_queue_subs_w_pos_res>(ids, std::bind(&database_access_layer::get_queue_submissions_with_pos,
+                                                                   this, std::placeholders::_1));
 }
 
 optional<vault_info_res> database_access_layer::get_vault_info(account_id_type vault_id) const
@@ -184,18 +168,13 @@ optional<vault_info_res> database_access_layer::get_vault_info(account_id_type v
                           license_information};
 }
 
-// TODO: like, seriously, refactor with template method.
 vector<acc_id_vault_info_res> database_access_layer::get_vaults_info(vector<account_id_type> vault_ids) const
 {
-    vector<acc_id_vault_info_res> result;
-    result.reserve(vault_ids.size());
-    for (auto id : vault_ids) {
-        result.emplace_back(acc_id_vault_info_res{id, get_vault_info(id)});
-    }
-    return result;
+    return get_balance<acc_id_vault_info_res>(vault_ids, [this](account_id_type account_id) -> acc_id_vault_info_res {
+        return acc_id_vault_info_res{account_id, this->get_vault_info(account_id)};
+    });
 }
 
-// TODO: combine, refactor, remove lambda.
 optional<asset_object> database_access_layer::lookup_asset_symbol(const string& symbol_or_id) const
 {
     return get_asset_symbol(_db.get_index_type<asset_index>(), symbol_or_id);

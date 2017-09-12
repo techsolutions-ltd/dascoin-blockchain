@@ -249,7 +249,7 @@ class database_access_layer {
     }
 
     template <typename ReturnType>
-    vector<ReturnType> get_balance(const vector<account_id_type> &ids, std::function<ReturnType(account_id_type)> getter) const
+    vector<ReturnType> get_balance(const vector<account_id_type>& ids, const std::function<ReturnType(account_id_type)>& getter) const
     {
         vector<ReturnType> result;
         result.reserve(ids.size());

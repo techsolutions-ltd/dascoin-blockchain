@@ -169,7 +169,7 @@ void_result transfer_vault_to_wallet_evaluator::do_evaluate(const transfer_vault
             );
 
    // If dascoin is being transferred, check daily limit constraint:
-   if (op.asset_to_transfer.asset_id == d.get_dascoin_asset_id())
+   if ( !from_acc_obj.disable_vault_to_wallet_limit && op.asset_to_transfer.asset_id == d.get_dascoin_asset_id() )
    {
       FC_ASSERT( from_balance_obj.spent + op.asset_to_transfer.amount <= from_balance_obj.limit,
                  "Cash limit has been exceeded, ${spent}/${max} on account ${a}",

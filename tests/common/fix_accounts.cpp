@@ -115,4 +115,22 @@ const account_balance_object& database_fixture::get_account_balance_object(accou
   return db.get_balance_object(account_id, asset_id);
 }
 
+void database_fixture::set_vault_to_wallet_limit_toggle(account_id_type account_id, bool flag)
+{ try {
+  const auto& account_obj = account_id(db);
+  db.modify(account_obj, [flag](account_object& ao){
+    ao.disable_vault_to_wallet_limit = flag;
+  });
+} FC_LOG_AND_RETHROW() }
+
+void database_fixture::disable_vault_to_wallet_limit(account_id_type account_id)
+{
+  set_vault_to_wallet_limit_toggle(account_id, true);
+}
+
+void database_fixture::enable_vault_to_wallet_limit(account_id_type account_id)
+{
+  set_vault_to_wallet_limit_toggle(account_id, false);
+}
+
 } }  // namespace graphene::chain

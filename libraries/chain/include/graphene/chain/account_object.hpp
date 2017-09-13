@@ -284,6 +284,11 @@ namespace graphene { namespace chain {
          uint8_t pi_level;
 
          /**
+          * If this is true, vault account observes no limits on transferring vault to wallet.
+          **/
+         bool disable_vault_to_wallet_limit = false;
+
+         /**
           * This flag is set when the top_n logic sets both authorities,
           * and gets reset when authority or special_authority is set.
           */
@@ -488,6 +493,7 @@ FC_REFLECT_DERIVED( graphene::chain::account_object, (graphene::db::object),
                     (hierarchy_depth)
                     (parents)
                     (vault)
+                    (disable_vault_to_wallet_limit)
                     (membership_expiration_date)(registrar)(referrer)(lifetime_referrer)
                     (network_fee_percentage)(lifetime_referrer_fee_percentage)(referrer_rewards_percentage)
                     (name)(owner)(active)(options)(statistics)(whitelisting_accounts)(blacklisting_accounts)

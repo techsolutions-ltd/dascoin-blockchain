@@ -188,4 +188,16 @@ void database_fixture::set_last_daily_dascoin_price(price val)
 
 } FC_LOG_AND_RETHROW() }
 
+void database_fixture::issue_dascoin(account_object& account_obj, share_type amount)
+{ try {
+  issue_dascoin(account_obj.id, amount);
+} FC_LOG_AND_RETHROW() }
+
+void database_fixture::issue_dascoin(account_id_type account_id, share_type amount)
+{ try {
+
+  db.issue_asset(account_id, amount, get_dascoin_asset_id(), 0);
+  
+} FC_LOG_AND_RETHROW() }
+
 } }  // namespace graphene::chain

@@ -139,6 +139,7 @@ namespace graphene { namespace chain {
 
             issue_free_cycles_operation,
             edit_license_type_operation,
+            update_euro_limit_operation,
 
             // Virtual operations below this point:
 
@@ -152,8 +153,7 @@ namespace graphene { namespace chain {
 
             fba_distribute_operation,
             asset_settle_cancel_operation,
-            fill_order_operation,
-            update_euro_limit_operation
+            fill_order_operation
 
          > operation;
 

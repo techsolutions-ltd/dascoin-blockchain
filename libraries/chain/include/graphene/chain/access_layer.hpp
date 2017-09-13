@@ -138,7 +138,6 @@ struct vault_info_res {
       eur_limit(eur_limit),
       spent(spent),
       license_information(license_information) {}
-
 };
 
 struct acc_id_vault_info_res : public acc_id_res {
@@ -248,6 +247,17 @@ class database_access_layer {
         std::advance(end, from + amount);
         return vector<typename IndexType::object_type>(start, end);
     }
+
+    template <typename ReturnType>
+    vector<ReturnType> get_balance(const vector<account_id_type>& ids, const std::function<ReturnType(account_id_type)>& getter) const
+    {
+        vector<ReturnType> result;
+        result.reserve(ids.size());
+        for (auto id : ids)
+            result.emplace_back(getter(id));
+        return result;
+    }
+
     const database& _db;
 };
 }

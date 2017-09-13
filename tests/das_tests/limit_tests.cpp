@@ -157,6 +157,8 @@ BOOST_AUTO_TEST_CASE( obey_limit_test )
 
   tether_accounts(wallet_id, vault_id);
 
+  BOOST_CHECK( !vault.disable_vault_to_wallet_limit );
+
   adjust_dascoin_reward(500 * DASCOIN_DEFAULT_ASSET_PRECISION);
   adjust_frequency(200);
 
@@ -187,6 +189,34 @@ BOOST_AUTO_TEST_CASE( obey_limit_test )
 
   // This will fail
   GRAPHENE_REQUIRE_THROW( transfer_dascoin_vault_to_wallet(vault_id, wallet_id, 1 * DASCOIN_DEFAULT_ASSET_PRECISION), fc::exception );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( toggle_limit_dascoin_test )
+{ try {
+  VAULT_ACTOR(sender);
+  ACTOR(receiver);
+
+  tether_accounts(receiver_id, sender_id);
+
+  BOOST_CHECK( !sender.disable_vault_to_wallet_limit );
+
+  // Give this account a bunch of dascoin and disable sending limit:
+  issue_dascoin(sender_id, 10000 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  BOOST_CHECK_EQUAL( get_balance(sender_id, get_dascoin_asset_id()), 10000 * DASCOIN_DEFAULT_ASSET_PRECISION );
+  disable_vault_to_wallet_limit(sender_id);
+  BOOST_CHECK( sender.disable_vault_to_wallet_limit );
+
+  transfer_dascoin_vault_to_wallet(sender_id, receiver_id, 10000 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  BOOST_CHECK_EQUAL( get_dascoin_balance(receiver_id), 10000 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+  issue_dascoin(sender_id, 10000 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  BOOST_CHECK_EQUAL( get_balance(sender_id, get_dascoin_asset_id()), 10000 * DASCOIN_DEFAULT_ASSET_PRECISION );
+  enable_vault_to_wallet_limit(sender_id);
+  BOOST_CHECK( !sender.disable_vault_to_wallet_limit );
+
+  // This will fail:
+  GRAPHENE_REQUIRE_THROW( transfer_dascoin_vault_to_wallet(sender_id, receiver_id, 10000 * DASCOIN_DEFAULT_ASSET_PRECISION), fc::exception );
 
 } FC_LOG_AND_RETHROW() }
 

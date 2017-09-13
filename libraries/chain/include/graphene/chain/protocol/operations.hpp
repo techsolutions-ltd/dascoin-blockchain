@@ -139,6 +139,7 @@ namespace graphene { namespace chain {
 
             issue_free_cycles_operation,
             edit_license_type_operation,
+            update_euro_limit_operation,
 
             // Virtual operations below this point:
 

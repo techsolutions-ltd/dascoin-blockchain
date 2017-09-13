@@ -156,6 +156,40 @@ namespace graphene { namespace chain {
       share_type      calculate_fee(const fee_parameters_type& k)const;
    };
 
+   /**
+    * @class update_euro_limit_operation
+    * @brief Allows the authority to disable or enable the euro limit to an account
+    * @ingroup operations
+    */
+   struct update_euro_limit_operation : public base_operation
+   {
+      struct fee_parameters_type {};
+
+      asset           fee;
+      account_id_type authority;
+      // Account to set or reset limit
+      account_id_type account;
+      // Disable or enable limit
+      bool            disable_limit;
+      // Optional amount of euro limit
+      optional<share_type> eur_limit;
+      // Comment
+      string          comment;
+      extensions_type extensions;
+
+      update_euro_limit_operation() = default;
+      explicit update_euro_limit_operation(account_id_type authority, account_id_type account, bool disable_limit,
+                                           optional<share_type> eur_limit, string comment)
+         : authority(authority),
+           account(account),
+           disable_limit(disable_limit),
+           eur_limit(eur_limit),
+           comment(comment) {}
+
+      account_id_type fee_payer()const { return authority; }
+      void            validate()const;
+      share_type      calculate_fee(const fee_parameters_type& k)const { return 0; }
+   };
 }} // graphene::chain
 
 ////////////////////////////////
@@ -193,5 +227,17 @@ FC_REFLECT( graphene::chain::transfer_wallet_to_vault_operation,
             (to_vault)
             (asset_to_transfer)
             (reserved_to_transfer)
+            (extensions)
+          )
+
+// update_euro_limit_operation:
+FC_REFLECT( graphene::chain::update_euro_limit_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::update_euro_limit_operation,
+            (fee)
+            (authority)
+            (account)
+            (disable_limit)
+            (eur_limit)
+            (comment)
             (extensions)
           )

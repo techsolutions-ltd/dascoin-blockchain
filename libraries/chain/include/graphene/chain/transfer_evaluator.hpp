@@ -54,6 +54,7 @@ namespace graphene { namespace chain {
          void_result do_evaluate( const operation_type& o );
          void_result do_apply( const operation_type& o );
 
+      private:
          const account_balance_object* from_balance_obj_;
          const account_balance_object* to_balance_obj_;
    };
@@ -66,8 +67,21 @@ namespace graphene { namespace chain {
          void_result do_evaluate( const operation_type& o );
          void_result do_apply( const operation_type& o );
 
+      private:
          const account_balance_object* from_balance_obj_;
          const account_balance_object* to_balance_obj_;
+   };
+
+   class update_euro_limit_evaluator : public evaluator<update_euro_limit_evaluator>
+   {
+      public:
+         typedef update_euro_limit_operation operation_type;
+
+         void_result do_evaluate( const operation_type& op );
+         void_result do_apply( const operation_type& op );
+
+      private:
+         const account_object* _account_obj = nullptr;
    };
 
 } } // graphene::chain

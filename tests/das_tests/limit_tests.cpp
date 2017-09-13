@@ -220,6 +220,39 @@ BOOST_AUTO_TEST_CASE( toggle_limit_dascoin_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( update_euro_limit_operation_test )
+{ try {
+  VAULT_ACTOR(sender);
+  ACTOR(receiver);
+
+  tether_accounts(receiver_id, sender_id);
+  issue_dascoin(sender_id, 10000 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+  BOOST_CHECK_EQUAL( get_dascoin_balance(sender_id), 10000 * DASCOIN_DEFAULT_ASSET_PRECISION );
+  BOOST_CHECK( !sender.disable_vault_to_wallet_limit );
+
+  // Turn off limit:
+  push_op(update_euro_limit_operation(get_license_administrator_id(), sender_id, true, {}, "foo"));
+  BOOST_CHECK_EQUAL( get_dascoin_balance(sender_id), 10000 * DASCOIN_DEFAULT_ASSET_PRECISION );
+  BOOST_CHECK_EQUAL( get_dascoin_balance(receiver_id), 0 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+  BOOST_CHECK( sender.disable_vault_to_wallet_limit );
+
+  // Transfer 5,000 das:
+  transfer_dascoin_vault_to_wallet(sender_id, receiver_id, 5000 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  BOOST_CHECK_EQUAL( get_dascoin_balance(sender_id), 5000 * DASCOIN_DEFAULT_ASSET_PRECISION );
+  BOOST_CHECK_EQUAL( get_dascoin_balance(receiver_id), 5000 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+  // Turn limit back on:
+  push_op(update_euro_limit_operation(get_license_administrator_id(), sender_id, false, {}, "foo"));
+
+  BOOST_CHECK( !sender.disable_vault_to_wallet_limit );
+
+  // This will fail:
+  GRAPHENE_REQUIRE_THROW( transfer_dascoin_vault_to_wallet(sender_id, receiver_id, 5000 * DASCOIN_DEFAULT_ASSET_PRECISION), fc::exception );
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_CASE( get_vault_info_unit_test )
 { try {
   ACTOR(wallet)

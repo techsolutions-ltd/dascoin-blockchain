@@ -276,4 +276,32 @@ void_result transfer_wallet_to_vault_evaluator::do_apply(const transfer_wallet_t
 
 } FC_CAPTURE_AND_RETHROW((op)) }
 
+void_result update_euro_limit_evaluator::do_evaluate(const operation_type &op)
+{ try {
+   const database& d = db();
+
+   const auto license_admin_id = d.get_global_properties().authorities.license_administrator;
+
+   const account_object& authority_obj = op.authority(d);
+   const account_object& acc_obj = op.account(d);
+
+   d.perform_chain_authority_check("license administration", license_admin_id, authority_obj);
+
+   FC_ASSERT( acc_obj.is_vault(), "Account '${acc_id}' needs to be a vault account", ("acc_id", acc_obj.id) );
+   _account_obj = &acc_obj;
+
+   return {};
+} FC_CAPTURE_AND_RETHROW((op)) }
+
+void_result update_euro_limit_evaluator::do_apply(const operation_type &op)
+{ try {
+   auto& d = db();
+
+   d.modify(*_account_obj, [op](account_object &acc_obj){
+
+   });
+
+   return {};
+} FC_CAPTURE_AND_RETHROW((op)) }
+
 } } // graphene::chain

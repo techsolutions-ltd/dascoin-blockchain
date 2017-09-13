@@ -298,7 +298,7 @@ void_result update_euro_limit_evaluator::do_apply(const operation_type &op)
    auto& d = db();
 
    d.modify(*_account_obj, [op](account_object &acc_obj){
-
+       acc_obj.disable_vault_to_wallet_limit = op.disable_limit;
    });
 
    return {};

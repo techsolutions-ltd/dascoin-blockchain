@@ -82,7 +82,7 @@ namespace graphene { namespace app {
          history_api(application& app):_app(app){}
 
          /**
-          * @brief Get operations relevant to the specificed account
+          * @brief Get operations relevant to the specified account
           * @param account The account whose history should be queried
           * @param stop ID of the earliest operation to retrieve
           * @param limit Maximum number of operations to retrieve (must not exceed 100)

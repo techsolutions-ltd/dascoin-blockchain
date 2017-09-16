@@ -156,6 +156,7 @@ struct get_impacted_account_visitor
    void operator()( const board_update_chain_authority_operation& op ) 
    {
       _impacted.insert( op.account );
+      _impacted.insert( op.committee_member_account );
    }
 
    void operator()( const create_license_type_operation& op ) {}
@@ -164,6 +165,7 @@ struct get_impacted_account_visitor
 
    void operator()( const issue_license_operation& op )
    {
+      _impacted.insert( op.issuer );
       _impacted.insert( op.account );
    }
 
@@ -236,6 +238,7 @@ struct get_impacted_account_visitor
    void operator()( const update_pi_limits_operation& op )
    {
       _impacted.insert( op.pi_validator );
+      _impacted.insert( op.account );
    }
 
    void operator()( const asset_create_issue_request_operation& op )
@@ -246,6 +249,7 @@ struct get_impacted_account_visitor
 
    void operator()( const asset_distribute_completed_request_operation& op )
    {
+      _impacted.insert( op.issuer );
       _impacted.insert( op.receiver );
    }
 
@@ -261,16 +265,19 @@ struct get_impacted_account_visitor
 
    void operator()( const transfer_vault_to_wallet_operation& op )
    {
+      _impacted.insert( op.from_vault );
       _impacted.insert( op.to_wallet );
    }
 
    void operator()( const transfer_wallet_to_vault_operation& op )
    {
+      _impacted.insert( op.from_wallet );
       _impacted.insert( op.to_vault );
    }
 
    void operator()( const submit_reserve_cycles_to_queue_operation& op ) 
    {
+      _impacted.insert( op.issuer );
       _impacted.insert( op.account );
    }
 
@@ -281,11 +288,13 @@ struct get_impacted_account_visitor
 
    void operator()( const record_submit_reserve_cycles_to_queue_operation& op )
    {
+      _impacted.insert( op.cycle_issuer );
       _impacted.insert( op.account );
    }
 
    void operator()( const record_submit_charter_license_cycles_operation& op )
    {
+      _impacted.insert( op.license_issuer );
       _impacted.insert( op.account );
    }
 
@@ -304,6 +313,7 @@ struct get_impacted_account_visitor
    void operator() ( const issue_free_cycles_operation& op )
    {
       _impacted.insert( op.authority );
+      _impacted.insert( op.account );
    }
 
    void operator() ( const update_euro_limit_operation& op )

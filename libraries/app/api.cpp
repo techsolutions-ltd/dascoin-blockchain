@@ -424,26 +424,27 @@ namespace graphene { namespace app {
                                                                        unsigned limit,
                                                                        operation_history_id_type start ) const
     {
+       return get_account_history_impl(account,
+                                       [](const account_transaction_history_object*) { return true; },
+                                       stop,
+                                       limit,
+                                       start);
+    }
+
+    vector<operation_history_object> history_api::get_account_history_by_operation(account_id_type account,
+                                                                      flat_set<uint32_t> operation_types,
+                                                                      operation_history_id_type stop,
+                                                                      unsigned limit,
+                                                                      operation_history_id_type start) const
+    {
        FC_ASSERT( _app.chain_database() );
        const auto& db = *_app.chain_database();
-       FC_ASSERT( limit <= 100 );
-       vector<operation_history_object> result;
-       const auto& stats = account(db).statistics(db);
-       if( stats.most_recent_op == account_transaction_history_id_type() ) return result;
-       const account_transaction_history_object* node = &stats.most_recent_op(db);
-       if( start == operation_history_id_type() )
-          start = node->operation_id;
-
-       while(node && node->operation_id.instance.value > stop.instance.value && result.size() < limit)
-       {
-          if( node->operation_id.instance.value <= start.instance.value )
-             result.push_back( node->operation_id(db) );
-          if( node->next == account_transaction_history_id_type() )
-             node = nullptr;
-          else node = &node->next(db);
-       }
-
-       return result;
+       return get_account_history_impl(account,
+                                       [&operation_types, &db](const account_transaction_history_object* node) {
+                                           return operation_types.find(node->operation_id(db).op.which()) != operation_types.end(); },
+                                       stop,
+                                       limit,
+                                       start);
     }
 
     vector<operation_history_object> history_api::get_relative_account_history( account_id_type account,
@@ -506,6 +507,34 @@ namespace graphene { namespace app {
        }
        return result;
     } FC_CAPTURE_AND_RETHROW( (a)(b)(bucket_seconds)(start)(end) ) }
+
+    vector<operation_history_object> history_api::get_account_history_impl( account_id_type account,
+                                                                            const std::function<bool(const account_transaction_history_object* node)> &selector,
+                                                                            operation_history_id_type stop,
+                                                                            unsigned limit,
+                                                                            operation_history_id_type start ) const
+    {
+        FC_ASSERT( _app.chain_database() );
+        const auto& db = *_app.chain_database();
+        FC_ASSERT( limit <= 100 );
+        vector<operation_history_object> result;
+        const auto& stats = account(db).statistics(db);
+        if( stats.most_recent_op == account_transaction_history_id_type() ) return result;
+        const account_transaction_history_object* node = &stats.most_recent_op(db);
+        if( start == operation_history_id_type() )
+            start = node->operation_id;
+
+        while(node && node->operation_id.instance.value > stop.instance.value && result.size() < limit)
+        {
+            if( node->operation_id.instance.value <= start.instance.value && selector(node) )
+                result.push_back( node->operation_id(db) );
+            if( node->next == account_transaction_history_id_type() )
+                node = nullptr;
+            else node = &node->next(db);
+        }
+
+        return result;
+    }
 
     crypto_api::crypto_api(){};
 

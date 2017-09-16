@@ -93,6 +93,20 @@ namespace graphene { namespace app {
                                                               operation_history_id_type stop = operation_history_id_type(),
                                                               unsigned limit = 100,
                                                               operation_history_id_type start = operation_history_id_type())const;
+        /**
+         * @brief Get operations of a given type, relevant to the specified account
+         * @param account The account whose history should be queried
+         * @param operation_types Operation types whose history should be queried
+         * @param stop ID of the earliest operation to retrieve
+         * @param limit Maximum number of operations to retrieve (must not exceed 100)
+         * @param start ID of the most recent operation to retrieve
+         * @return A list of operations performed by account, ordered from most recent to oldest.
+         */
+        vector<operation_history_object> get_account_history_by_operation(account_id_type account,
+                                                                          flat_set<uint32_t> operation_types,
+                                                                          operation_history_id_type stop = operation_history_id_type(),
+                                                                          unsigned limit = 100,
+                                                                          operation_history_id_type start = operation_history_id_type())const;
          /**
           * @breif Get operations relevant to the specified account referenced
           * by an event numbering specific to the account. The current number of operations
@@ -114,8 +128,16 @@ namespace graphene { namespace app {
          vector<bucket_object> get_market_history( asset_id_type a, asset_id_type b, uint32_t bucket_seconds,
                                                    fc::time_point_sec start, fc::time_point_sec end )const;
          flat_set<uint32_t> get_market_history_buckets()const;
+
+      protected:
+         vector<operation_history_object> get_account_history_impl(account_id_type account,
+                                                                   const std::function<bool(const account_transaction_history_object* node)> &selector,
+                                                                   operation_history_id_type stop = operation_history_id_type(),
+                                                                   unsigned limit = 100,
+                                                                   operation_history_id_type start = operation_history_id_type())const;
+
       private:
-           application& _app;
+         application& _app;
    };
 
    /**
@@ -312,6 +334,7 @@ FC_REFLECT( graphene::app::verify_range_proof_rewind_result,
 
 FC_API(graphene::app::history_api,
        (get_account_history)
+       (get_account_history_by_operation)
        (get_relative_account_history)
        (get_fill_order_history)
        (get_market_history)

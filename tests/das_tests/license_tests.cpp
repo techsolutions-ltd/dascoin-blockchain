@@ -9,6 +9,7 @@
 #include <graphene/chain/exceptions.hpp>
 
 #include <graphene/chain/account_object.hpp>
+#include <graphene/chain/frequency_history_record_object.hpp>
 #include <graphene/chain/license_objects.hpp>
 
 #include "../common/database_fixture.hpp"
@@ -127,6 +128,14 @@ BOOST_AUTO_TEST_CASE( edit_license_type_test )
 
     BOOST_CHECK_EQUAL( lic_plus->amount.value, 200 );
     BOOST_CHECK_EQUAL( lic_plus->eur_limit.value, 10 );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( frequency_record_index_test )
+{ try {
+
+  db.create<frequency_history_record_object>([&](frequency_history_record_object& fhro){});
+  db.create<frequency_history_record_object>([&](frequency_history_record_object& fhro){});
 
 } FC_LOG_AND_RETHROW() }
 

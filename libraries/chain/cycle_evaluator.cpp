@@ -4,6 +4,7 @@
 
 #include <graphene/chain/cycle_evaluator.hpp>
 #include <graphene/chain/database.hpp>
+#include <graphene/chain/frequency_history_record_object.hpp>
 #include <graphene/chain/queue_objects.hpp>
 
 namespace graphene { namespace chain {
@@ -132,15 +133,21 @@ void_result update_global_frequency_evaluator::do_evaluate(const update_global_f
 
 } FC_CAPTURE_AND_RETHROW((op)) }
 
-void_result update_global_frequency_evaluator::do_apply(const update_global_frequency_operation& op)
+object_id_type update_global_frequency_evaluator::do_apply(const update_global_frequency_operation& op)
 { try {
   auto& d = db();
+  const auto hb_time = d.head_block_time();
 
-  d.modify(d.get_dynamic_global_properties(), [&](dynamic_global_property_object& dgpo){
+  d.modify(d.get_dynamic_global_properties(), [&op](dynamic_global_property_object& dgpo){
     dgpo.frequency = op.frequency;
   });
 
-  return {};
+  return d.create<frequency_history_record_object>([&op, hb_time](frequency_history_record_object& fhro){
+    fhro.authority = op.authority;
+    fhro.frequency = op.frequency;
+    fhro.time = hb_time;
+    fhro.comment = op.comment;
+  }).id;
 
 } FC_CAPTURE_AND_RETHROW((op)) }
 

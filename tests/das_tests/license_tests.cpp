@@ -139,6 +139,29 @@ BOOST_AUTO_TEST_CASE( frequency_record_index_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( get_frequency_history_unit_test )
+{ try {
+
+  do_op(update_global_frequency_operation(get_license_issuer_id(), 450, "TEST"));
+  const auto& fhistory = _dal.get_frequency_history();
+
+  // Here we have object in the history:
+  BOOST_CHECK_EQUAL( fhistory.size(), 1 );
+  BOOST_CHECK_EQUAL( fhistory[0].frequency.value, 450 );
+  BOOST_CHECK_EQUAL( fhistory[0].comment, "TEST" );
+
+  do_op(update_global_frequency_operation(get_license_issuer_id(), 350, "TEST2"));
+  const auto& fhistory2 = _dal.get_frequency_history();
+
+  // After second update, there should be two objects in the history:
+  BOOST_CHECK_EQUAL( fhistory2.size(), 2 );
+  BOOST_CHECK_EQUAL( fhistory2[0].frequency.value, 450 );
+  BOOST_CHECK_EQUAL( fhistory2[0].comment, "TEST" );
+  BOOST_CHECK_EQUAL( fhistory2[1].frequency.value, 350 );
+  BOOST_CHECK_EQUAL( fhistory2[1].comment, "TEST2" );
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

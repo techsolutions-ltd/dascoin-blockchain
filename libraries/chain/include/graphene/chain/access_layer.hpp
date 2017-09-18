@@ -4,6 +4,7 @@
 #pragma once
 
 #include <graphene/chain/database.hpp>
+#include <graphene/chain/frequency_history_record_object.hpp>
 #include <graphene/chain/queue_objects.hpp>
 
 #include <fc/optional.hpp>
@@ -202,6 +203,10 @@ class database_access_layer {
     bool check_issued_asset(const string& unique_id, const string& asset) const;
     bool check_issued_webeur(const string& unique_id) const;
 
+    // Frequency:
+    vector<frequency_history_record_object> get_frequency_history() const;
+    vector<frequency_history_record_object> get_frequency_history_by_page(uint32_t from, uint32_t amount) const;
+
   private:
     optional<asset_object> get_asset_symbol(const asset_index &index, const string& symbol_or_id) const;
 
@@ -235,12 +240,13 @@ class database_access_layer {
         return vector<typename IndexType::object_type>(idx.begin(), idx.end());
     }
 
-    template <typename IndexType, typename IndexBy>
+    template <typename IndexType, typename IndexBy, int MAX_ELEMENTS = 100>
     vector<typename IndexType::object_type> get_range(uint32_t from, uint32_t amount) const
     {
         const auto& idx = _db.get_index_type<IndexType>().indices().get<IndexBy>();
         FC_ASSERT(idx.size() > from, "Index out of bounds, index: ${from}, size: ${size}", ("from", from)("size", idx.size()));
         FC_ASSERT(idx.size() - from >= amount, "Index out of bounds, amount: ${amount}, size: ${size}", ("amount", amount)("size", idx.size()));
+        FC_ASSERT(amount <= MAX_ELEMENTS, "Cannot retrieve more than ${max} elements in one page", ("max", MAX_ELEMENTS));
         auto start = idx.begin();
         std::advance(start, from);
         auto end = idx.begin();

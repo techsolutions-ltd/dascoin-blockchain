@@ -250,7 +250,8 @@ namespace graphene { namespace chain {
       impl_wire_out_holder_object_type,
       impl_reward_queue_object_type,
       impl_license_information_object_type,
-      impl_issued_asset_record_object_type
+      impl_issued_asset_record_object_type,
+      impl_frequency_history_record_object_type
    };
 
    //typedef fc::unsigned_int            object_id_type;
@@ -313,6 +314,7 @@ namespace graphene { namespace chain {
    class reward_queue_object;
    class license_information_object;
    class issued_asset_record_object;
+   class frequency_history_record_object;
 
    typedef object_id< implementation_ids, impl_global_property_object_type,  global_property_object>                    global_property_id_type;
    typedef object_id< implementation_ids, impl_dynamic_global_property_object_type,  dynamic_global_property_object>    dynamic_global_property_id_type;
@@ -357,6 +359,10 @@ namespace graphene { namespace chain {
    typedef object_id<
       implementation_ids, impl_issued_asset_record_object_type, issued_asset_record_object
    > issued_asset_record_id_type;
+
+   typedef object_id<
+      implementation_ids, impl_frequency_history_record_object_type, frequency_history_record_object
+   > frequency_history_record_id_type;
 
    typedef fc::array<char, GRAPHENE_MAX_ASSET_SYMBOL_LENGTH>    symbol_type;
    typedef fc::ripemd160                                        block_id_type;
@@ -564,6 +570,7 @@ FC_REFLECT_ENUM( graphene::chain::impl_object_type,
                  (impl_reward_queue_object_type)
                  (impl_license_information_object_type)
                  (impl_issued_asset_record_object_type)
+                 (impl_frequency_history_record_object_type)
                )
 
 FC_REFLECT_TYPENAME( graphene::chain::share_type )
@@ -603,6 +610,7 @@ FC_REFLECT_TYPENAME( graphene::chain::reward_queue_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::upgrade_multiplier_type )
 FC_REFLECT_TYPENAME( graphene::chain::license_information_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::issued_asset_record_id_type )
+FC_REFLECT_TYPENAME( graphene::chain::frequency_history_record_id_type )
 
 FC_REFLECT( graphene::chain::void_t, )
 

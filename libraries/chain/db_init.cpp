@@ -35,6 +35,7 @@
 #include <graphene/chain/committee_member_object.hpp>
 #include <graphene/chain/confidential_object.hpp>
 #include <graphene/chain/fba_object.hpp>
+#include <graphene/chain/frequency_history_record_object.hpp>
 #include <graphene/chain/global_property_object.hpp>
 #include <graphene/chain/issued_asset_record_object.hpp>
 #include <graphene/chain/license_objects.hpp>
@@ -156,6 +157,9 @@ const uint8_t license_information_object::type_id;
 
 const uint8_t issued_asset_record_object::space_id;
 const uint8_t issued_asset_record_object::type_id;
+
+const uint8_t frequency_history_record_object::space_id;
+const uint8_t frequency_history_record_object::type_id;
 
 void database::initialize_genesis_transaction_state()
 {
@@ -281,6 +285,7 @@ void database::initialize_indexes()
    add_index<primary_index<reward_queue_index>>();
    add_index<primary_index<license_information_index>>();
    add_index<primary_index<issued_asset_record_index>>();
+   add_index<primary_index<frequency_history_record_index>>();
 }
 
 account_id_type database::initialize_chain_authority(const string& kind_name, const string& acc_name)

@@ -162,6 +162,29 @@ BOOST_AUTO_TEST_CASE( get_frequency_history_unit_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( get_frequency_history_by_page_unit_test )
+{ try {
+
+  for (int i = 0; i < 105; ++i)
+    do_op(update_global_frequency_operation(get_license_issuer_id(), 100 + i , "TEST"));
+
+  // This ought to fall, cannot retrieve more than 100 elements:
+  GRAPHENE_REQUIRE_THROW( _dal.get_frequency_history_by_page(0, 102), fc::exception );
+
+  // Get first 90 elements:
+  const auto& fhistory = _dal.get_frequency_history_by_page(0, 90);
+  BOOST_CHECK_EQUAL( fhistory.size(), 90 );
+  // 69th element should have frequency set to 169:
+  BOOST_CHECK_EQUAL( fhistory[69].frequency.value, 169 );
+
+  // Get 10 elements, starting from 50:
+  const auto& fhistory2 = _dal.get_frequency_history_by_page(50, 10);
+  BOOST_CHECK_EQUAL( fhistory2.size(), 10 );
+  // First element should have frequency set to 150:
+  BOOST_CHECK_EQUAL( fhistory2[0].frequency.value, 150 );
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -202,6 +202,10 @@ class database_access_layer {
     bool check_issued_asset(const string& unique_id, const string& asset) const;
     bool check_issued_webeur(const string& unique_id) const;
 
+    // Frequency:
+    vector<reward_queue_object> get_frequency_history() const;
+    vector<reward_queue_object> get_frequency_history_by_page(uint32_t from, uint32_t amount) const;
+
   private:
     optional<asset_object> get_asset_symbol(const asset_index &index, const string& symbol_or_id) const;
 

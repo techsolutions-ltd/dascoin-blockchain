@@ -288,6 +288,7 @@ FC_REFLECT( graphene::chain::issue_free_cycles_operation,
             (fee)
             (authority)
             (origin)
+            (account)
             (amount)
             (comment)
             (extensions)

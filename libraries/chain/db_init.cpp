@@ -306,8 +306,8 @@ void database::init_genesis(const genesis_state_type& genesis_state)
 { try {
 
    const auto DASCOIN_DEFAULT_START_PRICE = 
-      asset{DASCOIN_DEFAULT_STARTING_PRICE_BASE_AMOUNT, get_dascoin_asset_id()} 
-      / asset {DASCOIN_DEFAULT_STARTING_PRICE_QUOTE_AMOUNT, get_web_asset_id()}; 
+      asset{genesis_state.initial_dascoin_price.base_amount, get_dascoin_asset_id()}
+      / asset {genesis_state.initial_dascoin_price.quote_amount, get_web_asset_id()};
 
    FC_ASSERT( genesis_state.initial_timestamp != time_point_sec(), "Must initialize genesis timestamp." );
    FC_ASSERT( genesis_state.initial_timestamp.sec_since_epoch() % GRAPHENE_DEFAULT_BLOCK_INTERVAL == 0,

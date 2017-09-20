@@ -266,7 +266,6 @@
 #define DASCOIN_DEFAULT_EUR_LIMIT_PRESIDENT (static_cast<share_type>(187.50 * DASCOIN_FIAT_ASSET_PRECISION))
 ///@}
 
-
 /**
  * Dascoin default starting price components:
  */

@@ -441,7 +441,6 @@ uint32_t database::push_applied_operation( const operation& op )
    _applied_ops.emplace_back(op);
    operation_history_object& oh = *(_applied_ops.back());
    oh.block_num    = _current_block_num;
-   oh.block_timestamp = head_block_time();
    oh.trx_in_block = _current_trx_in_block;
    oh.op_in_trx    = _current_op_in_trx;
    oh.virtual_op   = _current_virtual_op++;

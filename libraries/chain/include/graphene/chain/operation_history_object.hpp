@@ -56,6 +56,8 @@ namespace graphene { namespace chain {
          operation_result  result;
          /** the block that caused this operation */
          uint32_t          block_num = 0;
+         /** the block time */
+         fc::time_point_sec block_timestamp;
          /** the transaction in the block */
          uint16_t          trx_in_block = 0;
          /** the operation within the transaction */
@@ -127,7 +129,7 @@ typedef generic_index<account_transaction_history_object, account_transaction_hi
 } } // graphene::chain
 
 FC_REFLECT_DERIVED( graphene::chain::operation_history_object, (graphene::chain::object),
-                    (op)(result)(block_num)(trx_in_block)(op_in_trx)(virtual_op) )
+                    (op)(result)(block_num)(block_timestamp)(trx_in_block)(op_in_trx)(virtual_op) )
 
 FC_REFLECT_DERIVED( graphene::chain::account_transaction_history_object, (graphene::chain::object),
                     (account)(operation_id)(sequence)(next) )

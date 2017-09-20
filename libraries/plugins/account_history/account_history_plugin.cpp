@@ -81,7 +81,10 @@ void account_history_plugin_impl::update_account_histories( const signed_block& 
       const auto& oho = db.create<operation_history_object>( [&]( operation_history_object& h )
       {
          if( o_op.valid() )
+         {
             h = *o_op;
+            h.block_timestamp = b.timestamp;
+         }
       } );
 
       if( !o_op.valid() )

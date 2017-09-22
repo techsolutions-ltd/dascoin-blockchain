@@ -17,6 +17,7 @@ if( GRAPHENE_DISABLE_UNITY_BUILD )
         db_maint.cpp
         db_management.cpp
         db_market.cpp
+        db_notify.cpp
         db_update.cpp
         db_witness_schedule.cpp
         db_license.cpp

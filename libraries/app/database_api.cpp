@@ -350,7 +350,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       boost::signals2::scoped_connection _removed_connection;
       boost::signals2::scoped_connection _applied_block_connection;
       boost::signals2::scoped_connection _pending_trx_connection;
-      map< pair<asset_id_type,asset_id_type>, std::function<void(const variant&)> >      _market_subscriptions;
+      map< pair<asset_id_type,asset_id_type>, std::function<void(const variant&)> > _market_subscriptions;
       graphene::chain::database& _db;
       database_access_layer _dal;
 };

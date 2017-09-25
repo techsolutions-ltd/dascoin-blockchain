@@ -241,6 +241,8 @@ processed_transaction database::_push_transaction( const signed_transaction& trx
    auto processed_trx = _apply_transaction( trx );
    _pending_tx.push_back(processed_trx);
 
+   notify_changed_objects();
+
    // The transaction applied successfully. Merge its changes into the pending block session.
    temp_session.merge();
 
@@ -546,7 +548,6 @@ void database::_apply_block( const signed_block& next_block )
    applied_block( next_block ); //emit
    _applied_ops.clear();
 
-   notify_changed_objects();
 } FC_CAPTURE_AND_RETHROW( (next_block.block_num()) )  }
 
 processed_transaction database::apply_transaction(const signed_transaction& trx, uint32_t skip)

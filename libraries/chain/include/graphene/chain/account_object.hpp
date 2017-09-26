@@ -223,9 +223,15 @@ namespace graphene { namespace chain {
           * update the active authority.
           */
          authority owner;
+         /// This will one will track the number of how many times the owner has been changed.
+         uint32_t owner_change_counter = 0;
+
          /// The owner authority contains the hot keys of the account. This authority has control over nearly all
          /// operations the account may perform.
          authority active;
+
+         /// This will one will track the number of how many times the active authority has been changed.
+         uint32_t active_change_counter = 0;
 
          typedef account_options  options_type;
          account_options options;
@@ -506,7 +512,7 @@ FC_REFLECT_DERIVED( graphene::chain::account_object, (graphene::db::object),
                     (disable_vault_to_wallet_limit)
                     (membership_expiration_date)(registrar)(referrer)(lifetime_referrer)
                     (network_fee_percentage)(lifetime_referrer_fee_percentage)(referrer_rewards_percentage)
-                    (name)(owner)(active)(options)(statistics)(whitelisting_accounts)(blacklisting_accounts)
+                    (name)(owner)(owner_change_counter)(active_change_counter)(active)(options)(statistics)(whitelisting_accounts)(blacklisting_accounts)
                     (whitelisted_accounts)(blacklisted_accounts)
                     (cashback_vb)
                     (owner_special_authority)
@@ -515,7 +521,7 @@ FC_REFLECT_DERIVED( graphene::chain::account_object, (graphene::db::object),
                     (pi_level)
                     (top_n_control_flags)
                     (allowed_assets)
-                    )
+                  )
 
 FC_REFLECT_DERIVED( graphene::chain::account_statistics_object, (graphene::chain::object),
                     (owner)

@@ -363,8 +363,18 @@ namespace graphene { namespace chain {
             return vault.find(account) != vault.end();
          }
 
-
          account_id_type get_id()const { return id; }
+
+         // TODO: use hierarchy depth here?
+         bool is_tethered() const
+         {
+             return !vault.empty() || !parents.empty();
+         }
+
+         bool is_tethered_to(account_id_type acc_id) const
+         {
+             return vault.find(acc_id) != vault.end() || parents.find(acc_id) != parents.end();
+         }
    };
 
    /**

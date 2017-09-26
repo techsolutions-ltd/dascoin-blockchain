@@ -110,6 +110,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
 
       // Markets / feeds
       vector<limit_order_object>         get_limit_orders(asset_id_type a, asset_id_type b, uint32_t limit)const;
+      vector<limit_order_object>         get_limit_orders_for_account(account_id_type id, asset_id_type a, asset_id_type b, uint32_t limit)const;
       vector<call_order_object>          get_call_orders(asset_id_type a, uint32_t limit)const;
       vector<force_settlement_object>    get_settle_orders(asset_id_type a, uint32_t limit)const;
       vector<call_order_object>          get_margin_positions( const account_id_type& id )const;
@@ -1094,6 +1095,41 @@ vector<limit_order_object> database_api_impl::get_limit_orders(asset_id_type a, 
       result.push_back(*limit_itr);
       ++limit_itr;
       ++count;
+   }
+
+   return result;
+}
+
+vector<limit_order_object> database_api::get_limit_orders_for_account(account_id_type id, asset_id_type a, asset_id_type b, uint32_t limit)const
+{
+   return my->get_limit_orders_for_account( id, a, b, limit );
+}
+
+/**
+ *  @return the limit orders for a given account, for both sides of the book for the two assets specified up to limit number on each side.
+ */
+vector<limit_order_object> database_api_impl::get_limit_orders_for_account(account_id_type id, asset_id_type a, asset_id_type b, uint32_t limit)const
+{
+   FC_ASSERT( limit < 200, "Limit (${limit}) needs to be lower than 200", ("limit", limit) );
+   const auto& limit_order_idx = _db.get_index_type<limit_order_index>();
+   const auto& limit_account_idx = limit_order_idx.indices().get<by_account>();
+
+   vector<limit_order_object> result;
+
+   uint32_t count = 0;
+   auto market = std::make_pair( a, b );
+   if( market.first > market.second )
+      std::swap( market.first, market.second );
+   auto limit_itr = limit_account_idx.lower_bound(id);
+   auto limit_end = limit_account_idx.upper_bound(id);
+   while(limit_itr != limit_end && count < limit)
+   {
+      if (limit_itr->get_market() == market)
+      {
+         result.push_back(*limit_itr);
+         ++count;
+      }
+      ++limit_itr;
    }
 
    return result;

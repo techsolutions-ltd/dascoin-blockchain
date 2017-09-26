@@ -261,6 +261,29 @@ BOOST_AUTO_TEST_CASE( get_vaults_info_unit_test )
 
 } FC_LOG_AND_RETHROW () }
 
+BOOST_AUTO_TEST_CASE( account_tethered_unit_test )
+{ try {
+  ACTOR(wallet);
+  VAULT_ACTOR(vault);
+
+  auto resv = _dal.get_vault_info(vault_id);
+  auto resw = _dal.get_vault_info(wallet_id);
+
+  BOOST_CHECK( !resv->is_tethered );
+  BOOST_CHECK( !resw->is_tethered );
+
+  tether_accounts(wallet_id, vault_id);
+  resv = _dal.get_vault_info(vault_id);
+  resw = _dal.get_vault_info(wallet_id);
+
+  BOOST_CHECK( resv->is_tethered );
+  BOOST_CHECK( resw->is_tethered );
+
+  BOOST_CHECK( vault.is_tethered_to(wallet_id) );
+  BOOST_CHECK( wallet.is_tethered_to(vault_id) );
+
+} FC_LOG_AND_RETHROW () }
+
 /*BOOST_AUTO_TEST_CASE( get_all_cycle_balances_for_accounts_unit_test )
 { try {
   VAULT_ACTORS((first)(second)(third)(fourth))

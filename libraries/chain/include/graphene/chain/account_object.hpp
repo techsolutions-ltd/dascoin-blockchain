@@ -223,14 +223,14 @@ namespace graphene { namespace chain {
           * update the active authority.
           */
          authority owner;
-         /// This one will track the number of how many times the owner has been changed.
+         /// This one will track the number of times the owner has been changed.
          uint32_t owner_change_counter = 0;
 
          /// The owner authority contains the hot keys of the account. This authority has control over nearly all
          /// operations the account may perform.
          authority active;
 
-         /// This one will track the number of how many times the active authority has been changed.
+         /// This one will track the number of times the active authority has been changed.
          uint32_t active_change_counter = 0;
 
          typedef account_options  options_type;

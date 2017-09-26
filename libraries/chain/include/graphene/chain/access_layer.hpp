@@ -120,6 +120,7 @@ struct vault_info_res {
     share_type dascoin_limit;
     share_type eur_limit;
     share_type spent;
+    bool       is_tethered;
     optional<license_information_object> license_information;
 
     vault_info_res() = default;
@@ -130,6 +131,7 @@ struct vault_info_res {
         share_type dascoin_limit,
         share_type eur_limit,
         share_type spent,
+        bool is_tethered,
         optional<license_information_object> license_information)
     : cash_balance(cash_balance),
       reserved_balance(reserved_balance),
@@ -138,6 +140,7 @@ struct vault_info_res {
       dascoin_limit(dascoin_limit),
       eur_limit(eur_limit),
       spent(spent),
+      is_tethered(is_tethered),
       license_information(license_information) {}
 };
 
@@ -287,6 +290,7 @@ FC_REFLECT(graphene::chain::vault_info_res,
            (dascoin_limit)
            (eur_limit)
            (spent)
+           (is_tethered)
            (license_information))
 
 FC_REFLECT_DERIVED(graphene::chain::acc_id_vault_info_res, (graphene::chain::acc_id_res), (result))

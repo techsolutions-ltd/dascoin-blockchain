@@ -258,6 +258,7 @@ bool database::check_for_blackswan( const asset_object& mia, bool enable_black_s
 
 void database::clear_expired_orders()
 { try {
+   bool send_updates = false;
    detail::with_skip_flags( *this,
       get_node_properties().skip_flags | skip_authority_check, [&](){
          transaction_evaluation_state cancel_context(this);
@@ -283,9 +284,14 @@ void database::clear_expired_orders()
             // - if the fee is incorrect, which may happen due to #435 (although since cancel is a fixed-fee op, it shouldn't)
             cancel_context.skip_fee_schedule_check = true;
             apply_operation(cancel_context, canceler);
+            send_updates = true;
          }
      });
 
+   if (send_updates)
+       notify_changed_objects();
+
+   // TODO: call notify_changed_objects when handling settlements too.
    //Process expired force settlement orders
    auto& settlement_index = get_index_type<force_settlement_index>().indices().get<by_expiration>();
    if( !settlement_index.empty() )

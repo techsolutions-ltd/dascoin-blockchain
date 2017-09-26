@@ -176,6 +176,8 @@ optional<vault_info_res> database_access_layer::get_vault_info(account_id_type v
                           eur_limit,
                           dascoin_balance.spent,
                           account->is_tethered(),
+                          account->owner_change_counter,
+                          account->active_change_counter,
                           license_information};
 }
 

@@ -485,11 +485,13 @@ object_id_type change_public_keys_evaluator::do_apply(const change_public_keys_o
       if(op.owner)
       {
          ao.owner = *op.owner;
+         ao.owner_change_counter++;
          ao.top_n_control_flags = 0;  // Legacy bitshares flag.
       }
       if(op.active)
       {
          ao.active = *op.active;
+         ao.active_change_counter++;
          ao.top_n_control_flags = 0;  // Legacy bitshares flag.
       }
    });

@@ -34,11 +34,19 @@ BOOST_AUTO_TEST_CASE( get_free_cycle_balance_non_existant_id_unit_test )
   BOOST_CHECK(vault.active.num_auths() == 2);
   BOOST_CHECK(vault.active.key_auths.at(key_id) == 1);
   BOOST_CHECK(vault.active.key_auths.at(init_account_pub_key) == 1);
+  BOOST_CHECK(vault.active_change_counter == 1);
 
   BOOST_CHECK(vault.owner.weight_threshold == 2);
   BOOST_CHECK(vault.owner.num_auths() == 2);
   BOOST_CHECK(vault.owner.key_auths.at(key_id) == 1);
   BOOST_CHECK(vault.owner.key_auths.at(init_account_pub_key) == 1);
+  BOOST_CHECK(vault.owner_change_counter == 1);
+
+  do_op(change_public_keys_operation(vault_id, {owner}, {active}));
+
+  // Keys are changed twice at this point:
+  BOOST_CHECK(vault.active_change_counter == 2);
+  BOOST_CHECK(vault.owner_change_counter == 2);
 
 } FC_LOG_AND_RETHROW() }
 

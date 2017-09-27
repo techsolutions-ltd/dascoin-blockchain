@@ -267,20 +267,18 @@ BOOST_AUTO_TEST_CASE( account_tethered_unit_test )
   VAULT_ACTOR(vault);
 
   auto resv = _dal.get_vault_info(vault_id);
-  auto resw = _dal.get_vault_info(wallet_id);
 
+  BOOST_CHECK( resv.valid() );
   BOOST_CHECK( !resv->is_tethered );
-  BOOST_CHECK( !resw->is_tethered );
+  BOOST_CHECK( !wallet.is_tethered() );
 
   tether_accounts(wallet_id, vault_id);
   resv = _dal.get_vault_info(vault_id);
-  resw = _dal.get_vault_info(wallet_id);
 
   BOOST_CHECK( resv->is_tethered );
-  BOOST_CHECK( resw->is_tethered );
-
-  BOOST_CHECK( vault.is_tethered_to(wallet_id) );
+  BOOST_CHECK( wallet.is_tethered() );
   BOOST_CHECK( wallet.is_tethered_to(vault_id) );
+  BOOST_CHECK( vault.is_tethered_to(wallet_id) );
 
 } FC_LOG_AND_RETHROW () }
 

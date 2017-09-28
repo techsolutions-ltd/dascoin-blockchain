@@ -109,7 +109,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       bool check_issued_webeur(const string& unique_id) const;
 
       // Markets / feeds
-      limit_orders                       get_limit_orders(asset_id_type a, asset_id_type b, uint32_t limit)const;
+      vector<limit_order_object>         get_limit_orders(asset_id_type a, asset_id_type b, uint32_t limit)const;
       vector<limit_order_object>         get_limit_orders_for_account(account_id_type id, asset_id_type a, asset_id_type b, uint32_t limit)const;
       vector<call_order_object>          get_call_orders(asset_id_type a, uint32_t limit)const;
       vector<force_settlement_object>    get_settle_orders(asset_id_type a, uint32_t limit)const;
@@ -1063,7 +1063,7 @@ vector<optional<asset_object>> database_api_impl::lookup_asset_symbols(const vec
 //                                                                  //
 //////////////////////////////////////////////////////////////////////
 
-limit_orders database_api::get_limit_orders(asset_id_type a, asset_id_type b, uint32_t limit)const
+vector<limit_order_object> database_api::get_limit_orders(asset_id_type a, asset_id_type b, uint32_t limit)const
 {
    return my->get_limit_orders( a, b, limit );
 }
@@ -1071,29 +1071,28 @@ limit_orders database_api::get_limit_orders(asset_id_type a, asset_id_type b, ui
 /**
  *  @return the limit orders for both sides of the book for the two assets specified up to limit number on each side.
  */
-limit_orders database_api_impl::get_limit_orders(asset_id_type a, asset_id_type b, uint32_t limit)const
+vector<limit_order_object> database_api_impl::get_limit_orders(asset_id_type a, asset_id_type b, uint32_t limit)const
 {
    const auto& limit_order_idx = _db.get_index_type<limit_order_index>();
    const auto& limit_price_idx = limit_order_idx.indices().get<by_price>();
 
-   limit_orders result;
+   vector<limit_order_object> result;
 
    uint32_t count = 0;
    auto limit_itr = limit_price_idx.lower_bound(price::max(a,b));
    auto limit_end = limit_price_idx.upper_bound(price::min(a,b));
    while(limit_itr != limit_end && count < limit)
    {
-      result.buy.push_back(*limit_itr);
+      result.push_back(*limit_itr);
       ++limit_itr;
       ++count;
    }
-
    count = 0;
    limit_itr = limit_price_idx.lower_bound(price::max(b,a));
    limit_end = limit_price_idx.upper_bound(price::min(b,a));
    while(limit_itr != limit_end && count < limit)
    {
-      result.sell.push_back(*limit_itr);
+      result.push_back(*limit_itr);
       ++limit_itr;
       ++count;
    }
@@ -1382,21 +1381,24 @@ order_book database_api_impl::get_order_book( const string& base, const string& 
          return asset_to_real( p.quote, assets[0]->precision ) / asset_to_real( p.base, assets[1]->precision );
    };
 
-   for( const auto& o : orders.buy )
+   for( const auto& o : orders )
    {
-      order ord;
-      ord.price = price_to_real( o.sell_price );
-      ord.quote = asset_to_real( share_type( ( uint128_t( o.for_sale.value ) * o.sell_price.quote.amount.value ) / o.sell_price.base.amount.value ), assets[1]->precision );
-      ord.base = asset_to_real( o.for_sale, assets[0]->precision );
-      result.bids.push_back( ord );
-   }
-   for( const auto& o : orders.sell )
-   {
-      order ord;
-      ord.price = price_to_real( o.sell_price );
-      ord.quote = asset_to_real( o.for_sale, assets[1]->precision );
-      ord.base = asset_to_real( share_type( ( uint64_t( o.for_sale.value ) * o.sell_price.quote.amount.value ) / o.sell_price.base.amount.value ), assets[0]->precision );
-      result.asks.push_back( ord );
+      if( o.sell_price.base.asset_id == base_id )
+      {
+         order ord;
+         ord.price = price_to_real( o.sell_price );
+         ord.quote = asset_to_real( share_type( ( uint128_t( o.for_sale.value ) * o.sell_price.quote.amount.value ) / o.sell_price.base.amount.value ), assets[1]->precision );
+         ord.base = asset_to_real( o.for_sale, assets[0]->precision );
+         result.bids.push_back( ord );
+      }
+      else
+      {
+         order ord;
+         ord.price = price_to_real( o.sell_price );
+         ord.quote = asset_to_real( o.for_sale, assets[1]->precision );
+         ord.base = asset_to_real( share_type( ( uint64_t( o.for_sale.value ) * o.sell_price.quote.amount.value ) / o.sell_price.base.amount.value ), assets[0]->precision );
+         result.asks.push_back( ord );
+      }
    }
 
    return result;

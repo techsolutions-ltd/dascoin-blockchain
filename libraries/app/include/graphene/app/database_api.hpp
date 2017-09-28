@@ -112,12 +112,6 @@ struct market_trade
    double                     value;
 };
 
-struct limit_orders
-{
-   vector<limit_order_object> buy;
-   vector<limit_order_object> sell;
-};
-
 /**
  * @brief The database_api class implements the RPC API for the chain database.
  *
@@ -348,9 +342,9 @@ class database_api
        * @param a ID of asset being sold
        * @param b ID of asset being purchased
        * @param limit Maximum number of orders to retrieve
-       * @return The limit orders, ordered from least price to greatest in two vectors one for buy one for sell orders
+       * @return The limit orders, ordered from least price to greatest
        */
-      limit_orders get_limit_orders(asset_id_type a, asset_id_type b, uint32_t limit)const;
+      vector<limit_order_object>get_limit_orders(asset_id_type a, asset_id_type b, uint32_t limit)const;
 
       /**
        * @brief Get limit orders for an account, in a given market
@@ -709,7 +703,6 @@ FC_REFLECT( graphene::app::order_book, (base)(quote)(bids)(asks) );
 FC_REFLECT( graphene::app::market_ticker, (base)(quote)(latest)(lowest_ask)(highest_bid)(percent_change)(base_volume)(quote_volume) );
 FC_REFLECT( graphene::app::market_volume, (base)(quote)(base_volume)(quote_volume) );
 FC_REFLECT( graphene::app::market_trade, (date)(price)(amount)(value) );
-FC_REFLECT( graphene::app::limit_orders, (buy)(sell) );
 
 FC_API( graphene::app::database_api,
    // Objects

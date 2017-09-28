@@ -3031,7 +3031,7 @@ vector<bucket_object> wallet_api::get_market_history( string symbol1, string sym
    return my->_remote_hist->get_market_history( get_asset_id(symbol1), get_asset_id(symbol2), bucket, fc::time_point_sec(), fc::time_point::now() );
 }
 
-limit_orders wallet_api::get_limit_orders(string a, string b, uint32_t limit)const
+vector<limit_order_object> wallet_api::get_limit_orders(string a, string b, uint32_t limit)const
 {
    return my->_remote_db->get_limit_orders(get_asset(a).id, get_asset(b).id, limit);
 }

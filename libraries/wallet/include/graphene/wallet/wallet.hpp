@@ -337,7 +337,7 @@ class wallet_api
 
 
       vector<bucket_object>             get_market_history(string symbol, string symbol2, uint32_t bucket)const;
-      limit_orders                      get_limit_orders(string a, string b, uint32_t limit)const;
+      vector<limit_order_object>        get_limit_orders(string a, string b, uint32_t limit)const;
       vector<call_order_object>         get_call_orders(string a, uint32_t limit)const;
       vector<force_settlement_object>   get_settle_orders(string a, uint32_t limit)const;
 

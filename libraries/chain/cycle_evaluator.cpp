@@ -4,6 +4,7 @@
 
 #include <graphene/chain/cycle_evaluator.hpp>
 #include <graphene/chain/database.hpp>
+#include <graphene/chain/frequency_history_record_object.hpp>
 #include <graphene/chain/queue_objects.hpp>
 
 namespace graphene { namespace chain {
@@ -61,6 +62,15 @@ void_result submit_cycles_to_queue_evaluator::do_evaluate(const submit_cycles_to
              ("b", balance_obj.balance)
            );
 
+  // Make sure that the frequency matches the global frequency:
+  const auto GLOB_FREQUENCY = d.get_dynamic_global_properties().frequency;
+  FC_ASSERT( op.frequency == GLOB_FREQUENCY,
+             "Submit frequency ${op_f} must be equal to global frequency ${glob_f}",
+             // This hack should display the frequency with decimals, eg. 2.50 instead of 250.
+             ("op_f", asset(op.frequency, d.get_web_asset_id()))
+             ("glob_f", asset(GLOB_FREQUENCY, d.get_web_asset_id()))
+           );
+
   _account_obj = &account_obj;
   return {};
 
@@ -72,15 +82,9 @@ object_id_type submit_cycles_to_queue_evaluator::do_apply(const submit_cycles_to
 
   // Spend cycles, decrease balance and supply:
   d.reserve_cycles(op.account, op.amount);
-
-  frequency_type frequency = 0;
-  if( _account_obj->license_information.valid() )
-    frequency = (*_account_obj->license_information)(d).frequency_lock;
-  if ( 0 == frequency )
-    frequency = d.get_dynamic_global_properties().frequency;
-
   auto origin = fc::reflector<dascoin_origin_kind>::to_string(user_submit);
-  return d.push_queue_submission(origin, /* license = */{}, op.account, op.amount, frequency, "");
+  return d.push_queue_submission(origin, /* license = */{}, op.account, op.amount, 
+                                 op.frequency, op.comment);
 
 } FC_CAPTURE_AND_RETHROW((op)) }
 
@@ -129,13 +133,51 @@ void_result update_global_frequency_evaluator::do_evaluate(const update_global_f
 
 } FC_CAPTURE_AND_RETHROW((op)) }
 
-void_result update_global_frequency_evaluator::do_apply(const update_global_frequency_operation& op)
+object_id_type update_global_frequency_evaluator::do_apply(const update_global_frequency_operation& op)
 { try {
   auto& d = db();
+  const auto hb_time = d.head_block_time();
 
-  d.modify(d.get_dynamic_global_properties(), [&](dynamic_global_property_object& dgpo){
+  d.modify(d.get_dynamic_global_properties(), [&op](dynamic_global_property_object& dgpo){
     dgpo.frequency = op.frequency;
   });
+
+  return d.create<frequency_history_record_object>([&op, hb_time](frequency_history_record_object& fhro){
+    fhro.authority = op.authority;
+    fhro.frequency = op.frequency;
+    fhro.time = hb_time;
+    fhro.comment = op.comment;
+  }).id;
+
+} FC_CAPTURE_AND_RETHROW((op)) }
+
+void_result issue_free_cycles_evaluator::do_evaluate(const issue_free_cycles_operation& op)
+{ try {
+
+  const auto& d = db();
+  const auto& authority_obj = op.authority(d);
+  const auto cycle_issuer_id = d.get_chain_authorities().cycle_issuer;
+
+  // Make sure that this is the current license issuer:
+  d.perform_chain_authority_check("cycle issuing", cycle_issuer_id, authority_obj);
+
+  const auto& account_obj = op.account(d);
+  const auto& cycle_balance_obj = d.get_cycle_balance_object(op.account);
+
+  FC_ASSERT( account_obj.is_vault(),
+             "Account '${name}' must be a vault account",
+             ("name", account_obj.name)
+           );
+
+  _cycle_balance_obj = &cycle_balance_obj;
+  return {};
+
+} FC_CAPTURE_AND_RETHROW((op)) }
+
+void_result issue_free_cycles_evaluator::do_apply(const issue_free_cycles_operation& op)
+{ try {
+
+  db().issue_cycles(*_cycle_balance_obj, op.amount);
 
   return {};
 

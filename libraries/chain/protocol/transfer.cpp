@@ -74,5 +74,11 @@ void transfer_wallet_to_vault_operation::validate() const
    FC_ASSERT( asset_to_transfer.amount + reserved_to_transfer > 0 );
 }
 
+void update_euro_limit_operation::validate() const
+{
+   if ( eur_limit.valid() )
+      FC_ASSERT( eur_limit->value > 0 );
+   FC_ASSERT( comment.length() > 0 && comment.length() <= DASCOIN_MAX_COMMENT_LENGTH );
+}
 
 } } // graphene::chain

@@ -9,6 +9,7 @@
 #include <graphene/chain/exceptions.hpp>
 
 #include <graphene/chain/account_object.hpp>
+#include <graphene/chain/frequency_history_record_object.hpp>
 #include <graphene/chain/license_objects.hpp>
 
 #include "../common/database_fixture.hpp"
@@ -96,6 +97,91 @@ BOOST_AUTO_TEST_CASE( get_license_type_names_ids_unit_test )
     BOOST_CHECK_EQUAL( names_ids[i].first, lic_vec[i].name );
     BOOST_CHECK( names_ids[i].second == lic_vec[i].id );
   }
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( edit_license_type_test )
+{ try {
+
+  const auto& lic = _dal.get_license_type("standard");
+  BOOST_CHECK(lic.valid());
+  const auto& lic_id = lic->id;
+
+  // Try to set license's name to a name which is longer than 64 chars:
+  GRAPHENE_REQUIRE_THROW( do_op(edit_license_type_operation(get_license_administrator_id(), lic_id,
+                                 "0123456789012345678901234567890123456789012345678901234567890123456789", 200, 10)), fc::exception );
+
+  // Try to set license's name to an empty string:
+  GRAPHENE_REQUIRE_THROW( do_op(edit_license_type_operation(get_license_administrator_id(), lic_id, "", 200, 10)), fc::exception );
+
+  // Try to set license's amount to 0:
+  GRAPHENE_REQUIRE_THROW( do_op(edit_license_type_operation(get_license_administrator_id(), lic_id, "x", 0, 10)), fc::exception );
+
+  // Try to set license's eur limit to 0:
+  GRAPHENE_REQUIRE_THROW( do_op(edit_license_type_operation(get_license_administrator_id(), lic_id, "x", 200, 0)), fc::exception );
+
+  // Set name to 'standard_plus', amount to 200 and euro limit to 10:
+  do_op(edit_license_type_operation(get_license_administrator_id(), lic_id, "standard_plus", 200, 10));
+
+  const auto& lic_plus = _dal.get_license_type("standard_plus");
+  BOOST_CHECK(lic_plus.valid());
+
+  BOOST_CHECK_EQUAL( lic_plus->amount.value, 200 );
+  BOOST_CHECK_EQUAL( lic_plus->eur_limit.value, 10 );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( frequency_record_index_test )
+{ try {
+
+  db.create<frequency_history_record_object>([&](frequency_history_record_object& fhro){});
+  db.create<frequency_history_record_object>([&](frequency_history_record_object& fhro){});
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( get_frequency_history_unit_test )
+{ try {
+
+  do_op(update_global_frequency_operation(get_license_issuer_id(), 450, "TEST"));
+  const auto& fhistory = _dal.get_frequency_history();
+
+  // Here we have object in the history:
+  BOOST_CHECK_EQUAL( fhistory.size(), 1 );
+  BOOST_CHECK_EQUAL( fhistory[0].frequency.value, 450 );
+  BOOST_CHECK_EQUAL( fhistory[0].comment, "TEST" );
+
+  do_op(update_global_frequency_operation(get_license_issuer_id(), 350, "TEST2"));
+  const auto& fhistory2 = _dal.get_frequency_history();
+
+  // After second update, there should be two objects in the history:
+  BOOST_CHECK_EQUAL( fhistory2.size(), 2 );
+  BOOST_CHECK_EQUAL( fhistory2[0].frequency.value, 450 );
+  BOOST_CHECK_EQUAL( fhistory2[0].comment, "TEST" );
+  BOOST_CHECK_EQUAL( fhistory2[1].frequency.value, 350 );
+  BOOST_CHECK_EQUAL( fhistory2[1].comment, "TEST2" );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( get_frequency_history_by_page_unit_test )
+{ try {
+
+  for (int i = 0; i < 105; ++i)
+    do_op(update_global_frequency_operation(get_license_issuer_id(), 100 + i , "TEST"));
+
+  // This ought to fall, cannot retrieve more than 100 elements:
+  GRAPHENE_REQUIRE_THROW( _dal.get_frequency_history_by_page(0, 102), fc::exception );
+
+  // Get first 90 elements:
+  const auto& fhistory = _dal.get_frequency_history_by_page(0, 90);
+  BOOST_CHECK_EQUAL( fhistory.size(), 90 );
+  // 69th element should have frequency set to 169:
+  BOOST_CHECK_EQUAL( fhistory[69].frequency.value, 169 );
+
+  // Get 10 elements, starting from 50:
+  const auto& fhistory2 = _dal.get_frequency_history_by_page(50, 10);
+  BOOST_CHECK_EQUAL( fhistory2.size(), 10 );
+  // First element should have frequency set to 150:
+  BOOST_CHECK_EQUAL( fhistory2[0].frequency.value, 150 );
 
 } FC_LOG_AND_RETHROW() }
 

@@ -142,7 +142,7 @@ class database_api
       // Subscriptions //
       ///////////////////
 
-      void set_subscribe_callback( std::function<void(const variant&)> cb, bool clear_filter );
+      void set_subscribe_callback( std::function<void(const variant&)> cb, bool notify_remove_create );
       void set_pending_transaction_callback( std::function<void(const variant&)> cb );
       void set_block_applied_callback( std::function<void(const variant& block_id)> cb );
       /**
@@ -317,12 +317,21 @@ class database_api
 
       /**
        * @brief Get a list of assets by symbol
-       * @param asset_symbols Symbols or stringified IDs of the assets to retrieve
+       * @param symbols_or_ids Symbols or stringified IDs of the assets to retrieve
        * @return The assets corresponding to the provided symbols or IDs
        *
        * This function has semantics identical to @ref get_objects
        */
-      vector<optional<asset_object>> lookup_asset_symbols(const vector<string>& symbols_or_ids)const;
+      vector<optional<asset_object>> lookup_asset_symbols(const vector<string>& symbols_or_ids) const;
+
+      /**
+       * @brief Get an asset by symbol
+       * @param symbols_or_id Symbol or stringified ID of the asset to retrieve
+       * @return The asset corresponding to the provided symbol or ID
+       *
+       * This function has semantics identical to @ref get_objects
+       */
+      optional<asset_object> lookup_asset_symbol(const string& symbols_or_id) const;
 
       /////////////////////
       // Markets / feeds //
@@ -335,9 +344,19 @@ class database_api
        * @param limit Maximum number of orders to retrieve
        * @return The limit orders, ordered from least price to greatest
        */
-      vector<limit_order_object> get_limit_orders(asset_id_type a, asset_id_type b, uint32_t limit)const;
+      vector<limit_order_object>get_limit_orders(asset_id_type a, asset_id_type b, uint32_t limit)const;
 
       /**
+       * @brief Get limit orders for an account, in a given market
+       * @param id ID of the account to get limit orders for
+       * @param a ID of asset being sold
+       * @param b ID of asset being purchased
+       * @param limit Maximum number of orders to retrieve
+       * @return The limit orders, ordered from least price to greatest
+       */
+      vector<limit_order_object>get_limit_orders_for_account(account_id_type id, asset_id_type a, asset_id_type b, uint32_t limit)const;
+
+    /**
        * @brief Get call orders in a given asset
        * @param a ID of asset being called
        * @param limit Maximum number of orders to retrieve
@@ -414,7 +433,20 @@ class database_api
        */
       vector<market_trade> get_trade_history( const string& base, const string& quote, fc::time_point_sec start, fc::time_point_sec stop, unsigned limit = 100 )const;
 
+      /**
+       * @brief Check if an asset issue with the corresponding unique was completed on the chain.
+       * @param unique_id The unique indentifier string for a single issue
+       * @param asset The name or id of the asset.
+       * @return True if the issue has been completed, false otherwise.
+       **/
+      bool check_issued_asset(const string& unique_id, const string& asset) const;
 
+      /**
+       * @brief Check if a webeur issue with the corresponding unique was completed on the chain.
+       * @param unique_id The unique indentifier string for a single issue
+       * @return True if the issue has been completed, false otherwise.
+       **/
+      bool check_issued_webeur(const string& unique_id) const;
 
       ///////////////
       // Witnesses //
@@ -646,6 +678,20 @@ class database_api
        */
       vector<wire_out_holder_object> get_all_wire_out_holders() const;
 
+      /**
+       * @brief Get vault information.
+       * @param vault_id
+       * @return vault_info_res (optional)
+       */
+      optional<vault_info_res> get_vault_info(account_id_type vault_id) const;
+
+      /**
+       * @brief Get vault information for a list of vaults.
+       * @param vault_ids A list of vault ID's.
+       * @result A JSON object containig a vault id and optional vault information (if vault exists).
+       */
+      vector<acc_id_vault_info_res> get_vaults_info(vector<account_id_type> vault_ids) const;
+
    private:
       std::shared_ptr< database_api_impl > my;
 };
@@ -704,10 +750,12 @@ FC_API( graphene::app::database_api,
    (get_assets)
    (list_assets)
    (lookup_asset_symbols)
+   (lookup_asset_symbol)
 
    // Markets / feeds
    (get_order_book)
    (get_limit_orders)
+   (get_limit_orders_for_account)
    (get_call_orders)
    (get_settle_orders)
    (get_margin_positions)
@@ -716,6 +764,8 @@ FC_API( graphene::app::database_api,
    (get_ticker)
    (get_24_volume)
    (get_trade_history)
+   (check_issued_asset)
+   (check_issued_webeur)
 
    // Witnesses
    (get_witnesses)
@@ -777,4 +827,7 @@ FC_API( graphene::app::database_api,
    (get_all_webasset_issue_requests)
    (get_all_wire_out_holders)
 
+   // Vaults
+   (get_vault_info)
+   (get_vaults_info)
 )

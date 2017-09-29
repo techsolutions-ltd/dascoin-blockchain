@@ -17,6 +17,7 @@ if( GRAPHENE_DISABLE_UNITY_BUILD )
         db_maint.cpp
         db_management.cpp
         db_market.cpp
+        db_notify.cpp
         db_update.cpp
         db_witness_schedule.cpp
         db_license.cpp
@@ -101,6 +102,7 @@ add_library( graphene_chain
 
              queue_objects.cpp
              license_objects.cpp
+             issued_asset_record_object.cpp
              wire_object.cpp
              wire_evaluator.cpp
              cycle_evaluator.cpp

@@ -455,7 +455,24 @@ namespace graphene { namespace chain {
       asset_id_type asset_id;
       share_type reserved_amount;
 
+      // Used to uniquely identify each issued asset.
+      string unique_id;
+      // Comment set when issuing an asset.
+      string comment;
+
       extensions_type extensions;
+
+      asset_create_issue_request_operation() = default;
+      explicit asset_create_issue_request_operation(account_id_type issuer, account_id_type receiver,
+                                                    share_type amount, asset_id_type asset_id, share_type reserved_amount,
+                                                    string unique_id, string comment)
+         : issuer(issuer),
+           receiver(receiver),
+           amount(amount),
+           asset_id(asset_id),
+           reserved_amount(reserved_amount),
+           unique_id(unique_id),
+           comment(comment) {}
 
       asset get_balance() const { return asset(amount, asset_id); }
 
@@ -637,6 +654,8 @@ FC_REFLECT( graphene::chain::asset_create_issue_request_operation,
             (amount)
             (asset_id)
             (reserved_amount)
+            (unique_id)
+            (comment)
             (extensions)
           )
 

@@ -306,6 +306,7 @@ struct database_fixture {
    void print_joint_market( const string& syma, const string& symb )const;
    int64_t get_balance( account_id_type account, asset_id_type a )const;
    int64_t get_balance( const account_object& account, const asset_object& a )const;
+   int64_t get_dascoin_balance( account_id_type account ) const { return get_balance(account, get_dascoin_asset_id()); }
    vector< operation_history_object > get_operation_history( account_id_type account_id )const;
 
    // fix_accounts.cpp
@@ -349,10 +350,14 @@ struct database_fixture {
    // fix_accounts.cpp
    void tether_accounts(account_id_type wallet, account_id_type vault);
    const account_balance_object& get_account_balance_object(account_id_type account_id, asset_id_type aset_id);
+   void set_vault_to_wallet_limit_toggle(account_id_type account_id, bool flag);
+   void enable_vault_to_wallet_limit(account_id_type account_id);
+   void disable_vault_to_wallet_limit(account_id_type account_id);
 
    // fix_web_assets.cpp
    asset web_asset(share_type amount);
-   const issue_asset_request_object* issue_webasset(account_id_type receiver_id, share_type cash, share_type reserved);
+   const issued_asset_record_object* issue_webasset(const string& unique_id, account_id_type receiver_id, 
+                                                    share_type cash, share_type reserved);
    void deny_issue_request(issue_asset_request_id_type request_id);
    std::pair<share_type, share_type> get_web_asset_amounts(account_id_type owner_id);
    std::pair<asset, asset> get_web_asset_balances(account_id_type owner_id);
@@ -364,6 +369,10 @@ struct database_fixture {
    vector<issue_asset_request_object> get_asset_request_objects(account_id_type account_id);
    share_type get_asset_current_supply(asset_id_type asset_id);
    share_type get_web_asset_current_supply() { return get_asset_current_supply(get_web_asset_id()); }
+   void set_last_dascoin_price(price val);
+   void set_last_daily_dascoin_price(price val);
+   void issue_dascoin(account_id_type account_id, share_type amount);
+   void issue_dascoin(account_object& account_obj, share_type amount);
 
    // fix_pi_limits.cpp
    void update_pi_limits(account_id_type account_id, uint8_t level, limits_type new_limits);

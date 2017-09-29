@@ -24,6 +24,7 @@
 #include <graphene/chain/asset_evaluator.hpp>
 #include <graphene/chain/asset_object.hpp>
 #include <graphene/chain/account_object.hpp>
+#include <graphene/chain/issued_asset_record_object.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/exceptions.hpp>
@@ -571,47 +572,61 @@ void_result asset_claim_fees_evaluator::do_apply( const asset_claim_fees_operati
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-void_result asset_create_issue_request_evaluator::do_evaluate(const asset_create_issue_request_operation& o)
+void_result asset_create_issue_request_evaluator::do_evaluate(const asset_create_issue_request_operation& op)
 { try {
    const auto& d = db();
 
    // Check if we are transferring web assets:
    // NOTE: this check must be modified to apply for every kind of web asset there is.
-   FC_ASSERT ( o.asset_id == d.get_web_asset_id(), "Can only transfer web assets" );
+   FC_ASSERT( op.asset_id == d.get_web_asset_id(), "Can only issue web assets" );
 
-   const auto& a = o.asset_id(d);
+   const auto& a = op.asset_id(d);
    FC_ASSERT( a.is_dual_auth_issue(),
               "Cannot do a dual authority issue on a single issuer based asset '{asset_id}'.",
               ("asset_id", a.id) 
             );
 
    const auto issuer_id = d.get_chain_authorities().webasset_issuer;
-   const auto& op_issuer_obj = o.issuer(d);
+   const auto& op_issuer_obj = op.issuer(d);
 
    d.perform_chain_authority_check("asset issuing", issuer_id, op_issuer_obj);
 
    FC_ASSERT( !a.is_market_issued(), "Cannot manually issue a market-issued asset." );
 
-   const account_object& reciever = o.receiver(d);
+   const account_object& reciever = op.receiver(d);
    FC_ASSERT( is_authorized_asset( d, reciever, a ) );
 
    const auto& asset_dyn_data = a.dynamic_asset_data_id(d);
-   FC_ASSERT( (asset_dyn_data.current_supply + o.amount) <= a.options.max_supply );
+   FC_ASSERT( (asset_dyn_data.current_supply + op.amount) <= a.options.max_supply );
+
+   FC_ASSERT( d.check_unique_issued_id(op.unique_id, op.asset_id),
+              "Error: issuer unique_id already exists for asset ${asset_id}",
+              ("asset_id", op.asset_id)
+            );
 
    return {};
 
-} FC_CAPTURE_AND_RETHROW((o)) }
+} FC_CAPTURE_AND_RETHROW( (op) ) }
 
-object_id_type asset_create_issue_request_evaluator::do_apply(const asset_create_issue_request_operation& o)
+object_id_type asset_create_issue_request_evaluator::do_apply(const asset_create_issue_request_operation& op)
 { try {
 
-   db().issue_asset(o.receiver, o.amount, o.asset_id, o.reserved_amount);
+   auto& d = db();
+
+   d.issue_asset(op.receiver, op.amount, op.asset_id, op.reserved_amount);
+
+   return d.create<issued_asset_record_object>([&op](issued_asset_record_object& iaro){
+      iaro.unique_id = op.unique_id;
+      iaro.issuer = op.issuer;
+      iaro.receiver = op.receiver;
+      iaro.asset_type = op.asset_id;
+      iaro.amount = op.amount;
+      iaro.reserved = op.reserved_amount;
+   }).id;
 
    // TODO: figure out a way to do dual issuing for web assets (via hard fork?)
 
-   return {};
-
-} FC_CAPTURE_AND_RETHROW((o)) }
+} FC_CAPTURE_AND_RETHROW((op)) }
 
 void_result asset_deny_issue_request_evaluator::do_evaluate(const asset_deny_issue_request_operation& o)
 { try {

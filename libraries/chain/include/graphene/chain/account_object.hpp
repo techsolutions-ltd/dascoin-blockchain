@@ -119,6 +119,7 @@ namespace graphene { namespace chain {
          share_type reserved = 0;
          share_type spent = 0;  // Balance spent in limit interval.
 
+         share_type eur_limit;  // The limit in euros for this balance.
          share_type limit;  // The limit used for transfers on this balance.
 
          asset get_balance() const { return asset{balance, asset_type}; }
@@ -222,9 +223,15 @@ namespace graphene { namespace chain {
           * update the active authority.
           */
          authority owner;
+         /// This one will track the number of times the owner has been changed.
+         uint32_t owner_change_counter = 0;
+
          /// The owner authority contains the hot keys of the account. This authority has control over nearly all
          /// operations the account may perform.
          authority active;
+
+         /// This one will track the number of times the active authority has been changed.
+         uint32_t active_change_counter = 0;
 
          typedef account_options  options_type;
          account_options options;
@@ -281,6 +288,11 @@ namespace graphene { namespace chain {
           * The level of verified personal information assigned to the account.
           */
          uint8_t pi_level;
+
+         /**
+          * If this is true, vault account observes no limits on transferring vault to wallet.
+          **/
+         bool disable_vault_to_wallet_limit = false;
 
          /**
           * This flag is set when the top_n logic sets both authorities,
@@ -357,8 +369,18 @@ namespace graphene { namespace chain {
             return vault.find(account) != vault.end();
          }
 
-
          account_id_type get_id()const { return id; }
+
+         // TODO: use hierarchy depth here?
+         bool is_tethered() const
+         {
+             return !vault.empty() || !parents.empty();
+         }
+
+         bool is_tethered_to(account_id_type acc_id) const
+         {
+             return vault.find(acc_id) != vault.end() || parents.find(acc_id) != parents.end();
+         }
    };
 
    /**
@@ -487,9 +509,10 @@ FC_REFLECT_DERIVED( graphene::chain::account_object, (graphene::db::object),
                     (hierarchy_depth)
                     (parents)
                     (vault)
+                    (disable_vault_to_wallet_limit)
                     (membership_expiration_date)(registrar)(referrer)(lifetime_referrer)
                     (network_fee_percentage)(lifetime_referrer_fee_percentage)(referrer_rewards_percentage)
-                    (name)(owner)(active)(options)(statistics)(whitelisting_accounts)(blacklisting_accounts)
+                    (name)(owner)(owner_change_counter)(active_change_counter)(active)(options)(statistics)(whitelisting_accounts)(blacklisting_accounts)
                     (whitelisted_accounts)(blacklisted_accounts)
                     (cashback_vb)
                     (owner_special_authority)
@@ -498,7 +521,7 @@ FC_REFLECT_DERIVED( graphene::chain::account_object, (graphene::db::object),
                     (pi_level)
                     (top_n_control_flags)
                     (allowed_assets)
-                    )
+                  )
 
 FC_REFLECT_DERIVED( graphene::chain::account_statistics_object, (graphene::chain::object),
                     (owner)
@@ -516,6 +539,7 @@ FC_REFLECT_DERIVED( graphene::chain::account_balance_object, (graphene::db::obje
                     (balance)
                     (reserved)
                     (spent)
+                    (eur_limit)
                     (limit)
                   )
 

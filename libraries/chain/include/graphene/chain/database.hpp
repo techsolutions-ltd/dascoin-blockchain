@@ -195,12 +195,17 @@ namespace graphene { namespace chain {
           *  Emitted After a block has been applied and committed.  The callback
           *  should not yield and should execute quickly.
           */
-         fc::signal<void(const vector<object_id_type>&)> changed_objects;
+         fc::signal<void(const vector<object_id_type>&, const flat_set<account_id_type>&)> new_objects;
+         /**
+          *  Emitted After a block has been applied and committed.  The callback
+          *  should not yield and should execute quickly.
+          */
+         fc::signal<void(const vector<object_id_type>&, const flat_set<account_id_type>&)> changed_objects;
 
          /** this signal is emitted any time an object is removed and contains a
           * pointer to the last value of every object that was removed.
           */
-         fc::signal<void(const vector<const object*>&)>  removed_objects;
+         fc::signal<void(const vector<object_id_type>&, const vector<const object*>&, const flat_set<account_id_type>&)>  removed_objects;
 
          //////////////////// db_witness_schedule.cpp ////////////////////
 
@@ -356,9 +361,10 @@ namespace graphene { namespace chain {
           * Set the limit on the account balance. This limit is used for transfers ex. vault -> wallet.
           * @param account Account whose limit should set.
           * @param asset_id The ID of the asset for which balance the limit is being set.
+          * @param reset_spent Should we reset the spent amount or not
           * @param limit New limit.
           */
-         void adjust_balance_limit(const account_object& account, asset_id_type asset_id, share_type limit);
+         void adjust_balance_limit(const account_object& account, asset_id_type asset_id, share_type limit, bool reset_spent = false);
 
          /**
           * @brief Adjsut a particular account's cycle balance by a delta.
@@ -555,12 +561,17 @@ namespace graphene { namespace chain {
           * @return The limit for dascoin for vault accounts, nothing for other account types.
           **/
          optional<share_type> get_dascoin_limit(const account_object& account, price dascoin_price) const;
-         
+
+         share_type get_eur_limit(const optional<license_information_object> &license_info) const;
+
          //////////////////// db_queue.cpp ////////////////////
 
          object_id_type push_queue_submission(const string& origin, optional<license_type_id_type> license,
                                                account_id_type account, share_type amount, share_type frequency,
                                                const string& comment);
+
+
+         bool check_unique_issued_id(const string& unique_id, asset_id_type asset_id) const;
 
 
    protected:

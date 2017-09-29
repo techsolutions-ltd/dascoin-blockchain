@@ -248,6 +248,13 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
    db().create_empty_balance(new_acnt_object.id, db().get_dascoin_asset_id());
    db().create_empty_balance(new_acnt_object.id, db().get_web_asset_id());
 
+   if ( new_acnt_object.is_vault() )
+   {
+      const auto daily_price = dynamic_properties.last_daily_dascoin_price;
+      const auto starting_limit = *(db().get_dascoin_limit(new_acnt_object, daily_price));
+      const auto dsc_id = db().get_dascoin_asset_id();
+      db().adjust_balance_limit(new_acnt_object, dsc_id, starting_limit);
+   }
    return new_acnt_object.id;
 
 } FC_CAPTURE_AND_RETHROW((o)) }
@@ -478,11 +485,13 @@ object_id_type change_public_keys_evaluator::do_apply(const change_public_keys_o
       if(op.owner)
       {
          ao.owner = *op.owner;
+         ao.owner_change_counter++;
          ao.top_n_control_flags = 0;  // Legacy bitshares flag.
       }
       if(op.active)
       {
          ao.active = *op.active;
+         ao.active_change_counter++;
          ao.top_n_control_flags = 0;  // Legacy bitshares flag.
       }
    });

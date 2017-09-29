@@ -35,7 +35,9 @@
 #include <graphene/chain/committee_member_object.hpp>
 #include <graphene/chain/confidential_object.hpp>
 #include <graphene/chain/fba_object.hpp>
+#include <graphene/chain/frequency_history_record_object.hpp>
 #include <graphene/chain/global_property_object.hpp>
+#include <graphene/chain/issued_asset_record_object.hpp>
 #include <graphene/chain/license_objects.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/operation_history_object.hpp>
@@ -153,6 +155,12 @@ const uint8_t reward_queue_object::type_id;
 const uint8_t license_information_object::space_id;
 const uint8_t license_information_object::type_id;
 
+const uint8_t issued_asset_record_object::space_id;
+const uint8_t issued_asset_record_object::type_id;
+
+const uint8_t frequency_history_record_object::space_id;
+const uint8_t frequency_history_record_object::type_id;
+
 void database::initialize_genesis_transaction_state()
 {
   // Since this is the database initialization, skip checking signatures:
@@ -221,6 +229,9 @@ void database::initialize_evaluators()
    register_evaluator<update_queue_parameters_evaluator>();
    register_evaluator<change_public_keys_evaluator>();
    register_evaluator<update_global_frequency_evaluator>();
+   register_evaluator<issue_free_cycles_evaluator>();
+   register_evaluator<edit_license_type_evaluator>();
+   register_evaluator<update_euro_limit_evaluator>();
 }
 
 void database::initialize_indexes()
@@ -273,6 +284,8 @@ void database::initialize_indexes()
    add_index<primary_index<wire_out_holder_index>>();
    add_index<primary_index<reward_queue_index>>();
    add_index<primary_index<license_information_index>>();
+   add_index<primary_index<issued_asset_record_index>>();
+   add_index<primary_index<frequency_history_record_index>>();
 }
 
 account_id_type database::initialize_chain_authority(const string& kind_name, const string& acc_name)
@@ -293,8 +306,8 @@ void database::init_genesis(const genesis_state_type& genesis_state)
 { try {
 
    const auto DASCOIN_DEFAULT_START_PRICE = 
-      asset{DASCOIN_DEFAULT_STARTING_PRICE_BASE_AMOUNT, get_dascoin_asset_id()} 
-      / asset {DASCOIN_DEFAULT_STARTING_PRICE_QUOTE_AMOUNT, get_web_asset_id()}; 
+      asset{genesis_state.initial_dascoin_price.base_amount, get_dascoin_asset_id()}
+      / asset {genesis_state.initial_dascoin_price.quote_amount, get_web_asset_id()};
 
    FC_ASSERT( genesis_state.initial_timestamp != time_point_sec(), "Must initialize genesis timestamp." );
    FC_ASSERT( genesis_state.initial_timestamp.sec_since_epoch() % GRAPHENE_DEFAULT_BLOCK_INTERVAL == 0,
@@ -527,6 +540,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       p.recent_slots_filled = fc::uint128::max_value();
       p.frequency = genesis_state.initial_frequency;
       p.last_dascoin_price = DASCOIN_DEFAULT_START_PRICE;
+      p.last_daily_dascoin_price = DASCOIN_DEFAULT_START_PRICE;
    });
 
    FC_ASSERT( (genesis_state.immutable_parameters.min_witness_count & 1) == 1, "min_witness_count must be odd" );

@@ -10,6 +10,7 @@
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/asset_object.hpp>
 #include <graphene/chain/license_objects.hpp>
+#include <graphene/chain/issued_asset_record_object.hpp>
 
 #include "../common/database_fixture.hpp"
 
@@ -136,6 +137,79 @@ BOOST_AUTO_TEST_CASE( dascoin_test )
   transfer_dascoin_vault_to_wallet(vault_id, wallet_id, 50 * DASCOIN_DEFAULT_ASSET_PRECISION);
   BOOST_CHECK_EQUAL( get_balance(wallet_id, get_dascoin_asset_id()), 50 * DASCOIN_DEFAULT_ASSET_PRECISION );
   BOOST_CHECK_EQUAL( get_balance(vault_id, get_dascoin_asset_id()), 50 * DASCOIN_DEFAULT_ASSET_PRECISION );
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( issued_asset_record_object_index_test )
+{ try {
+
+  db.create<issued_asset_record_object>([&](issued_asset_record_object& o){
+    o.unique_id = "1";
+    o.asset_type = get_web_asset_id();
+  });
+  db.create<issued_asset_record_object>([&](issued_asset_record_object& o){
+    o.unique_id = "2";
+    o.asset_type = get_web_asset_id();
+  });
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( issued_asset_record_object_created_test )
+{ try {
+  ACTOR(wallet);
+
+  const auto created_record = issue_webasset("NL1", wallet_id, 100, 100);
+  BOOST_CHECK( created_record != nullptr );
+  BOOST_CHECK_EQUAL( created_record->unique_id, "NL1" );
+  BOOST_CHECK( created_record->issuer == get_webasset_issuer_id() );
+  BOOST_CHECK( created_record->receiver == wallet_id );
+  BOOST_CHECK( created_record->asset_type == get_web_asset_id() );
+  BOOST_CHECK_EQUAL( created_record->amount.value, 100 );
+  BOOST_CHECK_EQUAL( created_record->reserved.value, 100 );
+
+  const auto fetched_record = _dal.get_issued_asset_record("NL1", get_web_asset_id());
+  BOOST_CHECK( fetched_record.valid() );
+  BOOST_CHECK_EQUAL( fetched_record->unique_id, "NL1" );
+  BOOST_CHECK( fetched_record->issuer == get_webasset_issuer_id() );
+  BOOST_CHECK( fetched_record->receiver == wallet_id );
+  BOOST_CHECK( fetched_record->asset_type == get_web_asset_id() );
+  BOOST_CHECK_EQUAL( fetched_record->amount.value, 100 );
+  BOOST_CHECK_EQUAL( fetched_record->reserved.value, 100 );
+
+  GRAPHENE_REQUIRE_THROW( issue_webasset("NL1", wallet_id, 100, 100), fc::exception );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( check_issued_webeur_test )
+{ try {
+  ACTOR(wallet);
+
+  auto created_record = issue_webasset("NL1", wallet_id, 100, 100);
+  BOOST_CHECK( created_record != nullptr );
+  bool found = _dal.check_issued_webeur("NL1");
+  BOOST_CHECK( found );
+
+  // This was never issued:
+  found = _dal.check_issued_webeur("FOO");
+  BOOST_CHECK( !found );
+
+  // Issue another one, different unique id:
+  created_record = issue_webasset("NL2", wallet_id, 100, 100);
+  BOOST_CHECK( created_record != nullptr );
+
+  // The first one should still be reachable:
+  found = _dal.check_issued_webeur("NL1");
+  BOOST_CHECK( found );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( check_unique_id_when_issueing_webeur_test )
+{ try {
+  ACTOR(wallet);
+  issue_webasset("NL1", wallet_id, 100, 100);
+
+  // This will fail, unique id needs to be really unique:
+  GRAPHENE_REQUIRE_THROW( issue_webasset("NL1", wallet_id, 100, 100), fc::exception );
+
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_SUITE_END() // dascoin_tests::web_asset_tests

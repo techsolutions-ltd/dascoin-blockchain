@@ -150,7 +150,7 @@ namespace graphene { namespace chain {
           * The time point the spend limit will be reset for all balances.
           * NOTE: the value is set to maximum at the beginning to trigger a reset on the first block.
           */
-         time_point_sec next_spend_limit_reset = fc::time_point_sec::maximum();
+         time_point_sec next_spend_limit_reset = fc::time_point_sec();
 
          /**
           * The time of the next upgrade interval. Measured in days, the event will happen on the interval on that day.
@@ -163,9 +163,14 @@ namespace graphene { namespace chain {
          uint32_t total_upgrade_events = 0;
 
          /**
-          * Last dascoin trade price on DSC:WEBEUR market.
+          * Last dascoin trade price on the DSC:WEBEUR market.
           */
          price last_dascoin_price;
+
+         /**
+          * Last daily dascoin trade price on the DSC:WEBEUR market.
+          */
+         price last_daily_dascoin_price;
 
          enum dynamic_flag_bits
          {

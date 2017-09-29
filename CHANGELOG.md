@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.2.0] - 2017-09-29
+### Added
+ - EUR limits on license types
+ - Tracking latest and daily dascoin price
+ - Transfer limits on balances based on dascoin price
+ - New operation: issue free cycles
+ - Get vault info and get vaults info agregate call
+ - Issued asset record object
+ - New operation: update eur limits
+ - Frequency history object
+ - Get limit orders for accounts api call
+
+### Updated
+ - Asset create issue operation unique_id and comment fields
+ - Fallback dascoin price in genesis.json
+ - Block timestamp in operation history
+ - Major changes: patched in Bitshares subscription infrastructure
+ - Now tracking number of owner/active authority changes on account objects
+
 ## [0.1.4] - 2017-08-31
 ### Added
  - New operation: update global frequency

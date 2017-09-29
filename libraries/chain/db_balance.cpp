@@ -26,6 +26,7 @@
 
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/asset_object.hpp>
+#include <graphene/chain/issued_asset_record_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
 #include <graphene/chain/witness_object.hpp>
 
@@ -227,7 +228,7 @@ void database::adjust_balance(account_id_type account, asset delta, share_type r
 
 } FC_CAPTURE_AND_RETHROW( (account)(delta) ) }
 
-void database::adjust_balance_limit(const account_object& account, asset_id_type asset_id, share_type limit)
+void database::adjust_balance_limit(const account_object& account, asset_id_type asset_id, share_type limit, bool reset_spent /* = false */)
 { try {
    if ( limit <= 0 )
    {
@@ -250,9 +251,10 @@ void database::adjust_balance_limit(const account_object& account, asset_id_type
    //            ("asset_id", asset_id)
    //          );
    
-   modify(*itr, [limit](account_balance_object& b) {
+   modify(*itr, [limit, reset_spent](account_balance_object& b) {
       b.limit = limit;
-      b.spent = 0;
+      if (reset_spent)
+         b.spent = 0;
    });
 
 } FC_CAPTURE_AND_RETHROW( (account)(limit) ) }
@@ -397,6 +399,13 @@ void database::deposit_witness_pay(const witness_object& wit, share_type amount)
    }
 
    return;
+}
+
+// TODO: refactor into template method.
+bool database::check_unique_issued_id(const string& unique_id, asset_id_type asset_id) const
+{
+   const auto& idx = get_index_type<issued_asset_record_index>().indices().get<by_unique_id_asset>();
+   return idx.find(boost::make_tuple(unique_id, asset_id)) == idx.end();
 }
 
 } }

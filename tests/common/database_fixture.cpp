@@ -51,7 +51,8 @@
 
 using namespace graphene::chain::test;
 
-uint32_t GRAPHENE_TESTING_GENESIS_TIMESTAMP = 1431700002;
+uint32_t GRAPHENE_TESTING_GENESIS_TIMESTAMP = (fc::time_point::now().sec_since_epoch() / GRAPHENE_DEFAULT_BLOCK_INTERVAL)
+                                              * GRAPHENE_DEFAULT_BLOCK_INTERVAL;
 
 namespace graphene { namespace chain {
 

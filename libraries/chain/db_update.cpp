@@ -258,6 +258,7 @@ bool database::check_for_blackswan( const asset_object& mia, bool enable_black_s
 
 void database::clear_expired_orders()
 { try {
+   bool send_updates = false;
    detail::with_skip_flags( *this,
       get_node_properties().skip_flags | skip_authority_check, [&](){
          transaction_evaluation_state cancel_context(this);
@@ -283,9 +284,14 @@ void database::clear_expired_orders()
             // - if the fee is incorrect, which may happen due to #435 (although since cancel is a fixed-fee op, it shouldn't)
             cancel_context.skip_fee_schedule_check = true;
             apply_operation(cancel_context, canceler);
+            send_updates = true;
          }
      });
 
+   if (send_updates)
+       notify_changed_objects();
+
+   // TODO: call notify_changed_objects when handling settlements too.
    //Process expired force settlement orders
    auto& settlement_index = get_index_type<force_settlement_index>().indices().get<by_expiration>();
    if( !settlement_index.empty() )
@@ -502,7 +508,7 @@ void database::reset_spending_limits()
   const auto& params = get_global_properties().parameters;
   const auto& dgpo = get_dynamic_global_properties();
 
-  if ( dgpo.next_spend_limit_reset >= head_block_time() )
+  if ( dgpo.next_spend_limit_reset <= head_block_time() )
   {
     // Reset spending limit for each account:
     const auto& account_idx = get_index_type<account_index>().indices().get<by_id>();
@@ -513,13 +519,21 @@ void database::reset_spending_limits()
       if ( dsc_limit.valid() )
       {
         // Set the limit on the account balance object:
-        adjust_balance_limit(account, get_dascoin_asset_id(), *dsc_limit);
+        adjust_balance_limit(account, get_dascoin_asset_id(), *dsc_limit, true);
       }
     }
 
     // Set the time of the next limit reset:
     modify(dgpo, [&](dynamic_global_property_object& dgpo){
-      dgpo.next_spend_limit_reset = head_block_time() + params.limit_interval_elapse_time_seconds;
+      dgpo.last_daily_dascoin_price = dgpo.last_dascoin_price;
+      uint32_t now_sec = head_block_time().sec_since_epoch();
+      uint32_t next_interval = (now_sec / params.limit_interval_elapse_time_seconds) *
+                                params.limit_interval_elapse_time_seconds + params.limit_interval_elapse_time_seconds;
+      // Move to the next interval if the current calculation returns the same point as the previous one:
+      if (fc::time_point_sec(dgpo.next_spend_limit_reset) == fc::time_point_sec(next_interval))
+        dgpo.next_spend_limit_reset = fc::time_point_sec(next_interval) + params.limit_interval_elapse_time_seconds;
+      else
+        dgpo.next_spend_limit_reset = fc::time_point_sec(next_interval);
     });
   }
 

@@ -126,7 +126,16 @@ namespace graphene { namespace chain {
    {
      user_submit = 0,
      charter_license = 1,
-     reserve_cycles = 2
+     reserve_cycles = 2,
+     DASCOIN_ORIGIN_KIND_COUNT
+   };
+
+   enum cycle_origin_kind
+   {
+     upgrade = 0,
+     admin = 1,
+     unknown = 2,
+     CYCLE_ORIGIN_KIND_COUNT
    };
 
    enum asset_issuer_permission_flags
@@ -240,7 +249,9 @@ namespace graphene { namespace chain {
       impl_issue_asset_request_object_type,
       impl_wire_out_holder_object_type,
       impl_reward_queue_object_type,
-      impl_license_information_object_type
+      impl_license_information_object_type,
+      impl_issued_asset_record_object_type,
+      impl_frequency_history_record_object_type
    };
 
    //typedef fc::unsigned_int            object_id_type;
@@ -302,6 +313,8 @@ namespace graphene { namespace chain {
    class wire_out_holder_object;
    class reward_queue_object;
    class license_information_object;
+   class issued_asset_record_object;
+   class frequency_history_record_object;
 
    typedef object_id< implementation_ids, impl_global_property_object_type,  global_property_object>                    global_property_id_type;
    typedef object_id< implementation_ids, impl_dynamic_global_property_object_type,  dynamic_global_property_object>    dynamic_global_property_id_type;
@@ -342,6 +355,14 @@ namespace graphene { namespace chain {
    typedef object_id<
       implementation_ids, impl_license_information_object_type, license_information_object
    > license_information_id_type;
+
+   typedef object_id<
+      implementation_ids, impl_issued_asset_record_object_type, issued_asset_record_object
+   > issued_asset_record_id_type;
+
+   typedef object_id<
+      implementation_ids, impl_frequency_history_record_object_type, frequency_history_record_object
+   > frequency_history_record_id_type;
 
    typedef fc::array<char, GRAPHENE_MAX_ASSET_SYMBOL_LENGTH>    symbol_type;
    typedef fc::ripemd160                                        block_id_type;
@@ -488,6 +509,14 @@ REFLECT_ENUM_CHECK( graphene::chain::dascoin_origin_kind,
                     (user_submit)
                     (charter_license)
                     (reserve_cycles)
+                    (DASCOIN_ORIGIN_KIND_COUNT)
+                  )
+
+REFLECT_ENUM_CHECK( graphene::chain::cycle_origin_kind,
+                    (upgrade)
+                    (admin)
+                    (unknown)
+                    (CYCLE_ORIGIN_KIND_COUNT)
                   )
 
 FC_REFLECT( graphene::chain::public_key_type, (key_data) )
@@ -540,6 +569,8 @@ FC_REFLECT_ENUM( graphene::chain::impl_object_type,
                  (impl_wire_out_holder_object_type)
                  (impl_reward_queue_object_type)
                  (impl_license_information_object_type)
+                 (impl_issued_asset_record_object_type)
+                 (impl_frequency_history_record_object_type)
                )
 
 FC_REFLECT_TYPENAME( graphene::chain::share_type )
@@ -578,6 +609,8 @@ FC_REFLECT_TYPENAME( graphene::chain::wire_out_holder_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::reward_queue_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::upgrade_multiplier_type )
 FC_REFLECT_TYPENAME( graphene::chain::license_information_id_type )
+FC_REFLECT_TYPENAME( graphene::chain::issued_asset_record_id_type )
+FC_REFLECT_TYPENAME( graphene::chain::frequency_history_record_id_type )
 
 FC_REFLECT( graphene::chain::void_t, )
 

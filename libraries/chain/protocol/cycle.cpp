@@ -16,6 +16,7 @@ void submit_reserve_cycles_to_queue_operation::validate() const
 void submit_cycles_to_queue_operation::validate() const
 {
   FC_ASSERT( amount > 0 );
+  FC_ASSERT( frequency > 0 );
 }
 
 void update_queue_parameters_operation::validate() const
@@ -33,6 +34,14 @@ void update_queue_parameters_operation::validate() const
 void update_global_frequency_operation::validate() const
 {
   FC_ASSERT( frequency > 0 );  // TODO: maximum frequency?
+  FC_ASSERT( comment.length() <= DASCOIN_MAX_COMMENT_LENGTH );
+}
+
+void issue_free_cycles_operation::validate() const
+{
+  FC_ASSERT( amount > 0 );  // TODO: maximum amount?
+  FC_ASSERT( origin < cycle_origin_kind::CYCLE_ORIGIN_KIND_COUNT );
+  FC_ASSERT( comment.length() <= DASCOIN_MAX_COMMENT_LENGTH );
 }
 
 } } // namespace graphene::chain

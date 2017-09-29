@@ -114,7 +114,13 @@ object_id_type update_queue_parameters_evaluator::do_apply(const update_queue_pa
   d.modify(*_gpo, [&](global_property_object& gpo){
     CHECK_AND_SET_OPT(gpo.parameters.enable_dascoin_queue, op.enable_dascoin_queue);
     CHECK_AND_SET_OPT(gpo.parameters.reward_interval_time_seconds, op.reward_interval_time_seconds);
-    CHECK_AND_SET_OPT(gpo.parameters.dascoin_reward_amount, op.dascoin_reward_amount);
+    
+    // FIXME: This is a hotfix, the previous chain iteration observed dascoin precision of 4 digits
+    // The value must be 10 times less to achieve proper precision.
+    if ( op.dascoin_reward_amount.valid() )
+    {
+      gpo.parameters.dascoin_reward_amount = *op.dascoin_reward_amount * 10;
+    }
   });
 
   return _gpo->id;

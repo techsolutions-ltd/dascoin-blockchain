@@ -117,7 +117,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       void subscribe_to_market(std::function<void(const variant&)> callback, asset_id_type a, asset_id_type b);
       void unsubscribe_from_market(asset_id_type a, asset_id_type b);
       market_ticker                      get_ticker( const string& base, const string& quote )const;
-      market_volume                      get_24_volume( const string& base, const string& quote )const;
+      market_hi_low_volume               get_24_hi_low_volume( const string& base, const string& quote )const;
       order_book                         get_order_book( const string& base, const string& quote, unsigned limit = 50 )const;
       vector<market_trade>               get_trade_history( const string& base, const string& quote, fc::time_point_sec start, fc::time_point_sec stop, unsigned limit = 100 )const;
 
@@ -1274,12 +1274,12 @@ market_ticker database_api_impl::get_ticker( const string& base, const string& q
    return result;
 }
 
-market_volume database_api::get_24_volume( const string& base, const string& quote )const
+market_hi_low_volume database_api::get_24_hi_low_volume( const string& base, const string& quote )const
 {
-   return my->get_24_volume( base, quote );
+   return my->get_24_hi_low_volume( base, quote );
 }
 
-market_volume database_api_impl::get_24_volume( const string& base, const string& quote )const
+market_hi_low_volume database_api_impl::get_24_hi_low_volume( const string& base, const string& quote )const
 {
    auto assets = lookup_asset_symbols( {base, quote} );
    FC_ASSERT( assets[0], "Invalid base asset symbol: ${s}", ("s",base) );
@@ -1288,34 +1288,48 @@ market_volume database_api_impl::get_24_volume( const string& base, const string
    auto base_id = assets[0]->id;
    auto quote_id = assets[1]->id;
 
-   market_volume result;
+   market_hi_low_volume result;
    result.base = base;
    result.quote = quote;
+   result.high = 0;
+   result.low = 0;
    result.base_volume = 0;
    result.quote_volume = 0;
 
    try {
       if( base_id > quote_id ) std::swap(base_id, quote_id);
 
-      uint32_t bucket_size = 86400;
+      uint32_t sec_in_24h = 86400;
       auto now = fc::time_point_sec( fc::time_point::now() );
 
-      auto trades = get_trade_history( base, quote, now, fc::time_point_sec( now.sec_since_epoch() - bucket_size ), 100 );
+      auto trades = get_trade_history( base, quote, now, fc::time_point_sec( now.sec_since_epoch() - sec_in_24h ), 100 );
 
       for ( market_trade t: trades )
       {
+         if(result.high < t.price){
+            result.high = t.price;
+         }
+         if(result.low < t.price){
+            result.low = t.price;
+         }
          result.base_volume += t.value;
          result.quote_volume += t.amount;
       }
 
       while (trades.size() == 100)
       {
-         trades = get_trade_history( base, quote, trades[99].date, fc::time_point_sec( now.sec_since_epoch() - bucket_size ), 100 );
+         trades = get_trade_history( base, quote, trades[99].date, fc::time_point_sec( now.sec_since_epoch() - sec_in_24h ), 100 );
 
          for ( market_trade t: trades )
          {
-            result.base_volume += t.value;
-            result.quote_volume += t.amount;
+            if(result.high < t.price){
+              result.high = t.price;
+           }
+           if(result.low < t.price){
+              result.low = t.price;
+           }
+           result.base_volume += t.value;
+           result.quote_volume += t.amount;
          }
       }
 

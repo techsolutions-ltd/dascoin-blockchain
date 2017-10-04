@@ -96,12 +96,10 @@ struct market_ticker
    double                     quote_volume;
 };
 
-struct market_hi_low_volume
+struct market_volume
 {
    string                     base;
    string                     quote;
-   double                     high;
-   double                     low;
    double                     base_volume;
    double                     quote_volume;
 };
@@ -407,12 +405,12 @@ class database_api
       market_ticker get_ticker( const string& base, const string& quote )const;
 
       /**
-       * @brief Returns the 24 hour high, low and volume for the market assetA:assetB
+       * @brief Returns the 24 hour volume for the market assetA:assetB
        * @param a String name of the first asset
        * @param b String name of the second asset
-       * @return The market high, low and volume over the past 24 hours
+       * @return The market volume over the past 24 hours
        */
-      market_hi_low_volume get_24_hi_low_volume( const string& base, const string& quote )const;
+      market_volume get_24_volume( const string& base, const string& quote )const;
 
       /**
        * @brief Returns the order book for the market base:quote
@@ -703,7 +701,7 @@ class database_api
 FC_REFLECT( graphene::app::order, (price)(quote)(base) );
 FC_REFLECT( graphene::app::order_book, (base)(quote)(bids)(asks) );
 FC_REFLECT( graphene::app::market_ticker, (base)(quote)(latest)(lowest_ask)(highest_bid)(percent_change)(base_volume)(quote_volume) );
-FC_REFLECT( graphene::app::market_hi_low_volume, (base)(quote)(high)(low)(base_volume)(quote_volume) );
+FC_REFLECT( graphene::app::market_volume, (base)(quote)(base_volume)(quote_volume) );
 FC_REFLECT( graphene::app::market_trade, (date)(price)(amount)(value) );
 
 FC_API( graphene::app::database_api,
@@ -764,7 +762,7 @@ FC_API( graphene::app::database_api,
    (subscribe_to_market)
    (unsubscribe_from_market)
    (get_ticker)
-   (get_24_hi_low_volume)
+   (get_24_volume)
    (get_trade_history)
    (check_issued_asset)
    (check_issued_webeur)

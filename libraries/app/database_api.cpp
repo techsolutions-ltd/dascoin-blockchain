@@ -1178,9 +1178,7 @@ limit_orders_gbp database_api_impl::get_limit_orders_grouped_by_price(asset_id_t
          {
             alo_with_same_price alo;
             // adjust price precision and value accordingly
-            // alo.price = a > b ? price / coef : 1 / (price / coef);
-            //alo.price /= coef;
-            alo.price = price / coef;
+            alo.price = (price / coef) * DASCOIN_FIAT_ASSET_PRECISION;
 
             alo.base_volume = double(limit_itr->sell_price.base.amount.value);
             alo.quote_volume = double(limit_itr->sell_price.quote.amount.value);

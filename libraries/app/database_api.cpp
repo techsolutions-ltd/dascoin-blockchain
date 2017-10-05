@@ -1158,6 +1158,10 @@ limit_orders_grouped_by_price database_api_impl::get_limit_orders_grouped_by_pri
    const auto& limit_price_idx = limit_order_idx.indices().get<by_price>();
 
    limit_orders_grouped_by_price result;
+   if(a < b)
+   {
+      std::swap(a,b);
+   }
 
    auto func = [this, &limit_price_idx, limit](asset_id_type& a, asset_id_type& b, std::vector<agregated_limit_orders_with_same_price>& ret, bool ascending){
       std::map<double, agregated_limit_orders_with_same_price, own_double_less> helper_map;
@@ -1170,7 +1174,7 @@ limit_orders_grouped_by_price database_api_impl::get_limit_orders_grouped_by_pri
 
       while(limit_itr != limit_end)
       {
-         double price = limit_itr->sell_price.to_real();
+         double price = ascending ? 1 / limit_itr->sell_price.to_real() : limit_itr->sell_price.to_real();
          auto helper_itr = helper_map.find(price);
 
          // if we are adding limit order with new price
@@ -1178,10 +1182,10 @@ limit_orders_grouped_by_price database_api_impl::get_limit_orders_grouped_by_pri
          {
             agregated_limit_orders_with_same_price alo;
             // adjust price precision and value accordingly
-            alo.price = static_cast<int>((price / coef) * DASCOIN_FIAT_ASSET_PRECISION);
+            alo.price = static_cast<share_type>((ascending ? price * coef : price / coef) * DASCOIN_FIAT_ASSET_PRECISION);
 
-            alo.base_volume = static_cast<double>(limit_itr->sell_price.base.amount.value);
-            alo.quote_volume = static_cast<double>(limit_itr->sell_price.quote.amount.value);
+            alo.base_volume = limit_itr->for_sale.value;
+            alo.quote_volume = round(ascending ? limit_itr->for_sale.value * price : limit_itr->for_sale.value / price);
             alo.count = 1;
 
             helper_map[price] = alo;
@@ -1189,8 +1193,8 @@ limit_orders_grouped_by_price database_api_impl::get_limit_orders_grouped_by_pri
          }
          else
          {
-            helper_itr->second.base_volume += static_cast<double>(limit_itr->sell_price.base.amount.value);
-            helper_itr->second.quote_volume += static_cast<double>(limit_itr->sell_price.quote.amount.value);
+            helper_itr->second.base_volume += limit_itr->for_sale.value;;
+            helper_itr->second.quote_volume += round(ascending ? limit_itr->for_sale.value * price : limit_itr->for_sale.value / price);
             helper_itr->second.count++;
          }
 

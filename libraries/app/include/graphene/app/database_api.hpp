@@ -116,10 +116,10 @@ struct market_trade
 
 // agregated limit orders with same price
 struct agregated_limit_orders_with_same_price {
-   double                     price;
-   double                     base_volume;
-   double                     quote_volume;
-   unsigned                   count;
+   share_type                 price;
+   share_type                 base_volume;
+   share_type                 quote_volume;
+   share_type                 count;
 };
 
 // agregated limit orders grouped by price and devided in two vectros for buy/sell limit orders

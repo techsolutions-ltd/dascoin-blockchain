@@ -114,6 +114,22 @@ struct market_trade
    double                     value;
 };
 
+// agregated limit orders with same price
+struct alo_with_same_price {
+   share_type                 for_sale;
+   double                     price;
+   double                     base_volume;
+   double                     quote_volume;
+   unsigned                   count;
+};
+
+// agregated limit orders grouped by price and devided in two vectros for buy/sell limit orders
+struct limit_orders_gbp
+{
+   std::vector<alo_with_same_price> buy;
+   std::vector<alo_with_same_price> sell;
+};
+
 /**
  * @brief The database_api class implements the RPC API for the chain database.
  *
@@ -347,6 +363,15 @@ class database_api
        * @return The limit orders, ordered from least price to greatest
        */
       vector<limit_order_object>get_limit_orders(asset_id_type a, asset_id_type b, uint32_t limit)const;
+
+      /**
+       * @brief Get limit orders in a given market grouped by price and devided in buy and sell vectors
+       * @param a ID of asset being sold
+       * @param b ID of asset being purchased
+       * @param limit Maximum number of orders groups to retrieve per buy and per sell vector
+       * @return The limit orders aggregated by same price, ordered by price (in buy - descending in sell - ascending)
+       */
+      limit_orders_gbp get_limit_orders_grouped_by_price(asset_id_type a, asset_id_type b, uint32_t limit)const;
 
       /**
        * @brief Get limit orders for an account, in a given market
@@ -705,6 +730,8 @@ FC_REFLECT( graphene::app::order_book, (base)(quote)(bids)(asks) );
 FC_REFLECT( graphene::app::market_ticker, (base)(quote)(latest)(lowest_ask)(highest_bid)(percent_change)(base_volume)(quote_volume) );
 FC_REFLECT( graphene::app::market_hi_low_volume, (base)(quote)(high)(low)(base_volume)(quote_volume) );
 FC_REFLECT( graphene::app::market_trade, (date)(price)(amount)(value) );
+FC_REFLECT( graphene::app::alo_with_same_price, (for_sale)(price)(base_volume)(quote_volume)(count) );
+FC_REFLECT( graphene::app::limit_orders_gbp, (buy)(sell) );
 
 FC_API( graphene::app::database_api,
    // Objects
@@ -758,6 +785,7 @@ FC_API( graphene::app::database_api,
    (get_order_book)
    (get_limit_orders)
    (get_limit_orders_for_account)
+   (get_limit_orders_grouped_by_price)
    (get_call_orders)
    (get_settle_orders)
    (get_margin_positions)

@@ -111,6 +111,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       // Markets / feeds
       vector<limit_order_object>         get_limit_orders(asset_id_type a, asset_id_type b, uint32_t limit)const;
       vector<limit_order_object>         get_limit_orders_for_account(account_id_type id, asset_id_type a, asset_id_type b, uint32_t limit)const;
+      limit_orders_grouped_by_price                   get_limit_orders_grouped_by_price(asset_id_type a, asset_id_type b, uint32_t limit)const;
       vector<call_order_object>          get_call_orders(asset_id_type a, uint32_t limit)const;
       vector<force_settlement_object>    get_settle_orders(asset_id_type a, uint32_t limit)const;
       vector<call_order_object>          get_margin_positions( const account_id_type& id )const;
@@ -1133,6 +1134,97 @@ vector<limit_order_object> database_api_impl::get_limit_orders_for_account(accou
    }
 
    return result;
+}
+
+limit_orders_grouped_by_price database_api::get_limit_orders_grouped_by_price(asset_id_type a, asset_id_type b, uint32_t limit)const
+{
+   return my->get_limit_orders_grouped_by_price( a, b, limit );
+}
+
+class own_double_less
+{
+public:
+  own_double_less( double arg_ = 1e-7 ) : epsilon(arg_) {}
+  bool operator()( const double &left, const double &right  ) const
+  {
+    return (std::abs(left - right) > epsilon) && (left < right);
+  }
+  double epsilon;
+};
+
+limit_orders_grouped_by_price database_api_impl::get_limit_orders_grouped_by_price(asset_id_type a, asset_id_type b, uint32_t limit)const
+{
+   const auto& limit_order_idx = _db.get_index_type<limit_order_index>();
+   const auto& limit_price_idx = limit_order_idx.indices().get<by_price>();
+
+   limit_orders_grouped_by_price result;
+
+   auto func = [this, &limit_price_idx, limit](asset_id_type& a, asset_id_type& b, std::vector<agregated_limit_orders_with_same_price>& ret, bool ascending){
+      std::map<double, agregated_limit_orders_with_same_price, own_double_less> helper_map;
+      auto limit_itr = limit_price_idx.lower_bound(price::max(a,b));
+      auto limit_end = limit_price_idx.upper_bound(price::min(a,b));
+
+      auto& asset_a = _db.get(a);
+      auto& asset_b = _db.get(b);
+      double coef = asset::scaled_precision(asset_a.precision).value * 1.0 / asset::scaled_precision(asset_b.precision).value;
+
+      while(limit_itr != limit_end)
+      {
+         double price = limit_itr->sell_price.to_real();
+         auto helper_itr = helper_map.find(price);
+
+         // if we are adding limit order with new price
+         if(helper_itr == helper_map.end())
+         {
+            agregated_limit_orders_with_same_price alo;
+            // adjust price precision and value accordingly
+            alo.price = static_cast<int>((price / coef) * DASCOIN_FIAT_ASSET_PRECISION);
+
+            alo.base_volume = static_cast<double>(limit_itr->sell_price.base.amount.value);
+            alo.quote_volume = static_cast<double>(limit_itr->sell_price.quote.amount.value);
+            alo.count = 1;
+
+            helper_map[price] = alo;
+            helper_itr = helper_map.find(price);
+         }
+         else
+         {
+            helper_itr->second.base_volume += static_cast<double>(limit_itr->sell_price.base.amount.value);
+            helper_itr->second.quote_volume += static_cast<double>(limit_itr->sell_price.quote.amount.value);
+            helper_itr->second.count++;
+         }
+
+         ++limit_itr;
+      }
+
+      // re-pack result in vector (from map) in desired order
+      uint32_t count = 0;
+      if(ascending)
+      {
+         auto helper_itr = helper_map.begin();
+         while(helper_itr != helper_map.end() && count < limit)
+         {
+            ret.push_back(helper_itr->second);
+            helper_itr++;
+            count++;
+         }
+      }
+      else
+      {
+         auto helper_itr = helper_map.rbegin();
+         while(helper_itr != helper_map.rend() && count < limit)
+         {
+            ret.push_back(helper_itr->second);
+            helper_itr++;
+            count++;
+         }
+      }
+   };
+
+   func(a, b, result.sell, true);
+   func(b, a, result.buy, false);
+
+   return std::move(result);
 }
 
 vector<call_order_object> database_api::get_call_orders(asset_id_type a, uint32_t limit)const

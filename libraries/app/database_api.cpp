@@ -111,7 +111,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       // Markets / feeds
       vector<limit_order_object>         get_limit_orders(asset_id_type a, asset_id_type b, uint32_t limit)const;
       vector<limit_order_object>         get_limit_orders_for_account(account_id_type id, asset_id_type a, asset_id_type b, uint32_t limit)const;
-      limit_orders_gbp                   get_limit_orders_grouped_by_price(asset_id_type a, asset_id_type b, uint32_t limit)const;
+      limit_orders_grouped_by_price                   get_limit_orders_grouped_by_price(asset_id_type a, asset_id_type b, uint32_t limit)const;
       vector<call_order_object>          get_call_orders(asset_id_type a, uint32_t limit)const;
       vector<force_settlement_object>    get_settle_orders(asset_id_type a, uint32_t limit)const;
       vector<call_order_object>          get_margin_positions( const account_id_type& id )const;
@@ -1136,12 +1136,12 @@ vector<limit_order_object> database_api_impl::get_limit_orders_for_account(accou
    return result;
 }
 
-limit_orders_gbp database_api::get_limit_orders_grouped_by_price(asset_id_type a, asset_id_type b, uint32_t limit)const
+limit_orders_grouped_by_price database_api::get_limit_orders_grouped_by_price(asset_id_type a, asset_id_type b, uint32_t limit)const
 {
    return my->get_limit_orders_grouped_by_price( a, b, limit );
 }
 
-class own_double_less : public std::binary_function<double,double,bool>
+class own_double_less
 {
 public:
   own_double_less( double arg_ = 1e-7 ) : epsilon(arg_) {}
@@ -1152,15 +1152,15 @@ public:
   double epsilon;
 };
 
-limit_orders_gbp database_api_impl::get_limit_orders_grouped_by_price(asset_id_type a, asset_id_type b, uint32_t limit)const
+limit_orders_grouped_by_price database_api_impl::get_limit_orders_grouped_by_price(asset_id_type a, asset_id_type b, uint32_t limit)const
 {
    const auto& limit_order_idx = _db.get_index_type<limit_order_index>();
    const auto& limit_price_idx = limit_order_idx.indices().get<by_price>();
 
-   limit_orders_gbp result;
+   limit_orders_grouped_by_price result;
 
-   auto func = [this, &limit_price_idx, limit](asset_id_type& a, asset_id_type& b, std::vector<alo_with_same_price>& ret, bool ascending){
-      std::map<double, alo_with_same_price, own_double_less> helper_map;
+   auto func = [this, &limit_price_idx, limit](asset_id_type& a, asset_id_type& b, std::vector<agregated_limit_orders_with_same_price>& ret, bool ascending){
+      std::map<double, agregated_limit_orders_with_same_price, own_double_less> helper_map;
       auto limit_itr = limit_price_idx.lower_bound(price::max(a,b));
       auto limit_end = limit_price_idx.upper_bound(price::min(a,b));
 
@@ -1176,12 +1176,12 @@ limit_orders_gbp database_api_impl::get_limit_orders_grouped_by_price(asset_id_t
          // if we are adding limit order with new price
          if(helper_itr == helper_map.end())
          {
-            alo_with_same_price alo;
+            agregated_limit_orders_with_same_price alo;
             // adjust price precision and value accordingly
-            alo.price = (price / coef) * DASCOIN_FIAT_ASSET_PRECISION;
+            alo.price = static_cast<int>((price / coef) * DASCOIN_FIAT_ASSET_PRECISION);
 
-            alo.base_volume = double(limit_itr->sell_price.base.amount.value);
-            alo.quote_volume = double(limit_itr->sell_price.quote.amount.value);
+            alo.base_volume = static_cast<double>(limit_itr->sell_price.base.amount.value);
+            alo.quote_volume = static_cast<double>(limit_itr->sell_price.quote.amount.value);
             alo.count = 1;
 
             helper_map[price] = alo;
@@ -1189,8 +1189,8 @@ limit_orders_gbp database_api_impl::get_limit_orders_grouped_by_price(asset_id_t
          }
          else
          {
-            helper_itr->second.base_volume += double(limit_itr->sell_price.base.amount.value);
-            helper_itr->second.quote_volume += double(limit_itr->sell_price.quote.amount.value);
+            helper_itr->second.base_volume += static_cast<double>(limit_itr->sell_price.base.amount.value);
+            helper_itr->second.quote_volume += static_cast<double>(limit_itr->sell_price.quote.amount.value);
             helper_itr->second.count++;
          }
 
@@ -1219,7 +1219,6 @@ limit_orders_gbp database_api_impl::get_limit_orders_grouped_by_price(asset_id_t
             count++;
          }
       }
-      helper_map.clear();
    };
 
    func(a, b, result.sell, true);

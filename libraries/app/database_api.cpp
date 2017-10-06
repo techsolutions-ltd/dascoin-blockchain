@@ -1141,7 +1141,7 @@ limit_orders_grouped_by_price database_api::get_limit_orders_grouped_by_price(as
    return my->get_limit_orders_grouped_by_price( a, b, limit );
 }
 
-// this is helper class for precision catting on double type
+// this is helper class for precision cutting on double type
 // is used for key comparation in "helper_map" in function atabase_api_impl::get_limit_orders_grouped_by_price
 class double_less_comparator
 {

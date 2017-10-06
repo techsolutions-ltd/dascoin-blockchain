@@ -111,13 +111,14 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       // Markets / feeds
       vector<limit_order_object>         get_limit_orders(asset_id_type a, asset_id_type b, uint32_t limit)const;
       vector<limit_order_object>         get_limit_orders_for_account(account_id_type id, asset_id_type a, asset_id_type b, uint32_t limit)const;
+      limit_orders_grouped_by_price                   get_limit_orders_grouped_by_price(asset_id_type a, asset_id_type b, uint32_t limit)const;
       vector<call_order_object>          get_call_orders(asset_id_type a, uint32_t limit)const;
       vector<force_settlement_object>    get_settle_orders(asset_id_type a, uint32_t limit)const;
       vector<call_order_object>          get_margin_positions( const account_id_type& id )const;
       void subscribe_to_market(std::function<void(const variant&)> callback, asset_id_type a, asset_id_type b);
       void unsubscribe_from_market(asset_id_type a, asset_id_type b);
       market_ticker                      get_ticker( const string& base, const string& quote )const;
-      market_volume                      get_24_volume( const string& base, const string& quote )const;
+      market_hi_low_volume               get_24_hi_low_volume( const string& base, const string& quote )const;
       order_book                         get_order_book( const string& base, const string& quote, unsigned limit = 50 )const;
       vector<market_trade>               get_trade_history( const string& base, const string& quote, fc::time_point_sec start, fc::time_point_sec stop, unsigned limit = 100 )const;
 
@@ -1135,6 +1136,103 @@ vector<limit_order_object> database_api_impl::get_limit_orders_for_account(accou
    return result;
 }
 
+limit_orders_grouped_by_price database_api::get_limit_orders_grouped_by_price(asset_id_type a, asset_id_type b, uint32_t limit)const
+{
+   return my->get_limit_orders_grouped_by_price( a, b, limit );
+}
+
+// this is helper class for precision cutting on double type
+// is used for key comparation in "helper_map" in function database_api_impl::get_limit_orders_grouped_by_price
+class double_less_comparator
+{
+public:
+   double_less_comparator( double arg_ = 1e-7 ) : epsilon(arg_) {}
+   bool operator()( const double &left, const double &right  ) const
+   {
+    return (std::abs(left - right) > epsilon) && (left < right);
+   }
+   double epsilon;
+};
+
+limit_orders_grouped_by_price database_api_impl::get_limit_orders_grouped_by_price(asset_id_type base, asset_id_type quote, uint32_t limit)const
+{
+   const auto& limit_order_idx = _db.get_index_type<limit_order_index>();
+   const auto& limit_price_idx = limit_order_idx.indices().get<by_price>();
+
+   limit_orders_grouped_by_price result;
+   if(base < quote)
+   {
+      std::swap(base,quote);
+   }
+
+   auto func = [this, &limit_price_idx, limit](asset_id_type& a, asset_id_type& b, std::vector<agregated_limit_orders_with_same_price>& ret, bool ascending){
+      std::map<double, agregated_limit_orders_with_same_price, double_less_comparator> helper_map;
+      auto limit_itr = limit_price_idx.lower_bound(price::max(a,b));
+      auto limit_end = limit_price_idx.upper_bound(price::min(a,b));
+
+      auto& asset_a = _db.get(a);
+      auto& asset_b = _db.get(b);
+      double coef = asset::scaled_precision(asset_a.precision).value * 1.0 / asset::scaled_precision(asset_b.precision).value;
+
+      while(limit_itr != limit_end)
+      {
+         double price = ascending ? 1 / limit_itr->sell_price.to_real() : limit_itr->sell_price.to_real();
+         auto helper_itr = helper_map.find(price);
+
+         // if we are adding limit order with new price
+         if(helper_itr == helper_map.end())
+         {
+            agregated_limit_orders_with_same_price alo;
+            // adjust price precision and value accordingly
+            alo.price = static_cast<share_type>((ascending ? price * coef : price / coef) * DASCOIN_FIAT_ASSET_PRECISION);
+
+            alo.base_volume = limit_itr->for_sale.value;
+            alo.quote_volume = round(ascending ? limit_itr->for_sale.value * price : limit_itr->for_sale.value / price);
+            alo.count = 1;
+
+            helper_map[price] = alo;
+            helper_itr = helper_map.find(price);
+         }
+         else
+         {
+            helper_itr->second.base_volume += limit_itr->for_sale.value;;
+            helper_itr->second.quote_volume += round(ascending ? limit_itr->for_sale.value * price : limit_itr->for_sale.value / price);
+            helper_itr->second.count++;
+         }
+
+         ++limit_itr;
+      }
+
+      // re-pack result in vector (from map) in desired order
+      uint32_t count = 0;
+      if(ascending)
+      {
+         auto helper_itr = helper_map.begin();
+         while(helper_itr != helper_map.end() && count < limit)
+         {
+            ret.push_back(helper_itr->second);
+            helper_itr++;
+            count++;
+         }
+      }
+      else
+      {
+         auto helper_itr = helper_map.rbegin();
+         while(helper_itr != helper_map.rend() && count < limit)
+         {
+            ret.push_back(helper_itr->second);
+            helper_itr++;
+            count++;
+         }
+      }
+   };
+
+   func(base, quote, result.sell, true);
+   func(quote, base, result.buy, false);
+
+   return std::move(result);
+}
+
 vector<call_order_object> database_api::get_call_orders(asset_id_type a, uint32_t limit)const
 {
    return my->get_call_orders( a, limit );
@@ -1274,12 +1372,12 @@ market_ticker database_api_impl::get_ticker( const string& base, const string& q
    return result;
 }
 
-market_volume database_api::get_24_volume( const string& base, const string& quote )const
+market_hi_low_volume database_api::get_24_hi_low_volume( const string& base, const string& quote )const
 {
-   return my->get_24_volume( base, quote );
+   return my->get_24_hi_low_volume( base, quote );
 }
 
-market_volume database_api_impl::get_24_volume( const string& base, const string& quote )const
+market_hi_low_volume database_api_impl::get_24_hi_low_volume( const string& base, const string& quote )const
 {
    auto assets = lookup_asset_symbols( {base, quote} );
    FC_ASSERT( assets[0], "Invalid base asset symbol: ${s}", ("s",base) );
@@ -1288,34 +1386,51 @@ market_volume database_api_impl::get_24_volume( const string& base, const string
    auto base_id = assets[0]->id;
    auto quote_id = assets[1]->id;
 
-   market_volume result;
+   market_hi_low_volume result;
    result.base = base;
    result.quote = quote;
+   result.high = 0;
+   result.low = 0;
    result.base_volume = 0;
    result.quote_volume = 0;
 
    try {
       if( base_id > quote_id ) std::swap(base_id, quote_id);
 
-      uint32_t bucket_size = 86400;
+      uint32_t sec_in_24h = 86400;
       auto now = fc::time_point_sec( fc::time_point::now() );
 
-      auto trades = get_trade_history( base, quote, now, fc::time_point_sec( now.sec_since_epoch() - bucket_size ), 100 );
+      auto trades = get_trade_history( base, quote, now, fc::time_point_sec( now.sec_since_epoch() - sec_in_24h ), 100 );
+
+      if(trades.size() > 0){
+         result.high = trades[0].price;
+         result.low = trades[0].price;
+      }
 
       for ( market_trade t: trades )
       {
+         if(result.high < t.price)
+            result.high = t.price;
+         if(result.low > t.price)
+            result.low = t.price;
+
          result.base_volume += t.value;
          result.quote_volume += t.amount;
       }
 
       while (trades.size() == 100)
       {
-         trades = get_trade_history( base, quote, trades[99].date, fc::time_point_sec( now.sec_since_epoch() - bucket_size ), 100 );
+         trades = get_trade_history( base, quote, trades[99].date, fc::time_point_sec( now.sec_since_epoch() - sec_in_24h ), 100 );
 
          for ( market_trade t: trades )
          {
-            result.base_volume += t.value;
-            result.quote_volume += t.amount;
+           if(result.high < t.price)
+              result.high = t.price;
+           if(result.low > t.price)
+              result.low = t.price;
+
+           result.base_volume += t.value;
+           result.quote_volume += t.amount;
          }
       }
 

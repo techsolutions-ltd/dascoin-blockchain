@@ -1141,30 +1141,32 @@ limit_orders_grouped_by_price database_api::get_limit_orders_grouped_by_price(as
    return my->get_limit_orders_grouped_by_price( a, b, limit );
 }
 
-class own_double_less
+// this is helper class for precision cutting on double type
+// is used for key comparation in "helper_map" in function database_api_impl::get_limit_orders_grouped_by_price
+class double_less_comparator
 {
 public:
-  own_double_less( double arg_ = 1e-7 ) : epsilon(arg_) {}
-  bool operator()( const double &left, const double &right  ) const
-  {
+   double_less_comparator( double arg_ = 1e-7 ) : epsilon(arg_) {}
+   bool operator()( const double &left, const double &right  ) const
+   {
     return (std::abs(left - right) > epsilon) && (left < right);
-  }
-  double epsilon;
+   }
+   double epsilon;
 };
 
-limit_orders_grouped_by_price database_api_impl::get_limit_orders_grouped_by_price(asset_id_type a, asset_id_type b, uint32_t limit)const
+limit_orders_grouped_by_price database_api_impl::get_limit_orders_grouped_by_price(asset_id_type base, asset_id_type quote, uint32_t limit)const
 {
    const auto& limit_order_idx = _db.get_index_type<limit_order_index>();
    const auto& limit_price_idx = limit_order_idx.indices().get<by_price>();
 
    limit_orders_grouped_by_price result;
-   if(a < b)
+   if(base < quote)
    {
-      std::swap(a,b);
+      std::swap(base,quote);
    }
 
    auto func = [this, &limit_price_idx, limit](asset_id_type& a, asset_id_type& b, std::vector<agregated_limit_orders_with_same_price>& ret, bool ascending){
-      std::map<double, agregated_limit_orders_with_same_price, own_double_less> helper_map;
+      std::map<double, agregated_limit_orders_with_same_price, double_less_comparator> helper_map;
       auto limit_itr = limit_price_idx.lower_bound(price::max(a,b));
       auto limit_end = limit_price_idx.upper_bound(price::min(a,b));
 
@@ -1225,8 +1227,8 @@ limit_orders_grouped_by_price database_api_impl::get_limit_orders_grouped_by_pri
       }
    };
 
-   func(a, b, result.sell, true);
-   func(b, a, result.buy, false);
+   func(base, quote, result.sell, true);
+   func(quote, base, result.buy, false);
 
    return std::move(result);
 }

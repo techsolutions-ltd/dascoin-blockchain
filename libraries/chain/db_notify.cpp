@@ -258,6 +258,11 @@ struct get_impacted_account_visitor
       _impacted.insert( op.wire_out_handler );
    }
 
+   void operator()( const wire_out_result_operation& op )
+   {
+      _impacted.insert( op.account );
+   }
+
    void operator()( const transfer_vault_to_wallet_operation& op )
    {
       _impacted.insert( op.from_vault );

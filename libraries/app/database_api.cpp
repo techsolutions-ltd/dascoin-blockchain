@@ -1141,17 +1141,6 @@ limit_orders_grouped_by_price database_api::get_limit_orders_grouped_by_price(as
    return my->get_limit_orders_grouped_by_price( a, b, limit );
 }
 
-class own_double_less
-{
-public:
-  own_double_less( double arg_ = 1e-7 ) : epsilon(arg_) {}
-  bool operator()( const double &left, const double &right  ) const
-  {
-    return (std::abs(left - right) > epsilon) && (left < right);
-  }
-  double epsilon;
-};
-
 limit_orders_grouped_by_price database_api_impl::get_limit_orders_grouped_by_price(asset_id_type a, asset_id_type b, uint32_t limit)const
 {
    const auto& limit_order_idx = _db.get_index_type<limit_order_index>();
@@ -1164,7 +1153,8 @@ limit_orders_grouped_by_price database_api_impl::get_limit_orders_grouped_by_pri
    }
 
    auto func = [this, &limit_price_idx, limit](asset_id_type& a, asset_id_type& b, std::vector<agregated_limit_orders_with_same_price>& ret, bool ascending){
-      std::map<double, agregated_limit_orders_with_same_price, own_double_less> helper_map;
+      std::map<share_type, agregated_limit_orders_with_same_price> helper_map;
+
       auto limit_itr = limit_price_idx.lower_bound(price::max(a,b));
       auto limit_end = limit_price_idx.upper_bound(price::min(a,b));
 
@@ -1175,21 +1165,23 @@ limit_orders_grouped_by_price database_api_impl::get_limit_orders_grouped_by_pri
       while(limit_itr != limit_end)
       {
          double price = ascending ? 1 / limit_itr->sell_price.to_real() : limit_itr->sell_price.to_real();
-         auto helper_itr = helper_map.find(price);
+         // adjust price precision and value accordingly so we can forme key
+         auto p = round((ascending ? price * coef : price / coef) * DASCOIN_FIAT_ASSET_PRECISION);
+         share_type price_key = static_cast<share_type>(p);
+
+         auto helper_itr = helper_map.find(price_key);
 
          // if we are adding limit order with new price
          if(helper_itr == helper_map.end())
          {
             agregated_limit_orders_with_same_price alo;
-            // adjust price precision and value accordingly
-            alo.price = static_cast<share_type>((ascending ? price * coef : price / coef) * DASCOIN_FIAT_ASSET_PRECISION);
-
+            alo.price = price_key;
             alo.base_volume = limit_itr->for_sale.value;
             alo.quote_volume = round(ascending ? limit_itr->for_sale.value * price : limit_itr->for_sale.value / price);
             alo.count = 1;
 
-            helper_map[price] = alo;
-            helper_itr = helper_map.find(price);
+            helper_map[price_key] = alo;
+            helper_itr = helper_map.find(alo.price);
          }
          else
          {

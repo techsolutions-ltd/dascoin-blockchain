@@ -1180,7 +1180,6 @@ limit_orders_grouped_by_price database_api_impl::get_limit_orders_grouped_by_pri
             alo.count = 1;
 
             helper_map[price_key] = alo;
-            helper_itr = helper_map.find(alo.price);
          }
          else
          {

@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [0.2.2] - 2017-10-06
 ### Added
  - Query to get limit orders grouped by price
+
 ### Updated
  - get_24_volume replaced with get_24_hi_low_volume
 

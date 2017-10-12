@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE( update_queue_parameters_unit_test )
 { try {
 
   do_op(update_queue_parameters_operation(get_license_issuer_id(), {true}, {600}, 
-                                          {2000 * DASCOIN_DEFAULT_ASSET_PRECISION}));
+                                          {200 * DASCOIN_DEFAULT_ASSET_PRECISION})); // TODO: re-evaluate this value, due to precision change
 
   const auto& params = get_chain_parameters();
   BOOST_CHECK_EQUAL( params.enable_dascoin_queue, true );

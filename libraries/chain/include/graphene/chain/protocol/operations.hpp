@@ -153,7 +153,8 @@ namespace graphene { namespace chain {
 
             fba_distribute_operation,
             asset_settle_cancel_operation,
-            fill_order_operation
+            fill_order_operation,
+            wire_out_result_operation
 
          > operation;
 

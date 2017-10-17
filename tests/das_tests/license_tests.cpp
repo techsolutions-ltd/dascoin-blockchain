@@ -80,7 +80,8 @@ BOOST_AUTO_TEST_CASE( get_license_types_unit_test )
 
   auto lic_vec = _dal.get_license_types();
 
-  BOOST_CHECK_EQUAL( lic_vec.size(), 13 );
+  // Number of kinds (regular, chartered, locked) times number of types (standard, manager, pro, executive, vise president, president + 1:
+  BOOST_CHECK_EQUAL( lic_vec.size(), 19 );
   
 } FC_LOG_AND_RETHROW() }
 

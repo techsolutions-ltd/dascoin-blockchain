@@ -807,6 +807,13 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       create_license_type(license_kind::chartered, "executive_charter", DASCOIN_BASE_EXECUTIVE_CYCLES, {}, {1,2}, {}, DASCOIN_DEFAULT_EUR_LIMIT_EXECUTIVE);
       create_license_type(license_kind::chartered, "vice_president_charter", DASCOIN_BASE_VICE_PRESIDENT_CYCLES, {1,2}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_VICE_PRESIDENT);
       create_license_type(license_kind::chartered, "president_charter", DASCOIN_BASE_PRESIDENT_CYCLES, {}, {1,2,4}, {}, DASCOIN_DEFAULT_EUR_LIMIT_PRESIDENT);
+
+      create_license_type(license_kind::locked_frequency, "standard_locked", DASCOIN_BASE_STANDARD_CYCLES, {}, {1}, {}, DASCOIN_DEFAULT_EUR_LIMIT_STANDARD);
+      create_license_type(license_kind::locked_frequency, "manager_locked", DASCOIN_BASE_MANAGER_CYCLES, {}, {1}, {}, DASCOIN_DEFAULT_EUR_LIMIT_MANAGER);
+      create_license_type(license_kind::locked_frequency, "pro_locked", DASCOIN_BASE_PRO_CYCLES, {}, {1}, {}, DASCOIN_DEFAULT_EUR_LIMIT_PRO);
+      create_license_type(license_kind::locked_frequency, "executive_locked", DASCOIN_BASE_EXECUTIVE_CYCLES, {}, {1,2}, {}, DASCOIN_DEFAULT_EUR_LIMIT_EXECUTIVE);
+      create_license_type(license_kind::locked_frequency, "vice_president_locked", DASCOIN_BASE_VICE_PRESIDENT_CYCLES, {1,2}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_VICE_PRESIDENT);
+      create_license_type(license_kind::locked_frequency, "president_locked", DASCOIN_BASE_PRESIDENT_CYCLES, {}, {1,2,4}, {}, DASCOIN_DEFAULT_EUR_LIMIT_PRESIDENT);
    }
 
    // Set active witnesses

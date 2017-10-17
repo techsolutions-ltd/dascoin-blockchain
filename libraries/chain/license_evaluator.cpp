@@ -98,7 +98,7 @@ void_result issue_license_evaluator::do_evaluate(const issue_license_operation& 
 
   if ( new_license_obj.kind == license_kind::chartered ||
        new_license_obj.kind == license_kind::promo ||
-       new_license_obj.kind == license_kind::locked_frequency)
+       new_license_obj.kind == license_kind::locked_frequency )
   {
     FC_ASSERT( op.frequency_lock != 0,
                "Cannot issue license ${l_n} on account ${a}, frequency lock cannot be zero",

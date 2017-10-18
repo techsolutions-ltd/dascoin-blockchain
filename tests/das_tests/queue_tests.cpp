@@ -263,6 +263,56 @@ BOOST_AUTO_TEST_CASE( basic_chartered_license_to_queue_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( submit_cycles_to_queue_by_license_operation_test )
+{ try {
+  VAULT_ACTOR(vault)
+
+  auto standard_locked = *(_dal.get_license_type("standard_locked"));
+  auto manager_locked = *(_dal.get_license_type("manager_locked"));
+  const share_type bonus_percent = 10;
+  share_type frequency_lock = 200;
+  const time_point_sec issue_time = db.head_block_time();
+
+  // Error: no issued license.
+  GRAPHENE_REQUIRE_THROW( do_op(submit_cycles_to_queue_by_license_operation(vault_id, 100, standard_locked.id, "TEST")), fc::exception );
+
+  do_op(issue_license_operation(get_license_issuer_id(), vault_id, manager_locked.id, bonus_percent, frequency_lock, issue_time));
+
+  // Error: issued other license.
+  GRAPHENE_REQUIRE_THROW( do_op(submit_cycles_to_queue_by_license_operation(vault_id, 100, standard_locked.id, "TEST")), fc::exception );
+
+  // Error: cannot submit zero cycles.
+  GRAPHENE_REQUIRE_THROW( do_op(submit_cycles_to_queue_by_license_operation(vault_id, 0, manager_locked.id, "TEST")), fc::exception );
+
+  // Error: not enough cycles on the balance.
+  GRAPHENE_REQUIRE_THROW( do_op(submit_cycles_to_queue_by_license_operation(vault_id, 2 * DASCOIN_BASE_MANAGER_CYCLES, manager_locked.id, "TEST")), fc::exception );
+
+  do_op(submit_cycles_to_queue_by_license_operation(vault_id, 1000, manager_locked.id, "TEST"));
+
+  const auto& license_information_obj = (*vault.license_information)(db);
+  const auto& license_history = license_information_obj.history;
+  const auto& license_record = license_history[0];
+  const uint32_t remaining_cycles = static_cast<uint32_t >(DASCOIN_BASE_MANAGER_CYCLES * 1.1) - 1000;
+  BOOST_CHECK_EQUAL( license_record.amount.value, remaining_cycles );
+
+  const auto& balance = get_cycle_balance(vault_id);
+  BOOST_CHECK_EQUAL( balance.value, remaining_cycles );
+
+  // Error: not enough cycles on the balance:
+  GRAPHENE_REQUIRE_THROW( do_op(submit_cycles_to_queue_by_license_operation(vault_id, remaining_cycles + 1, manager_locked.id, "TEST")), fc::exception );
+
+  do_op(submit_cycles_to_queue_by_license_operation(vault_id, 1000, manager_locked.id, "TEST"));
+
+  const auto& license_information_obj2 = (*vault.license_information)(db);
+  const auto& license_history2 = license_information_obj2.history;
+  const auto& license_record2 = license_history2[0];
+  BOOST_CHECK_EQUAL( license_record2.amount.value, remaining_cycles - 1000 );
+
+  const auto& balance2 = get_cycle_balance(vault_id);
+  BOOST_CHECK_EQUAL( balance2.value, remaining_cycles - 1000 );
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_CASE( historic_sum_test )
 { try {
   VAULT_ACTORS((first)(second)(third)(fourth))

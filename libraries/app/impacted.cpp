@@ -298,6 +298,11 @@ struct get_impacted_account_visitor
       _impacted.insert( op.account );
    }
 
+   void operator()( const submit_cycles_to_queue_by_license_operation& op )
+   {
+      _impacted.insert( op.account );
+   }
+
    void operator()( const record_submit_reserve_cycles_to_queue_operation& op )
    {
       _impacted.insert( op.cycle_issuer );

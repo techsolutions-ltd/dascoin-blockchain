@@ -88,6 +88,72 @@ object_id_type submit_cycles_to_queue_evaluator::do_apply(const submit_cycles_to
 
 } FC_CAPTURE_AND_RETHROW((op)) }
 
+void_result submit_cycles_to_queue_by_license_evaluator::do_evaluate(const operation_type& op)
+{ try {
+  const auto& d = db();
+  const auto& account_obj = op.account(d);
+
+  // Only vault accounts are allowed to submit cycles:
+  FC_ASSERT( account_obj.is_vault(),
+             "Account '${n}' is not a vault account",
+             ("n", account_obj.name)
+           );
+
+  FC_ASSERT( account_obj.license_information.valid(),
+             "Cannot submit cycles, account '${n}' does not have any licenses",
+             ("n", account_obj.name)
+           );
+
+  const auto& license_information_obj = (*account_obj.license_information)(d);
+  // Check if this account has a license of required type:
+  optional<license_information_object::license_history_record> license{};
+  for (const auto& lic_history: license_information_obj.history)
+  {
+    if (lic_history.license == op.license_type)
+    {
+      license = lic_history;
+      break;
+    }
+  }
+
+  FC_ASSERT( license.valid(), "Account '${n}' does not have a license of type ${l}",
+             ("n", account_obj.name)
+             ("l", op.license_type)
+           );
+
+  // Assure we have enough funds to submit:
+  FC_ASSERT( license->amount >= op.amount,
+             "Cannot submit ${am}, account '${n}' license cycle balance is ${b}",
+             ("am", op.amount)
+             ("n", account_obj.name)
+             ("b", license->amount)
+           );
+
+  _account_obj = &account_obj;
+  _license_information_obj = &license_information_obj;
+  _license_type = op.license_type;
+  _frequency = license->frequency_lock;
+
+  return {};
+
+} FC_CAPTURE_AND_RETHROW((op)) }
+
+object_id_type submit_cycles_to_queue_by_license_evaluator::do_apply(const operation_type& op)
+{ try {
+  auto& d = db();
+
+  // Spend cycles, decrease balance and supply:
+  d.reserve_cycles(op.account, op.amount);
+  auto origin = fc::reflector<dascoin_origin_kind>::to_string(user_submit);
+  d.modify(*_license_information_obj, [&](license_information_object& lio){
+    lio.subtract_cycles(op.license_type, op.amount);
+  });
+
+  return d.push_queue_submission(origin, _license_type, op.account, op.amount,
+                                 _frequency, op.comment);
+
+} FC_CAPTURE_AND_RETHROW((op)) }
+
 void_result update_queue_parameters_evaluator::do_evaluate(const update_queue_parameters_operation& op)
 { try {
   const auto& d = db();

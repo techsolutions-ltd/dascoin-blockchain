@@ -29,6 +29,21 @@ namespace graphene { namespace chain {
     const account_object* _account_obj = nullptr;
   };
 
+  class submit_cycles_to_queue_by_license_evaluator : public evaluator<submit_cycles_to_queue_by_license_evaluator>
+  {
+  public:
+    typedef submit_cycles_to_queue_by_license_operation operation_type;
+
+    void_result do_evaluate(const operation_type& op);
+    object_id_type do_apply(const operation_type& op);
+
+  private:
+    const account_object* _account_obj = nullptr;
+    const license_information_object* _license_information_obj = nullptr;
+    license_type_id_type _license_type;
+    frequency_type _frequency;
+  };
+
   class update_queue_parameters_evaluator : public evaluator<update_queue_parameters_evaluator>
   {
   public:

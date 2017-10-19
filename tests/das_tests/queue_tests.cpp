@@ -274,34 +274,37 @@ BOOST_AUTO_TEST_CASE( submit_cycles_to_queue_by_license_operation_test )
   const time_point_sec issue_time = db.head_block_time();
 
   // Error: no issued license.
-  GRAPHENE_REQUIRE_THROW( do_op(submit_cycles_to_queue_by_license_operation(vault_id, 100, standard_locked.id, "TEST")), fc::exception );
+  GRAPHENE_REQUIRE_THROW( do_op(submit_cycles_to_queue_by_license_operation(vault_id, 100, standard_locked.id, 200, "TEST")), fc::exception );
 
   do_op(issue_license_operation(get_license_issuer_id(), vault_id, manager_locked.id, bonus_percent, frequency_lock, issue_time));
 
   // Error: issued other license.
-  GRAPHENE_REQUIRE_THROW( do_op(submit_cycles_to_queue_by_license_operation(vault_id, 100, standard_locked.id, "TEST")), fc::exception );
+  GRAPHENE_REQUIRE_THROW( do_op(submit_cycles_to_queue_by_license_operation(vault_id, 100, standard_locked.id, 200, "TEST")), fc::exception );
 
   // Error: cannot submit zero cycles.
-  GRAPHENE_REQUIRE_THROW( do_op(submit_cycles_to_queue_by_license_operation(vault_id, 0, manager_locked.id, "TEST")), fc::exception );
+  GRAPHENE_REQUIRE_THROW( do_op(submit_cycles_to_queue_by_license_operation(vault_id, 0, manager_locked.id, 200, "TEST")), fc::exception );
 
   // Error: not enough cycles on the balance.
-  GRAPHENE_REQUIRE_THROW( do_op(submit_cycles_to_queue_by_license_operation(vault_id, 2 * DASCOIN_BASE_MANAGER_CYCLES, manager_locked.id, "TEST")), fc::exception );
+  GRAPHENE_REQUIRE_THROW( do_op(submit_cycles_to_queue_by_license_operation(vault_id, 2 * DASCOIN_BASE_MANAGER_CYCLES, manager_locked.id, 200, "TEST")), fc::exception );
 
-  do_op(submit_cycles_to_queue_by_license_operation(vault_id, 1000, manager_locked.id, "TEST"));
+  // Error: frequency (20) is not equal to license's frequency.
+  GRAPHENE_REQUIRE_THROW( do_op(submit_cycles_to_queue_by_license_operation(vault_id, 1000, manager_locked.id, 20, "TEST")), fc::exception );
+
+  do_op(submit_cycles_to_queue_by_license_operation(vault_id, 1000, manager_locked.id, 200, "TEST"));
 
   const auto& license_information_obj = (*vault.license_information)(db);
   const auto& license_history = license_information_obj.history;
   const auto& license_record = license_history[0];
-  const uint32_t remaining_cycles = static_cast<uint32_t >(DASCOIN_BASE_MANAGER_CYCLES * 1.1) - 1000;
+  const uint32_t remaining_cycles = static_cast<uint32_t>(DASCOIN_BASE_MANAGER_CYCLES * 1.1) - 1000;
   BOOST_CHECK_EQUAL( license_record.amount.value, remaining_cycles );
 
   const auto& balance = get_cycle_balance(vault_id);
   BOOST_CHECK_EQUAL( balance.value, remaining_cycles );
 
   // Error: not enough cycles on the balance:
-  GRAPHENE_REQUIRE_THROW( do_op(submit_cycles_to_queue_by_license_operation(vault_id, remaining_cycles + 1, manager_locked.id, "TEST")), fc::exception );
+  GRAPHENE_REQUIRE_THROW( do_op(submit_cycles_to_queue_by_license_operation(vault_id, remaining_cycles + 1, manager_locked.id, 200, "TEST")), fc::exception );
 
-  do_op(submit_cycles_to_queue_by_license_operation(vault_id, 1000, manager_locked.id, "TEST"));
+  do_op(submit_cycles_to_queue_by_license_operation(vault_id, 1000, manager_locked.id, 200, "TEST"));
 
   const auto& license_information_obj2 = (*vault.license_information)(db);
   const auto& license_history2 = license_information_obj2.history;

@@ -99,16 +99,18 @@ namespace graphene { namespace chain {
     share_type amount;
 
     license_type_id_type license_type;
+    frequency_type frequency_lock;
     string comment;
 
     extensions_type extensions;
 
     submit_cycles_to_queue_by_license_operation() = default;
     explicit submit_cycles_to_queue_by_license_operation(account_id_type account, share_type amount, license_type_id_type license_type,
-                                              const string& comment)
+                                                         frequency_type frequency_lock, const string& comment)
             : account(account),
               amount(amount),
               license_type(license_type),
+              frequency_lock(frequency_lock),
               comment(comment) {}
 
     account_id_type fee_payer() const { return account; }
@@ -285,6 +287,7 @@ FC_REFLECT( graphene::chain::submit_cycles_to_queue_by_license_operation,
             (account)
             (amount)
             (license_type)
+            (frequency_lock)
             (comment)
             (extensions)
           )

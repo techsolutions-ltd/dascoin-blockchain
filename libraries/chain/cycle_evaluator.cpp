@@ -123,11 +123,19 @@ void_result submit_cycles_to_queue_by_license_evaluator::do_evaluate(const opera
 
   // Assure we have enough funds to submit:
   FC_ASSERT( license->amount >= op.amount,
-             "Cannot submit ${am}, account '${n}' license cycle balance is ${b}",
+             "Cannot submit ${am} cycles, account '${n}' license cycle balance is ${b}",
              ("am", op.amount)
              ("n", account_obj.name)
              ("b", license->amount)
            );
+
+  // Assure frequency submitted is the same as in the license:
+  FC_ASSERT( license->frequency_lock == op.frequency_lock,
+             "Cannot submit ${am} cycles, frequency set (${f}) is not equal to license's frequency (${lf})",
+             ("am", op.amount)
+             ("f", op.frequency_lock)
+             ("lf", license->frequency_lock)
+  );
 
   _account_obj = &account_obj;
   _license_information_obj = &license_information_obj;

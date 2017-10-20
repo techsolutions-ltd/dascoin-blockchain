@@ -119,6 +119,7 @@ namespace graphene { namespace chain {
       registrar = 8,
       pi_validator = 9,
       wire_out_handler = 10,
+      root_administrator = 11,
       CHAIN_AUTHORITY_KIND_COUNT
    };
 
@@ -502,6 +503,7 @@ REFLECT_ENUM_CHECK( graphene::chain::chain_authority_kind,
                     (registrar)
                     (pi_validator)
                     (wire_out_handler)
+                    (root_administrator)
                     (CHAIN_AUTHORITY_KIND_COUNT)
                   )
 

@@ -17,7 +17,8 @@ void submit_cycles_to_queue_operation::validate() const
 {
   FC_ASSERT( amount > 0 );
   FC_ASSERT( frequency > 0 );
-  FC_ASSERT( comment.length() <= DASCOIN_MAX_COMMENT_LENGTH );
+  // Comment's format needs to be x.yy.z
+  FC_ASSERT( comment.length() >= 6 && comment.length() <= DASCOIN_MAX_COMMENT_LENGTH );
 }
 
 void submit_cycles_to_queue_by_license_operation::validate() const

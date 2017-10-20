@@ -6,6 +6,7 @@
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/frequency_history_record_object.hpp>
 #include <graphene/chain/queue_objects.hpp>
+#include <graphene/db/object_id.hpp>
 
 namespace graphene { namespace chain {
 
@@ -46,7 +47,6 @@ void_result submit_cycles_to_queue_evaluator::do_evaluate(const submit_cycles_to
 { try {
   const auto& d = db();
   const auto& account_obj = op.account(d);
-  const auto& balance_obj = d.get_cycle_balance_object(op.account);
 
   // Only vault accounts are allowed to submit cycles:
   FC_ASSERT( account_obj.is_vault(),
@@ -54,24 +54,45 @@ void_result submit_cycles_to_queue_evaluator::do_evaluate(const submit_cycles_to
              ("n", account_obj.name)
            );
 
+  FC_ASSERT( account_obj.license_information.valid(),
+             "Cannot submit cycles, account '${n}' does not have any licenses",
+             ("n", account_obj.name)
+  );
+
+  fc::from_variant<license_type_object::space_id, license_type_object::type_id>(variant{op.comment}, _license_type);
+  const auto& license_information_obj = (*account_obj.license_information)(d);
+  // Check if this account has a license of required type:
+  optional<license_information_object::license_history_record> license{};
+  for (const auto& lic_history: license_information_obj.history)
+  {
+    if (lic_history.license == _license_type)
+    {
+      license = lic_history;
+      break;
+    }
+  }
+  FC_ASSERT( license.valid(), "Account '${n}' does not have a license of type ${l}",
+             ("n", account_obj.name)
+             ("l", _license_type)
+  );
+
   // Assure we have enough funds to submit:
-  FC_ASSERT( balance_obj.balance >= op.amount,
-             "Cannot submit ${am}, account '${n}' cycle balance is ${b}",
+  FC_ASSERT( license->amount >= op.amount,
+             "Cannot submit ${am} cycles, account '${n}' license cycle balance is ${b}",
              ("am", op.amount)
              ("n", account_obj.name)
-             ("b", balance_obj.balance)
-           );
+             ("b", license->amount)
+  );
 
-  // Make sure that the frequency matches the global frequency:
-  const auto GLOB_FREQUENCY = d.get_dynamic_global_properties().frequency;
-  FC_ASSERT( op.frequency == GLOB_FREQUENCY,
-             "Submit frequency ${op_f} must be equal to global frequency ${glob_f}",
-             // This hack should display the frequency with decimals, eg. 2.50 instead of 250.
-             ("op_f", asset(op.frequency, d.get_web_asset_id()))
-             ("glob_f", asset(GLOB_FREQUENCY, d.get_web_asset_id()))
-           );
+  // Assure frequency submitted is the same as in the license:
+  FC_ASSERT( license->frequency_lock == op.frequency,
+             "Cannot submit ${am} cycles, frequency set (${f}) is not equal to license's frequency (${lf})",
+             ("am", op.amount)
+             ("f", op.frequency)
+             ("lf", license->frequency_lock)
+  );
 
-  _account_obj = &account_obj;
+  _license_information_obj = &license_information_obj;
   return {};
 
 } FC_CAPTURE_AND_RETHROW((op)) }
@@ -83,7 +104,11 @@ object_id_type submit_cycles_to_queue_evaluator::do_apply(const submit_cycles_to
   // Spend cycles, decrease balance and supply:
   d.reserve_cycles(op.account, op.amount);
   auto origin = fc::reflector<dascoin_origin_kind>::to_string(user_submit);
-  return d.push_queue_submission(origin, /* license = */{}, op.account, op.amount, 
+  d.modify(*_license_information_obj, [&](license_information_object& lio){
+    lio.subtract_cycles(_license_type, op.amount);
+  });
+
+  return d.push_queue_submission(origin, _license_type, op.account, op.amount,
                                  op.frequency, op.comment);
 
 } FC_CAPTURE_AND_RETHROW((op)) }
@@ -137,10 +162,8 @@ void_result submit_cycles_to_queue_by_license_evaluator::do_evaluate(const opera
              ("lf", license->frequency_lock)
   );
 
-  _account_obj = &account_obj;
   _license_information_obj = &license_information_obj;
   _license_type = op.license_type;
-  _frequency = license->frequency_lock;
 
   return {};
 
@@ -158,7 +181,7 @@ object_id_type submit_cycles_to_queue_by_license_evaluator::do_apply(const opera
   });
 
   return d.push_queue_submission(origin, _license_type, op.account, op.amount,
-                                 _frequency, op.comment);
+                                 op.frequency_lock, op.comment);
 
 } FC_CAPTURE_AND_RETHROW((op)) }
 

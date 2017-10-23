@@ -96,7 +96,9 @@ void_result issue_license_evaluator::do_evaluate(const issue_license_operation& 
   const auto& account_obj = op.account(d);
   const auto& new_license_obj = op.license(d);
 
-  if ( new_license_obj.kind == license_kind::chartered || new_license_obj.kind == license_kind::promo )
+  if ( new_license_obj.kind == license_kind::chartered ||
+       new_license_obj.kind == license_kind::promo ||
+       new_license_obj.kind == license_kind::locked_frequency )
   {
     FC_ASSERT( op.frequency_lock != 0,
                "Cannot issue license ${l_n} on account ${a}, frequency lock cannot be zero",
@@ -166,7 +168,7 @@ object_id_type issue_license_evaluator::do_apply(const issue_license_operation& 
   }
 
   auto kind = _new_license_obj->kind;
-  if ( kind == license_kind::regular )
+  if ( kind == license_kind::regular || kind == license_kind::locked_frequency )
   {
     d.issue_cycles(op.account, amount);
   }

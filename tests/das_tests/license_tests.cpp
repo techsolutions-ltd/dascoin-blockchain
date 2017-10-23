@@ -80,7 +80,8 @@ BOOST_AUTO_TEST_CASE( get_license_types_unit_test )
 
   auto lic_vec = _dal.get_license_types();
 
-  BOOST_CHECK_EQUAL( lic_vec.size(), 13 );
+  // Number of kinds (regular, chartered, locked) times number of types (standard, manager, pro, executive, vise president, president + 1:
+  BOOST_CHECK_EQUAL( lic_vec.size(), 19 );
   
 } FC_LOG_AND_RETHROW() }
 
@@ -182,6 +183,47 @@ BOOST_AUTO_TEST_CASE( get_frequency_history_by_page_unit_test )
   BOOST_CHECK_EQUAL( fhistory2.size(), 10 );
   // First element should have frequency set to 150:
   BOOST_CHECK_EQUAL( fhistory2[0].frequency.value, 150 );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( locked_license_unit_test )
+{ try {
+  VAULT_ACTOR(vault);
+
+  auto locked = *(_dal.get_license_type("standard_locked"));
+  const share_type bonus_percent = 50;
+  share_type frequency_lock = 0;
+  const time_point_sec issue_time = db.head_block_time();
+  const uint32_t amount = DASCOIN_BASE_STANDARD_CYCLES + (50 * DASCOIN_BASE_STANDARD_CYCLES) / 100;
+
+  // This will fail, frequency cannot be zero:
+  GRAPHENE_REQUIRE_THROW( do_op(issue_license_operation(get_license_issuer_id(), vault_id, locked.id,
+                                bonus_percent, frequency_lock, issue_time)), fc::exception );
+
+  frequency_lock = 200;
+  // Frequency is now valid, this ought to work:
+  do_op(issue_license_operation(get_license_issuer_id(), vault_id, locked.id,
+                                bonus_percent, frequency_lock, issue_time));
+
+  BOOST_CHECK( vault.license_information.valid() );
+
+  const auto& license_information_obj = (*vault.license_information)(db);
+
+  BOOST_CHECK( license_information_obj.account == vault_id );
+
+  const auto& license_history = license_information_obj.history;
+
+  BOOST_CHECK_EQUAL( license_history.size(), 1 );
+
+  const auto& license_record = license_history[0];
+
+  BOOST_CHECK( license_record.license == locked.id );
+  BOOST_CHECK_EQUAL( license_record.amount.value, amount );
+  BOOST_CHECK_EQUAL( license_record.base_amount.value, DASCOIN_BASE_STANDARD_CYCLES );
+  BOOST_CHECK_EQUAL( license_record.bonus_percent.value, 50 );
+  BOOST_CHECK_EQUAL( license_record.frequency_lock.value, 200 );
+  BOOST_CHECK( license_record.activated_at == issue_time );
+  BOOST_CHECK( license_record.issued_on_blockchain == issue_time );
 
 } FC_LOG_AND_RETHROW() }
 

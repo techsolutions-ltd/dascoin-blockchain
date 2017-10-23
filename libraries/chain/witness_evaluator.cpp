@@ -73,4 +73,23 @@ void_result witness_update_evaluator::do_apply( const witness_update_operation& 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
+void_result remove_root_authority_evaluator::do_evaluate( const remove_root_authority_operation& op )
+{ try {
+   FC_ASSERT(db().get(op.root_account).is_lifetime_member());
+   return void_result();
+} FC_CAPTURE_AND_RETHROW( (op) ) }
+
+void_result remove_root_authority_evaluator::do_apply( const remove_root_authority_operation& op )
+{ try {
+   database& _db = db();
+   _db.modify(
+         _db.get_dynamic_global_properties(),
+         [&](dynamic_global_property_object& dgp)
+         {
+            dgp.is_root_authority_enabled_flag = false;
+         });
+
+   return void_result();
+} FC_CAPTURE_AND_RETHROW( (op) ) }
+
 } } // graphene::chain

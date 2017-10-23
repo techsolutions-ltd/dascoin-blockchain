@@ -45,4 +45,13 @@ namespace graphene { namespace chain {
          void_result do_apply( const witness_update_operation& o );
    };
 
+   class remove_root_authority_evaluator : public evaluator<remove_root_authority_evaluator>
+   {
+      public:
+         typedef remove_root_authority_operation operation_type;
+
+         void_result do_evaluate( const remove_root_authority_operation& o );
+         void_result do_apply( const remove_root_authority_operation& o );
+   };
+
 } } // graphene::chain

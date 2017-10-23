@@ -76,6 +76,7 @@ namespace graphene { namespace chain {
 
             witness_create_operation,
             witness_update_operation,
+            remove_root_authority_operation,
 
             proposal_create_operation,
             proposal_update_operation,

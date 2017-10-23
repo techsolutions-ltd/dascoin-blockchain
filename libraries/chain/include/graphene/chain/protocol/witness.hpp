@@ -72,6 +72,21 @@ namespace graphene { namespace chain {
       void            validate()const;
    };
 
+
+
+   struct remove_root_authority_operation : public base_operation
+   {
+      struct fee_parameters_type { uint64_t fee = 0; };
+
+      asset             fee;
+      /// Root account whose authority we will revoke. This account pays the fee for this operation.
+      account_id_type   root_account;
+
+      account_id_type fee_payer()const { return root_account; }
+      void            validate()const{}
+   };
+
+
    /// TODO: witness_resign_operation : public base_operation
 
 } } // graphene::chain
@@ -81,3 +96,6 @@ FC_REFLECT( graphene::chain::witness_create_operation, (fee)(witness_account)(ur
 
 FC_REFLECT( graphene::chain::witness_update_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::witness_update_operation, (fee)(witness)(witness_account)(new_url)(new_signing_key) )
+
+FC_REFLECT( graphene::chain::remove_root_authority_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::remove_root_authority_operation, (fee)(root_account) )

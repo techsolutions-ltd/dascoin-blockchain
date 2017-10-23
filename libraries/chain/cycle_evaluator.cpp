@@ -74,7 +74,7 @@ void_result submit_cycles_to_queue_evaluator::do_evaluate(const submit_cycles_to
   FC_ASSERT( license.valid(), "Account '${n}' does not have a license of type ${l}",
              ("n", account_obj.name)
              ("l", _license_type)
-  );
+           );
 
   // Assure we have enough funds to submit:
   FC_ASSERT( license->amount >= op.amount,
@@ -82,7 +82,7 @@ void_result submit_cycles_to_queue_evaluator::do_evaluate(const submit_cycles_to
              ("am", op.amount)
              ("n", account_obj.name)
              ("b", license->amount)
-  );
+           );
 
   // Assure frequency submitted is the same as in the license:
   FC_ASSERT( license->frequency_lock == op.frequency,
@@ -90,7 +90,7 @@ void_result submit_cycles_to_queue_evaluator::do_evaluate(const submit_cycles_to
              ("am", op.amount)
              ("f", op.frequency)
              ("lf", license->frequency_lock)
-  );
+           );
 
   _license_information_obj = &license_information_obj;
   return {};
@@ -160,7 +160,7 @@ void_result submit_cycles_to_queue_by_license_evaluator::do_evaluate(const opera
              ("am", op.amount)
              ("f", op.frequency_lock)
              ("lf", license->frequency_lock)
-  );
+           );
 
   _license_information_obj = &license_information_obj;
   _license_type = op.license_type;
@@ -193,7 +193,7 @@ void_result update_queue_parameters_evaluator::do_evaluate(const update_queue_pa
 
   d.perform_chain_authority_check("license issuer", gpo.authorities.license_issuer, issuer_obj);
 
-  if ( op.reward_interval_time_seconds.valid()  )
+  if ( op.reward_interval_time_seconds.valid() )
     FC_ASSERT( *op.reward_interval_time_seconds % gpo.parameters.block_interval == 0,
                "Reward interval must be a multiple of the block interval ${bi}",
                ("bi", gpo.parameters.block_interval)

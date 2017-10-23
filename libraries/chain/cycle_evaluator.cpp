@@ -6,6 +6,7 @@
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/frequency_history_record_object.hpp>
 #include <graphene/chain/queue_objects.hpp>
+#include <graphene/chain/submit_cycles_evaluator_helper.hpp>
 #include <graphene/db/object_id.hpp>
 
 namespace graphene { namespace chain {
@@ -45,48 +46,10 @@ object_id_type submit_reserve_cycles_to_queue_evaluator::do_apply(const submit_r
 
 void_result submit_cycles_to_queue_evaluator::do_evaluate(const submit_cycles_to_queue_operation& op)
 { try {
-  const auto& d = db();
-  const auto& account_obj = op.account(d);
-
-  // Only vault accounts are allowed to submit cycles:
-  FC_ASSERT( account_obj.is_vault(),
-             "Account '${n}' is not a vault account",
-             ("n", account_obj.name)
-           );
-
-  FC_ASSERT( account_obj.license_information.valid(),
-             "Cannot submit cycles, account '${n}' does not have any licenses",
-             ("n", account_obj.name)
-           );
-
+  detail::submit_cycles_evaluator_helper helper(db());
   fc::from_variant<license_type_object::space_id, license_type_object::type_id>(variant{op.comment}, _license_type);
-  const auto& license_information_obj = (*account_obj.license_information)(d);
+  _license_information_obj = helper.do_evaluate(op, _license_type, op.frequency);
 
-  // Check if this account has a license of required type:
-  optional<license_information_object::license_history_record> license{license_information_obj.get_license(_license_type)};
-
-  FC_ASSERT( license.valid(), "Account '${n}' does not have a license of type ${l}",
-             ("n", account_obj.name)
-             ("l", _license_type)
-           );
-
-  // Assure we have enough funds to submit:
-  FC_ASSERT( license->amount >= op.amount,
-             "Cannot submit ${am} cycles, account '${n}' license cycle balance is ${b}",
-             ("am", op.amount)
-             ("n", account_obj.name)
-             ("b", license->amount)
-           );
-
-  // Assure frequency submitted is the same as in the license:
-  FC_ASSERT( license->frequency_lock == op.frequency,
-             "Cannot submit ${am} cycles, frequency set (${f}) is not equal to license's frequency (${lf})",
-             ("am", op.amount)
-             ("f", op.frequency)
-             ("lf", license->frequency_lock)
-           );
-
-  _license_information_obj = &license_information_obj;
   return {};
 
 } FC_CAPTURE_AND_RETHROW((op)) }
@@ -109,48 +72,8 @@ object_id_type submit_cycles_to_queue_evaluator::do_apply(const submit_cycles_to
 
 void_result submit_cycles_to_queue_by_license_evaluator::do_evaluate(const operation_type& op)
 { try {
-  const auto& d = db();
-  const auto& account_obj = op.account(d);
-
-  // Only vault accounts are allowed to submit cycles:
-  FC_ASSERT( account_obj.is_vault(),
-             "Account '${n}' is not a vault account",
-             ("n", account_obj.name)
-           );
-
-  FC_ASSERT( account_obj.license_information.valid(),
-             "Cannot submit cycles, account '${n}' does not have any licenses",
-             ("n", account_obj.name)
-           );
-
-  const auto& license_information_obj = (*account_obj.license_information)(d);
-
-  // Check if this account has a license of required type:
-  optional<license_information_object::license_history_record> license{license_information_obj.get_license(op.license_type)};
-
-  FC_ASSERT( license.valid(), "Account '${n}' does not have a license of type ${l}",
-             ("n", account_obj.name)
-             ("l", op.license_type)
-           );
-
-  // Assure we have enough funds to submit:
-  FC_ASSERT( license->amount >= op.amount,
-             "Cannot submit ${am} cycles, account '${n}' license cycle balance is ${b}",
-             ("am", op.amount)
-             ("n", account_obj.name)
-             ("b", license->amount)
-           );
-
-  // Assure frequency submitted is the same as in the license:
-  FC_ASSERT( license->frequency_lock == op.frequency_lock,
-             "Cannot submit ${am} cycles, frequency set (${f}) is not equal to license's frequency (${lf})",
-             ("am", op.amount)
-             ("f", op.frequency_lock)
-             ("lf", license->frequency_lock)
-           );
-
-  _license_information_obj = &license_information_obj;
-
+  detail::submit_cycles_evaluator_helper helper(db());
+  _license_information_obj = helper.do_evaluate(op, op.license_type, op.frequency_lock);
   return {};
 
 } FC_CAPTURE_AND_RETHROW((op)) }

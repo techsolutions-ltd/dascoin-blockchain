@@ -14,7 +14,8 @@ namespace graphene { namespace chain { namespace detail {
       : _db{db}{}
 
     template<typename OperationType>
-    const license_information_object* do_evaluate(const OperationType& op, const license_type_id_type &license_type, frequency_type frequency) const
+    const license_information_object* do_evaluate(const OperationType& op, const license_type_id_type &license_type,
+                                                  frequency_type frequency) const
     {
       const auto& account_obj = op.account(_db);
 
@@ -56,6 +57,22 @@ namespace graphene { namespace chain { namespace detail {
                );
 
       return &license_information_obj;
+    }
+
+    template<typename OperationType>
+    object_id_type do_apply(const OperationType& op, const license_information_object* lio,
+                            const license_type_id_type &license_type, frequency_type frequency)
+    {
+      auto& d = const_cast<database &>(_db);
+
+      // Spend cycles, decrease balance and supply:
+      d.reserve_cycles(op.account, op.amount);
+      auto origin = fc::reflector<dascoin_origin_kind>::to_string(user_submit);
+      d.modify(*lio, [&](license_information_object& lio){
+        lio.subtract_cycles(license_type, op.amount);
+      });
+
+      return d.push_queue_submission(origin, license_type, op.account, op.amount, frequency, op.comment);
     }
 
   private:

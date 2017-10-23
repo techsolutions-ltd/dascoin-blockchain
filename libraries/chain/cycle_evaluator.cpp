@@ -56,17 +56,8 @@ void_result submit_cycles_to_queue_evaluator::do_evaluate(const submit_cycles_to
 
 object_id_type submit_cycles_to_queue_evaluator::do_apply(const submit_cycles_to_queue_operation& op)
 { try {
-  auto& d = db();
-
-  // Spend cycles, decrease balance and supply:
-  d.reserve_cycles(op.account, op.amount);
-  auto origin = fc::reflector<dascoin_origin_kind>::to_string(user_submit);
-  d.modify(*_license_information_obj, [&](license_information_object& lio){
-    lio.subtract_cycles(_license_type, op.amount);
-  });
-
-  return d.push_queue_submission(origin, _license_type, op.account, op.amount,
-                                 op.frequency, op.comment);
+  detail::submit_cycles_evaluator_helper helper(db());
+  return helper.do_apply(op, _license_information_obj, _license_type, op.frequency);
 
 } FC_CAPTURE_AND_RETHROW((op)) }
 
@@ -80,17 +71,8 @@ void_result submit_cycles_to_queue_by_license_evaluator::do_evaluate(const opera
 
 object_id_type submit_cycles_to_queue_by_license_evaluator::do_apply(const operation_type& op)
 { try {
-  auto& d = db();
-
-  // Spend cycles, decrease balance and supply:
-  d.reserve_cycles(op.account, op.amount);
-  auto origin = fc::reflector<dascoin_origin_kind>::to_string(user_submit);
-  d.modify(*_license_information_obj, [&](license_information_object& lio){
-    lio.subtract_cycles(op.license_type, op.amount);
-  });
-
-  return d.push_queue_submission(origin, op.license_type, op.account, op.amount,
-                                 op.frequency_lock, op.comment);
+  detail::submit_cycles_evaluator_helper helper(db());
+  return helper.do_apply(op, _license_information_obj, op.license_type, op.frequency_lock);
 
 } FC_CAPTURE_AND_RETHROW((op)) }
 

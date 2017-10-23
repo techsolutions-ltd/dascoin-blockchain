@@ -57,7 +57,7 @@ void_result submit_cycles_to_queue_evaluator::do_evaluate(const submit_cycles_to
   FC_ASSERT( account_obj.license_information.valid(),
              "Cannot submit cycles, account '${n}' does not have any licenses",
              ("n", account_obj.name)
-  );
+           );
 
   fc::from_variant<license_type_object::space_id, license_type_object::type_id>(variant{op.comment}, _license_type);
   const auto& license_information_obj = (*account_obj.license_information)(d);

@@ -74,6 +74,7 @@ void database_fixture::init_genesis_state()
 
    // Master account:
    auto master_key = make_account("sys.master");
+   genesis_state.initial_root_authority = {"sys.master"};
 
    genesis_state.initial_committee_candidates.push_back({"sys.master"});
 

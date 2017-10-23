@@ -41,7 +41,6 @@ namespace graphene { namespace chain {
 
   private:
     const license_information_object* _license_information_obj = nullptr;
-    license_type_id_type _license_type;
   };
 
   class update_queue_parameters_evaluator : public evaluator<update_queue_parameters_evaluator>

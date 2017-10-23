@@ -78,6 +78,20 @@ namespace graphene { namespace chain {
           found->amount -= amount;
         }
       }
+
+      optional<license_history_record> get_license(const license_type_id_type& license_type) const
+      {
+        optional<license_history_record> license{};
+        for (const auto& lic_history: history)
+        {
+          if (lic_history.license == license_type)
+          {
+            license = lic_history;
+            break;
+          }
+        }
+        return license;
+      }
   };
 
   ///////////////////////////////

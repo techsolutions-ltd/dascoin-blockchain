@@ -61,16 +61,10 @@ void_result submit_cycles_to_queue_evaluator::do_evaluate(const submit_cycles_to
 
   fc::from_variant<license_type_object::space_id, license_type_object::type_id>(variant{op.comment}, _license_type);
   const auto& license_information_obj = (*account_obj.license_information)(d);
+
   // Check if this account has a license of required type:
-  optional<license_information_object::license_history_record> license{};
-  for (const auto& lic_history: license_information_obj.history)
-  {
-    if (lic_history.license == _license_type)
-    {
-      license = lic_history;
-      break;
-    }
-  }
+  optional<license_information_object::license_history_record> license{license_information_obj.get_license(_license_type)};
+
   FC_ASSERT( license.valid(), "Account '${n}' does not have a license of type ${l}",
              ("n", account_obj.name)
              ("l", _license_type)
@@ -130,16 +124,9 @@ void_result submit_cycles_to_queue_by_license_evaluator::do_evaluate(const opera
            );
 
   const auto& license_information_obj = (*account_obj.license_information)(d);
+
   // Check if this account has a license of required type:
-  optional<license_information_object::license_history_record> license{};
-  for (const auto& lic_history: license_information_obj.history)
-  {
-    if (lic_history.license == op.license_type)
-    {
-      license = lic_history;
-      break;
-    }
-  }
+  optional<license_information_object::license_history_record> license{license_information_obj.get_license(op.license_type)};
 
   FC_ASSERT( license.valid(), "Account '${n}' does not have a license of type ${l}",
              ("n", account_obj.name)
@@ -163,7 +150,6 @@ void_result submit_cycles_to_queue_by_license_evaluator::do_evaluate(const opera
            );
 
   _license_information_obj = &license_information_obj;
-  _license_type = op.license_type;
 
   return {};
 
@@ -180,7 +166,7 @@ object_id_type submit_cycles_to_queue_by_license_evaluator::do_apply(const opera
     lio.subtract_cycles(op.license_type, op.amount);
   });
 
-  return d.push_queue_submission(origin, _license_type, op.account, op.amount,
+  return d.push_queue_submission(origin, op.license_type, op.account, op.amount,
                                  op.frequency_lock, op.comment);
 
 } FC_CAPTURE_AND_RETHROW((op)) }

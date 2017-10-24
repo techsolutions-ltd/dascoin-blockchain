@@ -54,4 +54,29 @@ namespace graphene { namespace chain {
          void_result do_apply( const remove_root_authority_operation& o );
    };
 
+   class create_witness_account_evaluator : public evaluator<create_witness_account_evaluator>
+   {
+      public:
+         typedef create_witness_account_operation operation_type;
+
+         void_result do_evaluate( const create_witness_account_operation& o );
+         object_id_type do_apply( const create_witness_account_operation& o );
+   };
+   class update_witness_account_evaluator : public evaluator<update_witness_account_evaluator>
+   {
+      public:
+         typedef update_witness_account_operation operation_type;
+
+         void_result do_evaluate( const update_witness_account_operation& o );
+         void_result do_apply( const update_witness_account_operation& o );
+   };
+   class remove_witness_account_evaluator : public evaluator<remove_witness_account_evaluator>
+   {
+      public:
+         typedef remove_witness_account_operation operation_type;
+
+         void_result do_evaluate( const remove_witness_account_operation& o );
+         void_result do_apply( const remove_witness_account_operation& o );
+   };
+
 } } // graphene::chain

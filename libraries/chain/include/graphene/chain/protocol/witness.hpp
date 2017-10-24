@@ -72,8 +72,6 @@ namespace graphene { namespace chain {
       void            validate()const;
    };
 
-
-
    struct remove_root_authority_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 0; };
@@ -82,7 +80,61 @@ namespace graphene { namespace chain {
       /// Root account whose authority we will revoke. This account pays the fee for this operation.
       account_id_type   root_account;
 
+      string            comment;
+
       account_id_type fee_payer()const { return root_account; }
+      void            validate()const{}
+   };
+
+   struct create_witness_account_operation : public base_operation
+   {
+      struct fee_parameters_type { uint64_t fee = 0; };
+
+      asset             fee;
+      /// Root account authority. This account pays the fee for this operation.
+      account_id_type   authority;
+      /// Existing account that we want to promote into a master node candidate.
+      account_id_type   witness_account;
+      /// Public key that is used for signing blocks
+      public_key_type   block_signing_key;
+
+      string            url;
+      string            comment;
+      account_id_type fee_payer()const { return authority; }
+      void            validate()const{}
+   };
+
+   struct update_witness_account_operation : public base_operation
+   {
+      struct fee_parameters_type { uint64_t fee = 0; };
+
+      asset             fee;
+      witness_id_type   witness;
+
+      /// Root account authority. This account pays the fee for this operation.
+      account_id_type   authority;
+      /// Existing account that we want to promote into a master node candidate.
+      optional < account_id_type >   witness_account;
+      /// Public key that is used for signing blocks
+      optional < public_key_type >   block_signing_key;
+      optional < string >            url;
+      optional < string >            comment;
+
+      account_id_type fee_payer()const { return authority; }
+      void            validate()const{}
+   };
+
+   struct remove_witness_account_operation : public base_operation
+   {
+      struct fee_parameters_type { uint64_t fee = 0; };
+
+      asset                fee;
+      witness_id_type      witness;
+      /// Root account authority. This account pays the fee for this operation.
+      account_id_type      authority;
+      optional < string >  comment;
+
+      account_id_type fee_payer()const { return authority; }
       void            validate()const{}
    };
 
@@ -98,4 +150,13 @@ FC_REFLECT( graphene::chain::witness_update_operation::fee_parameters_type, (fee
 FC_REFLECT( graphene::chain::witness_update_operation, (fee)(witness)(witness_account)(new_url)(new_signing_key) )
 
 FC_REFLECT( graphene::chain::remove_root_authority_operation::fee_parameters_type, (fee) )
-FC_REFLECT( graphene::chain::remove_root_authority_operation, (fee)(root_account) )
+FC_REFLECT( graphene::chain::remove_root_authority_operation, (fee)(root_account)(comment) )
+
+FC_REFLECT( graphene::chain::create_witness_account_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::create_witness_account_operation, (fee)(authority)(witness_account)(block_signing_key)(url)(comment) )
+
+FC_REFLECT( graphene::chain::update_witness_account_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::update_witness_account_operation, (fee)(witness)(authority)(witness_account)(block_signing_key)(url)(comment) )
+
+FC_REFLECT( graphene::chain::remove_witness_account_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::remove_witness_account_operation, (fee)(witness)(authority)(comment) )

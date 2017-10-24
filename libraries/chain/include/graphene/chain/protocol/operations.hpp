@@ -76,7 +76,6 @@ namespace graphene { namespace chain {
 
             witness_create_operation,
             witness_update_operation,
-            remove_root_authority_operation,
 
             proposal_create_operation,
             proposal_update_operation,
@@ -143,6 +142,11 @@ namespace graphene { namespace chain {
             update_euro_limit_operation,
 
             // Virtual operations below this point:
+
+            remove_root_authority_operation,
+            create_witness_account_operation,
+            update_witness_account_operation,
+            remove_witness_account_operation,
 
             record_submit_reserve_cycles_to_queue_operation,  // TODO: should we keep this op?
             record_submit_charter_license_cycles_operation,  // TODO: should we keep this op?

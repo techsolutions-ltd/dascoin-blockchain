@@ -92,12 +92,16 @@ void_result remove_root_authority_evaluator::do_apply( const remove_root_authori
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result create_witness_account_evaluator::do_evaluate( const create_witness_account_operation& op )
+void_result create_witness_evaluator::do_evaluate( const create_witness_operation& op )
 { try {
+
+   database& _db = db();
+   FC_ASSERT(_db.get_dynamic_global_properties().is_root_authority_enabled_flag);
+
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-object_id_type create_witness_account_evaluator::do_apply( const create_witness_account_operation& op )
+object_id_type create_witness_evaluator::do_apply( const create_witness_operation& op )
 { try {
 
    const auto& new_witness_object = db().create<witness_object>( [&]( witness_object& obj ){
@@ -108,12 +112,15 @@ object_id_type create_witness_account_evaluator::do_apply( const create_witness_
    return new_witness_object.id;
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result update_witness_account_evaluator::do_evaluate( const update_witness_account_operation& op )
+void_result update_witness_evaluator::do_evaluate( const update_witness_operation& op )
 { try {
+   database& _db = db();
+   FC_ASSERT(_db.get_dynamic_global_properties().is_root_authority_enabled_flag);
+
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result update_witness_account_evaluator::do_apply( const update_witness_account_operation& op )
+void_result update_witness_evaluator::do_apply( const update_witness_operation& op )
 { try {
    database& _db = db();
    _db.modify(
@@ -130,15 +137,19 @@ void_result update_witness_account_evaluator::do_apply( const update_witness_acc
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result remove_witness_account_evaluator::do_evaluate( const remove_witness_account_operation& op )
+void_result remove_witness_evaluator::do_evaluate( const remove_witness_operation& op )
 { try {
+   database& _db = db();
+   FC_ASSERT(_db.get_dynamic_global_properties().is_root_authority_enabled_flag);
+
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result remove_witness_account_evaluator::do_apply( const remove_witness_account_operation& op )
+void_result remove_witness_evaluator::do_apply( const remove_witness_operation& op )
 { try {
    database& _db = db();
-   _db.remove(_db.get(op.witness));
+   auto& obj = _db.get(op.witness);
+   _db.remove(obj);
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }

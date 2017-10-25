@@ -103,9 +103,9 @@ struct get_impacted_account_visitor
    void operator()( const asset_global_settle_operation& op ) {}
    void operator()( const asset_publish_feed_operation& op ) {}
    void operator()( const remove_root_authority_operation& op) {}
-   void operator()( const create_witness_account_operation& op) {}
-   void operator()( const update_witness_account_operation& op){}
-   void operator()( const remove_witness_account_operation& op){}
+   void operator()( const create_witness_operation& op) {}
+   void operator()( const update_witness_operation& op){}
+   void operator()( const remove_witness_operation& op){}
 
    void operator()( const witness_create_operation& op )
    {

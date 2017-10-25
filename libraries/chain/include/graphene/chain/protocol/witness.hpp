@@ -86,7 +86,7 @@ namespace graphene { namespace chain {
       void            validate()const{}
    };
 
-   struct create_witness_account_operation : public base_operation
+   struct create_witness_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 0; };
 
@@ -104,7 +104,7 @@ namespace graphene { namespace chain {
       void            validate()const{}
    };
 
-   struct update_witness_account_operation : public base_operation
+   struct update_witness_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 0; };
 
@@ -124,7 +124,7 @@ namespace graphene { namespace chain {
       void            validate()const{}
    };
 
-   struct remove_witness_account_operation : public base_operation
+   struct remove_witness_operation : public base_operation
    {
       struct fee_parameters_type { uint64_t fee = 0; };
 
@@ -152,11 +152,11 @@ FC_REFLECT( graphene::chain::witness_update_operation, (fee)(witness)(witness_ac
 FC_REFLECT( graphene::chain::remove_root_authority_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::remove_root_authority_operation, (fee)(root_account)(comment) )
 
-FC_REFLECT( graphene::chain::create_witness_account_operation::fee_parameters_type, (fee) )
-FC_REFLECT( graphene::chain::create_witness_account_operation, (fee)(authority)(witness_account)(block_signing_key)(url)(comment) )
+FC_REFLECT( graphene::chain::create_witness_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::create_witness_operation, (fee)(authority)(witness_account)(block_signing_key)(url)(comment) )
 
-FC_REFLECT( graphene::chain::update_witness_account_operation::fee_parameters_type, (fee) )
-FC_REFLECT( graphene::chain::update_witness_account_operation, (fee)(witness)(authority)(witness_account)(block_signing_key)(url)(comment) )
+FC_REFLECT( graphene::chain::update_witness_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::update_witness_operation, (fee)(witness)(authority)(witness_account)(block_signing_key)(url)(comment) )
 
-FC_REFLECT( graphene::chain::remove_witness_account_operation::fee_parameters_type, (fee) )
-FC_REFLECT( graphene::chain::remove_witness_account_operation, (fee)(witness)(authority)(comment) )
+FC_REFLECT( graphene::chain::remove_witness_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::remove_witness_operation, (fee)(witness)(authority)(comment) )

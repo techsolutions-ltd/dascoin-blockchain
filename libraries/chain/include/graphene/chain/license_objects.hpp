@@ -66,6 +66,32 @@ namespace graphene { namespace chain {
         max_license = license_id;
         frequency_lock = f_lock;
       }
+
+      void subtract_cycles(license_type_id_type license_type, const share_type& amount)
+      {
+        auto found = find_if(history.begin(), history.end(), [license_type](const license_history_record& record){
+          return record.license == license_type;
+        });
+        if (found != history.end())
+        {
+          FC_ASSERT( found->amount >= amount, "Insufficient cycle balance" );
+          found->amount -= amount;
+        }
+      }
+
+      optional<license_history_record> get_license(const license_type_id_type& license_type) const
+      {
+        optional<license_history_record> license{};
+        for (const auto& lic_history: history)
+        {
+          if (lic_history.license == license_type)
+          {
+            license = lic_history;
+            break;
+          }
+        }
+        return license;
+      }
   };
 
   ///////////////////////////////

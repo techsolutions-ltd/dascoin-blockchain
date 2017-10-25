@@ -141,6 +141,8 @@ namespace graphene { namespace chain {
             edit_license_type_operation,
             update_euro_limit_operation,
 
+            submit_cycles_to_queue_by_license_operation,
+
             // Virtual operations below this point:
 
             remove_root_authority_operation,

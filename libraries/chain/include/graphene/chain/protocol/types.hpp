@@ -102,6 +102,7 @@ namespace graphene { namespace chain {
       regular = 0,
       chartered = 1,
       promo = 2,
+      locked_frequency = 3,
       none = 99,
       LICENSE_KIND_COUNT
    };
@@ -480,6 +481,7 @@ REFLECT_ENUM_CHECK( graphene::chain::license_kind,
                     (regular)
                     (chartered)
                     (promo)
+                    (locked_frequency)
                     (none)
                     (LICENSE_KIND_COUNT)
                   )

@@ -305,7 +305,7 @@ BOOST_AUTO_TEST_CASE( get_vault_info_unit_test )
   BOOST_CHECK_EQUAL( res->eur_limit.value, static_cast<share_type>(DASCOIN_DEFAULT_EUR_LIMIT_EXECUTIVE).value );
   BOOST_CHECK( res->license_information.valid() );
 
-  auto president = *(_dal.get_license_type("president"));
+  auto president = *(_dal.get_license_type("president_locked"));
   issue_time = db.head_block_time();
 
   // Increase license to president, we should get new limit

@@ -52,6 +52,7 @@ namespace graphene { namespace chain {
       array_t history;
       license_type_id_type max_license;
       frequency_type frequency_lock;
+      license_kind vault_license_kind;
 
       upgrade_type balance_upgrade;
       upgrade_type requeue_upgrade;
@@ -219,6 +220,7 @@ FC_REFLECT( graphene::chain::license_information_object,
             (history)
             (max_license)
             (frequency_lock)
+            (vault_license_kind)
             (balance_upgrade)
             (requeue_upgrade)
             (return_upgrade)

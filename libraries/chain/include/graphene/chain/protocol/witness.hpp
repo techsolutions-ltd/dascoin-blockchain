@@ -23,6 +23,7 @@
  */
 #pragma once
 #include <graphene/chain/protocol/base.hpp>
+#include <graphene/db/object.hpp>
 
 namespace graphene { namespace chain { 
 
@@ -138,7 +139,78 @@ namespace graphene { namespace chain {
       void            validate()const{}
    };
 
+   struct activate_witness_operation : public base_operation
+   {
+      struct fee_parameters_type { uint64_t fee = 0; };
 
+      asset                fee;
+      witness_id_type      witness;
+      /// Root account authority. This account pays the fee for this operation.
+      account_id_type      authority;
+      optional < string >  comment;
+
+      account_id_type fee_payer()const { return authority; }
+      void            validate()const{}
+   };
+
+   struct deactivate_witness_operation : public base_operation
+   {
+      struct fee_parameters_type { uint64_t fee = 0; };
+
+      asset                fee;
+      witness_id_type      witness;
+      /// Root account authority. This account pays the fee for this operation.
+      account_id_type      authority;
+      optional < string >  comment;
+
+      account_id_type fee_payer()const { return authority; }
+      void            validate()const{}
+   };
+
+   struct update_witness_delegate_data
+   {
+      witness_id_type   witness;
+      /// Existing account that we want to promote into a master node candidate.
+      optional < account_id_type >   witness_account;
+      /// Public key that is used for signing blocks
+      optional < public_key_type >   block_signing_key;
+      optional < string >            url;
+      optional < string >            comment;
+   };
+
+   struct remove_witness_delegate_data
+   {
+      witness_id_type      witness;
+      optional < string >  comment;
+   };
+
+   struct activate_witness_delegate_data
+   {
+      witness_id_type      witness;
+      optional < string >  comment;
+   };
+
+   struct deactivate_witness_delegate_data
+   {
+      witness_id_type      witness;
+      optional < string >  comment;
+   };
+
+   typedef fc::static_variant<update_witness_delegate_data,
+                              remove_witness_delegate_data,
+                              activate_witness_delegate_data,
+                              deactivate_witness_delegate_data
+           > witness_delegate_data_type;
+
+
+   class witness_delegate_data_colection_type : public graphene::db::abstract_object < witness_delegate_data_colection_type >
+   {
+   public:
+      static const uint8_t space_id = implementation_ids;
+      static const uint8_t type_id  = impl_witness_delegate_data_colection_object_type;
+
+      std::vector<witness_delegate_data_type> data;
+   };
    /// TODO: witness_resign_operation : public base_operation
 
 } } // graphene::chain
@@ -160,3 +232,18 @@ FC_REFLECT( graphene::chain::update_witness_operation, (fee)(witness)(authority)
 
 FC_REFLECT( graphene::chain::remove_witness_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::remove_witness_operation, (fee)(witness)(authority)(comment) )
+
+FC_REFLECT( graphene::chain::activate_witness_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::activate_witness_operation, (fee)(witness)(authority)(comment) )
+
+FC_REFLECT( graphene::chain::deactivate_witness_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::deactivate_witness_operation, (fee)(witness)(authority)(comment) )
+
+FC_REFLECT( graphene::chain::update_witness_delegate_data, (witness)(witness_account)(block_signing_key)(url)(comment) )
+FC_REFLECT( graphene::chain::remove_witness_delegate_data, (witness)(comment) )
+FC_REFLECT( graphene::chain::activate_witness_delegate_data, (witness)(comment) )
+FC_REFLECT( graphene::chain::deactivate_witness_delegate_data, (witness)(comment) )
+FC_REFLECT_TYPENAME( graphene::chain::witness_delegate_data_type )
+FC_REFLECT_DERIVED( graphene::chain::witness_delegate_data_colection_type, (graphene::db::object),
+                    (data)
+                  )

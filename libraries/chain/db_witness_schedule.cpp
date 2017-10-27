@@ -83,6 +83,18 @@ uint32_t database::witness_participation_rate()const
    return uint64_t(GRAPHENE_100_PERCENT) * dpo.recent_slots_filled.popcount() / 128;
 }
 
+void database::update_witnesses()
+{
+   if(_witness_delegate_data.data.size() < 1)
+      return;
+
+   witness_delegate_data_evaluator witness_delegate_data_evaluate(*this);
+   for(auto wdd : _witness_delegate_data.data)
+   {
+      wdd.visit(witness_delegate_data_evaluate);
+   }
+}
+
 void database::update_witness_schedule()
 {
    const witness_schedule_object& wso = witness_schedule_id_type()(*this);

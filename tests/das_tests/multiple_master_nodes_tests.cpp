@@ -98,6 +98,45 @@ BOOST_AUTO_TEST_CASE( successful_creation_update_and_removal_of_witness_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( successful_activate_deactivate_witness_test )
+{ try {
+
+   auto root_id = db.get_global_properties().authorities.root_administrator;
+
+   const string name("witnesss1");
+   const fc::ecc::private_key new_key = fc::ecc::private_key::generate();
+   const public_key_type key = new_key.get_public_key();
+
+   auto ao = make_new_account_base( account_kind::special, db.get_chain_authorities().registrar, name, key );
+
+   const auto& witnesses_bi = db.get_index_type<witness_index>().indices().get<by_id>();
+   size_t count = witnesses_bi.size();
+
+   create_witness_operation cwao;
+   cwao.authority = root_id;
+   cwao.block_signing_key = key;
+   cwao.witness_account = ao.id;
+
+   BOOST_CHECK( db.get_dynamic_global_properties().is_root_authority_enabled_flag );
+
+   do_op(cwao);
+
+   const auto& idx = db.get_index_type<witness_index>().indices().get<by_account>();
+   auto itr = idx.find(ao.id);
+   // we check if we have created witness sucessfuly
+   BOOST_CHECK(itr != idx.end());
+
+   activate_witness_operation awao;
+   awao.authority = root_id;
+   awao.witness = ao.id;
+
+   do_op(awao);
+
+   BOOST_CHECK(get_global_properties().active_witnesses.size() == 2);
+
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

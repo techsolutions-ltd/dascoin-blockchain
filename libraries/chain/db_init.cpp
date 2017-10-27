@@ -204,6 +204,8 @@ void database::initialize_evaluators()
    register_evaluator<create_witness_evaluator>();
    register_evaluator<update_witness_evaluator>();
    register_evaluator<remove_witness_evaluator>();
+   register_evaluator<activate_witness_evaluator>();
+   register_evaluator<deactivate_witness_evaluator>();
    register_evaluator<witness_create_evaluator>();
    register_evaluator<witness_update_evaluator>();
    register_evaluator<withdraw_permission_create_evaluator>();

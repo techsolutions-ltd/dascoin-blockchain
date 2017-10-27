@@ -94,6 +94,8 @@ struct get_impacted_account_visitor
    void operator()( const create_witness_operation& op){}
    void operator()( const update_witness_operation& op){}
    void operator()( const remove_witness_operation& op){}
+   void operator()( const activate_witness_operation& op){}
+   void operator()( const deactivate_witness_operation& op){}
    void operator()( const witness_create_operation& op )
    {
       _impacted.insert( op.witness_account );

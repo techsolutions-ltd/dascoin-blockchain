@@ -123,17 +123,21 @@ void_result update_witness_evaluator::do_evaluate( const update_witness_operatio
 void_result update_witness_evaluator::do_apply( const update_witness_operation& op )
 { try {
    database& _db = db();
-   _db.modify(
-      _db.get(op.witness), [&]( witness_object& obj ){
-         if(op.witness_account.valid())
-            obj.witness_account  = *op.witness_account;
+   update_witness_delegate_data uwdd;
 
-         if(op.block_signing_key.valid())
-            obj.signing_key      = *op.block_signing_key;
+   if(op.witness_account.valid())
+      uwdd.witness_account  = *op.witness_account;
 
-         if(op.url.valid())
-            obj.url              = *op.url;
+   if(op.block_signing_key.valid())
+      uwdd.block_signing_key      = *op.block_signing_key;
+
+   if(op.url.valid())
+      uwdd.url              = *op.url;
+
+   _db.modify(_db.get_witness_delegate_data(), [&]( witness_delegate_data_colection_type& all_delegated_operations ){
+      all_delegated_operations.data.push_back(uwdd);
    });
+
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
@@ -148,10 +152,101 @@ void_result remove_witness_evaluator::do_evaluate( const remove_witness_operatio
 void_result remove_witness_evaluator::do_apply( const remove_witness_operation& op )
 { try {
    database& _db = db();
-   auto& obj = _db.get(op.witness);
-   _db.remove(obj);
+
+   remove_witness_delegate_data rwdd;
+   rwdd.witness = op.witness;
+
+   _db.modify(_db.get_witness_delegate_data(), [&]( witness_delegate_data_colection_type& all_delegated_operations ){
+      all_delegated_operations.data.push_back(rwdd);
+   });
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
+
+void_result activate_witness_evaluator::do_evaluate( const activate_witness_operation& op )
+{ try {
+   database& _db = db();
+   FC_ASSERT(_db.get_dynamic_global_properties().is_root_authority_enabled_flag);
+
+   return void_result();
+} FC_CAPTURE_AND_RETHROW( (op) ) }
+
+void_result activate_witness_evaluator::do_apply( const activate_witness_operation& op )
+{ try {
+   database& _db = db();
+
+   activate_witness_delegate_data awdd;
+   awdd.witness = op.witness;
+
+   _db.modify(_db.get_witness_delegate_data(), [&]( witness_delegate_data_colection_type& all_delegated_operations ){
+      all_delegated_operations.data.push_back(awdd);
+   });
+
+   return void_result();
+} FC_CAPTURE_AND_RETHROW( (op) ) }
+
+void_result deactivate_witness_evaluator::do_evaluate( const deactivate_witness_operation& op )
+{ try {
+   database& _db = db();
+   FC_ASSERT(_db.get_dynamic_global_properties().is_root_authority_enabled_flag);
+
+   return void_result();
+} FC_CAPTURE_AND_RETHROW( (op) ) }
+
+void_result deactivate_witness_evaluator::do_apply( const deactivate_witness_operation& op )
+{ try {
+   database& _db = db();
+
+   deactivate_witness_delegate_data dwdd;
+   dwdd.witness = op.witness;
+
+   _db.modify(_db.get_witness_delegate_data(), [&]( witness_delegate_data_colection_type& all_delegated_operations ){
+      all_delegated_operations.data.push_back(dwdd);
+   });
+
+   return void_result();
+} FC_CAPTURE_AND_RETHROW( (op) ) }
+
+void witness_delegate_data_evaluator::operator ()(const update_witness_delegate_data& o)
+{
+   try {
+      db.modify(
+         db.get(o.witness), [&]( witness_object& obj ){
+            if(o.witness_account.valid())
+               obj.witness_account  = *o.witness_account;
+
+            if(o.block_signing_key.valid())
+               obj.signing_key      = *o.block_signing_key;
+
+            if(o.url.valid())
+               obj.url              = *o.url;
+      });
+} FC_CAPTURE_AND_RETHROW( (o) ) }
+
+void witness_delegate_data_evaluator::operator ()(const remove_witness_delegate_data& o)
+{
+   try {
+      auto& obj = db.get(o.witness);
+      db.remove(obj);
+} FC_CAPTURE_AND_RETHROW( (o) ) }
+
+void witness_delegate_data_evaluator::operator ()(const activate_witness_delegate_data& o)
+{
+   try {
+      db.modify(db.get_global_properties(), [&](global_property_object& gpo) {
+         gpo.active_witnesses.insert(o.witness);
+      });
+} FC_CAPTURE_AND_RETHROW( (o) ) }
+
+void witness_delegate_data_evaluator::operator ()(const deactivate_witness_delegate_data& o)
+{
+   try {
+      db.modify(db.get_global_properties(), [&](global_property_object& gpo) {
+         auto itr = gpo.active_witnesses.find(o.witness);
+         if(itr != gpo.active_witnesses.end())
+            gpo.active_witnesses.erase(itr);
+      });
+} FC_CAPTURE_AND_RETHROW( (o) ) }
+
 
 } } // graphene::chain

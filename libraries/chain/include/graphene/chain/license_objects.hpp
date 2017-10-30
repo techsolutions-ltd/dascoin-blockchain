@@ -208,6 +208,7 @@ namespace graphene { namespace chain {
 FC_REFLECT( graphene::chain::license_information_object::license_history_record,
             (license)
             (amount)
+            (base_amount)
             (bonus_percent)
             (frequency_lock)
             (activated_at)
@@ -234,4 +235,3 @@ FC_REFLECT_DERIVED( graphene::chain::license_type_object, (graphene::db::object)
                     (eur_limit)
                     (extensions)
                   )
-

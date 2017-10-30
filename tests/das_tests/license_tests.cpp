@@ -227,6 +227,31 @@ BOOST_AUTO_TEST_CASE( locked_license_unit_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( different_license_kinds_unit_test )
+{ try {
+  VAULT_ACTOR(vault);
+
+  auto standard_locked = *(_dal.get_license_type("standard_locked"));
+  auto executive_locked = *(_dal.get_license_type("executive_locked"));
+  auto standard = *(_dal.get_license_type("standard"));
+  const share_type bonus_percent = 50;
+  share_type frequency_lock = 20;
+  const time_point_sec issue_time = db.head_block_time();
+
+  // Issue standard locked license:
+  do_op(issue_license_operation(get_license_issuer_id(), vault_id, standard_locked.id,
+                                bonus_percent, frequency_lock, issue_time));
+
+  // This should work, the same license kind:
+  do_op(issue_license_operation(get_license_issuer_id(), vault_id, executive_locked.id,
+                                bonus_percent, frequency_lock, issue_time));
+
+  // This should fail, different license kind:
+  GRAPHENE_REQUIRE_THROW( do_op(issue_license_operation(get_license_issuer_id(), vault_id, standard.id,
+                          bonus_percent, frequency_lock, issue_time)), fc::exception );
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

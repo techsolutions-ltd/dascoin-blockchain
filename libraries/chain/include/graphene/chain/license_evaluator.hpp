@@ -44,6 +44,7 @@ private:
   const account_object* _account_obj = nullptr;
   const license_information_object* _license_information_obj = nullptr;
   const license_type_object* _new_license_obj = nullptr;
+  license_kind _license_kind;
 };
 
 } } // graphene::chain

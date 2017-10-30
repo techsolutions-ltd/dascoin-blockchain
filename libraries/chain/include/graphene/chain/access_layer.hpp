@@ -162,8 +162,17 @@ struct acc_id_vault_info_res : public acc_id_res {
 };
 
 struct license_types_grouped_by_kind_res {
+    struct license_name_and_id {
+        string name;
+        license_type_id_type type_id;
+    };
+
+    license_types_grouped_by_kind_res() = default;
+    explicit license_types_grouped_by_kind_res(license_kind kind, vector<license_name_and_id> licenses)
+      : kind(kind), licenses(move(licenses))
+    {}
     license_kind kind;
-    vector<pair<string, license_type_id_type>> licenses;
+    vector<license_name_and_id> licenses;
 };
 
 class database;
@@ -308,6 +317,10 @@ FC_REFLECT(graphene::chain::vault_info_res,
            (license_information))
 
 FC_REFLECT_DERIVED(graphene::chain::acc_id_vault_info_res, (graphene::chain::acc_id_res), (result))
+
+FC_REFLECT(graphene::chain::license_types_grouped_by_kind_res::license_name_and_id,
+           (name)
+           (type_id))
 
 FC_REFLECT(graphene::chain::license_types_grouped_by_kind_res,
            (kind)

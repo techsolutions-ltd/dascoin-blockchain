@@ -125,6 +125,8 @@ void_result update_witness_evaluator::do_apply( const update_witness_operation& 
    database& _db = db();
    update_witness_delegate_data uwdd;
 
+   uwdd.witness = op.witness;
+
    if(op.witness_account.valid())
       uwdd.witness_account  = *op.witness_account;
 
@@ -134,9 +136,12 @@ void_result update_witness_evaluator::do_apply( const update_witness_operation& 
    if(op.url.valid())
       uwdd.url              = *op.url;
 
-   _db.modify(_db.get_witness_delegate_data(), [&]( witness_delegate_data_colection_type& all_delegated_operations ){
-      all_delegated_operations.data.push_back(uwdd);
-   });
+//   _db.modify(_db.get_witness_delegate_data(), [&]( witness_delegate_data_colection_type& all_delegated_operations ){
+//      all_delegated_operations.data.push_back(uwdd);
+//   });
+
+   auto& dt = _db.get_witness_delegate_data().data;
+   dt.push_back(uwdd);
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
@@ -156,9 +161,11 @@ void_result remove_witness_evaluator::do_apply( const remove_witness_operation& 
    remove_witness_delegate_data rwdd;
    rwdd.witness = op.witness;
 
-   _db.modify(_db.get_witness_delegate_data(), [&]( witness_delegate_data_colection_type& all_delegated_operations ){
-      all_delegated_operations.data.push_back(rwdd);
-   });
+//   _db.modify(_db.get_witness_delegate_data(), [&]( witness_delegate_data_colection_type& all_delegated_operations ){
+//      all_delegated_operations.data.push_back(rwdd);
+//   });
+
+   _db.get_witness_delegate_data().data.push_back(rwdd);
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
@@ -178,9 +185,11 @@ void_result activate_witness_evaluator::do_apply( const activate_witness_operati
    activate_witness_delegate_data awdd;
    awdd.witness = op.witness;
 
-   _db.modify(_db.get_witness_delegate_data(), [&]( witness_delegate_data_colection_type& all_delegated_operations ){
-      all_delegated_operations.data.push_back(awdd);
-   });
+//   _db.modify(_db.get_witness_delegate_data(), [&]( witness_delegate_data_colection_type& all_delegated_operations ){
+//      all_delegated_operations.data.push_back(awdd);
+//   });
+
+   _db.get_witness_delegate_data().data.push_back(awdd);
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
@@ -200,9 +209,11 @@ void_result deactivate_witness_evaluator::do_apply( const deactivate_witness_ope
    deactivate_witness_delegate_data dwdd;
    dwdd.witness = op.witness;
 
-   _db.modify(_db.get_witness_delegate_data(), [&]( witness_delegate_data_colection_type& all_delegated_operations ){
-      all_delegated_operations.data.push_back(dwdd);
-   });
+//   _db.modify(_db.get_witness_delegate_data(), [&]( witness_delegate_data_colection_type& all_delegated_operations ){
+//      all_delegated_operations.data.push_back(dwdd);
+//   });
+
+   _db.get_witness_delegate_data().data.push_back(dwdd);
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }

@@ -248,7 +248,7 @@ namespace graphene { namespace chain {
          void update_witnesses();
          void update_witness_schedule();
 
-         const witness_delegate_data_colection_type& get_witness_delegate_data()const{return _witness_delegate_data;}
+         witness_delegate_data_colection_type& get_witness_delegate_data(){return _witness_delegate_data;}
 
          //////////////////// db_getter.cpp ////////////////////
 

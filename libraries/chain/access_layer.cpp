@@ -105,6 +105,17 @@ vector<pair<string, license_type_id_type>> database_access_layer::get_license_ty
     return result;
 }
 
+vector<license_types_grouped_by_kind_res> database_access_layer::get_license_types_grouped_by_kind() const
+{
+    map<license_kind, vector<pair<string, license_type_id_type>>> tmp;
+    vector<license_types_grouped_by_kind_res> result;
+    for (const auto& lic : get_license_types())
+        tmp[lic.kind].emplace_back(lic.name, lic.id);
+    for (const auto& lic : tmp)
+        result.emplace_back(license_types_grouped_by_kind_res{lic.first, lic.second});
+    return result;
+}
+
 uint32_t database_access_layer::get_reward_queue_size() const { return size<reward_queue_index>(); }
 
 vector<reward_queue_object> database_access_layer::get_reward_queue() const

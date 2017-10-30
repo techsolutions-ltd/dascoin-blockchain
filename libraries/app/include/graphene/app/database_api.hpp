@@ -626,6 +626,7 @@ class database_api
       vector<license_type_object> get_license_types() const;
       vector<pair<string, license_type_id_type>> get_license_type_names_ids() const;
       vector<license_types_grouped_by_kind_res> get_license_types_grouped_by_kind() const;
+      vector<license_objects_grouped_by_kind_res> get_license_objects_grouped_by_kind() const;
 
       /**
        * @brief Get license types active on the blockchain by name.
@@ -834,6 +835,7 @@ FC_API( graphene::app::database_api,
    (get_license_types)
    (get_license_type_names_ids)
    (get_license_types_grouped_by_kind)
+   (get_license_objects_grouped_by_kind)
    (list_license_types_by_name)
    (list_license_types_by_amount)
    (lookup_license_type_names)

@@ -116,6 +116,17 @@ vector<license_types_grouped_by_kind_res> database_access_layer::get_license_typ
     return result;
 }
 
+vector<license_objects_grouped_by_kind_res> database_access_layer::get_license_objects_grouped_by_kind() const
+{
+    map<license_kind, vector<license_type_object>> tmp;
+    vector<license_objects_grouped_by_kind_res> result;
+    for (const auto& lic : get_license_types())
+        tmp[lic.kind].emplace_back(lic);
+    for (auto& lic : tmp)
+        result.emplace_back(license_objects_grouped_by_kind_res{lic.first, lic.second});
+    return result;
+}
+
 uint32_t database_access_layer::get_reward_queue_size() const { return size<reward_queue_index>(); }
 
 vector<reward_queue_object> database_access_layer::get_reward_queue() const

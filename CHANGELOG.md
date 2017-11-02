@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.2.4] - 2017-11-02
+### Added
+ - Wire out result virtual operation added to account history
+ - New license kind: locked licenses keep frequency lock but have manual submit
+ - New operation: submit cycles to queue by license
+ - New constraint: vaults cannot have mixed license kinds
+
+### Updated
+ - Tracking wire out complete and reject operations in account history
+ - Updated operation: submit cycles to queue uses comment to submit from license
+ - Reflected base_amount on license history object
+
 ## [0.2.3] - 2017-10-11
 ### Updated
  - Query to get limit orders grouped by price, now grouped by price with precision of two decimal places

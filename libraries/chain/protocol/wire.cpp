@@ -23,4 +23,8 @@ namespace graphene { namespace chain {
 
   }
 
+  void wire_out_result_operation::validate() const
+  {
+  }
+
 } } // namespace graphene::chain

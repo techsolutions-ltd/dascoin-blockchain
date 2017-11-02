@@ -276,13 +276,16 @@ BOOST_AUTO_TEST_CASE( get_vault_info_unit_test )
 
   BOOST_CHECK_EQUAL( res->dascoin_limit.value, dascoin_limit.amount.value );
 
-  auto executive = *(_dal.get_license_type("executive"));
+  auto executive = *(_dal.get_license_type("executive_locked"));
+  variant v;
+  fc::to_variant(executive.id, v);
+
   time_point_sec issue_time = db.head_block_time();
 
   do_op(issue_license_operation(get_license_issuer_id(), vault_id, executive.id,
                                 0, DASCOIN_INITIAL_FREQUENCY, issue_time));
 
-  do_op(submit_cycles_to_queue_operation(vault_id, 1000, DASCOIN_INITIAL_FREQUENCY, "test"));
+  do_op(submit_cycles_to_queue_operation(vault_id, 1000, DASCOIN_INITIAL_FREQUENCY, v.as_string()));
 
   adjust_dascoin_reward(500 * DASCOIN_DEFAULT_ASSET_PRECISION);
   toggle_reward_queue(true);
@@ -302,7 +305,7 @@ BOOST_AUTO_TEST_CASE( get_vault_info_unit_test )
   BOOST_CHECK_EQUAL( res->eur_limit.value, static_cast<share_type>(DASCOIN_DEFAULT_EUR_LIMIT_EXECUTIVE).value );
   BOOST_CHECK( res->license_information.valid() );
 
-  auto president = *(_dal.get_license_type("president"));
+  auto president = *(_dal.get_license_type("president_locked"));
   issue_time = db.head_block_time();
 
   // Increase license to president, we should get new limit

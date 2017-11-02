@@ -96,7 +96,9 @@ void_result issue_license_evaluator::do_evaluate(const issue_license_operation& 
   const auto& account_obj = op.account(d);
   const auto& new_license_obj = op.license(d);
 
-  if ( new_license_obj.kind == license_kind::chartered || new_license_obj.kind == license_kind::promo )
+  if ( new_license_obj.kind == license_kind::chartered ||
+       new_license_obj.kind == license_kind::promo ||
+       new_license_obj.kind == license_kind::locked_frequency )
   {
     FC_ASSERT( op.frequency_lock != 0,
                "Cannot issue license ${l_n} on account ${a}, frequency lock cannot be zero",
@@ -110,12 +112,18 @@ void_result issue_license_evaluator::do_evaluate(const issue_license_operation& 
              ("n", account_obj.name)
            );
 
-  // If a license already exists, we can only improve it:
+  // If a license already exists, we can only add license of the same kind we had before and we can only improve it:
   if ( account_obj.license_information.valid() )
   {
     const auto& license_information_obj = (*account_obj.license_information)(d);
     const auto& max_license_obj = license_information_obj.max_license(d);
 
+    FC_ASSERT( new_license_obj.kind == license_information_obj.vault_license_kind,
+               "Cannot issue license of kind '${kind}' on account ${a}, current license kind is '${ckind}'",
+               ("kind", new_license_obj.kind)
+               ("a", account_obj.name)
+               ("ckind", fc::reflector<license_kind>::to_string(license_information_obj.vault_license_kind) )
+             );
     FC_ASSERT( max_license_obj < new_license_obj,
                "Cannot improve license '${l_max}' on account ${a}, new license '${l_new}' is not an improvement",
                ("a", account_obj.name)
@@ -129,6 +137,7 @@ void_result issue_license_evaluator::do_evaluate(const issue_license_operation& 
   _issuer_id = issuer_id;
   _account_obj = &account_obj;
   _new_license_obj = &new_license_obj;
+  _license_kind = new_license_obj.kind;
   return {};
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
@@ -143,6 +152,7 @@ object_id_type issue_license_evaluator::do_apply(const issue_license_operation& 
   {
     lic_info_id = d.create<license_information_object>([&](license_information_object& lio){
       lio.account = op.account;
+      lio.vault_license_kind = _license_kind;
       lio.add_license(op.license, amount, _new_license_obj->amount, op.bonus_percentage, op.frequency_lock, op.activated_at, d.head_block_time());
       lio.balance_upgrade += _new_license_obj->balance_upgrade;
       lio.requeue_upgrade += _new_license_obj->requeue_upgrade;
@@ -166,7 +176,7 @@ object_id_type issue_license_evaluator::do_apply(const issue_license_operation& 
   }
 
   auto kind = _new_license_obj->kind;
-  if ( kind == license_kind::regular )
+  if ( kind == license_kind::regular || kind == license_kind::locked_frequency )
   {
     d.issue_cycles(op.account, amount);
   }

@@ -82,4 +82,37 @@ BOOST_AUTO_TEST_CASE( wire_out_web_asset_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( wire_out_web_asset_history_test )
+{ try {
+  ACTOR(wallet);
+  generate_block();
+
+  issue_webasset("1", wallet_id, 15000, 15000);
+  generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
+
+  // Wire out 10K:
+  wire_out(wallet_id, web_asset(10000), "debit");
+  generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
+  auto holders = get_wire_out_holders(wallet_id, {get_web_asset_id()});
+  wire_out_reject(holders[0].id);
+  generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
+  auto history = get_operation_history( wallet_id );
+  BOOST_CHECK( !history.empty() );
+  // Wire out result should be on top:
+  wire_out_result_operation op = history[0].op.get<wire_out_result_operation>();
+  BOOST_CHECK ( !op.completed );
+
+  // Wire out 10K again:
+  wire_out(wallet_id, web_asset(10000), "debit");
+  generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
+  holders = get_wire_out_holders(wallet_id, {get_web_asset_id()});
+  wire_out_complete(holders[0].id);
+  generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
+  history = get_operation_history( wallet_id );
+  // Wire out result should be on top:
+  op = history[0].op.get<wire_out_result_operation>();
+  BOOST_CHECK ( op.completed );
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -76,8 +76,11 @@ namespace graphene { namespace chain {
 
   void_result wire_out_complete_evaluator::do_apply(const wire_out_complete_operation& op)
   { try {
+    db().push_applied_operation(wire_out_result_operation{holder_->account, true, holder_->amount, holder_->asset_id,
+                                holder_->memo, holder_->timestamp});
     // Free the holder object:
     db().remove(*holder_);
+
     return {};
 
   } FC_CAPTURE_AND_RETHROW( (op) ) }
@@ -112,8 +115,11 @@ namespace graphene { namespace chain {
     d.modify(*asset_dyn_data_, [&]( asset_dynamic_data_object& data){
       data.current_supply += holder_->amount;
     });
+    db().push_applied_operation(wire_out_result_operation{holder_->account, false, holder_->amount, holder_->asset_id,
+                                                          holder_->memo, holder_->timestamp});
     // Free the holder object:
     d.remove(*holder_);
+
     return {};
 
   } FC_CAPTURE_AND_RETHROW( (op) ) }

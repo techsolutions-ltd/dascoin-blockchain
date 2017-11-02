@@ -6,6 +6,8 @@
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/frequency_history_record_object.hpp>
 #include <graphene/chain/queue_objects.hpp>
+#include <graphene/chain/submit_cycles_evaluator_helper.hpp>
+#include <graphene/db/object_id.hpp>
 
 namespace graphene { namespace chain {
 
@@ -44,47 +46,33 @@ object_id_type submit_reserve_cycles_to_queue_evaluator::do_apply(const submit_r
 
 void_result submit_cycles_to_queue_evaluator::do_evaluate(const submit_cycles_to_queue_operation& op)
 { try {
-  const auto& d = db();
-  const auto& account_obj = op.account(d);
-  const auto& balance_obj = d.get_cycle_balance_object(op.account);
+  detail::submit_cycles_evaluator_helper helper(db());
+  fc::from_variant<license_type_object::space_id, license_type_object::type_id>(variant{op.comment}, _license_type);
+  _license_information_obj = helper.do_evaluate(op, _license_type, op.frequency);
 
-  // Only vault accounts are allowed to submit cycles:
-  FC_ASSERT( account_obj.is_vault(),
-             "Account '${n}' is not a vault account",
-             ("n", account_obj.name)
-           );
-
-  // Assure we have enough funds to submit:
-  FC_ASSERT( balance_obj.balance >= op.amount,
-             "Cannot submit ${am}, account '${n}' cycle balance is ${b}",
-             ("am", op.amount)
-             ("n", account_obj.name)
-             ("b", balance_obj.balance)
-           );
-
-  // Make sure that the frequency matches the global frequency:
-  const auto GLOB_FREQUENCY = d.get_dynamic_global_properties().frequency;
-  FC_ASSERT( op.frequency == GLOB_FREQUENCY,
-             "Submit frequency ${op_f} must be equal to global frequency ${glob_f}",
-             // This hack should display the frequency with decimals, eg. 2.50 instead of 250.
-             ("op_f", asset(op.frequency, d.get_web_asset_id()))
-             ("glob_f", asset(GLOB_FREQUENCY, d.get_web_asset_id()))
-           );
-
-  _account_obj = &account_obj;
   return {};
 
 } FC_CAPTURE_AND_RETHROW((op)) }
 
 object_id_type submit_cycles_to_queue_evaluator::do_apply(const submit_cycles_to_queue_operation& op)
 { try {
-  auto& d = db();
+  detail::submit_cycles_evaluator_helper helper(db());
+  return helper.do_apply(op, _license_information_obj, _license_type, op.frequency);
 
-  // Spend cycles, decrease balance and supply:
-  d.reserve_cycles(op.account, op.amount);
-  auto origin = fc::reflector<dascoin_origin_kind>::to_string(user_submit);
-  return d.push_queue_submission(origin, /* license = */{}, op.account, op.amount, 
-                                 op.frequency, op.comment);
+} FC_CAPTURE_AND_RETHROW((op)) }
+
+void_result submit_cycles_to_queue_by_license_evaluator::do_evaluate(const operation_type& op)
+{ try {
+  detail::submit_cycles_evaluator_helper helper(db());
+  _license_information_obj = helper.do_evaluate(op, op.license_type, op.frequency_lock);
+  return {};
+
+} FC_CAPTURE_AND_RETHROW((op)) }
+
+object_id_type submit_cycles_to_queue_by_license_evaluator::do_apply(const operation_type& op)
+{ try {
+  detail::submit_cycles_evaluator_helper helper(db());
+  return helper.do_apply(op, _license_information_obj, op.license_type, op.frequency_lock);
 
 } FC_CAPTURE_AND_RETHROW((op)) }
 
@@ -96,7 +84,7 @@ void_result update_queue_parameters_evaluator::do_evaluate(const update_queue_pa
 
   d.perform_chain_authority_check("license issuer", gpo.authorities.license_issuer, issuer_obj);
 
-  if ( op.reward_interval_time_seconds.valid()  )
+  if ( op.reward_interval_time_seconds.valid() )
     FC_ASSERT( *op.reward_interval_time_seconds % gpo.parameters.block_interval == 0,
                "Reward interval must be a multiple of the block interval ${bi}",
                ("bi", gpo.parameters.block_interval)

@@ -83,6 +83,41 @@ namespace graphene { namespace chain {
     share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
 
+  /**
+   * @brief Submit cycles by license to the DasCoin distribution queue.
+   * @ingroup operations
+   *
+   * A user can submit their cycles to the dascoin distribution queue where they await to be minted.
+   */
+  struct submit_cycles_to_queue_by_license_operation : public base_operation
+  {
+    struct fee_parameters_type {};  // No fees are paid for this operation.
+
+    asset fee;
+
+    account_id_type account;
+    share_type amount;
+
+    license_type_id_type license_type;
+    frequency_type frequency_lock;
+    string comment;
+
+    extensions_type extensions;
+
+    submit_cycles_to_queue_by_license_operation() = default;
+    explicit submit_cycles_to_queue_by_license_operation(account_id_type account, share_type amount, license_type_id_type license_type,
+                                                         frequency_type frequency_lock, const string& comment)
+            : account(account),
+              amount(amount),
+              license_type(license_type),
+              frequency_lock(frequency_lock),
+              comment(comment) {}
+
+    account_id_type fee_payer() const { return account; }
+    void validate() const;
+    share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+  };
+
   struct record_submit_reserve_cycles_to_queue_operation : public base_operation
   {
     struct fee_parameters_type {};  // Virtual operation.
@@ -242,6 +277,17 @@ FC_REFLECT( graphene::chain::submit_cycles_to_queue_operation,
             (account)
             (amount)
             (frequency)
+            (comment)
+            (extensions)
+          )
+
+FC_REFLECT( graphene::chain::submit_cycles_to_queue_by_license_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::submit_cycles_to_queue_by_license_operation,
+            (fee)
+            (account)
+            (amount)
+            (license_type)
+            (frequency_lock)
             (comment)
             (extensions)
           )

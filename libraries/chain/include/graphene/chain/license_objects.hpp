@@ -52,6 +52,7 @@ namespace graphene { namespace chain {
       array_t history;
       license_type_id_type max_license;
       frequency_type frequency_lock;
+      license_kind vault_license_kind;
 
       upgrade_type balance_upgrade;
       upgrade_type requeue_upgrade;
@@ -65,6 +66,32 @@ namespace graphene { namespace chain {
                              activated_at, issued_on_blockchain);
         max_license = license_id;
         frequency_lock = f_lock;
+      }
+
+      void subtract_cycles(license_type_id_type license_type, const share_type& amount)
+      {
+        auto found = find_if(history.begin(), history.end(), [license_type](const license_history_record& record){
+          return record.license == license_type;
+        });
+        if (found != history.end())
+        {
+          FC_ASSERT( found->amount >= amount, "Insufficient cycle balance" );
+          found->amount -= amount;
+        }
+      }
+
+      optional<license_history_record> get_license(const license_type_id_type& license_type) const
+      {
+        optional<license_history_record> license{};
+        for (const auto& lic_history: history)
+        {
+          if (lic_history.license == license_type)
+          {
+            license = lic_history;
+            break;
+          }
+        }
+        return license;
       }
   };
 
@@ -182,6 +209,7 @@ namespace graphene { namespace chain {
 FC_REFLECT( graphene::chain::license_information_object::license_history_record,
             (license)
             (amount)
+            (base_amount)
             (bonus_percent)
             (frequency_lock)
             (activated_at)
@@ -193,6 +221,7 @@ FC_REFLECT( graphene::chain::license_information_object,
             (history)
             (max_license)
             (frequency_lock)
+            (vault_license_kind)
             (balance_upgrade)
             (requeue_upgrade)
             (return_upgrade)
@@ -208,4 +237,3 @@ FC_REFLECT_DERIVED( graphene::chain::license_type_object, (graphene::db::object)
                     (eur_limit)
                     (extensions)
                   )
-

@@ -141,6 +141,8 @@ namespace graphene { namespace chain {
             edit_license_type_operation,
             update_euro_limit_operation,
 
+            submit_cycles_to_queue_by_license_operation,
+
             // Virtual operations below this point:
 
             record_submit_reserve_cycles_to_queue_operation,  // TODO: should we keep this op?
@@ -153,7 +155,8 @@ namespace graphene { namespace chain {
 
             fba_distribute_operation,
             asset_settle_cancel_operation,
-            fill_order_operation
+            fill_order_operation,
+            wire_out_result_operation
 
          > operation;
 

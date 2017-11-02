@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE( update_queue_parameters_unit_test )
 { try {
 
   do_op(update_queue_parameters_operation(get_license_issuer_id(), {true}, {600}, 
-                                          {2000 * DASCOIN_DEFAULT_ASSET_PRECISION}));
+                                          {200 * DASCOIN_DEFAULT_ASSET_PRECISION})); // TODO: re-evaluate this value, due to precision change
 
   const auto& params = get_chain_parameters();
   BOOST_CHECK_EQUAL( params.enable_dascoin_queue, true );
@@ -96,14 +96,24 @@ BOOST_AUTO_TEST_CASE( submit_cycles_operation_test )
   adjust_frequency(200);
 
   adjust_cycles(first_id, 200);
-  
+  variant v;
+  auto locked = *(_dal.get_license_type("standard_locked"));
+  fc::to_variant(locked.id, v);
+  const share_type bonus_percent = 50;
+  share_type frequency_lock = 200;
+  const time_point_sec issue_time = db.head_block_time();
+
+  // This will fail, frequency cannot be zero:
+  do_op(issue_license_operation(get_license_issuer_id(), first_id, locked.id,
+                                bonus_percent, frequency_lock, issue_time));
+
   // Error: wrong frequency.
   GRAPHENE_REQUIRE_THROW(
-    do_op(submit_cycles_to_queue_operation(first_id, 100, 730, "TEST")),
+    do_op(submit_cycles_to_queue_operation(first_id, 100, 730, v.as_string())),
     fc::exception
   );
 
-  do_op(submit_cycles_to_queue_operation(first_id, 100, 200, "TEST"));
+  do_op(submit_cycles_to_queue_operation(first_id, 100, 200, v.as_string()));
 
   auto result_vec = *_dal.get_queue_submissions_with_pos(first_id).result;
   BOOST_CHECK_EQUAL( result_vec.size(), 1 );
@@ -112,7 +122,7 @@ BOOST_AUTO_TEST_CASE( submit_cycles_operation_test )
 
   auto rqo = result_vec[0].submission;
   BOOST_CHECK_EQUAL( rqo.origin, "user_submit" );
-  BOOST_CHECK( !rqo.license.valid() );
+  BOOST_CHECK( rqo.license.valid() );
   BOOST_CHECK( rqo.account == first_id );
   BOOST_CHECK_EQUAL( rqo.amount.value, 100 );
   BOOST_CHECK_EQUAL( rqo.frequency.value, 200 );
@@ -162,7 +172,7 @@ BOOST_AUTO_TEST_CASE( basic_submit_reserved_cycles_to_queue_test )
   BOOST_CHECK_EQUAL( _dal.get_reward_queue_size(), 0 );
 
 } FC_LOG_AND_RETHROW() }
-
+/*
 BOOST_AUTO_TEST_CASE( basic_submit_cycles_to_queue_test )
 { try {
   VAULT_ACTORS((first)(second)(third)(fourth))
@@ -208,7 +218,7 @@ BOOST_AUTO_TEST_CASE( basic_submit_cycles_to_queue_test )
   BOOST_CHECK_EQUAL( _dal.get_reward_queue_size(), 0 );
 
 } FC_LOG_AND_RETHROW() }
-
+*/
 BOOST_AUTO_TEST_CASE( basic_chartered_license_to_queue_test )
 { 
   const auto& issue =  [&](account_id_type account_id, const string& license_name, share_type bonus_percentage, 
@@ -260,6 +270,117 @@ BOOST_AUTO_TEST_CASE( basic_chartered_license_to_queue_test )
   BOOST_CHECK_EQUAL( get_balance(fourth_id, get_dascoin_asset_id()), 3300 * DASCOIN_DEFAULT_ASSET_PRECISION );
 
   BOOST_CHECK_EQUAL( _dal.get_reward_queue_size(), 0 );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( submit_cycles_to_queue_by_license_operation_test )
+{ try {
+  VAULT_ACTOR(vault)
+
+  auto standard_locked = *(_dal.get_license_type("standard_locked"));
+  auto manager_locked = *(_dal.get_license_type("manager_locked"));
+  const share_type bonus_percent = 10;
+  share_type frequency_lock = 200;
+  const time_point_sec issue_time = db.head_block_time();
+
+  // Error: no issued license.
+  GRAPHENE_REQUIRE_THROW( do_op(submit_cycles_to_queue_by_license_operation(vault_id, 100, standard_locked.id, 200, "TEST")), fc::exception );
+
+  do_op(issue_license_operation(get_license_issuer_id(), vault_id, manager_locked.id, bonus_percent, frequency_lock, issue_time));
+
+  // Error: issued other license.
+  GRAPHENE_REQUIRE_THROW( do_op(submit_cycles_to_queue_by_license_operation(vault_id, 100, standard_locked.id, 200, "TEST")), fc::exception );
+
+  // Error: cannot submit zero cycles.
+  GRAPHENE_REQUIRE_THROW( do_op(submit_cycles_to_queue_by_license_operation(vault_id, 0, manager_locked.id, 200, "TEST")), fc::exception );
+
+  // Error: not enough cycles on the balance.
+  GRAPHENE_REQUIRE_THROW( do_op(submit_cycles_to_queue_by_license_operation(vault_id, 2 * DASCOIN_BASE_MANAGER_CYCLES, manager_locked.id, 200, "TEST")), fc::exception );
+
+  // Error: frequency (20) is not equal to license's frequency.
+  GRAPHENE_REQUIRE_THROW( do_op(submit_cycles_to_queue_by_license_operation(vault_id, 1000, manager_locked.id, 20, "TEST")), fc::exception );
+
+  do_op(submit_cycles_to_queue_by_license_operation(vault_id, 1000, manager_locked.id, 200, "TEST"));
+
+  const auto& license_information_obj = (*vault.license_information)(db);
+  const auto& license_history = license_information_obj.history;
+  const auto& license_record = license_history[0];
+  const uint32_t remaining_cycles = static_cast<uint32_t>(DASCOIN_BASE_MANAGER_CYCLES * 1.1) - 1000;
+  BOOST_CHECK_EQUAL( license_record.amount.value, remaining_cycles );
+
+  const auto& balance = get_cycle_balance(vault_id);
+  BOOST_CHECK_EQUAL( balance.value, remaining_cycles );
+
+  // Error: not enough cycles on the balance:
+  GRAPHENE_REQUIRE_THROW( do_op(submit_cycles_to_queue_by_license_operation(vault_id, remaining_cycles + 1, manager_locked.id, 200, "TEST")), fc::exception );
+
+  do_op(submit_cycles_to_queue_by_license_operation(vault_id, 1000, manager_locked.id, 200, "TEST"));
+
+  const auto& license_information_obj2 = (*vault.license_information)(db);
+  const auto& license_history2 = license_information_obj2.history;
+  const auto& license_record2 = license_history2[0];
+  BOOST_CHECK_EQUAL( license_record2.amount.value, remaining_cycles - 1000 );
+
+  const auto& balance2 = get_cycle_balance(vault_id);
+  BOOST_CHECK_EQUAL( balance2.value, remaining_cycles - 1000 );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( submit_cycles_to_queue_operation_test )
+{ try {
+  VAULT_ACTOR(vault)
+
+  auto standard_locked = *(_dal.get_license_type("standard_locked"));
+  auto manager_locked = *(_dal.get_license_type("manager_locked"));
+  variant vs;
+  variant vm;
+  fc::to_variant(standard_locked.id, vs);
+  fc::to_variant(manager_locked.id, vm);
+
+  const share_type bonus_percent = 10;
+  share_type frequency_lock = 200;
+  const time_point_sec issue_time = db.head_block_time();
+
+  // Error: no issued license.
+  GRAPHENE_REQUIRE_THROW( do_op(submit_cycles_to_queue_operation(vault_id, 100, 200, vs.as_string())), fc::exception );
+
+  do_op(issue_license_operation(get_license_issuer_id(), vault_id, manager_locked.id, bonus_percent, frequency_lock, issue_time));
+
+  // Error: issued other license.
+  GRAPHENE_REQUIRE_THROW( do_op(submit_cycles_to_queue_operation(vault_id, 100, 200, vs.as_string())), fc::exception );
+
+  // Error: cannot submit zero cycles.
+  GRAPHENE_REQUIRE_THROW( do_op(submit_cycles_to_queue_operation(vault_id, 0, 200, vm.as_string())), fc::exception );
+
+  // Error: not enough cycles on the balance.
+  GRAPHENE_REQUIRE_THROW( do_op(submit_cycles_to_queue_operation(vault_id, 2 * DASCOIN_BASE_MANAGER_CYCLES, 200, vm.as_string())), fc::exception );
+
+  // Error: frequency (20) is not equal to license's frequency.
+  GRAPHENE_REQUIRE_THROW( do_op(submit_cycles_to_queue_operation(vault_id, 1000, 20, vm.as_string())), fc::exception );
+
+  do_op(submit_cycles_to_queue_operation(vault_id, 1000, 200, vm.as_string()));
+
+  const auto& license_information_obj = (*vault.license_information)(db);
+  const auto& license_history = license_information_obj.history;
+  const auto& license_record = license_history[0];
+  const uint32_t remaining_cycles = static_cast<uint32_t>(DASCOIN_BASE_MANAGER_CYCLES * 1.1) - 1000;
+  BOOST_CHECK_EQUAL( license_record.amount.value, remaining_cycles );
+
+  const auto& balance = get_cycle_balance(vault_id);
+  BOOST_CHECK_EQUAL( balance.value, remaining_cycles );
+
+  // Error: not enough cycles on the balance:
+  GRAPHENE_REQUIRE_THROW( do_op(submit_cycles_to_queue_operation(vault_id, remaining_cycles + 1, 200, vm.as_string())), fc::exception );
+
+  do_op(submit_cycles_to_queue_operation(vault_id, 1000, 200, vm.as_string()));
+
+  const auto& license_information_obj2 = (*vault.license_information)(db);
+  const auto& license_history2 = license_information_obj2.history;
+  const auto& license_record2 = license_history2[0];
+  BOOST_CHECK_EQUAL( license_record2.amount.value, remaining_cycles - 1000 );
+
+  const auto& balance2 = get_cycle_balance(vault_id);
+  BOOST_CHECK_EQUAL( balance2.value, remaining_cycles - 1000 );
 
 } FC_LOG_AND_RETHROW() }
 

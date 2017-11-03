@@ -1,0 +1,4 @@
+// #BLC-58
+#ifndef HARDFORK_BLC_58_TIME
+#define HARDFORK_BLC_58_TIME (fc::time_point_sec( 1509580800 ))
+#endif

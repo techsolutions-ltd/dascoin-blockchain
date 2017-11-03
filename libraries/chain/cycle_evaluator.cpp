@@ -5,6 +5,7 @@
 #include <graphene/chain/cycle_evaluator.hpp>
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/frequency_history_record_object.hpp>
+#include <graphene/chain/hardfork.hpp>
 #include <graphene/chain/queue_objects.hpp>
 #include <graphene/chain/submit_cycles_evaluator_helper.hpp>
 #include <graphene/db/object_id.hpp>
@@ -103,11 +104,14 @@ object_id_type update_queue_parameters_evaluator::do_apply(const update_queue_pa
     CHECK_AND_SET_OPT(gpo.parameters.enable_dascoin_queue, op.enable_dascoin_queue);
     CHECK_AND_SET_OPT(gpo.parameters.reward_interval_time_seconds, op.reward_interval_time_seconds);
     
-    // FIXME: This is a hotfix, the previous chain iteration observed dascoin precision of 4 digits
-    // The value must be 10 times less to achieve proper precision.
     if ( op.dascoin_reward_amount.valid() )
     {
-      gpo.parameters.dascoin_reward_amount = *op.dascoin_reward_amount * 10;
+      gpo.parameters.dascoin_reward_amount = *op.dascoin_reward_amount;
+      if( d.head_block_time() < HARDFORK_BLC_58_TIME )
+      {
+        // Before BLC_58 hardfork we need to multiply the amount by 10 (because we were using 4 decimal places):
+        gpo.parameters.dascoin_reward_amount *= 10;
+      }
     }
   });
 

@@ -4,6 +4,7 @@
 #include <graphene/chain/exceptions.hpp>
 #include <graphene/chain/market_object.hpp>
 #include <graphene/chain/witness_object.hpp>
+#include <graphene/chain/witness_schedule_object.hpp>
 
 #include "../common/database_fixture.hpp"
 
@@ -109,8 +110,8 @@ BOOST_AUTO_TEST_CASE( successful_activate_deactivate_witness_test )
 
    auto ao = make_new_account_base( account_kind::special, db.get_chain_authorities().registrar, name, key );
 
-   const auto& witnesses_bi = db.get_index_type<witness_index>().indices().get<by_id>();
-   size_t count = witnesses_bi.size();
+   const auto& witnesses_by_id = db.get_index_type<witness_index>().indices().get<by_id>();
+   size_t count = witnesses_by_id.size();
 
    create_witness_operation cwao;
    cwao.authority = root_id;
@@ -130,9 +131,23 @@ BOOST_AUTO_TEST_CASE( successful_activate_deactivate_witness_test )
    awao.authority = root_id;
    awao.witness = ao.id;
 
+   auto old_size = get_global_properties().active_witnesses.size();
    do_op(awao);
+   auto size = get_global_properties().active_witnesses.size();
+   BOOST_CHECK(size == old_size + 1);
 
-   BOOST_CHECK(get_global_properties().active_witnesses.size() == 2);
+   // this is check if witnes is in schedule queue
+   const witness_schedule_object& wso = witness_schedule_id_type()(db);
+   bool contains_activated_witness = false;
+   for(auto& w : wso.current_shuffled_witnesses)
+   {
+      if(w.instance == awao.witness.instance)
+      {
+         contains_activated_witness = true;
+         break;
+      }
+   }
+   BOOST_CHECK(contains_activated_witness);
 
 
 } FC_LOG_AND_RETHROW() }

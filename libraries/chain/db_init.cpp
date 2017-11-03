@@ -293,6 +293,7 @@ void database::initialize_indexes()
    add_index<primary_index<license_information_index>>();
    add_index<primary_index<issued_asset_record_index>>();
    add_index<primary_index<frequency_history_record_index>>();
+   add_index<primary_index< witness_delegate_data_index > >();
 }
 
 account_id_type database::initialize_chain_authority(const string& kind_name, const string& acc_name)

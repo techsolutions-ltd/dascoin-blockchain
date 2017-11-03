@@ -85,14 +85,47 @@ uint32_t database::witness_participation_rate()const
 
 void database::update_witnesses()
 {
-   if(_witness_delegate_data.data.size() < 1)
-      return;
-
+   const auto& wdd_idx = get_index_type<witness_delegate_data_index>().indices().get<by_id>();
+   auto itr = wdd_idx.begin();
    witness_delegate_data_evaluator witness_delegate_data_evaluate(*this);
-   for(auto wdd : _witness_delegate_data.data)
+   while( itr != wdd_idx.end() )
    {
-      wdd.visit(witness_delegate_data_evaluate);
+      itr->data.visit(witness_delegate_data_evaluate);
+      itr++;
    }
+
+   const witness_schedule_object& wso = witness_schedule_id_type()(*this);
+   const global_property_object& gpo = get_global_properties();
+   update_witness_schedule_impl(wso, gpo);
+}
+
+void database::update_witness_schedule_impl(const witness_schedule_object& wso, const global_property_object& gpo)
+{
+   modify( wso, [&]( witness_schedule_object& _wso )
+   {
+      _wso.current_shuffled_witnesses.clear();
+      _wso.current_shuffled_witnesses.reserve( gpo.active_witnesses.size() );
+
+      for( const witness_id_type& w : gpo.active_witnesses )
+         _wso.current_shuffled_witnesses.push_back( w );
+
+      auto now_hi = uint64_t(head_block_time().sec_since_epoch()) << 32;
+      for( uint32_t i = 0; i < _wso.current_shuffled_witnesses.size(); ++i )
+      {
+         /// High performance random generator
+         /// http://xorshift.di.unimi.it/
+         uint64_t k = now_hi + uint64_t(i)*2685821657736338717ULL;
+         k ^= (k >> 12);
+         k ^= (k << 25);
+         k ^= (k >> 27);
+         k *= 2685821657736338717ULL;
+
+         uint32_t jmax = _wso.current_shuffled_witnesses.size() - i;
+         uint32_t j = i + k%jmax;
+         std::swap( _wso.current_shuffled_witnesses[i],
+                    _wso.current_shuffled_witnesses[j] );
+      }
+   });
 }
 
 void database::update_witness_schedule()
@@ -102,31 +135,7 @@ void database::update_witness_schedule()
 
    if( head_block_num() % gpo.active_witnesses.size() == 0 )
    {
-      modify( wso, [&]( witness_schedule_object& _wso )
-      {
-         _wso.current_shuffled_witnesses.clear();
-         _wso.current_shuffled_witnesses.reserve( gpo.active_witnesses.size() );
-
-         for( const witness_id_type& w : gpo.active_witnesses )
-            _wso.current_shuffled_witnesses.push_back( w );
-
-         auto now_hi = uint64_t(head_block_time().sec_since_epoch()) << 32;
-         for( uint32_t i = 0; i < _wso.current_shuffled_witnesses.size(); ++i )
-         {
-            /// High performance random generator
-            /// http://xorshift.di.unimi.it/
-            uint64_t k = now_hi + uint64_t(i)*2685821657736338717ULL;
-            k ^= (k >> 12);
-            k ^= (k << 25);
-            k ^= (k >> 27);
-            k *= 2685821657736338717ULL;
-
-            uint32_t jmax = _wso.current_shuffled_witnesses.size() - i;
-            uint32_t j = i + k%jmax;
-            std::swap( _wso.current_shuffled_witnesses[i],
-                       _wso.current_shuffled_witnesses[j] );
-         }
-      });
+      update_witness_schedule_impl(wso, gpo);
    }
 }
 

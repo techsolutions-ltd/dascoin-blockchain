@@ -122,26 +122,20 @@ void_result update_witness_evaluator::do_evaluate( const update_witness_operatio
 
 void_result update_witness_evaluator::do_apply( const update_witness_operation& op )
 { try {
-   database& _db = db();
-   update_witness_delegate_data uwdd;
 
-   uwdd.witness = op.witness;
+   const auto& new_witness_delegate_data_object = db().create<witness_delegate_data_object>( [&]( witness_delegate_data_object& obj ){
 
-   if(op.witness_account.valid())
-      uwdd.witness_account  = *op.witness_account;
+      update_witness_delegate_data uwdd;
+      uwdd.witness = op.witness;
+      if(op.witness_account.valid())
+         uwdd.witness_account    = *op.witness_account;
+      if(op.block_signing_key.valid())
+         uwdd.block_signing_key  = *op.block_signing_key;
+      if(op.url.valid())
+         uwdd.url                = *op.url;
 
-   if(op.block_signing_key.valid())
-      uwdd.block_signing_key      = *op.block_signing_key;
-
-   if(op.url.valid())
-      uwdd.url              = *op.url;
-
-//   _db.modify(_db.get_witness_delegate_data(), [&]( witness_delegate_data_colection_type& all_delegated_operations ){
-//      all_delegated_operations.data.push_back(uwdd);
-//   });
-
-   auto& dt = _db.get_witness_delegate_data().data;
-   dt.push_back(uwdd);
+      obj.data = uwdd;
+   });
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
@@ -156,16 +150,14 @@ void_result remove_witness_evaluator::do_evaluate( const remove_witness_operatio
 
 void_result remove_witness_evaluator::do_apply( const remove_witness_operation& op )
 { try {
-   database& _db = db();
 
-   remove_witness_delegate_data rwdd;
-   rwdd.witness = op.witness;
+   const auto& new_witness_delegate_data_object = db().create<witness_delegate_data_object>( [&]( witness_delegate_data_object& obj ){
 
-//   _db.modify(_db.get_witness_delegate_data(), [&]( witness_delegate_data_colection_type& all_delegated_operations ){
-//      all_delegated_operations.data.push_back(rwdd);
-//   });
+      remove_witness_delegate_data rwdd;
+      rwdd.witness = op.witness;
 
-   _db.get_witness_delegate_data().data.push_back(rwdd);
+      obj.data = rwdd;
+   });
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
@@ -180,16 +172,14 @@ void_result activate_witness_evaluator::do_evaluate( const activate_witness_oper
 
 void_result activate_witness_evaluator::do_apply( const activate_witness_operation& op )
 { try {
-   database& _db = db();
 
-   activate_witness_delegate_data awdd;
-   awdd.witness = op.witness;
+   const auto& new_witness_delegate_data_object = db().create<witness_delegate_data_object>( [&]( witness_delegate_data_object& obj ){
 
-//   _db.modify(_db.get_witness_delegate_data(), [&]( witness_delegate_data_colection_type& all_delegated_operations ){
-//      all_delegated_operations.data.push_back(awdd);
-//   });
+      activate_witness_delegate_data awdd;
+      awdd.witness = op.witness;
 
-   _db.get_witness_delegate_data().data.push_back(awdd);
+      obj.data = awdd;
+   });
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
@@ -204,16 +194,13 @@ void_result deactivate_witness_evaluator::do_evaluate( const deactivate_witness_
 
 void_result deactivate_witness_evaluator::do_apply( const deactivate_witness_operation& op )
 { try {
-   database& _db = db();
+   const auto& new_witness_delegate_data_object = db().create<witness_delegate_data_object>( [&]( witness_delegate_data_object& obj ){
 
-   deactivate_witness_delegate_data dwdd;
-   dwdd.witness = op.witness;
+      deactivate_witness_delegate_data dwdd;
+      dwdd.witness = op.witness;
 
-//   _db.modify(_db.get_witness_delegate_data(), [&]( witness_delegate_data_colection_type& all_delegated_operations ){
-//      all_delegated_operations.data.push_back(dwdd);
-//   });
-
-   _db.get_witness_delegate_data().data.push_back(dwdd);
+      obj.data = dwdd;
+   });
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }

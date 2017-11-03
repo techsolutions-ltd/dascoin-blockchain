@@ -24,6 +24,8 @@
 #pragma once
 #include <graphene/chain/protocol/base.hpp>
 #include <graphene/db/object.hpp>
+#include <boost/multi_index_container.hpp>
+#include <graphene/db/generic_index.hpp>
 
 namespace graphene { namespace chain { 
 
@@ -202,15 +204,27 @@ namespace graphene { namespace chain {
                               deactivate_witness_delegate_data
            > witness_delegate_data_type;
 
-
-   class witness_delegate_data_colection_type : public graphene::db::abstract_object < witness_delegate_data_colection_type >
+   class witness_delegate_data_object : public graphene::db::abstract_object < witness_delegate_data_object >
    {
    public:
       static const uint8_t space_id = implementation_ids;
       static const uint8_t type_id  = impl_witness_delegate_data_colection_object_type;
 
-      std::vector<witness_delegate_data_type> data;
+      witness_delegate_data_type data;
    };
+
+   typedef multi_index_container<
+         witness_delegate_data_object,
+       indexed_by<
+         ordered_unique<
+           tag<by_id>,
+           member<object, object_id_type, &object::id>
+         >
+       >
+   > witness_delegate_data_object_multi_index_type;
+
+   typedef generic_index<witness_delegate_data_object, witness_delegate_data_object_multi_index_type> witness_delegate_data_index;
+
    /// TODO: witness_resign_operation : public base_operation
 
 } } // graphene::chain
@@ -244,6 +258,6 @@ FC_REFLECT( graphene::chain::remove_witness_delegate_data, (witness)(comment) )
 FC_REFLECT( graphene::chain::activate_witness_delegate_data, (witness)(comment) )
 FC_REFLECT( graphene::chain::deactivate_witness_delegate_data, (witness)(comment) )
 FC_REFLECT_TYPENAME( graphene::chain::witness_delegate_data_type )
-FC_REFLECT_DERIVED( graphene::chain::witness_delegate_data_colection_type, (graphene::db::object),
+FC_REFLECT_DERIVED( graphene::chain::witness_delegate_data_object, (graphene::db::object),
                     (data)
                   )

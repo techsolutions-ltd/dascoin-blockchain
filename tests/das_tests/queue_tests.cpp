@@ -3,9 +3,10 @@
  */
 
 #include <boost/test/unit_test.hpp>
-#include <graphene/chain/database.hpp>
 #include <graphene/chain/access_layer.hpp>
+#include <graphene/chain/database.hpp>
 #include <graphene/chain/exceptions.hpp>
+#include <graphene/chain/hardfork.hpp>
 
 #include <graphene/chain/queue_objects.hpp>
 
@@ -53,13 +54,23 @@ BOOST_AUTO_TEST_CASE( dascoin_reward_amount_regression_test )
 BOOST_AUTO_TEST_CASE( update_queue_parameters_unit_test )
 { try {
 
+  // Before HARDFORK_BLC_58_TIME, we submit reward amount divided by 10:
   do_op(update_queue_parameters_operation(get_license_issuer_id(), {true}, {600}, 
-                                          {200 * DASCOIN_DEFAULT_ASSET_PRECISION})); // TODO: re-evaluate this value, due to precision change
+                                          {200 * DASCOIN_DEFAULT_ASSET_PRECISION}));
 
   const auto& params = get_chain_parameters();
   BOOST_CHECK_EQUAL( params.enable_dascoin_queue, true );
   BOOST_CHECK_EQUAL( params.reward_interval_time_seconds, 600 );
   BOOST_CHECK_EQUAL( params.dascoin_reward_amount.value, 2000 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+  generate_blocks( HARDFORK_BLC_58_TIME );
+
+  // After HARDFORK_BLC_58_TIME, reward amount is submitted with precision of 5:
+  do_op(update_queue_parameters_operation(get_license_issuer_id(), {true}, {600},
+                                          {2000 * DASCOIN_DEFAULT_ASSET_PRECISION}));
+
+  const auto& params2 = get_chain_parameters();
+  BOOST_CHECK_EQUAL( params2.dascoin_reward_amount.value, 2000 * DASCOIN_DEFAULT_ASSET_PRECISION );
 
   // TODO: handle negative cases
 

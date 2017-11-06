@@ -157,7 +157,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<license_type_object> get_license_types() const;
       vector<optional<license_type_object>> get_license_types(const vector<license_type_id_type>& license_type_ids) const;
       vector<pair<string, license_type_id_type>> get_license_type_names_ids() const;
-      vector<license_types_grouped_by_kind_res> get_license_types_grouped_by_kind() const;
+      vector<license_types_grouped_by_kind_res> get_license_type_names_ids_grouped_by_kind() const;
       vector<license_objects_grouped_by_kind_res> get_license_objects_grouped_by_kind() const;
       vector<optional<license_information_object>> get_license_information(const vector<account_id_type>& account_ids) const;
 
@@ -2127,14 +2127,14 @@ vector<pair<string, license_type_id_type>> database_api_impl::get_license_type_n
     return _dal.get_license_type_names_ids();
 }
 
-vector<license_types_grouped_by_kind_res> database_api::get_license_types_grouped_by_kind() const
+vector<license_types_grouped_by_kind_res> database_api::get_license_type_names_ids_grouped_by_kind() const
 {
-    return my->get_license_types_grouped_by_kind();
+    return my->get_license_type_names_ids_grouped_by_kind();
 }
 
-vector<license_types_grouped_by_kind_res> database_api_impl::get_license_types_grouped_by_kind() const
+vector<license_types_grouped_by_kind_res> database_api_impl::get_license_type_names_ids_grouped_by_kind() const
 {
-    return _dal.get_license_types_grouped_by_kind();
+    return _dal.get_license_type_names_ids_grouped_by_kind();
 }
 
 vector<license_objects_grouped_by_kind_res> database_api::get_license_objects_grouped_by_kind() const

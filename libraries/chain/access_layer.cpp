@@ -105,7 +105,7 @@ vector<pair<string, license_type_id_type>> database_access_layer::get_license_ty
     return result;
 }
 
-vector<license_types_grouped_by_kind_res> database_access_layer::get_license_types_grouped_by_kind() const
+vector<license_types_grouped_by_kind_res> database_access_layer::get_license_type_names_ids_grouped_by_kind() const
 {
     map<license_kind, vector<license_types_grouped_by_kind_res::license_name_and_id>> tmp;
     vector<license_types_grouped_by_kind_res> result;

@@ -261,6 +261,39 @@ BOOST_AUTO_TEST_CASE( upgrade_event_index_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( create_upgrade_event_test )
+{ try {
+
+  auto license_administrator_id = db.get_global_properties().authorities.license_administrator;
+  auto license_issuer_id = db.get_global_properties().authorities.license_issuer;
+  const auto hbt = db.head_block_time();
+
+  // This should fail, wrong authority:
+  GRAPHENE_REQUIRE_THROW( do_op(create_upgrade_event_operation(license_issuer_id, hbt, {}, {}, "")), fc::exception );
+
+  // Should also fail, event is scheduled in the past:
+  GRAPHENE_REQUIRE_THROW( do_op(create_upgrade_event_operation(license_administrator_id, hbt, {}, {}, "")), fc::exception );
+
+  // Should also fail, cutoff is scheduled in the past:
+  GRAPHENE_REQUIRE_THROW( do_op(create_upgrade_event_operation(license_administrator_id, hbt + 60, hbt, {}, "")), fc::exception );
+
+  // Should also fail, subsequent event is scheduled in the past:
+  GRAPHENE_REQUIRE_THROW( do_op(create_upgrade_event_operation(license_administrator_id, hbt + 60, hbt + 60, {hbt}, "")), fc::exception );
+
+  // This ought to work, execute time in future, no cutoff, no subsequent events:
+  do_op(create_upgrade_event_operation(license_administrator_id, hbt + 60, {}, {}, ""));
+
+  // This ought to work, execute time in future, cutoff in the future, no subsequent events:
+  do_op(create_upgrade_event_operation(license_administrator_id, hbt + 60, hbt + 60, {}, ""));
+
+  // This ought to work, execute time in future, cutoff in the future, subsequent event in the future:
+  do_op(create_upgrade_event_operation(license_administrator_id, hbt + 60, hbt + 60, {hbt + 60}, ""));
+
+  // This fails, second subsequent event is not in the future:
+  GRAPHENE_REQUIRE_THROW( do_op(create_upgrade_event_operation(license_administrator_id, hbt + 60, hbt + 60, {hbt + 60, hbt}, "")), fc::exception );
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

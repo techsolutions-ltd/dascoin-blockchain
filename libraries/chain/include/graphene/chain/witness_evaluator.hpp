@@ -62,6 +62,7 @@ namespace graphene { namespace chain {
          void_result do_evaluate( const create_witness_operation& o );
          object_id_type do_apply( const create_witness_operation& o );
    };
+
    class update_witness_evaluator : public evaluator<update_witness_evaluator>
    {
       public:
@@ -70,6 +71,7 @@ namespace graphene { namespace chain {
          void_result do_evaluate( const update_witness_operation& o );
          void_result do_apply( const update_witness_operation& o );
    };
+
    class remove_witness_evaluator : public evaluator<remove_witness_evaluator>
    {
       public:
@@ -78,6 +80,7 @@ namespace graphene { namespace chain {
          void_result do_evaluate( const remove_witness_operation& o );
          void_result do_apply( const remove_witness_operation& o );
    };
+
    class activate_witness_evaluator : public evaluator<activate_witness_evaluator>
    {
       public:
@@ -86,6 +89,7 @@ namespace graphene { namespace chain {
          void_result do_evaluate( const activate_witness_operation& o );
          void_result do_apply( const activate_witness_operation& o );
    };
+
    class deactivate_witness_evaluator : public evaluator<deactivate_witness_evaluator>
    {
       public:
@@ -97,17 +101,15 @@ namespace graphene { namespace chain {
 
    class witness_delegate_data_evaluator
    {
+         database& db;
+      public:
+         typedef void result_type;
 
-      database& db;
-   public:
-      typedef void result_type;
-
-
-      witness_delegate_data_evaluator(database& db) : db(db){}
-      void operator ()(const update_witness_delegate_data& o);
-      void operator ()(const remove_witness_delegate_data& o);
-      void operator ()(const activate_witness_delegate_data& o);
-      void operator ()(const deactivate_witness_delegate_data& o);
+         witness_delegate_data_evaluator(database& db) : db(db){}
+         void operator ()(const update_witness_delegate_data& o);
+         void operator ()(const remove_witness_delegate_data& o);
+         void operator ()(const activate_witness_delegate_data& o);
+         void operator ()(const deactivate_witness_delegate_data& o);
    };
 
 } } // graphene::chain

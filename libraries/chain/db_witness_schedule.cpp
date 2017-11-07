@@ -85,13 +85,21 @@ uint32_t database::witness_participation_rate()const
 
 void database::update_witnesses()
 {
+   std::vector<object_id_type> to_remove;
    const auto& wdd_idx = get_index_type<witness_delegate_data_index>().indices().get<by_id>();
    auto itr = wdd_idx.begin();
    witness_delegate_data_evaluator witness_delegate_data_evaluate(*this);
+
    while( itr != wdd_idx.end() )
    {
       itr->data.visit(witness_delegate_data_evaluate);
+      to_remove.push_back(itr->id);
       itr++;
+   }
+
+   for(auto& rm : to_remove)
+   {
+      remove(get<witness_delegate_data_object>(rm));
    }
 
    const witness_schedule_object& wso = witness_schedule_id_type()(*this);

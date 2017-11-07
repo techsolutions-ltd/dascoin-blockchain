@@ -326,6 +326,11 @@ struct get_impacted_account_visitor
       _impacted.insert( op.authority );
       _impacted.insert( op.account );
    }
+
+   void operator() ( const create_upgrade_event_operation& op )
+   {
+      _impacted.insert( op.upgrade_creator );
+   }
 };
 
 void operation_get_impacted_accounts( const operation& op, flat_set<account_id_type>& result )

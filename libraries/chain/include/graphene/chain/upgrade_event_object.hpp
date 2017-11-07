@@ -28,7 +28,7 @@ namespace graphene { namespace chain {
       optional<time_point_sec> cutoff_time;
       vector<time_point_sec> subsequent_execution_times;
       string comment;
-      bool executed;
+      bool executed = false;
 
       extensions_type extensions;
 
@@ -38,8 +38,7 @@ namespace graphene { namespace chain {
       : execution_time(execution_time),
         cutoff_time(cutoff_time),
         subsequent_execution_times(std::move(subsequent_execution_times)),
-        comment(move(comment)),
-        executed(false)
+        comment(move(comment))
       {}
   };
 

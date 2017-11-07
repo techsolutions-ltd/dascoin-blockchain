@@ -11,6 +11,7 @@
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/frequency_history_record_object.hpp>
 #include <graphene/chain/license_objects.hpp>
+#include <graphene/chain/upgrade_event_object.hpp>
 
 #include "../common/database_fixture.hpp"
 
@@ -249,6 +250,14 @@ BOOST_AUTO_TEST_CASE( different_license_kinds_unit_test )
   // This should fail, different license kind:
   GRAPHENE_REQUIRE_THROW( do_op(issue_license_operation(get_license_issuer_id(), vault_id, standard.id,
                           bonus_percent, frequency_lock, issue_time)), fc::exception );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( upgrade_event_index_test )
+{ try {
+
+  db.create<upgrade_event_object>([&](upgrade_event_object& lio){});
+  db.create<upgrade_event_object>([&](upgrade_event_object& lio){});
 
 } FC_LOG_AND_RETHROW() }
 

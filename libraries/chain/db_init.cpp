@@ -46,6 +46,7 @@
 #include <graphene/chain/special_authority_object.hpp>
 #include <graphene/chain/transaction_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
+#include <graphene/chain/upgrade_event_object.hpp>
 #include <graphene/chain/wire_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
 #include <graphene/chain/witness_object.hpp>
@@ -280,6 +281,7 @@ void database::initialize_indexes()
    add_index< primary_index< simple_index< fba_accumulator_object       > > >();
 
    add_index<primary_index<license_type_index>>();
+   add_index<primary_index<upgrade_event_index>>();
    add_index<primary_index<account_cycle_balance_index>>();
    add_index<primary_index<issue_asset_request_index>>();
    add_index<primary_index<wire_out_holder_index>>();

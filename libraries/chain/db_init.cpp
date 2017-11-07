@@ -67,6 +67,7 @@
 #include <graphene/chain/proposal_evaluator.hpp>
 #include <graphene/chain/transfer_evaluator.hpp>
 #include <graphene/chain/vesting_balance_evaluator.hpp>
+#include <graphene/chain/upgrade_event_evaluator.hpp>
 #include <graphene/chain/wire_evaluator.hpp>
 #include <graphene/chain/withdraw_permission_evaluator.hpp>
 #include <graphene/chain/witness_evaluator.hpp>
@@ -162,6 +163,9 @@ const uint8_t issued_asset_record_object::type_id;
 const uint8_t frequency_history_record_object::space_id;
 const uint8_t frequency_history_record_object::type_id;
 
+const uint8_t upgrade_event_object::space_id;
+const uint8_t upgrade_event_object::type_id;
+
 void database::initialize_genesis_transaction_state()
 {
   // Since this is the database initialization, skip checking signatures:
@@ -234,6 +238,7 @@ void database::initialize_evaluators()
    register_evaluator<edit_license_type_evaluator>();
    register_evaluator<update_euro_limit_evaluator>();
    register_evaluator<submit_cycles_to_queue_by_license_evaluator>();
+   register_evaluator<create_upgrade_event_evaluator>();
 }
 
 void database::initialize_indexes()

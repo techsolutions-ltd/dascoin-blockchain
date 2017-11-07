@@ -419,6 +419,8 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
               case license_type_object_type:{
                /** these are free from any accounts */
                break;
+            } case upgrade_event_object_type:{
+               break;
             }
          }
       }

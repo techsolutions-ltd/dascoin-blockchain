@@ -161,6 +161,29 @@ struct acc_id_vault_info_res : public acc_id_res {
     result_t result;
 };
 
+struct license_types_grouped_by_kind_res {
+    struct license_name_and_id {
+        string name;
+        license_type_id_type id;
+    };
+
+    license_types_grouped_by_kind_res() = default;
+    explicit license_types_grouped_by_kind_res(license_kind kind, vector<license_name_and_id> licenses)
+      : kind(kind), licenses(move(licenses))
+    {}
+    license_kind kind;
+    vector<license_name_and_id> licenses;
+};
+
+struct license_objects_grouped_by_kind_res {
+    license_objects_grouped_by_kind_res() = default;
+    explicit license_objects_grouped_by_kind_res(license_kind kind, vector<license_type_object> licenses)
+      : kind(kind), licenses(move(licenses))
+    {}
+    license_kind kind;
+    vector<license_type_object> licenses;
+};
+
 class database;
 class global_property_object;
 class reward_queue_object;
@@ -191,6 +214,8 @@ class database_access_layer {
     vector<license_type_object> get_license_types() const;
     optional<license_type_object> get_license_type(string name) const;
     optional<license_type_object> get_license_type(license_type_id_type license_id) const;
+    vector<license_types_grouped_by_kind_res> get_license_type_names_ids_grouped_by_kind() const;
+    vector<license_objects_grouped_by_kind_res> get_license_objects_grouped_by_kind() const;
 
     // Queue:
     uint32_t get_reward_queue_size() const;
@@ -302,3 +327,15 @@ FC_REFLECT(graphene::chain::vault_info_res,
            (license_information))
 
 FC_REFLECT_DERIVED(graphene::chain::acc_id_vault_info_res, (graphene::chain::acc_id_res), (result))
+
+FC_REFLECT(graphene::chain::license_types_grouped_by_kind_res::license_name_and_id,
+           (name)
+           (id))
+
+FC_REFLECT(graphene::chain::license_types_grouped_by_kind_res,
+           (kind)
+           (licenses))
+
+FC_REFLECT(graphene::chain::license_objects_grouped_by_kind_res,
+           (kind)
+           (licenses))

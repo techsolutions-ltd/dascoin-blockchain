@@ -38,6 +38,7 @@
 #include <graphene/chain/protocol/proposal.hpp>
 #include <graphene/chain/protocol/transfer.hpp>
 #include <graphene/chain/protocol/vesting.hpp>
+#include <graphene/chain/protocol/upgrade.hpp>
 #include <graphene/chain/protocol/wire.hpp>
 #include <graphene/chain/protocol/withdraw_permission.hpp>
 #include <graphene/chain/protocol/witness.hpp>
@@ -142,6 +143,8 @@ namespace graphene { namespace chain {
             update_euro_limit_operation,
 
             submit_cycles_to_queue_by_license_operation,
+
+            create_upgrade_event_operation,
 
             // Virtual operations below this point:
 

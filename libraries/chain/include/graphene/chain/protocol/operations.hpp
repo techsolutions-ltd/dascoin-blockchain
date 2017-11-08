@@ -145,6 +145,7 @@ namespace graphene { namespace chain {
             submit_cycles_to_queue_by_license_operation,
 
             create_upgrade_event_operation,
+            update_upgrade_event_operation,
 
             // Virtual operations below this point:
 

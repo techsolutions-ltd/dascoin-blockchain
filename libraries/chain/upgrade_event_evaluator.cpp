@@ -119,6 +119,33 @@ namespace graphene { namespace chain {
     });
 
     return {};
+
+  } FC_CAPTURE_AND_RETHROW( (op) ) }
+
+  void_result delete_upgrade_event_evaluator::do_evaluate(const operation_type &op)
+  { try {
+
+    const auto& d = db();
+    const upgrade_event_object& o = op.upgrade_event_id(d);
+    const auto license_admin_id = d.get_global_properties().authorities.license_administrator;
+    const auto& op_creator_obj = op.upgrade_creator(d);
+
+    d.perform_chain_authority_check("license administration", license_admin_id, op_creator_obj);
+    _upgrade_event = &o;
+
+    // fixme: additional check is needed here - only events which have 'executed' flag set to false could be deleted
+    return {};
+
+  } FC_CAPTURE_AND_RETHROW( (op) ) }
+
+  void_result delete_upgrade_event_evaluator::do_apply(const operation_type& op)
+  { try {
+    auto& d = db();
+
+    d.remove(*_upgrade_event);
+
+    return {};
+
   } FC_CAPTURE_AND_RETHROW( (op) ) }
 
 } }  // namespace graphene::chain

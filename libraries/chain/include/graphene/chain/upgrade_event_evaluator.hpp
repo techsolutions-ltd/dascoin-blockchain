@@ -29,4 +29,16 @@ namespace graphene { namespace chain {
     const upgrade_event_object* _upgrade_event = nullptr;
   };
 
-} }  // namespace graphene::chain
+  class delete_upgrade_event_evaluator : public evaluator<delete_upgrade_event_evaluator>
+  {
+  public:
+    using operation_type = delete_upgrade_event_operation;
+
+    void_result do_evaluate(const operation_type& op);
+    void_result do_apply(const operation_type& op);
+
+  private:
+    const upgrade_event_object* _upgrade_event = nullptr;
+  };
+
+} } // namespace graphene::chain

@@ -38,4 +38,9 @@ namespace graphene { namespace chain {
     }
   }
 
+  void delete_upgrade_event_operation::validate() const
+  {
+
+  }
+
 } } // namespace graphene::chain

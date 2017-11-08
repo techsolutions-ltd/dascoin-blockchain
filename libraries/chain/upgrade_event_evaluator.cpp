@@ -57,4 +57,68 @@ namespace graphene { namespace chain {
 
   } FC_CAPTURE_AND_RETHROW( (op) ) }
 
+  void_result update_upgrade_event_evaluator::do_evaluate(const operation_type &op)
+  { try {
+
+    const auto& d = db();
+    const auto& hbt = d.head_block_time();
+    const upgrade_event_object& o = op.upgrade_event_id(d);
+    const auto license_admin_id = d.get_global_properties().authorities.license_administrator;
+    const auto& op_creator_obj = op.upgrade_creator(d);
+
+    d.perform_chain_authority_check("license administration", license_admin_id, op_creator_obj);
+
+    if (op.execution_time.valid())
+    {
+      FC_ASSERT( *op.execution_time > hbt,
+                 "Cannot update upgrade event to be executed in the past, head block time is ${now}, execution time is ${exec}",
+                 ("now", hbt)
+                 ("exec", *op.execution_time)
+      );
+    }
+
+    if (op.cutoff_time.valid())
+    {
+      FC_ASSERT( *op.cutoff_time > hbt,
+                 "Cannot update cutoff to be in the past, head block time is ${now}, cutoff time is ${cut}",
+                 ("now", hbt)
+                 ("cut", *op.cutoff_time)
+      );
+    }
+
+    if (op.subsequent_execution_times.valid())
+    {
+      for (const auto& i : *op.subsequent_execution_times)
+      {
+        FC_ASSERT( i > hbt,
+                   "Cannot update subsequent upgrade event to be executed in the past, head block time is ${now}, event time is ${exec}",
+                   ("now", hbt)
+                   ("exec", i)
+        );
+      }
+    }
+
+    _upgrade_event = &o;
+
+    return {};
+
+  } FC_CAPTURE_AND_RETHROW( (op) ) }
+
+  void_result update_upgrade_event_evaluator::do_apply(const operation_type& op)
+  { try {
+    auto& d = db();
+    d.modify(*_upgrade_event, [&](upgrade_event_object& ueo){
+      if (op.execution_time.valid())
+        ueo.execution_time = *op.execution_time;
+      if (op.cutoff_time.valid())
+        ueo.cutoff_time = *op.cutoff_time;
+      if (op.subsequent_execution_times.valid())
+        ueo.subsequent_execution_times = *op.subsequent_execution_times;
+      if (op.comment.valid())
+        ueo.comment = *op.comment;
+    });
+
+    return {};
+  } FC_CAPTURE_AND_RETHROW( (op) ) }
+
 } }  // namespace graphene::chain

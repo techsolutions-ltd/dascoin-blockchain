@@ -280,6 +280,9 @@ BOOST_AUTO_TEST_CASE( create_upgrade_event_test )
   // Should also fail, subsequent event is scheduled in the past:
   GRAPHENE_REQUIRE_THROW( do_op(create_upgrade_event_operation(license_administrator_id, hbt + 60, hbt + 60, {hbt}, "")), fc::exception );
 
+  // Should also fail, subsequent event is scheduled before the main execution time:
+  GRAPHENE_REQUIRE_THROW( do_op(create_upgrade_event_operation(license_administrator_id, hbt + 60, hbt + 60, {hbt + 30}, "")), fc::exception );
+
   // This ought to work, execute time in future, no cutoff, no subsequent events:
   do_op(create_upgrade_event_operation(license_administrator_id, hbt + 60, {}, {}, ""));
 
@@ -287,10 +290,10 @@ BOOST_AUTO_TEST_CASE( create_upgrade_event_test )
   do_op(create_upgrade_event_operation(license_administrator_id, hbt + 60, hbt + 60, {}, ""));
 
   // This ought to work, execute time in future, cutoff in the future, subsequent event in the future:
-  do_op(create_upgrade_event_operation(license_administrator_id, hbt + 60, hbt + 60, {hbt + 60}, ""));
+  do_op(create_upgrade_event_operation(license_administrator_id, hbt + 60, hbt + 60, {hbt + 120}, ""));
 
   // This fails, second subsequent event is not in the future:
-  GRAPHENE_REQUIRE_THROW( do_op(create_upgrade_event_operation(license_administrator_id, hbt + 60, hbt + 60, {hbt + 60, hbt}, "")), fc::exception );
+  GRAPHENE_REQUIRE_THROW( do_op(create_upgrade_event_operation(license_administrator_id, hbt + 60, hbt + 60, {hbt + 120, hbt}, "")), fc::exception );
 
 } FC_LOG_AND_RETHROW() }
 

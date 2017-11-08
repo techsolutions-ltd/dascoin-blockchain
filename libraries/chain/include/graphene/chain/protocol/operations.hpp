@@ -146,6 +146,7 @@ namespace graphene { namespace chain {
 
             create_upgrade_event_operation,
             update_upgrade_event_operation,
+            delete_upgrade_event_operation,
 
             // Virtual operations below this point:
 

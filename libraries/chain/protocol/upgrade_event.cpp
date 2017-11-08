@@ -10,6 +10,14 @@ namespace graphene { namespace chain {
   {
     FC_ASSERT( fee.amount >= 0 );
     FC_ASSERT( comment.size() <= DASCOIN_MAXIMUM_INTERNAL_MEMO_LENGTH );
+    for (const auto& subsequent_event : subsequent_execution_times)
+    {
+      FC_ASSERT( execution_time < subsequent_event,
+                 "Subsequent execution time cannot be before the main execution time, execution time: ${exec} subsequent time: ${time} ",
+                 ("exec", execution_time)
+                 ("time", subsequent_event)
+               );
+    }
   }
 
 } } // namespace graphene::chain

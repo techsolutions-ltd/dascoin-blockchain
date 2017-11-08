@@ -300,6 +300,7 @@ BOOST_AUTO_TEST_CASE( create_upgrade_event_test )
 BOOST_AUTO_TEST_CASE( update_upgrade_event_test )
 { try {
   auto license_administrator_id = db.get_global_properties().authorities.license_administrator;
+  auto license_issuer_id = db.get_global_properties().authorities.license_issuer;
   const auto hbt = db.head_block_time();
 
   const auto get_upgrade_events = [this](vector<upgrade_event_object> &upgrades) {
@@ -314,7 +315,8 @@ BOOST_AUTO_TEST_CASE( update_upgrade_event_test )
   get_upgrade_events(upgrades);
   FC_ASSERT( upgrades.size() == 1 );
 
-  upgrades.clear();
+  // Fails because of invalid authority:
+  GRAPHENE_REQUIRE_THROW( do_op(update_upgrade_event_operation(license_issuer_id, upgrades[0].id, hbt, {}, {}, "bar")), fc::exception );
 
   // Fails because execution time is in the past:
   GRAPHENE_REQUIRE_THROW( do_op(update_upgrade_event_operation(license_administrator_id, upgrades[0].id, hbt, {}, {}, "bar")), fc::exception );
@@ -327,6 +329,8 @@ BOOST_AUTO_TEST_CASE( update_upgrade_event_test )
 
   // This should succeed:
   do_op(update_upgrade_event_operation(license_administrator_id, upgrades[0].id, hbt + 120, hbt + 120, vector<time_point_sec>{hbt + 220}, "bar"));
+
+  upgrades.clear();
   get_upgrade_events(upgrades);
 
   // There's still one upgrade event:
@@ -337,6 +341,40 @@ BOOST_AUTO_TEST_CASE( update_upgrade_event_test )
   FC_ASSERT( upgrades[0].subsequent_execution_times.size() == 1 );
   FC_ASSERT( upgrades[0].subsequent_execution_times[0] == hbt + 220 );
   FC_ASSERT( upgrades[0].comment.compare("bar") == 0 );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( delete_upgrade_event_test )
+{ try {
+  auto license_administrator_id = db.get_global_properties().authorities.license_administrator;
+  auto license_issuer_id = db.get_global_properties().authorities.license_issuer;
+  const auto hbt = db.head_block_time();
+
+  const auto get_upgrade_events = [this](vector<upgrade_event_object> &upgrades) {
+    const auto& idx = db.get_index_type<upgrade_event_index>().indices().get<by_id>();
+    for ( auto it = idx.begin(); it != idx.end(); ++it )
+      upgrades.emplace_back(*it);
+  };
+
+  do_op(create_upgrade_event_operation(license_administrator_id, hbt + 60, {}, {}, "foo"));
+
+  vector<upgrade_event_object> upgrades;
+  get_upgrade_events(upgrades);
+  FC_ASSERT( upgrades.size() == 1 );
+
+  // Fails because of invalid authority:
+  GRAPHENE_REQUIRE_THROW( do_op(delete_upgrade_event_operation(license_issuer_id, upgrades[0].id)), fc::exception );
+  auto id = upgrades[0].id;
+  ++id;
+  // Fails because of invalid id:
+  GRAPHENE_REQUIRE_THROW( do_op(delete_upgrade_event_operation(license_administrator_id, id)), fc::exception );
+
+  do_op(delete_upgrade_event_operation(license_administrator_id, upgrades[0].id));
+  upgrades.clear();
+  get_upgrade_events(upgrades);
+
+  // No active upgrade events at this point:
+  FC_ASSERT( upgrades.empty() );
 
 } FC_LOG_AND_RETHROW() }
 

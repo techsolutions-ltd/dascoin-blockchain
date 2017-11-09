@@ -97,6 +97,7 @@ namespace graphene { namespace chain {
 
 FC_REFLECT( graphene::chain::create_upgrade_event_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::create_upgrade_event_operation,
+            (fee)
             (upgrade_creator)
             (execution_time)
             (cutoff_time)
@@ -107,6 +108,7 @@ FC_REFLECT( graphene::chain::create_upgrade_event_operation,
 
 FC_REFLECT( graphene::chain::update_upgrade_event_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::update_upgrade_event_operation,
+            (fee)
             (upgrade_creator)
             (upgrade_event_id)
             (execution_time)
@@ -118,6 +120,7 @@ FC_REFLECT( graphene::chain::update_upgrade_event_operation,
 
 FC_REFLECT( graphene::chain::delete_upgrade_event_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::delete_upgrade_event_operation,
+            (fee)
             (upgrade_creator)
             (upgrade_event_id)
 )

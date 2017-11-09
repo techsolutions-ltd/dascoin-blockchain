@@ -163,6 +163,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<license_types_grouped_by_kind_res> get_license_type_names_ids_grouped_by_kind() const;
       vector<license_objects_grouped_by_kind_res> get_license_objects_grouped_by_kind() const;
       vector<optional<license_information_object>> get_license_information(const vector<account_id_type>& account_ids) const;
+      vector<upgrade_event_object> get_upgrade_events() const;
 
       // Access:
       acc_id_share_t_res get_free_cycle_balance(account_id_type account_id) const;
@@ -2385,6 +2386,17 @@ vector<optional<license_information_object>> database_api_impl::get_license_info
       return {};
    });
    return result;
+}
+
+vector<upgrade_event_object> database_api::get_upgrade_events() const
+{
+  return my->get_upgrade_events();
+}
+
+vector<upgrade_event_object> database_api_impl::get_upgrade_events() const
+{
+  const auto& idx = _db.get_index_type<upgrade_event_index>().indices().get<by_id>();
+  return vector<upgrade_event_object>(idx.begin(), idx.end());
 }
 
 //////////////////////////////////////////////////////////////////////

@@ -131,9 +131,11 @@ namespace graphene { namespace chain {
     const auto& op_creator_obj = op.upgrade_creator(d);
 
     d.perform_chain_authority_check("license administration", license_admin_id, op_creator_obj);
+
+    FC_ASSERT( !o.executed, "Cannot delete upgrade event which has been executed" );
+
     _upgrade_event = &o;
 
-    // fixme: additional check is needed here - only events which have 'executed' flag set to false could be deleted
     return {};
 
   } FC_CAPTURE_AND_RETHROW( (op) ) }

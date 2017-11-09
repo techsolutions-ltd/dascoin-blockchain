@@ -70,6 +70,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       // Blocks and transactions
       optional<block_header> get_block_header(uint32_t block_num)const;
       optional<signed_block> get_block(uint32_t block_num)const;
+      vector<signed_block_with_num> get_blocks(uint32_t block_num, uint32_t count) const;
       processed_transaction get_transaction( uint32_t block_num, uint32_t trx_in_block )const;
 
       // Globals
@@ -517,6 +518,16 @@ optional<signed_block> database_api::get_block(uint32_t block_num)const
 optional<signed_block> database_api_impl::get_block(uint32_t block_num)const
 {
    return _db.fetch_block_by_number(block_num);
+}
+
+vector<signed_block_with_num> database_api::get_blocks(uint32_t start_block_num, uint32_t count) const
+{
+    return my->get_blocks(start_block_num, count);
+}
+
+vector<signed_block_with_num> database_api_impl::get_blocks(uint32_t start_block_num, uint32_t count) const
+{
+    return _dal.get_blocks(start_block_num, count);
 }
 
 processed_transaction database_api::get_transaction( uint32_t block_num, uint32_t trx_in_block )const

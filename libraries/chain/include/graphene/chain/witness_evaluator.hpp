@@ -99,13 +99,13 @@ namespace graphene { namespace chain {
          void_result do_apply( const deactivate_witness_operation& o );
    };
 
-   class witness_delegate_data_evaluator
+   class witness_delegate_data_visitor // TODO: prevaci da se zove visitor
    {
          database& db;
       public:
          typedef void result_type;
 
-         witness_delegate_data_evaluator(database& db) : db(db){}
+         witness_delegate_data_visitor(database& db) : db(db){}
          void operator ()(const update_witness_delegate_data& o);
          void operator ()(const remove_witness_delegate_data& o);
          void operator ()(const activate_witness_delegate_data& o);

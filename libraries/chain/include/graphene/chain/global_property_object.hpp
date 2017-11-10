@@ -219,6 +219,7 @@ FC_REFLECT_DERIVED( graphene::chain::dynamic_global_property_object, (graphene::
                     (next_spend_limit_reset)
                     (next_upgrade_event)
                     (total_upgrade_events)
+                    (is_root_authority_enabled_flag)
                     (last_dascoin_price)
                   )
 

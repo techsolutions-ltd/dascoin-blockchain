@@ -13,7 +13,7 @@ using namespace graphene::chain::test;
 
 BOOST_FIXTURE_TEST_SUITE( dascoin_tests, database_fixture )
 
-BOOST_FIXTURE_TEST_SUITE( exchange_unit_tests, database_fixture )
+BOOST_FIXTURE_TEST_SUITE( multiple_master_tests, database_fixture )
 
 BOOST_AUTO_TEST_CASE( successful_removal_of_root_authority_test )
 { try {

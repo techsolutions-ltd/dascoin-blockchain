@@ -88,7 +88,7 @@ void database::update_witnesses()
    std::vector<object_id_type> to_remove;
    const auto& wdd_idx = get_index_type<witness_delegate_data_index>().indices().get<by_id>();
    auto itr = wdd_idx.begin();
-   witness_delegate_data_evaluator witness_delegate_data_evaluate(*this);
+   witness_delegate_data_visitor witness_delegate_data_evaluate(*this);
 
    while( itr != wdd_idx.end() )
    {

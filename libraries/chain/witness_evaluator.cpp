@@ -205,7 +205,7 @@ void_result deactivate_witness_evaluator::do_apply( const deactivate_witness_ope
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void witness_delegate_data_evaluator::operator ()(const update_witness_delegate_data& o)
+void witness_delegate_data_visitor::operator ()(const update_witness_delegate_data& o)
 {
    try {
       db.modify(
@@ -221,14 +221,14 @@ void witness_delegate_data_evaluator::operator ()(const update_witness_delegate_
       });
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-void witness_delegate_data_evaluator::operator ()(const remove_witness_delegate_data& o)
+void witness_delegate_data_visitor::operator ()(const remove_witness_delegate_data& o)
 {
    try {
       auto& obj = db.get(o.witness);
       db.remove(obj);
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-void witness_delegate_data_evaluator::operator ()(const activate_witness_delegate_data& o)
+void witness_delegate_data_visitor::operator ()(const activate_witness_delegate_data& o)
 {
    try {
       db.modify(db.get_global_properties(), [&](global_property_object& gpo) {
@@ -236,7 +236,7 @@ void witness_delegate_data_evaluator::operator ()(const activate_witness_delegat
       });
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
-void witness_delegate_data_evaluator::operator ()(const deactivate_witness_delegate_data& o)
+void witness_delegate_data_visitor::operator ()(const deactivate_witness_delegate_data& o)
 {
    try {
       db.modify(db.get_global_properties(), [&](global_property_object& gpo) {

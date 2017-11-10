@@ -23,6 +23,12 @@ namespace graphene { namespace chain {
                ("exec", op.execution_time)
              );
 
+    // Check that we don't have a scheduled event which has the same execution time:
+    const auto& idx = d.get_index_type<upgrade_event_index>().indices().get<by_id>();
+    for ( auto it = idx.begin(); it != idx.end(); ++it )
+      FC_ASSERT( it->execution_time != op.execution_time,
+                 "Cannot create upgrade event which has the same execution time as the previously created event");
+
     if (op.cutoff_time.valid())
     {
       FC_ASSERT( *op.cutoff_time > hbt,

@@ -332,6 +332,10 @@ namespace graphene { namespace chain {
 
      extensions_type extensions;
 
+     upgrade_account_cycles_operation() = default;
+     explicit upgrade_account_cycles_operation(account_id_type account)
+       : account(account) {}
+
      account_id_type fee_payer() const { return account; }
      void validate() const { FC_ASSERT( false ); }
      share_type calculate_fee(const fee_parameters_type&) const { return 0; }

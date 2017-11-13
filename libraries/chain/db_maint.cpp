@@ -717,36 +717,104 @@ void deprecate_annual_members( database& db )
 }
 
 // TODO: refactor this method completely!
-void database::perform_upgrades(const account_object& account)
+void database::perform_upgrades(const account_object& account, const upgrade_event_object& upgrade)
 {
-   share_type new_balance;
+   share_type new_balance{0};
    share_type requeue_amount;
    share_type return_amount;
+   bool update_balance{false};
 
    // NOTE: special accounts are not upgraded!
    if ( account.kind == account_kind::special )
       return;
 
+   if ( !account.license_information.valid() )
+      return;
+
    const auto& cycle_balance_obj = get_cycle_balance_object(account.id);
    const auto& license_info_obj = (*account.license_information)(*this);
+   const auto& cutoff_time = upgrade.cutoff_time.valid() ? *(upgrade.cutoff_time) : upgrade.execution_time;
 
+   // Upgrade each license. fixme: check license type
    modify(license_info_obj, [&](license_information_object& lio) {
-      new_balance = lio.balance_upgrade(cycle_balance_obj.balance);
+      for (auto& license_history : lio.history)
+      {
+         auto upgrade_it = std::find_if(license_history.upgrades.begin(), license_history.upgrades.end(),
+                                        [&upgrade](const pair<upgrade_event_id_type, time_point_sec> upgrade_and_time){
+                                            return upgrade_and_time.first == upgrade.id;
+                                      });
+         // If not upgraded by this upgrade, proceed with it:
+         if ( license_history.upgrades.end() == upgrade_it )
+         {
+            // If the license has been issued before the cutoff time, execute it:
+            if ( license_history.activated_at <= cutoff_time )
+            {
+               license_history.amount = license_history.balance_upgrade(license_history.amount);
+               new_balance += license_history.amount;
+               update_balance = true;
+               license_history.upgrades.emplace_back(std::make_pair(upgrade.id, head_block_time()));
+            }
+         }
+      }
    });
 
-   // First, perform the balance_upgrade:
-   modify(cycle_balance_obj, [&](account_cycle_balance_object& acb){
-      acb.balance = new_balance;
-   });
+   if (update_balance)
+   {
+      modify(cycle_balance_obj, [&](account_cycle_balance_object& acb){
+        acb.balance = new_balance;
+      });
+   }
 
    // Second, perform the requeue upgrades:
 
    // Third, perform the return upgrades:
 
    // Last, apply the upgrade operation:
-   upgrade_account_cycles_operation vop;
-   vop.account = account.id;
-   push_applied_operation(vop);
+   push_applied_operation(upgrade_account_cycles_operation{account.id});
+}
+
+void database::perform_upgrades()
+{
+   class perform_upgrades_helper
+   {
+   public:
+     explicit perform_upgrades_helper(database& d, const upgrade_event_object& upgrade)
+         : d(d), upgrade(upgrade) {}
+
+     void operator()(const account_object& a) { d.perform_upgrades(a, upgrade); }
+
+   private:
+     database& d;
+     const upgrade_event_object& upgrade;
+   };
+
+   // Helper lambda which returns true if upgrade should be executed:
+   const auto should_execute_upgrade_event = [this](const upgrade_event_object& upgrade) -> bool {
+     // If executed already, do not execute:
+     if (upgrade.executed)
+        return false;
+     // If head block time is lower than execution time or any of the subsequent execution times, do execute:
+     const auto hbt = head_block_time();
+     if (upgrade.execution_time < hbt ||
+         std::find_if(upgrade.subsequent_execution_times.begin(), upgrade.subsequent_execution_times.end(),
+                      [&hbt](const time_point_sec& time) {
+                          return hbt > time;
+                      }) != upgrade.subsequent_execution_times.end())
+     {
+        return true;
+     }
+     return false;
+   };
+
+   const auto& idx = get_index_type<upgrade_event_index>().indices().get<by_id>();
+   for ( auto it = idx.cbegin(); it != idx.cend(); ++it )
+   {
+      if ( !should_execute_upgrade_event(*it) )
+         continue;
+
+      perform_upgrades_helper upgrades_helper(*this, *it);
+      perform_helpers<account_index, by_name>(std::tie(upgrades_helper));
+   }
 }
 
 void database::perform_chain_maintenance(const signed_block& next_block, const global_property_object& global_props)
@@ -867,6 +935,7 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
    update_active_witnesses();
    update_active_committee_members();
    update_worker_votes();
+   perform_upgrades();
 
    modify(gpo, [this](global_property_object& p) {
       // Remove scaling of account registration fee

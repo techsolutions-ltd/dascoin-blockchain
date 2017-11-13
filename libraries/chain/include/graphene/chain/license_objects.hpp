@@ -28,6 +28,8 @@ namespace graphene { namespace chain {
         frequency_type frequency_lock;
         time_point_sec activated_at;
         time_point_sec issued_on_blockchain;
+        upgrade_type balance_upgrade;
+        vector<pair<upgrade_event_id_type, time_point_sec>> upgrades;
 
         license_history_record() = default;
         explicit license_history_record(license_type_id_type license,
@@ -36,14 +38,16 @@ namespace graphene { namespace chain {
                                         share_type bonus_percent,
                                         frequency_type frequency_lock,
                                         time_point_sec activated_at,
-                                        time_point_sec issued_on_blockchain)
+                                        time_point_sec issued_on_blockchain,
+                                        upgrade_type balance_upgrade)
             : license(license),
               amount(amount),
               base_amount(base_amount),
               bonus_percent(bonus_percent),
               frequency_lock(frequency_lock),
               activated_at(activated_at),
-              issued_on_blockchain(issued_on_blockchain) {}
+              issued_on_blockchain(issued_on_blockchain),
+              balance_upgrade(balance_upgrade) {}
       };
       typedef vector<license_history_record> array_t;
 
@@ -54,16 +58,16 @@ namespace graphene { namespace chain {
       frequency_type frequency_lock;
       license_kind vault_license_kind;
 
-      upgrade_type balance_upgrade;
       upgrade_type requeue_upgrade;
       upgrade_type return_upgrade;
 
       void add_license(license_type_id_type license_id, share_type amount, share_type base_amount,
                        share_type bonus_percentage, frequency_type f_lock,
                        time_point_sec activated_at,
-                       time_point_sec issued_on_blockchain) {
+                       time_point_sec issued_on_blockchain,
+                       upgrade_type up_type) {
         history.emplace_back(license_id, amount, base_amount, bonus_percentage, f_lock,
-                             activated_at, issued_on_blockchain);
+                             activated_at, issued_on_blockchain, up_type);
         max_license = license_id;
         frequency_lock = f_lock;
       }
@@ -214,6 +218,8 @@ FC_REFLECT( graphene::chain::license_information_object::license_history_record,
             (frequency_lock)
             (activated_at)
             (issued_on_blockchain)
+            (balance_upgrade)
+            (upgrades)
           )
 
 FC_REFLECT_DERIVED( graphene::chain::license_information_object, (graphene::db::object),
@@ -222,7 +228,6 @@ FC_REFLECT_DERIVED( graphene::chain::license_information_object, (graphene::db::
             (max_license)
             (frequency_lock)
             (vault_license_kind)
-            (balance_upgrade)
             (requeue_upgrade)
             (return_upgrade)
           )

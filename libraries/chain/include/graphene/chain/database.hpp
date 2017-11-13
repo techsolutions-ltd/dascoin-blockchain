@@ -636,7 +636,8 @@ private:
          void perform_chain_maintenance(const signed_block& next_block, const global_property_object& global_props);
          void update_active_witnesses();
          void update_active_committee_members();
-         void perform_upgrades(const account_object& account);
+         void perform_upgrades(const account_object& account, const upgrade_event_object& upgrade);
+         void perform_upgrades();
          void update_worker_votes();
 
          template<typename IndexType, typename IndexBy, class... HelperTypes>

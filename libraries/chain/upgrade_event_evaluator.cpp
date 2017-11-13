@@ -29,15 +29,6 @@ namespace graphene { namespace chain {
       FC_ASSERT( it->execution_time != op.execution_time,
                  "Cannot create upgrade event which has the same execution time as the previously created event");
 
-    if (op.cutoff_time.valid())
-    {
-      FC_ASSERT( *op.cutoff_time > hbt,
-                 "Cannot create cutoff in the past, head block time is ${now}, cutoff time is ${cut}",
-                 ("now", hbt)
-                 ("cut", *op.cutoff_time)
-               );
-    }
-
     for (const auto& i : op.subsequent_execution_times)
     {
       FC_ASSERT( i > hbt,

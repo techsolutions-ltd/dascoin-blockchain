@@ -267,33 +267,59 @@ BOOST_AUTO_TEST_CASE( create_upgrade_event_test )
   auto license_administrator_id = db.get_global_properties().authorities.license_administrator;
   auto license_issuer_id = db.get_global_properties().authorities.license_issuer;
   const auto hbt = db.head_block_time();
+  const auto& dgpo = db.get_dynamic_global_properties();
+  const auto& gpo = db.get_global_properties();
 
   // This should fail, wrong authority:
   GRAPHENE_REQUIRE_THROW( do_op(create_upgrade_event_operation(license_issuer_id, hbt, {}, {}, "")), fc::exception );
 
+  // Should also fail, event's execution time is not a multiply of maintenance interval:
+  GRAPHENE_REQUIRE_THROW( do_op(create_upgrade_event_operation(license_administrator_id,
+                                                               dgpo.next_maintenance_time - fc::seconds(1),
+                                                               {}, {}, "")), fc::exception );
+
   // Should also fail, event is scheduled in the past:
-  GRAPHENE_REQUIRE_THROW( do_op(create_upgrade_event_operation(license_administrator_id, hbt, {}, {}, "")), fc::exception );
+  GRAPHENE_REQUIRE_THROW( do_op(create_upgrade_event_operation(license_administrator_id,
+                                                               dgpo.next_maintenance_time - 2 * gpo.parameters.maintenance_interval,
+                                                               {}, {}, "")), fc::exception );
 
   // Should also fail, subsequent event is scheduled in the past:
-  GRAPHENE_REQUIRE_THROW( do_op(create_upgrade_event_operation(license_administrator_id, hbt + 60, hbt + 60, {hbt}, "")), fc::exception );
+  GRAPHENE_REQUIRE_THROW( do_op(create_upgrade_event_operation(license_administrator_id,
+                                                               dgpo.next_maintenance_time,
+                                                               hbt + 60,
+                                                               {dgpo.next_maintenance_time - 2 * gpo.parameters.maintenance_interval}, "")), fc::exception );
 
   // Should also fail, subsequent event is scheduled before the main execution time:
-  GRAPHENE_REQUIRE_THROW( do_op(create_upgrade_event_operation(license_administrator_id, hbt + 60, hbt + 60, {hbt + 30}, "")), fc::exception );
+  GRAPHENE_REQUIRE_THROW( do_op(create_upgrade_event_operation(license_administrator_id,
+                                                               dgpo.next_maintenance_time + 2 * gpo.parameters.maintenance_interval,
+                                                               hbt + 60,
+                                                               {dgpo.next_maintenance_time + gpo.parameters.maintenance_interval}, "")), fc::exception );
 
   // This ought to work, execute time in future, no cutoff, no subsequent events:
-  do_op(create_upgrade_event_operation(license_administrator_id, hbt + 60, {}, {}, ""));
+  do_op(create_upgrade_event_operation(license_administrator_id,
+                                       dgpo.next_maintenance_time, {}, {}, ""));
 
   // Fails, cannot create upgrade event at the same time as the previously created event:
-  GRAPHENE_REQUIRE_THROW( do_op(create_upgrade_event_operation(license_administrator_id, hbt + 60, {}, {}, "")), fc::exception );
+  GRAPHENE_REQUIRE_THROW( do_op(create_upgrade_event_operation(license_administrator_id, dgpo.next_maintenance_time,
+                                                               {}, {}, "")), fc::exception );
 
   // This ought to work, execute time in future, cutoff in the future, no subsequent events:
-  do_op(create_upgrade_event_operation(license_administrator_id, hbt + 120, hbt + 60, {}, ""));
+  do_op(create_upgrade_event_operation(license_administrator_id,
+                                       dgpo.next_maintenance_time + gpo.parameters.maintenance_interval,
+                                       hbt + 60, {}, ""));
 
   // This ought to work, execute time in future, cutoff in the future, subsequent event in the future:
-  do_op(create_upgrade_event_operation(license_administrator_id, hbt + 180, hbt + 60, {hbt + 220}, ""));
+  do_op(create_upgrade_event_operation(license_administrator_id,
+                                       dgpo.next_maintenance_time + 2 * gpo.parameters.maintenance_interval,
+                                       hbt + 60,
+                                       {dgpo.next_maintenance_time + 3 * gpo.parameters.maintenance_interval}, ""));
 
   // This fails, second subsequent event is not in the future:
-  GRAPHENE_REQUIRE_THROW( do_op(create_upgrade_event_operation(license_administrator_id, hbt + 240, hbt + 60, {hbt + 320, hbt}, "")), fc::exception );
+  GRAPHENE_REQUIRE_THROW( do_op(create_upgrade_event_operation(license_administrator_id,
+                                                               dgpo.next_maintenance_time + 3 * gpo.parameters.maintenance_interval,
+                                                               hbt + 60,
+                                                               {dgpo.next_maintenance_time + 4 * gpo.parameters.maintenance_interval,
+                                                                dgpo.next_maintenance_time - 4 * gpo.parameters.maintenance_interval}, "")), fc::exception );
 
 } FC_LOG_AND_RETHROW() }
 
@@ -302,6 +328,8 @@ BOOST_AUTO_TEST_CASE( update_upgrade_event_test )
   auto license_administrator_id = db.get_global_properties().authorities.license_administrator;
   auto license_issuer_id = db.get_global_properties().authorities.license_issuer;
   const auto hbt = db.head_block_time();
+  const auto& dgpo = db.get_dynamic_global_properties();
+  const auto& gpo = db.get_global_properties();
 
   const auto get_upgrade_events = [this](vector<upgrade_event_object> &upgrades) {
     const auto& idx = db.get_index_type<upgrade_event_index>().indices().get<by_id>();
@@ -309,7 +337,7 @@ BOOST_AUTO_TEST_CASE( update_upgrade_event_test )
       upgrades.emplace_back(*it);
   };
 
-  do_op(create_upgrade_event_operation(license_administrator_id, hbt + 60, {}, {}, "foo"));
+  do_op(create_upgrade_event_operation(license_administrator_id, dgpo.next_maintenance_time, {}, {}, "foo"));
 
   vector<upgrade_event_object> upgrades;
   get_upgrade_events(upgrades);
@@ -319,16 +347,29 @@ BOOST_AUTO_TEST_CASE( update_upgrade_event_test )
   GRAPHENE_REQUIRE_THROW( do_op(update_upgrade_event_operation(license_issuer_id, upgrades[0].id, hbt, {}, {}, "bar")), fc::exception );
 
   // Fails because execution time is in the past:
-  GRAPHENE_REQUIRE_THROW( do_op(update_upgrade_event_operation(license_administrator_id, upgrades[0].id, hbt, {}, {}, "bar")), fc::exception );
+  GRAPHENE_REQUIRE_THROW( do_op(update_upgrade_event_operation(license_administrator_id,
+                                                               upgrades[0].id,
+                                                               dgpo.next_maintenance_time - 4 * gpo.parameters.maintenance_interval,
+                                                               {}, {}, "bar")), fc::exception );
 
   // Fails because cutoff time is in the past:
-  GRAPHENE_REQUIRE_THROW( do_op(update_upgrade_event_operation(license_administrator_id, upgrades[0].id, hbt + 60, hbt, {}, "bar")), fc::exception );
+  GRAPHENE_REQUIRE_THROW( do_op(update_upgrade_event_operation(license_administrator_id,
+                                                               upgrades[0].id,
+                                                               dgpo.next_maintenance_time,
+                                                               hbt, {}, "bar")), fc::exception );
 
   // Fails because subsequent execution time is in the past:
-  GRAPHENE_REQUIRE_THROW( do_op(update_upgrade_event_operation(license_administrator_id, upgrades[0].id, hbt + 60, hbt + 60, vector<time_point_sec>{hbt}, "bar")), fc::exception );
+  GRAPHENE_REQUIRE_THROW( do_op(update_upgrade_event_operation(license_administrator_id,
+                                                               upgrades[0].id,
+                                                               dgpo.next_maintenance_time,
+                                                               hbt + 60,
+                                                               vector<time_point_sec>{dgpo.next_maintenance_time - 4 * gpo.parameters.maintenance_interval}, "bar")), fc::exception );
 
   // This should succeed:
-  do_op(update_upgrade_event_operation(license_administrator_id, upgrades[0].id, hbt + 120, hbt + 120, vector<time_point_sec>{hbt + 220}, "bar"));
+  do_op(update_upgrade_event_operation(license_administrator_id,
+                                       upgrades[0].id,
+                                       dgpo.next_maintenance_time + 2 * gpo.parameters.maintenance_interval,
+                                       hbt + 120, vector<time_point_sec>{dgpo.next_maintenance_time + 4 * gpo.parameters.maintenance_interval}, "bar"));
 
   upgrades.clear();
   get_upgrade_events(upgrades);
@@ -336,10 +377,10 @@ BOOST_AUTO_TEST_CASE( update_upgrade_event_test )
   // There's still one upgrade event:
   FC_ASSERT( upgrades.size() == 1 );
   // But updated accordingly:
-  FC_ASSERT( upgrades[0].execution_time == hbt + 120 );
+  FC_ASSERT( upgrades[0].execution_time == dgpo.next_maintenance_time + 2 * gpo.parameters.maintenance_interval );
   FC_ASSERT( upgrades[0].cutoff_time == hbt + 120 );
   FC_ASSERT( upgrades[0].subsequent_execution_times.size() == 1 );
-  FC_ASSERT( upgrades[0].subsequent_execution_times[0] == hbt + 220 );
+  FC_ASSERT( upgrades[0].subsequent_execution_times[0] == dgpo.next_maintenance_time + 4 * gpo.parameters.maintenance_interval );
   FC_ASSERT( upgrades[0].comment.compare("bar") == 0 );
 
 } FC_LOG_AND_RETHROW() }
@@ -348,7 +389,7 @@ BOOST_AUTO_TEST_CASE( delete_upgrade_event_test )
 { try {
   auto license_administrator_id = db.get_global_properties().authorities.license_administrator;
   auto license_issuer_id = db.get_global_properties().authorities.license_issuer;
-  const auto hbt = db.head_block_time();
+  const auto& dgpo = db.get_dynamic_global_properties();
 
   const auto get_upgrade_events = [this](vector<upgrade_event_object> &upgrades) {
     const auto& idx = db.get_index_type<upgrade_event_index>().indices().get<by_id>();
@@ -356,7 +397,7 @@ BOOST_AUTO_TEST_CASE( delete_upgrade_event_test )
       upgrades.emplace_back(*it);
   };
 
-  do_op(create_upgrade_event_operation(license_administrator_id, hbt + 60, {}, {}, "foo"));
+  do_op(create_upgrade_event_operation(license_administrator_id, dgpo.next_maintenance_time, {}, {}, "foo"));
 
   vector<upgrade_event_object> upgrades;
   get_upgrade_events(upgrades);
@@ -392,6 +433,8 @@ BOOST_AUTO_TEST_CASE( upgrade_cycles_test )
   const share_type bonus_percent = 0;
   const share_type frequency_lock = 100;
   const time_point_sec issue_time = db.head_block_time();
+  const auto& dgpo = db.get_dynamic_global_properties();
+  const auto& gpo = db.get_global_properties();
 
   do_op(issue_license_operation(get_license_issuer_id(), foo_id, standard_locked.id,
                                 bonus_percent, frequency_lock, issue_time));
@@ -411,16 +454,18 @@ BOOST_AUTO_TEST_CASE( upgrade_cycles_test )
   generate_blocks(db.head_block_time() + fc::hours(24));
 
   // No upgrade happened yet!
-  BOOST_CHECK_EQUAL( db.get_dynamic_global_properties().total_upgrade_events, 0 );
+//  BOOST_CHECK_EQUAL( db.get_dynamic_global_properties().total_upgrade_events, 0 );
 
   // Alice is spender:
   do_op(submit_cycles_to_queue_by_license_operation(alice_id, 1000, executive_locked.id, 100, "TEST"));
   do_op(submit_cycles_to_queue_by_license_operation(alice_id, 2000, vice_president_locked.id, 100, "TEST"));
 
-  do_op(create_upgrade_event_operation(get_license_administrator_id(), db.head_block_time() + 60, {}, {}, "foo"));
+  do_op(create_upgrade_event_operation(get_license_administrator_id(),
+                                       dgpo.next_maintenance_time,
+                                       {}, {}, "foo"));
 
-  // Wait for the next day, assume maintenance interval will kick in:
-  generate_blocks(db.head_block_time() + fc::hours(24));
+  // Wait for the next maintenance interval:
+  generate_blocks(dgpo.next_maintenance_time + gpo.parameters.maintenance_interval);
 
   // One upgrade event has happened:
 //  BOOST_CHECK_EQUAL( db.get_dynamic_global_properties().total_upgrade_events, 1 );
@@ -438,9 +483,11 @@ BOOST_AUTO_TEST_CASE( upgrade_cycles_test )
   BOOST_CHECK_EQUAL( executive_license_record.amount.value, executive_remaining_cycles );
   BOOST_CHECK_EQUAL( vice_president_license_record.amount.value, vice_president_remaining_cycles );
 
-  do_op(create_upgrade_event_operation(get_license_administrator_id(), db.head_block_time() + 60, {}, {}, "foo"));
+  do_op(create_upgrade_event_operation(get_license_administrator_id(),
+                                       dgpo.next_maintenance_time + 2 * gpo.parameters.maintenance_interval,
+                                       {}, {}, "foo"));
 
-  generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
+  generate_blocks(dgpo.next_maintenance_time + 3 * gpo.parameters.maintenance_interval);
 
   // Second upgrade event has happened:
 //  BOOST_CHECK_EQUAL( db.get_dynamic_global_properties().total_upgrade_events, 2 );
@@ -452,8 +499,11 @@ BOOST_AUTO_TEST_CASE( upgrade_cycles_test )
 
   // Wait for the maintenance interval to trigger:
 //  generate_blocks(db.head_block_time() + fc::days(120));
-  do_op(create_upgrade_event_operation(get_license_administrator_id(), db.head_block_time() + 60, {}, {}, "foo"));
-  generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
+  do_op(create_upgrade_event_operation(get_license_administrator_id(),
+                                       dgpo.next_maintenance_time + 3 * gpo.parameters.maintenance_interval,
+                                       {}, {}, "foo"));
+
+  generate_blocks(dgpo.next_maintenance_time + 4 * gpo.parameters.maintenance_interval);
 
   // Third upgrade event has happened:
 //  BOOST_CHECK_EQUAL( db.get_dynamic_global_properties().total_upgrade_events, 3 );
@@ -473,30 +523,44 @@ BOOST_AUTO_TEST_CASE( upgrade_not_executed_test )
   const share_type bonus_percent = 0;
   const share_type frequency_lock = 100;
   const time_point_sec activated_time = db.head_block_time();
+  const auto& dgpo = db.get_dynamic_global_properties();
+  const auto& gpo = db.get_global_properties();
 
   do_op(issue_license_operation(get_license_issuer_id(), foo_id, standard_locked.id,
-                                bonus_percent, frequency_lock, activated_time + 120));
+                                bonus_percent, frequency_lock,
+                                dgpo.next_maintenance_time + 2 * gpo.parameters.maintenance_interval));
 
   // This will not upgrade foo, because the execution time is before license's activation time:
-  do_op(create_upgrade_event_operation(get_license_administrator_id(), activated_time + 60, {}, {}, "upgrade1"));
+  do_op(create_upgrade_event_operation(get_license_administrator_id(),
+                                       dgpo.next_maintenance_time + gpo.parameters.maintenance_interval, {}, {},
+                                       "upgrade1"));
 
   // Will not upgrade foo, because cutoff time is before license's activation time:
-  do_op(create_upgrade_event_operation(get_license_administrator_id(), activated_time + 180, activated_time + 60, {}, "upgrade2"));
+  do_op(create_upgrade_event_operation(get_license_administrator_id(),
+                                       dgpo.next_maintenance_time + 2 * gpo.parameters.maintenance_interval,
+                                       activated_time + 60, {}, "upgrade2"));
 
   // Will not upgrade foo even in subsequent executions:
-  do_op(create_upgrade_event_operation(get_license_administrator_id(), activated_time + 240, {activated_time + 60}, {{activated_time + 360}}, "upgrade3"));
+  do_op(create_upgrade_event_operation(get_license_administrator_id(),
+                                       dgpo.next_maintenance_time + 3 * gpo.parameters.maintenance_interval,
+                                       {activated_time + 60},
+                                       {{dgpo.next_maintenance_time + 4 * gpo.parameters.maintenance_interval}}, "upgrade3"));
 
   generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
 
   BOOST_CHECK_EQUAL( get_cycle_balance(foo_id).value, DASCOIN_BASE_STANDARD_CYCLES );
 
-  do_op(create_upgrade_event_operation(get_license_administrator_id(), db.head_block_time() + 60, activated_time - 60, {}, "foo"));
+  do_op(create_upgrade_event_operation(get_license_administrator_id(),
+                                       dgpo.next_maintenance_time + 4 * gpo.parameters.maintenance_interval,
+                                       activated_time - 60, {}, "foo"));
 
   generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
 
   BOOST_CHECK_EQUAL( get_cycle_balance(foo_id).value, DASCOIN_BASE_STANDARD_CYCLES );
 
-  do_op(create_upgrade_event_operation(get_license_administrator_id(), db.head_block_time() + 60, activated_time - 60, {}, "foo"));
+  do_op(create_upgrade_event_operation(get_license_administrator_id(),
+                                       dgpo.next_maintenance_time + 5 * gpo.parameters.maintenance_interval,
+                                       activated_time - 60, {}, "foo"));
 
   generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
 
@@ -522,6 +586,8 @@ BOOST_AUTO_TEST_CASE( upgrade_executed_test )
   const share_type bonus_percent = 0;
   const share_type frequency_lock = 100;
   const time_point_sec activated_time = db.head_block_time();
+  const auto& dgpo = db.get_dynamic_global_properties();
+  const auto& gpo = db.get_global_properties();
 
   // License activated before upgrade event, so it should be upgraded:
   do_op(issue_license_operation(get_license_issuer_id(), foo_id, standard_locked.id,
@@ -531,8 +597,10 @@ BOOST_AUTO_TEST_CASE( upgrade_executed_test )
   do_op(issue_license_operation(get_license_issuer_id(), bar_id, manager_locked.id,
                                 bonus_percent, frequency_lock, activated_time + fc::hours(26)));
 
-  do_op(create_upgrade_event_operation(get_license_administrator_id(), activated_time + fc::hours(24),
-                                       activated_time + fc::hours(72), {{activated_time + fc::hours(96)}}, "foo_upgrade"));
+  do_op(create_upgrade_event_operation(get_license_administrator_id(),
+                                       dgpo.next_maintenance_time + gpo.parameters.maintenance_interval,
+                                       activated_time + fc::hours(72),
+                                       {{dgpo.next_maintenance_time + 4 * gpo.parameters.maintenance_interval}}, "foo_upgrade"));
 
   generate_blocks(activated_time + fc::hours(48));
 

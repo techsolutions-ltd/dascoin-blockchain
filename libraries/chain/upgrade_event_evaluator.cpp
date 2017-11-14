@@ -14,8 +14,13 @@ namespace graphene { namespace chain {
     const auto& hbt = d.head_block_time();
     const auto license_admin_id = d.get_global_properties().authorities.license_administrator;
     const auto& op_creator_obj = op.upgrade_creator(d);
+    const auto& gpo = d.get_global_properties();
+    const auto& dgpo = d.get_dynamic_global_properties();
 
     d.perform_chain_authority_check("license administration", license_admin_id, op_creator_obj);
+
+    FC_ASSERT( op.execution_time.sec_since_epoch() % gpo.parameters.maintenance_interval == 0,
+               "Cannot create upgrade event whose execution time is not a multiply of maintenance interval ");
 
     FC_ASSERT( op.execution_time > hbt,
                "Cannot create upgrade event in the past, head block time is ${now}, execution time is ${exec}",
@@ -31,6 +36,8 @@ namespace graphene { namespace chain {
 
     for (const auto& i : op.subsequent_execution_times)
     {
+      FC_ASSERT( i.sec_since_epoch() % gpo.parameters.maintenance_interval == 0,
+                 "Cannot create subsequent upgrade event whose execution time is not a multiply of maintenance interval ");
       FC_ASSERT( i > hbt,
                  "Cannot create subsequent upgrade event in the past, head block time is ${now}, event time is ${exec}",
                  ("now", hbt)

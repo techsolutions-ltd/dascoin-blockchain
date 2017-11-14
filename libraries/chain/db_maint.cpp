@@ -902,24 +902,7 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
 
    } fee_helper(*this, gpo);
 
-   auto next_upgrade_event = get<dynamic_global_property_object>(dynamic_global_property_id_type()).next_upgrade_event;
-   auto total_upgrade_events = get<dynamic_global_property_object>(dynamic_global_property_id_type()).total_upgrade_events;
-   if ( next_upgrade_event <= head_block_time() )
-   {
-      // Perform upgrades on each account:
-      perform_helpers<account_index, by_name>(std::tie(tally_helper, fee_helper));
-      // Set the next upgrade interval:
-      next_upgrade_event = head_block_time() + fc::days(gpo.parameters.upgrade_event_interval_days);
-      total_upgrade_events++;
-
-      ilog( "Head block number on upgrade: '${n}'; head block time: '${h}'; next upgrade event scheduled at: '${t}'",
-            ("n", head_block_num())
-            ("h", head_block_time())
-            ("t", next_upgrade_event)
-          );
-   }
-   else
-      perform_helpers<account_index, by_name>(std::tie(tally_helper, fee_helper));
+   perform_helpers<account_index, by_name>(std::tie(tally_helper, fee_helper));
 
    struct clear_canary {
       clear_canary(vector<uint64_t>& target): target(target){}
@@ -959,13 +942,6 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
       {
          next_maintenance_time = time_point_sec() +
                (((next_block.timestamp.sec_since_epoch() / maintenance_interval) + 1) * maintenance_interval);
-         next_upgrade_event = head_block_time() + fc::days(gpo.parameters.upgrade_event_interval_days);
-
-         ilog( "Head block number: '${n}'; head block time: '${h}'; first upgrade event scheduled at: '${t}'",
-               ("n", head_block_num())
-               ("h", head_block_time())
-               ("t", next_upgrade_event)
-             );
       }
       else
       {
@@ -993,10 +969,8 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
       deprecate_annual_members(*this);
 
    modify(dgpo,
-      [next_maintenance_time, next_upgrade_event, total_upgrade_events](dynamic_global_property_object& d) {
+      [next_maintenance_time](dynamic_global_property_object& d) {
       d.next_maintenance_time = next_maintenance_time;
-      d.next_upgrade_event = next_upgrade_event;
-      d.total_upgrade_events = total_upgrade_events;
       d.accounts_registered_this_interval = 0;
    });
 

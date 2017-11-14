@@ -101,10 +101,22 @@ namespace graphene { namespace chain {
     }
 
     const auto exec_time = op.execution_time.valid() ? *(op.execution_time) : o.execution_time;
+    bool sub_executed = false;
+    if (!o.subsequent_execution_times.empty())
+    {
+      auto it = std::find_if(o.subsequent_execution_times.begin(), o.subsequent_execution_times.end(), [&hbt](const time_point_sec& t) {
+        return t <= hbt;
+      });
+      sub_executed = it != o.subsequent_execution_times.end();
+    }
+
     if (op.subsequent_execution_times.valid())
     {
       for (const auto& i : *op.subsequent_execution_times)
       {
+        FC_ASSERT( !sub_executed,
+                   "Cannot update upgrade event with new subsequent execution times when at least one subsequent time was executed" );
+
         FC_ASSERT( i.sec_since_epoch() % gpo.parameters.maintenance_interval == 0,
                    "Cannot update subsequent upgrade event whose execution time is not a multiply of maintenance interval ");
 

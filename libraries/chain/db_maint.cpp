@@ -793,7 +793,7 @@ void database::perform_upgrades()
      // If executed already, do not execute:
      if (upgrade.executed)
         return false;
-     // If head block time is lower than execution time or any of the subsequent execution times, do execute:
+     // If head block time is greater than execution time or any of the subsequent execution times, do execute:
      const auto hbt = head_block_time();
      if (upgrade.execution_time < hbt ||
          std::find_if(upgrade.subsequent_execution_times.begin(), upgrade.subsequent_execution_times.end(),

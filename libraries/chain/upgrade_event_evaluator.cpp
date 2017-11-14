@@ -79,7 +79,7 @@ namespace graphene { namespace chain {
 
     if (op.execution_time.valid())
     {
-      FC_ASSERT( hbt < o.execution_time, "Cannot update upgrade event which has already been in execution");
+      FC_ASSERT( hbt < o.execution_time, "Cannot update upgrade event's execution time which has already been in execution");
 
       FC_ASSERT( (*op.execution_time).sec_since_epoch() % gpo.parameters.maintenance_interval == 0,
                  "Cannot update upgrade event and set execution time which is not a multiply of maintenance interval ");

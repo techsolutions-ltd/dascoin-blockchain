@@ -37,6 +37,9 @@ namespace graphene { namespace chain {
     {
       FC_ASSERT( i.sec_since_epoch() % gpo.parameters.maintenance_interval == 0,
                  "Cannot create subsequent upgrade event whose execution time is not a multiply of maintenance interval ");
+
+      FC_ASSERT( i > op.execution_time, "Cannot create subsequent execution time which is less than the main execution time");
+
       FC_ASSERT( i > hbt,
                  "Cannot create subsequent upgrade event in the past, head block time is ${now}, event time is ${exec}",
                  ("now", hbt)
@@ -76,6 +79,8 @@ namespace graphene { namespace chain {
 
     if (op.execution_time.valid())
     {
+      FC_ASSERT( hbt < o.execution_time, "Cannot update upgrade event which has already been in execution");
+
       FC_ASSERT( (*op.execution_time).sec_since_epoch() % gpo.parameters.maintenance_interval == 0,
                  "Cannot update upgrade event and set execution time which is not a multiply of maintenance interval ");
 
@@ -95,12 +100,15 @@ namespace graphene { namespace chain {
       );
     }
 
+    const auto exec_time = op.execution_time.valid() ? *(op.execution_time) : o.execution_time;
     if (op.subsequent_execution_times.valid())
     {
       for (const auto& i : *op.subsequent_execution_times)
       {
         FC_ASSERT( i.sec_since_epoch() % gpo.parameters.maintenance_interval == 0,
                    "Cannot update subsequent upgrade event whose execution time is not a multiply of maintenance interval ");
+
+        FC_ASSERT( i > exec_time, "Cannot create subsequent execution time which is less than the main execution time");
 
         FC_ASSERT( i > hbt,
                    "Cannot update subsequent upgrade event to be executed in the past, head block time is ${now}, event time is ${exec}",

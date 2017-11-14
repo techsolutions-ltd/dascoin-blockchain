@@ -806,14 +806,28 @@ void database::perform_upgrades()
      return false;
    };
 
+   optional<upgrade_event_object> last_upgrade{};
    const auto& idx = get_index_type<upgrade_event_index>().indices().get<by_id>();
    for ( auto it = idx.cbegin(); it != idx.cend(); ++it )
    {
       if ( !should_execute_upgrade_event(*it) )
          continue;
 
+      last_upgrade = *it;
       perform_upgrades_helper upgrades_helper(*this, *it);
       perform_helpers<account_index, by_name>(std::tie(upgrades_helper));
+   }
+
+   // If we performed an upgrade, mark all older upgrade events as executed:
+   if (last_upgrade.valid())
+   {
+      for ( auto it = idx.begin(); it != idx.end(); ++it )
+      {
+         if ( (*it).execution_time < (*last_upgrade).execution_time )
+            modify(*it, [](upgrade_event_object& obj){
+              obj.executed = true;
+            });
+      }
    }
 }
 

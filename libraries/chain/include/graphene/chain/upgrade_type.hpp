@@ -18,6 +18,7 @@ namespace graphene { namespace chain {
     void reset(const array_type& mul) { max = static_cast<uint8_t>(mul.size()); used = 0; multipliers = mul; }
     void improve(const upgrade_type& new_upgrade);
     bool based_on(const upgrade_type& base_upgrade) const;
+    bool has_remaining_upgrades() const { return used < max; }
 
     share_type operator() (share_type x);
     upgrade_type& operator+= (const upgrade_type& rhs) { improve(rhs); return *this; }

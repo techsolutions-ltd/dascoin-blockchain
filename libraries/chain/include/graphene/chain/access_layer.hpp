@@ -187,10 +187,12 @@ struct license_objects_grouped_by_kind_res {
 struct signed_block_with_num
 {
   uint32_t num;
+  block_id_type block_id;
   signed_block block;
 
   signed_block_with_num() = default;
-  explicit signed_block_with_num(uint32_t num, signed_block block) : num(num), block(block) {}
+  explicit signed_block_with_num(uint32_t num, block_id_type block_id, signed_block block)
+    : num(num), block_id(block_id), block(block) {}
 };
 
 class database;
@@ -207,6 +209,7 @@ class database_access_layer {
     ~database_access_layer() {}
 
     // Transactions and blocks:
+    // TODO: expose get_block through this interface.
     vector<signed_block_with_num> get_blocks(uint32_t start_block_num, uint32_t count) const;
 
     // Global objects:

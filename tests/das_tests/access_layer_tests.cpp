@@ -330,6 +330,11 @@ BOOST_AUTO_TEST_CASE( get_blocks_test )
     BOOST_CHECK_EQUAL(res.num, i+18);
   }
 
+  // Test if block id is correct:
+  const auto block_id = _dal.get_blocks(18, 1)[0].block.id();
+  const auto stored_id = _dal.get_blocks(18, 1)[0].block_id;
+  BOOST_CHECK(block_id == stored_id);
+
 } FC_LOG_AND_RETHROW() }
 
 /*BOOST_AUTO_TEST_CASE( get_all_cycle_balances_for_accounts_unit_test )

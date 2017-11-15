@@ -37,7 +37,8 @@ vector<signed_block_with_num> database_access_layer::get_blocks(uint32_t start_b
                   "Block number ${num} could not be retreived",
                   ("num", i)
                  );
-        result.emplace_back(i, *signed_block);
+        const auto block_id = signed_block->id();
+        result.emplace_back(i, block_id, *signed_block);
     }
     return result;
 }

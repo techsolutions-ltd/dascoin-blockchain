@@ -19,7 +19,7 @@ global_property_object database_access_layer::get_global_properties() const
 vector<signed_block_with_num> database_access_layer::get_blocks(uint32_t start_block_num, uint32_t count) const
 {
     FC_ASSERT(count > 0, "Must fetch at least one block");
-    FC_ASSERT(count < 100, "Too many blocks to fetch, limit is 100");
+    FC_ASSERT(count <= 100, "Too many blocks to fetch, limit is 100");
     auto head_block_num = _db.head_block_num();
     FC_ASSERT(start_block_num <= head_block_num,
               "Starting block ${start_n} is higher than current block height ${head_n}",

@@ -328,7 +328,7 @@ FC_REFLECT_DERIVED(graphene::chain::acc_id_vec_cycle_agreement_res, (graphene::c
 FC_REFLECT(graphene::chain::sub_w_pos, (position)(submission))
 FC_REFLECT_DERIVED(graphene::chain::acc_id_queue_subs_w_pos_res, (graphene::chain::acc_id_res), (result))
 
-FC_REFLECT( graphene::chain::signed_block_with_num, (num)(block) )
+FC_REFLECT( graphene::chain::signed_block_with_num, (num)(block_id)(block) )
 
 FC_REFLECT(graphene::chain::vault_info_res,
            (cash_balance)

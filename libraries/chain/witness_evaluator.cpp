@@ -73,9 +73,21 @@ void_result witness_update_evaluator::do_apply( const witness_update_operation& 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
+void perform_root_authority_check(database& db, const account_id_type& authority_account_id)
+{
+   FC_ASSERT(db.get_dynamic_global_properties().is_root_authority_enabled_flag, "Your authority is deprecated!");
+
+   const auto root_administrator_id = db.get_global_properties().authorities.root_administrator;
+   const auto& op_authority_account_obj = authority_account_id(db);
+
+   db.perform_chain_authority_check("root authority", root_administrator_id, op_authority_account_obj);
+}
+
 void_result remove_root_authority_evaluator::do_evaluate( const remove_root_authority_operation& op )
 { try {
-   FC_ASSERT(db().get(op.root_account).is_lifetime_member());
+   database& _db = db();
+   perform_root_authority_check(_db, op.root_account);
+
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
@@ -96,7 +108,10 @@ void_result create_witness_evaluator::do_evaluate( const create_witness_operatio
 { try {
 
    database& _db = db();
-   FC_ASSERT(_db.get_dynamic_global_properties().is_root_authority_enabled_flag);
+   perform_root_authority_check(_db, op.authority);
+
+   const account_object& account_obj= op.witness_account(_db);
+   FC_ASSERT(account_obj.kind == account_kind::special, "Wrong kind of account!");
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
@@ -115,7 +130,14 @@ object_id_type create_witness_evaluator::do_apply( const create_witness_operatio
 void_result update_witness_evaluator::do_evaluate( const update_witness_operation& op )
 { try {
    database& _db = db();
-   FC_ASSERT(_db.get_dynamic_global_properties().is_root_authority_enabled_flag);
+   perform_root_authority_check(_db, op.authority);
+
+   const auto& wit = op.witness(_db);
+   if(op.witness_account.valid())
+   {
+      const auto& account_obj = (*op.witness_account)(_db);
+      FC_ASSERT(account_obj.kind == account_kind::special, "Wrong kind of account!");
+   }
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
@@ -143,7 +165,9 @@ void_result update_witness_evaluator::do_apply( const update_witness_operation& 
 void_result remove_witness_evaluator::do_evaluate( const remove_witness_operation& op )
 { try {
    database& _db = db();
-   FC_ASSERT(_db.get_dynamic_global_properties().is_root_authority_enabled_flag);
+   perform_root_authority_check(_db, op.authority);
+
+   const auto& wit = op.witness(_db);
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
@@ -165,7 +189,8 @@ void_result remove_witness_evaluator::do_apply( const remove_witness_operation& 
 void_result activate_witness_evaluator::do_evaluate( const activate_witness_operation& op )
 { try {
    database& _db = db();
-   FC_ASSERT(_db.get_dynamic_global_properties().is_root_authority_enabled_flag);
+   perform_root_authority_check(_db, op.authority);
+   const auto& wit = op.witness(_db);
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
@@ -187,7 +212,8 @@ void_result activate_witness_evaluator::do_apply( const activate_witness_operati
 void_result deactivate_witness_evaluator::do_evaluate( const deactivate_witness_operation& op )
 { try {
    database& _db = db();
-   FC_ASSERT(_db.get_dynamic_global_properties().is_root_authority_enabled_flag);
+   perform_root_authority_check(_db, op.authority);
+   const auto& wit = op.witness(_db);
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }

@@ -60,11 +60,10 @@ BOOST_AUTO_TEST_CASE( successful_creation_update_and_removal_of_witness_test )
    BOOST_CHECK(itr != idx.end());
 
    const auto& witnesses_by_id = db.get_index_type<witness_index>().indices().get<by_id>();
-   witness_object wobj;
    size_t st = witnesses_by_id.size();
    BOOST_CHECK( st == count + 1);
-   for (const witness_object& witness : witnesses_by_id)
-      wobj = witness;
+
+   const witness_object& wobj = *itr;
 
    const fc::ecc::private_key new_key1 = fc::ecc::private_key::generate();
    public_key_type key1 = new_key.get_public_key();
@@ -76,25 +75,25 @@ BOOST_AUTO_TEST_CASE( successful_creation_update_and_removal_of_witness_test )
    uwao.block_signing_key = key1;
    do_op(uwao);
 
-   const auto& witnesses_by_id1 = db.get_index_type<witness_index>().indices().get<by_id>();
+   const auto& idx1 = db.get_index_type<witness_index>().indices().get<by_account>();
+   auto itr1 = idx1.find(ao.id);
+   // we check if we have updated witness sucessfuly
+   BOOST_CHECK(itr1 != idx1.end());
 
-   size_t st1 = witnesses_by_id1.size();
-   BOOST_CHECK( st1 == count + 1);
-   for (const witness_object& witness : witnesses_by_id1)
-      wobj = witness;
+   const witness_object& wobj1 = *itr1;
    // check if we have updated witness sucessfuly
-   BOOST_CHECK(wobj.signing_key == key1);
+   BOOST_CHECK(wobj1.signing_key == key1);
 
 
    remove_witness_operation rwao;
    rwao.authority = root_id;
-   rwao.witness = wobj.id;
+   rwao.witness = wobj1.id;
    do_op(rwao);
 
-   const auto& idx1 = db.get_index_type<witness_index>().indices().get<by_account>();
-   auto itr1 = idx1.find(ao.id);
+   const auto& idx2 = db.get_index_type<witness_index>().indices().get<by_account>();
+   auto itr2 = idx2.find(ao.id);
    // check if we have removed witness sucessfuly
-   BOOST_CHECK(itr1 == idx1.end());
+   BOOST_CHECK(itr2 == idx2.end());
 
 
 } FC_LOG_AND_RETHROW() }
@@ -104,7 +103,7 @@ BOOST_AUTO_TEST_CASE( successful_activate_deactivate_witness_test )
 
    auto root_id = db.get_global_properties().authorities.root_administrator;
 
-   const string name("witnesss1");
+   const string name("witnesss2");
    const fc::ecc::private_key new_key = fc::ecc::private_key::generate();
    const public_key_type key = new_key.get_public_key();
 
@@ -127,9 +126,11 @@ BOOST_AUTO_TEST_CASE( successful_activate_deactivate_witness_test )
    // we check if we have created witness sucessfuly
    BOOST_CHECK(itr != idx.end());
 
+   witness_object wobj = *itr;
+
    activate_witness_operation awao;
    awao.authority = root_id;
-   awao.witness = ao.id;
+   awao.witness = wobj.id;
 
    auto old_size = get_global_properties().active_witnesses.size();
    do_op(awao);

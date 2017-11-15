@@ -740,11 +740,11 @@ void database::perform_upgrades(const account_object& account, const upgrade_eve
       for (auto& license_history : lio.history)
       {
          auto upgrade_it = std::find_if(license_history.upgrades.begin(), license_history.upgrades.end(),
-                                        [&upgrade](const pair<upgrade_event_id_type, time_point_sec> upgrade_and_time){
+                                        [&upgrade](const pair<upgrade_event_id_type, time_point_sec>& upgrade_and_time){
                                             return upgrade_and_time.first == upgrade.id;
                                       });
          // If not upgraded by this upgrade, proceed with it:
-         if ( license_history.upgrades.end() == upgrade_it )
+         if ( license_history.upgrades.end() == upgrade_it && license_history.balance_upgrade.has_remaining_upgrades() )
          {
             // If the license has been issued before the cutoff time, execute it:
             if ( license_history.activated_at <= cutoff_time )
@@ -795,10 +795,10 @@ void database::perform_upgrades()
         return false;
      // If head block time is greater than execution time or any of the subsequent execution times, do execute:
      const auto hbt = head_block_time();
-     if ( upgrade.execution_time < hbt ||
+     if ( upgrade.execution_time <= hbt ||
          std::find_if(upgrade.subsequent_execution_times.begin(), upgrade.subsequent_execution_times.end(),
                       [&hbt](const time_point_sec& time) {
-                          return hbt > time;
+                          return hbt >= time;
                       }) != upgrade.subsequent_execution_times.end() )
      {
         return true;

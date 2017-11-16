@@ -184,6 +184,17 @@ struct license_objects_grouped_by_kind_res {
     vector<license_type_object> licenses;
 };
 
+struct signed_block_with_num
+{
+  uint32_t num;
+  block_id_type block_id;
+  signed_block block;
+
+  signed_block_with_num() = default;
+  explicit signed_block_with_num(uint32_t num, block_id_type block_id, signed_block block)
+    : num(num), block_id(block_id), block(block) {}
+};
+
 class database;
 class global_property_object;
 class reward_queue_object;
@@ -196,6 +207,10 @@ class database_access_layer {
     explicit database_access_layer(const database& db)
         : _db(db){};
     ~database_access_layer() {}
+
+    // Transactions and blocks:
+    // TODO: expose get_block through this interface.
+    vector<signed_block_with_num> get_blocks(uint32_t start_block_num, uint32_t count) const;
 
     // Global objects:
     global_property_object get_global_properties() const;
@@ -312,6 +327,8 @@ FC_REFLECT_DERIVED(graphene::chain::acc_id_vec_cycle_agreement_res, (graphene::c
 
 FC_REFLECT(graphene::chain::sub_w_pos, (position)(submission))
 FC_REFLECT_DERIVED(graphene::chain::acc_id_queue_subs_w_pos_res, (graphene::chain::acc_id_res), (result))
+
+FC_REFLECT( graphene::chain::signed_block_with_num, (num)(block_id)(block) )
 
 FC_REFLECT(graphene::chain::vault_info_res,
            (cash_balance)

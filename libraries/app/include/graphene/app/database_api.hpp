@@ -188,9 +188,17 @@ class database_api
       optional<signed_block> get_block(uint32_t block_num)const;
 
       /**
+       * @brief Return an array of full, signed blocks starting from a specified height.
+       * @param start_block_num Height of the starting block.
+       * @param count Number of blocks to return.
+       * @return Array of enumerated blocks
+       */
+      vector<signed_block_with_num> get_blocks(uint32_t start_block_num, uint32_t count) const;
+
+      /**
        * @brief used to fetch an individual transaction.
        */
-      processed_transaction get_transaction( uint32_t block_num, uint32_t trx_in_block )const;
+      processed_transaction get_transaction( uint32_t start_block_num, uint32_t trx_in_block )const;
 
       /**
        * If the transaction has not expired, this method will return the transaction for the given ID or
@@ -747,6 +755,7 @@ FC_API( graphene::app::database_api,
    // Blocks and transactions
    (get_block_header)
    (get_block)
+   (get_blocks)
    (get_transaction)
    (get_recent_transaction_by_id)
 

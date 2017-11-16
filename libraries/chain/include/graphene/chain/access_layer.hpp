@@ -161,6 +161,40 @@ struct acc_id_vault_info_res : public acc_id_res {
     result_t result;
 };
 
+struct license_types_grouped_by_kind_res {
+    struct license_name_and_id {
+        string name;
+        license_type_id_type id;
+    };
+
+    license_types_grouped_by_kind_res() = default;
+    explicit license_types_grouped_by_kind_res(license_kind kind, vector<license_name_and_id> licenses)
+      : kind(kind), licenses(move(licenses))
+    {}
+    license_kind kind;
+    vector<license_name_and_id> licenses;
+};
+
+struct license_objects_grouped_by_kind_res {
+    license_objects_grouped_by_kind_res() = default;
+    explicit license_objects_grouped_by_kind_res(license_kind kind, vector<license_type_object> licenses)
+      : kind(kind), licenses(move(licenses))
+    {}
+    license_kind kind;
+    vector<license_type_object> licenses;
+};
+
+struct signed_block_with_num
+{
+  uint32_t num;
+  block_id_type block_id;
+  signed_block block;
+
+  signed_block_with_num() = default;
+  explicit signed_block_with_num(uint32_t num, block_id_type block_id, signed_block block)
+    : num(num), block_id(block_id), block(block) {}
+};
+
 class database;
 class global_property_object;
 class reward_queue_object;
@@ -173,6 +207,10 @@ class database_access_layer {
     explicit database_access_layer(const database& db)
         : _db(db){};
     ~database_access_layer() {}
+
+    // Transactions and blocks:
+    // TODO: expose get_block through this interface.
+    vector<signed_block_with_num> get_blocks(uint32_t start_block_num, uint32_t count) const;
 
     // Global objects:
     global_property_object get_global_properties() const;
@@ -191,6 +229,8 @@ class database_access_layer {
     vector<license_type_object> get_license_types() const;
     optional<license_type_object> get_license_type(string name) const;
     optional<license_type_object> get_license_type(license_type_id_type license_id) const;
+    vector<license_types_grouped_by_kind_res> get_license_type_names_ids_grouped_by_kind() const;
+    vector<license_objects_grouped_by_kind_res> get_license_objects_grouped_by_kind() const;
 
     // Queue:
     uint32_t get_reward_queue_size() const;
@@ -288,6 +328,8 @@ FC_REFLECT_DERIVED(graphene::chain::acc_id_vec_cycle_agreement_res, (graphene::c
 FC_REFLECT(graphene::chain::sub_w_pos, (position)(submission))
 FC_REFLECT_DERIVED(graphene::chain::acc_id_queue_subs_w_pos_res, (graphene::chain::acc_id_res), (result))
 
+FC_REFLECT( graphene::chain::signed_block_with_num, (num)(block_id)(block) )
+
 FC_REFLECT(graphene::chain::vault_info_res,
            (cash_balance)
            (reserved_balance)
@@ -302,3 +344,15 @@ FC_REFLECT(graphene::chain::vault_info_res,
            (license_information))
 
 FC_REFLECT_DERIVED(graphene::chain::acc_id_vault_info_res, (graphene::chain::acc_id_res), (result))
+
+FC_REFLECT(graphene::chain::license_types_grouped_by_kind_res::license_name_and_id,
+           (name)
+           (id))
+
+FC_REFLECT(graphene::chain::license_types_grouped_by_kind_res,
+           (kind)
+           (licenses))
+
+FC_REFLECT(graphene::chain::license_objects_grouped_by_kind_res,
+           (kind)
+           (licenses))

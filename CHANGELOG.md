@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.2.5] - 2017-11-16
+### Added
+ - Get license types grouped by kind to database api
+ - Hardfork: update queue parameters now uses the correct number decimal
+ - Get blocks to database api
+
 ## [0.2.4] - 2017-11-02
 ### Added
  - Wire out result virtual operation added to account history

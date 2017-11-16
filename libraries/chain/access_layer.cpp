@@ -15,6 +15,34 @@ global_property_object database_access_layer::get_global_properties() const
     return _db.get(global_property_id_type());
 }
 
+// Transactions and blocks:
+vector<signed_block_with_num> database_access_layer::get_blocks(uint32_t start_block_num, uint32_t count) const
+{
+    FC_ASSERT(count > 0, "Must fetch at least one block");
+    FC_ASSERT(count <= 100, "Too many blocks to fetch, limit is 100");
+    auto head_block_num = _db.head_block_num();
+    FC_ASSERT(start_block_num <= head_block_num,
+              "Starting block ${start_n} is higher than current block height ${head_n}",
+              ("start_n", start_block_num)
+              ("head_n", head_block_num));
+
+    vector<signed_block_with_num> result;
+    result.reserve(count);
+    auto end = start_block_num + count;
+    if (end > head_block_num)
+        end = head_block_num;
+    for (auto i = start_block_num; i < end; ++i) {
+        auto signed_block = _db.fetch_block_by_number(i);
+        FC_ASSERT(signed_block.valid(),
+                  "Block number ${num} could not be retreived",
+                  ("num", i)
+                 );
+        const auto block_id = signed_block->id();
+        result.emplace_back(i, block_id, *signed_block);
+    }
+    return result;
+}
+
 // Balances:
 acc_id_share_t_res database_access_layer::get_free_cycle_balance(account_id_type id) const
 {
@@ -102,6 +130,28 @@ vector<pair<string, license_type_id_type>> database_access_layer::get_license_ty
     vector<pair<string, license_type_id_type>> result;
     for (const auto& lic : get_license_types())
         result.emplace_back(lic.name, lic.id);
+    return result;
+}
+
+vector<license_types_grouped_by_kind_res> database_access_layer::get_license_type_names_ids_grouped_by_kind() const
+{
+    map<license_kind, vector<license_types_grouped_by_kind_res::license_name_and_id>> tmp;
+    vector<license_types_grouped_by_kind_res> result;
+    for (const auto& lic : get_license_types())
+        tmp[lic.kind].emplace_back(license_types_grouped_by_kind_res::license_name_and_id{lic.name, lic.id});
+    for (auto& lic : tmp)
+        result.emplace_back(license_types_grouped_by_kind_res{lic.first, lic.second});
+    return result;
+}
+
+vector<license_objects_grouped_by_kind_res> database_access_layer::get_license_objects_grouped_by_kind() const
+{
+    map<license_kind, vector<license_type_object>> tmp;
+    vector<license_objects_grouped_by_kind_res> result;
+    for (const auto& lic : get_license_types())
+        tmp[lic.kind].emplace_back(lic);
+    for (auto& lic : tmp)
+        result.emplace_back(license_objects_grouped_by_kind_res{lic.first, lic.second});
     return result;
 }
 

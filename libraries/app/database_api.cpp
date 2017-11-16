@@ -70,6 +70,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       // Blocks and transactions
       optional<block_header> get_block_header(uint32_t block_num)const;
       optional<signed_block> get_block(uint32_t block_num)const;
+      vector<signed_block_with_num> get_blocks(uint32_t block_num, uint32_t count) const;
       processed_transaction get_transaction( uint32_t block_num, uint32_t trx_in_block )const;
 
       // Globals
@@ -157,6 +158,8 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<license_type_object> get_license_types() const;
       vector<optional<license_type_object>> get_license_types(const vector<license_type_id_type>& license_type_ids) const;
       vector<pair<string, license_type_id_type>> get_license_type_names_ids() const;
+      vector<license_types_grouped_by_kind_res> get_license_type_names_ids_grouped_by_kind() const;
+      vector<license_objects_grouped_by_kind_res> get_license_objects_grouped_by_kind() const;
       vector<optional<license_information_object>> get_license_information(const vector<account_id_type>& account_ids) const;
 
       // Access:
@@ -515,6 +518,16 @@ optional<signed_block> database_api::get_block(uint32_t block_num)const
 optional<signed_block> database_api_impl::get_block(uint32_t block_num)const
 {
    return _db.fetch_block_by_number(block_num);
+}
+
+vector<signed_block_with_num> database_api::get_blocks(uint32_t start_block_num, uint32_t count) const
+{
+    return my->get_blocks(start_block_num, count);
+}
+
+vector<signed_block_with_num> database_api_impl::get_blocks(uint32_t start_block_num, uint32_t count) const
+{
+    return _dal.get_blocks(start_block_num, count);
 }
 
 processed_transaction database_api::get_transaction( uint32_t block_num, uint32_t trx_in_block )const
@@ -2123,6 +2136,26 @@ vector<pair<string, license_type_id_type>> database_api::get_license_type_names_
 vector<pair<string, license_type_id_type>> database_api_impl::get_license_type_names_ids() const
 {
     return _dal.get_license_type_names_ids();
+}
+
+vector<license_types_grouped_by_kind_res> database_api::get_license_type_names_ids_grouped_by_kind() const
+{
+    return my->get_license_type_names_ids_grouped_by_kind();
+}
+
+vector<license_types_grouped_by_kind_res> database_api_impl::get_license_type_names_ids_grouped_by_kind() const
+{
+    return _dal.get_license_type_names_ids_grouped_by_kind();
+}
+
+vector<license_objects_grouped_by_kind_res> database_api::get_license_objects_grouped_by_kind() const
+{
+    return my->get_license_objects_grouped_by_kind();
+}
+
+vector<license_objects_grouped_by_kind_res> database_api_impl::get_license_objects_grouped_by_kind() const
+{
+    return _dal.get_license_objects_grouped_by_kind();
 }
 
 vector<optional<license_type_object>> database_api_impl::get_license_types(const vector<license_type_id_type>& license_type_ids) const

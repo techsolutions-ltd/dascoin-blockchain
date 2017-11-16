@@ -188,9 +188,17 @@ class database_api
       optional<signed_block> get_block(uint32_t block_num)const;
 
       /**
+       * @brief Return an array of full, signed blocks starting from a specified height.
+       * @param start_block_num Height of the starting block.
+       * @param count Number of blocks to return.
+       * @return Array of enumerated blocks
+       */
+      vector<signed_block_with_num> get_blocks(uint32_t start_block_num, uint32_t count) const;
+
+      /**
        * @brief used to fetch an individual transaction.
        */
-      processed_transaction get_transaction( uint32_t block_num, uint32_t trx_in_block )const;
+      processed_transaction get_transaction( uint32_t start_block_num, uint32_t trx_in_block )const;
 
       /**
        * If the transaction has not expired, this method will return the transaction for the given ID or
@@ -625,6 +633,8 @@ class database_api
       optional<license_type_object> get_license_type(license_type_id_type) const;
       vector<license_type_object> get_license_types() const;
       vector<pair<string, license_type_id_type>> get_license_type_names_ids() const;
+      vector<license_types_grouped_by_kind_res> get_license_type_names_ids_grouped_by_kind() const;
+      vector<license_objects_grouped_by_kind_res> get_license_objects_grouped_by_kind() const;
 
       /**
        * @brief Get license types active on the blockchain by name.
@@ -745,6 +755,7 @@ FC_API( graphene::app::database_api,
    // Blocks and transactions
    (get_block_header)
    (get_block)
+   (get_blocks)
    (get_transaction)
    (get_recent_transaction_by_id)
 
@@ -832,6 +843,8 @@ FC_API( graphene::app::database_api,
    (get_license_type)
    (get_license_types)
    (get_license_type_names_ids)
+   (get_license_type_names_ids_grouped_by_kind)
+   (get_license_objects_grouped_by_kind)
    (list_license_types_by_name)
    (list_license_types_by_amount)
    (lookup_license_type_names)

@@ -282,6 +282,61 @@ BOOST_AUTO_TEST_CASE( account_tethered_unit_test )
 
 } FC_LOG_AND_RETHROW () }
 
+BOOST_AUTO_TEST_CASE( get_blocks_test )
+{ try {
+  VAULT_ACTOR(vault);
+
+  // const auto& check_blocks = [&](uint32_t start, uint32_t count)
+  // { try {
+  //   const auto results = _dal.get_blocks(start, count);
+  //   BOOST_CHECK_EQUAL(results.size(), count);
+  //   for (uint32_t i = 0; i < count; ++i) {
+  //     const auto res = results[i];
+  //     BOOST_CHECK_EQUAL(res.num, i+start);
+  //   }
+  // } FC_LOG_AND_RETHROW() };
+
+  // First, set up the blocks:
+  for(int i = 0; i < 20; ++i) {
+    do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), vault_id, (i+1)*100, 200, "TEST"));
+  }
+  // NOTE: two blocks are generated during test set up.
+  BOOST_CHECK_EQUAL(db.head_block_num(), 22);
+
+  // ERROR: start block is higher than head block number.
+  GRAPHENE_REQUIRE_THROW(_dal.get_blocks(55, 2), fc::exception);
+  
+  // ERROR: number of blocks to fetch is 0.
+  GRAPHENE_REQUIRE_THROW(_dal.get_blocks(4, 0), fc::exception);
+
+  vector<signed_block_with_num> results;
+
+  // Starting from block #2, fetch the following 20 blocks:
+  results = _dal.get_blocks(2, 20);
+  BOOST_CHECK_EQUAL(results.size(), 20);
+  for (int i = 0; i < 20; ++i) {
+    const auto res = results[i];
+    // We are fetching blocks [2,22]:
+    BOOST_CHECK_EQUAL(res.num, i+2);
+  }
+
+  // Starting from block #18, fetch the following 20 blocks:
+  results = _dal.get_blocks(18, 20);
+  // Only 4 blocks are available:
+  BOOST_CHECK_EQUAL(results.size(), 4);
+  for (int i = 0; i < 4; ++i) {
+    const auto res = results[i];
+    // We are fetching blocks [18,22]:
+    BOOST_CHECK_EQUAL(res.num, i+18);
+  }
+
+  // Test if block id is correct:
+  const auto block_id = _dal.get_blocks(18, 1)[0].block.id();
+  const auto stored_id = _dal.get_blocks(18, 1)[0].block_id;
+  BOOST_CHECK(block_id == stored_id);
+
+} FC_LOG_AND_RETHROW() }
+
 /*BOOST_AUTO_TEST_CASE( get_all_cycle_balances_for_accounts_unit_test )
 { try {
   VAULT_ACTORS((first)(second)(third)(fourth))

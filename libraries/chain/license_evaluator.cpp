@@ -154,7 +154,8 @@ object_id_type issue_license_evaluator::do_apply(const issue_license_operation& 
       lio.account = op.account;
       lio.vault_license_kind = _license_kind;
       lio.add_license(op.license, amount, _new_license_obj->amount, op.bonus_percentage, op.frequency_lock,
-                      op.activated_at, d.head_block_time(), _new_license_obj->balance_upgrade);
+                      op.activated_at, d.head_block_time(), _new_license_obj->balance_upgrade,
+                      _new_license_obj->up_policy);
       lio.requeue_upgrade += _new_license_obj->requeue_upgrade;
       lio.return_upgrade += _new_license_obj->return_upgrade;
     }).id;
@@ -169,7 +170,8 @@ object_id_type issue_license_evaluator::do_apply(const issue_license_operation& 
 
     d.modify(*_license_information_obj, [&](license_information_object& lio){
       lio.add_license(op.license, amount, _new_license_obj->amount, op.bonus_percentage, op.frequency_lock,
-                      op.activated_at, d.head_block_time(), _new_license_obj->balance_upgrade);
+                      op.activated_at, d.head_block_time(), _new_license_obj->balance_upgrade,
+                      _new_license_obj->up_policy);
       lio.requeue_upgrade += _new_license_obj->requeue_upgrade;
       lio.return_upgrade += _new_license_obj->return_upgrade;
     });

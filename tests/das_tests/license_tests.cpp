@@ -460,6 +460,9 @@ BOOST_AUTO_TEST_CASE( upgrade_cycles_test )
   do_op(submit_cycles_to_queue_by_license_operation(alice_id, 1000, executive_locked.id, 100, "TEST"));
   do_op(submit_cycles_to_queue_by_license_operation(alice_id, 2000, vice_president_locked.id, 100, "TEST"));
 
+  // FooBar wasted its balance:
+  do_op(submit_cycles_to_queue_by_license_operation(foobar_id, DASCOIN_BASE_PRESIDENT_CYCLES, president_locked.id, 100, "TEST"));
+
   do_op(create_upgrade_event_operation(get_license_administrator_id(),
                                        dgpo.next_maintenance_time,
                                        {}, {}, "foo"));
@@ -472,6 +475,7 @@ BOOST_AUTO_TEST_CASE( upgrade_cycles_test )
 
   BOOST_CHECK_EQUAL( get_cycle_balance(foo_id).value, 2 * DASCOIN_BASE_STANDARD_CYCLES );
   BOOST_CHECK_EQUAL( get_cycle_balance(bar_id).value, 2 * DASCOIN_BASE_EXECUTIVE_CYCLES );
+  BOOST_CHECK_EQUAL( get_cycle_balance(foobar_id).value, 2 * DASCOIN_BASE_PRESIDENT_CYCLES );
   BOOST_CHECK_EQUAL( get_cycle_balance(alice_id).value, 2 * (DASCOIN_BASE_EXECUTIVE_CYCLES - 1000) + 2 * (DASCOIN_BASE_VICE_PRESIDENT_CYCLES - 2000) );
 
   const auto& license_information_obj = (*alice.license_information)(db);

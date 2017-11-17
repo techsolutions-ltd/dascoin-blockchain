@@ -30,6 +30,7 @@
 #include <graphene/chain/block_database.hpp>
 #include <graphene/chain/genesis_state.hpp>
 #include <graphene/chain/evaluator.hpp>
+#include <graphene/chain/license_objects.hpp>
 
 #include <graphene/db/object_database.hpp>
 #include <graphene/db/object.hpp>
@@ -551,7 +552,8 @@ namespace graphene { namespace chain {
                                             upgrade_multiplier_type balance_multipliers,
                                             upgrade_multiplier_type requeue_multipliers,
                                             upgrade_multiplier_type return_multipliers,
-                                            share_type eur_limit);
+                                            share_type eur_limit,
+         license_type_object::upgrade_policy up_policy = license_type_object::upgrade_policy(license_type_object::license_upgrade_policy()));
 
          optional<license_information_object> get_license_information(account_id_type account_id) const;
 

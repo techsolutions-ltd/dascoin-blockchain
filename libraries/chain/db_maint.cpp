@@ -749,7 +749,11 @@ void database::perform_upgrades(const account_object& account, const upgrade_eve
             // If the license has been issued before the cutoff time, execute it:
             if ( license_history.activated_at <= cutoff_time )
             {
-               license_history.amount = license_history.balance_upgrade(license_history.amount_to_upgrade());
+               // If this upgrade event is one of the historic upgrades, then do not touch the amount:
+               if (upgrade.historic)
+                  license_history.balance_upgrade(0);
+               else
+                  license_history.amount = license_history.balance_upgrade(license_history.amount_to_upgrade());
                new_balance += license_history.amount;
                update_balance = true;
                license_history.upgrades.emplace_back(std::make_pair(upgrade.id, head_block_time()));

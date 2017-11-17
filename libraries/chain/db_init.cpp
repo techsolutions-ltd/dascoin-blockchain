@@ -826,6 +826,18 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       create_license_type(license_kind::locked_frequency, "president_locked", DASCOIN_BASE_PRESIDENT_CYCLES, {2,4,8}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_PRESIDENT, license_type_object::upgrade_policy::president);
    }
 
+   // Create historic upgrade events:
+   for (const auto& historic_upgrade : genesis_state.historic_upgrade_events)
+   {
+     create<upgrade_event_object>([&historic_upgrade](upgrade_event_object &o) {
+       o.execution_time = historic_upgrade.execution_time;
+       o.cutoff_time = historic_upgrade.cutoff_time;
+       o.subsequent_execution_times = historic_upgrade.subsequent_executions;
+       o.comment = historic_upgrade.comment;
+       o.historic = true;
+     });
+   }
+
    // Set active witnesses
    modify(get_global_properties(), [&](global_property_object& p) {
       for( uint32_t i = 1; i <= genesis_state.initial_active_witnesses; ++i )

@@ -823,7 +823,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       create_license_type(license_kind::locked_frequency, "pro_locked", DASCOIN_BASE_PRO_CYCLES, {2}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_PRO);
       create_license_type(license_kind::locked_frequency, "executive_locked", DASCOIN_BASE_EXECUTIVE_CYCLES, {2,2}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_EXECUTIVE);
       create_license_type(license_kind::locked_frequency, "vice_president_locked", DASCOIN_BASE_VICE_PRESIDENT_CYCLES, {2,2}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_VICE_PRESIDENT);
-      create_license_type(license_kind::locked_frequency, "president_locked", DASCOIN_BASE_PRESIDENT_CYCLES, {2,4,8}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_PRESIDENT, license_type_object::predident_license_upgrade_policy());
+      create_license_type(license_kind::locked_frequency, "president_locked", DASCOIN_BASE_PRESIDENT_CYCLES, {2,4,8}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_PRESIDENT, license_type_object::upgrade_policy::president);
    }
 
    // Set active witnesses

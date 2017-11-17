@@ -15,19 +15,32 @@ namespace graphene { namespace chain {
 
   namespace detail {
 
-    template<typename T>
-    struct default_upgrade_policy
+    enum policy
     {
-      share_type get_amount_to_upgrade(const T& upgradeable) const
+      standard,
+      president
+    };
+
+    class policy_class
+    {
+    public:
+      template<typename T>
+      static share_type get_amount_to_upgrade(const T& upgradeable, policy p)
+      {
+        if (p == standard)
+          return policy_class::get_amount_to_upgrade(upgradeable);
+        return policy_class::get_amount_to_upgrade_predident(upgradeable);
+      }
+
+    private:
+      template<typename T>
+      static share_type get_amount_to_upgrade(const T& upgradeable)
       {
         return upgradeable.amount;
       }
-    };
 
-    template<typename T>
-    struct president_upgrade_policy
-    {
-      share_type get_amount_to_upgrade(const T& upgradeable) const
+      template<typename T>
+      static share_type get_amount_to_upgrade_predident(const T& upgradeable)
       {
         return upgradeable.base_amount + upgradeable.base_amount * upgradeable.bonus_percent / 100;
       }
@@ -52,10 +65,7 @@ namespace graphene { namespace chain {
         upgrade_type balance_upgrade;
         vector<pair<upgrade_event_id_type, time_point_sec>> upgrades;
 
-        using license_upgrade_policy = detail::default_upgrade_policy<license_history_record>;
-        using predident_license_upgrade_policy = detail::president_upgrade_policy<license_history_record>;
-
-        using upgrade_policy = fc::static_variant<license_upgrade_policy, predident_license_upgrade_policy>;
+        using upgrade_policy = detail::policy;
 
         upgrade_policy up_policy;
 
@@ -81,30 +91,7 @@ namespace graphene { namespace chain {
 
         share_type amount_to_upgrade()
         {
-          struct policy_visitor
-          {
-            using result_type = void;
-
-            explicit policy_visitor(license_history_record &record)
-              : history_record(record) {}
-
-            const license_history_record& history_record;
-            share_type amount = 0;
-
-            void operator()( const license_upgrade_policy& policy )
-            {
-              amount = policy.get_amount_to_upgrade(history_record);
-            }
-
-            void operator()( const predident_license_upgrade_policy& policy )
-            {
-              amount = policy.get_amount_to_upgrade(history_record);
-            }
-          } visitor(*this);
-
-          up_policy.visit(visitor);
-
-          return visitor.amount;
+          return detail::policy_class::get_amount_to_upgrade(*this, up_policy);
         }
       };
       typedef vector<license_history_record> array_t;
@@ -188,9 +175,6 @@ namespace graphene { namespace chain {
 
       // The eur limit used parameter used for vault to wallet transfers in the system:
       share_type eur_limit;
-
-      using license_upgrade_policy = license_information_object::license_history_record::license_upgrade_policy;
-      using predident_license_upgrade_policy = license_information_object::license_history_record::predident_license_upgrade_policy;
 
       using upgrade_policy = license_information_object::license_history_record::upgrade_policy;
 

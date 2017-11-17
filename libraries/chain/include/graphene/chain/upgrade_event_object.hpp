@@ -29,6 +29,7 @@ namespace graphene { namespace chain {
       vector<time_point_sec> subsequent_execution_times;
       string comment;
       bool executed = false;
+      bool historic = false;
 
       extensions_type extensions;
 

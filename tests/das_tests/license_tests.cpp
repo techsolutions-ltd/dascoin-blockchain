@@ -270,6 +270,12 @@ BOOST_AUTO_TEST_CASE( create_upgrade_event_test )
   const auto& dgpo = db.get_dynamic_global_properties();
   const auto& gpo = db.get_global_properties();
 
+  const auto get_upgrade_events = [this](vector<upgrade_event_object> &upgrades) {
+    const auto& idx = db.get_index_type<upgrade_event_index>().indices().get<by_id>();
+    for ( auto it = idx.begin(); it != idx.end(); ++it )
+      upgrades.emplace_back(*it);
+  };
+
   // This should fail, wrong authority:
   GRAPHENE_REQUIRE_THROW( do_op(create_upgrade_event_operation(license_issuer_id, hbt, {}, {}, "")), fc::exception );
 
@@ -297,7 +303,15 @@ BOOST_AUTO_TEST_CASE( create_upgrade_event_test )
 
   // This ought to work, execute time in future, no cutoff, no subsequent events:
   do_op(create_upgrade_event_operation(license_administrator_id,
-                                       dgpo.next_maintenance_time, {}, {}, ""));
+                                       dgpo.next_maintenance_time, {}, {}, "foo"));
+
+  vector<upgrade_event_object> upgrades;
+  get_upgrade_events(upgrades);
+
+  FC_ASSERT( upgrades.size() == 1 );
+  FC_ASSERT( !upgrades[0].executed );
+  FC_ASSERT( upgrades[0].comment.compare("foo") == 0 );
+  FC_ASSERT( upgrades[0].execution_time == dgpo.next_maintenance_time );
 
   // Fails, cannot create upgrade event at the same time as the previously created event:
   GRAPHENE_REQUIRE_THROW( do_op(create_upgrade_event_operation(license_administrator_id, dgpo.next_maintenance_time,
@@ -306,13 +320,31 @@ BOOST_AUTO_TEST_CASE( create_upgrade_event_test )
   // This ought to work, execute time in future, cutoff in the future, no subsequent events:
   do_op(create_upgrade_event_operation(license_administrator_id,
                                        dgpo.next_maintenance_time + gpo.parameters.maintenance_interval,
-                                       hbt + 60, {}, ""));
+                                       hbt + 60, {}, "bar"));
+
+  upgrades.clear();
+  get_upgrade_events(upgrades);
+
+  FC_ASSERT( upgrades.size() == 2 );
+  FC_ASSERT( !upgrades[1].executed );
+  FC_ASSERT( upgrades[1].comment.compare("bar") == 0 );
+  FC_ASSERT( upgrades[1].execution_time == dgpo.next_maintenance_time + gpo.parameters.maintenance_interval );
 
   // This ought to work, execute time in future, cutoff in the future, subsequent event in the future:
   do_op(create_upgrade_event_operation(license_administrator_id,
                                        dgpo.next_maintenance_time + 2 * gpo.parameters.maintenance_interval,
                                        hbt + 60,
-                                       {dgpo.next_maintenance_time + 3 * gpo.parameters.maintenance_interval}, ""));
+                                       {dgpo.next_maintenance_time + 3 * gpo.parameters.maintenance_interval}, "foobar"));
+
+  upgrades.clear();
+  get_upgrade_events(upgrades);
+
+  FC_ASSERT( upgrades.size() == 3 );
+  FC_ASSERT( !upgrades[2].executed );
+  FC_ASSERT( upgrades[2].comment.compare("foobar") == 0 );
+  FC_ASSERT( upgrades[2].execution_time == dgpo.next_maintenance_time + 2 * gpo.parameters.maintenance_interval );
+  FC_ASSERT( upgrades[2].subsequent_execution_times.size() == 1 );
+  FC_ASSERT( upgrades[2].subsequent_execution_times[0] == dgpo.next_maintenance_time + 3 * gpo.parameters.maintenance_interval );
 
   // This fails, second subsequent event is not in the future:
   GRAPHENE_REQUIRE_THROW( do_op(create_upgrade_event_operation(license_administrator_id,

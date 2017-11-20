@@ -355,6 +355,44 @@ BOOST_AUTO_TEST_CASE( create_upgrade_event_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( upgrade_event_executed_test )
+{ try {
+  const auto& dgpo = db.get_dynamic_global_properties();
+  const auto& gpo = db.get_global_properties();
+
+  const auto get_upgrade_events = [this](vector<upgrade_event_object> &upgrades) {
+    const auto& idx = db.get_index_type<upgrade_event_index>().indices().get<by_id>();
+    for ( auto it = idx.begin(); it != idx.end(); ++it )
+      upgrades.emplace_back(*it);
+  };
+
+  do_op(create_upgrade_event_operation(get_license_administrator_id(),
+                                       dgpo.next_maintenance_time,
+                                       {}, {}, "foo"));
+
+  // Wait for the next maintenance interval:
+  generate_blocks(dgpo.next_maintenance_time + gpo.parameters.maintenance_interval);
+
+  vector<upgrade_event_object> upgrades;
+  get_upgrade_events(upgrades);
+
+  FC_ASSERT( !upgrades[0].executed );
+
+  do_op(create_upgrade_event_operation(get_license_administrator_id(),
+                                       dgpo.next_maintenance_time + 2 * gpo.parameters.maintenance_interval,
+                                       {}, {}, "bar"));
+
+  // Wait for the next maintenance interval:
+  generate_blocks(dgpo.next_maintenance_time + 3 * gpo.parameters.maintenance_interval);
+
+  upgrades.clear();
+  get_upgrade_events(upgrades);
+
+  // At this point, the first upgrade event has been marked as executed:
+  FC_ASSERT( upgrades[0].executed );
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_CASE( update_upgrade_event_test )
 { try {
   auto license_administrator_id = db.get_global_properties().authorities.license_administrator;

@@ -77,5 +77,6 @@ FC_REFLECT_DERIVED( graphene::chain::upgrade_event_object, (graphene::db::object
                     (cutoff_time)
                     (subsequent_execution_times)
                     (comment)
+                    (executed)
                     (extensions)
                   )

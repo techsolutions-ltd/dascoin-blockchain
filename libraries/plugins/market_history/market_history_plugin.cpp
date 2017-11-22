@@ -61,6 +61,7 @@ class market_history_plugin_impl
       market_history_plugin&     _self;
       flat_set<uint32_t>         _tracked_buckets;
       uint32_t                   _maximum_history_per_bucket_size = 1000;
+      uint32_t                   _maximum_history_trade_ticks_size = 1000;
 };
 
 
@@ -108,7 +109,7 @@ struct operation_process_fill_order
          ho.op = o;
       });
 
-      hkey.sequence += 200;
+      hkey.sequence += _plugin.max_history_trade_ticks();
       itr = history_idx.lower_bound( hkey );
 
       while( itr != history_idx.end() )
@@ -122,7 +123,7 @@ struct operation_process_fill_order
       }
 
 
-      auto max_history = _plugin.max_history();
+      auto max_history = _plugin.max_history_buckets_tracked();
       for( auto bucket : buckets )
       {
           auto cutoff      = (fc::time_point() + fc::seconds( bucket * max_history));
@@ -256,8 +257,10 @@ void market_history_plugin::plugin_set_program_options(
    cli.add_options()
          ("bucket-size", boost::program_options::value<string>()->default_value("[15,60,300,3600,86400]"),
            "Track market history by grouping orders into buckets of equal size measured in seconds specified as a JSON array of numbers")
-         ("history-per-size", boost::program_options::value<uint32_t>()->default_value(1000), 
+         ("history-per-bucket-size", boost::program_options::value<uint32_t>()->default_value(1000),
            "How far back in time to track history for each bucket size, measured in the number of buckets (default: 1000)")
+         ("history-trade-ticks-size", boost::program_options::value<uint32_t>()->default_value(1000),
+           "How far back in time to track history for trade ticks, measured in the number of filled limit orders (default: 1000)")
          ;
    cfg.add(cli);
 }
@@ -273,8 +276,10 @@ void market_history_plugin::plugin_initialize(const boost::program_options::vari
       const std::string& buckets = options["bucket-size"].as<string>(); 
       my->_tracked_buckets = fc::json::from_string(buckets).as<flat_set<uint32_t>>();
    }
-   if( options.count( "history-per-size" ) )
-      my->_maximum_history_per_bucket_size = options["history-per-size"].as<uint32_t>();
+   if( options.count( "history-per-bucket-size" ) )
+      my->_maximum_history_per_bucket_size = options["history-per-bucket-size"].as<uint32_t>();
+   if( options.count( "history-trade-ticks-size" ) )
+      my->_maximum_history_trade_ticks_size = options["history-trade-ticks-size"].as<uint32_t>();
 } FC_CAPTURE_AND_RETHROW() }
 
 void market_history_plugin::plugin_startup()
@@ -286,9 +291,14 @@ const flat_set<uint32_t>& market_history_plugin::tracked_buckets() const
    return my->_tracked_buckets;
 }
 
-uint32_t market_history_plugin::max_history()const
+uint32_t market_history_plugin::max_history_buckets_tracked()const
 {
    return my->_maximum_history_per_bucket_size;
+}
+
+uint32_t market_history_plugin::max_history_trade_ticks()const
+{
+   return my->_maximum_history_trade_ticks_size;
 }
 
 } }

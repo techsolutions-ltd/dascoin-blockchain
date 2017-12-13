@@ -116,13 +116,14 @@ namespace graphene { namespace chain {
           *  @return true if the block is in our fork DB or saved to disk as
           *  part of the official chain, otherwise return false
           */
-         bool                       is_known_block( const block_id_type& id )const;
-         bool                       is_known_transaction( const transaction_id_type& id )const;
-         block_id_type              get_block_id_for_num( uint32_t block_num )const;
-         optional<signed_block>     fetch_block_by_id( const block_id_type& id )const;
-         optional<signed_block>     fetch_block_by_number( uint32_t num )const;
-         const signed_transaction&  get_recent_transaction( const transaction_id_type& trx_id )const;
-         std::vector<block_id_type> get_block_ids_on_fork(block_id_type head_of_fork) const;
+         bool                                            is_known_block( const block_id_type& id )const;
+         bool                                            is_known_transaction( const transaction_id_type& id )const;
+         block_id_type                                   get_block_id_for_num( uint32_t block_num )const;
+         optional<signed_block>                          fetch_block_by_id( const block_id_type& id )const;
+         optional<signed_block>                          fetch_block_by_number( uint32_t num )const;
+         optional<signed_block_with_virtual_operations>  fetch_block_with_virtual_operations_by_number( uint32_t num, std::vector<uint16_t> virtual_op_id_vec)const;
+         const signed_transaction&                       get_recent_transaction( const transaction_id_type& trx_id )const;
+         std::vector<block_id_type>                      get_block_ids_on_fork(block_id_type head_of_fork) const;
 
          /**
           *  Calculate the percent of block production slots that were missed in the
@@ -168,7 +169,9 @@ namespace graphene { namespace chain {
           */
          uint32_t  push_applied_operation( const operation& op );
          void      set_applied_operation_result( uint32_t op_id, const operation_result& r );
+         void      applied_ops_to_virtual_ops();
          const vector<optional< operation_history_object > >& get_applied_operations()const;
+         vector<optional< operation_history_object > > get_virtual_ops_and_clear_collection();
 
          string to_pretty_string(const asset& a) const;
          string to_pretty_string(const asset_reserved& a) const;
@@ -671,6 +674,13 @@ private:
           * emited.
           */
          vector<optional<operation_history_object> >  _applied_ops;
+
+         /**
+          * Contains the set of virtual ops that are in the process of being applied from
+          * the current block.  It contains real virtual operations in the
+          * order they occur and is cleared after account history plagin is updated
+          */
+         vector<optional<operation_history_object> >  _virtual_ops;
 
          uint32_t                          _current_block_num    = 0;
          uint16_t                          _current_trx_in_block = 0;

@@ -95,6 +95,7 @@ add_library( graphene_chain
              fba_object.cpp
              proposal_object.cpp
              vesting_balance_object.cpp
+	     virtaul_operation_helper.cpp
 
              block_database.cpp
 

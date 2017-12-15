@@ -77,55 +77,45 @@ void account_history_plugin_impl::update_account_histories( const signed_block& 
    const vector<optional< operation_history_object > >& hist = db.get_applied_operations();
    vector<optional< operation_history_object > > virtual_hist = db.get_virtual_ops_and_clear_collection();
 
+   auto helper_func_for_creating_operation_history_object = [&db, &b](const optional< operation_history_object >& o_op)
+   {
+      // add to the operation history index
+      const auto& oho = db.create<operation_history_object>( [&]( operation_history_object& h )
+      {
+         if( o_op.valid() )
+         {
+            h.op           = o_op->op;
+            h.result       = o_op->result;
+            h.block_num    = o_op->block_num;
+            h.trx_in_block = o_op->trx_in_block;
+            h.op_in_trx    = o_op->op_in_trx;
+            h.virtual_op   = o_op->virtual_op;
+            h.block_timestamp = b.timestamp;
+         }
+      } );
+
+      if( !o_op.valid() )
+      {
+         ilog( "removing failed operation with ID: ${id}", ("id", oho.id) );
+         db.remove( oho );
+         return std::make_pair(oho, false);
+      }
+
+      return std::make_pair(oho, true);
+   };
+
+   // create virtual operations
    for( const optional< operation_history_object >& o_op : virtual_hist )
    {
-
-      // add to the operation history index
-      const auto& oho = db.create<operation_history_object>( [&]( operation_history_object& h )
-      {
-         if( o_op.valid() )
-         {
-            h.op           = o_op->op;
-            h.result       = o_op->result;
-            h.block_num    = o_op->block_num;
-            h.trx_in_block = o_op->trx_in_block;
-            h.op_in_trx    = o_op->op_in_trx;
-            h.virtual_op   = o_op->virtual_op;
-            h.block_timestamp = b.timestamp;
-         }
-      } );
-
-      if( !o_op.valid() )
-      {
-         ilog( "removing failed operation with ID: ${id}", ("id", oho.id) );
-         db.remove( oho );
-         continue;
-      }
+      helper_func_for_creating_operation_history_object(o_op);
    }
 
-
+   // create real non virtual operation and update account history object index
    for( const optional< operation_history_object >& o_op : hist )
    {
-
-      // add to the operation history index
-      const auto& oho = db.create<operation_history_object>( [&]( operation_history_object& h )
+      auto oho_valid_pair = helper_func_for_creating_operation_history_object(o_op);
+      if(!oho_valid_pair.second)
       {
-         if( o_op.valid() )
-         {
-            h.op           = o_op->op;
-            h.result       = o_op->result;
-            h.block_num    = o_op->block_num;
-            h.trx_in_block = o_op->trx_in_block;
-            h.op_in_trx    = o_op->op_in_trx;
-            h.virtual_op   = o_op->virtual_op;
-            h.block_timestamp = b.timestamp;
-         }
-      } );
-
-      if( !o_op.valid() )
-      {
-         ilog( "removing failed operation with ID: ${id}", ("id", oho.id) );
-         db.remove( oho );
          continue;
       }
 
@@ -137,7 +127,7 @@ void account_history_plugin_impl::update_account_histories( const signed_block& 
       operation_get_required_authorities( op.op, impacted, impacted, other );
 
       if( op.op.which() == operation::tag< account_create_operation >::value )
-         impacted.insert( oho.result.get<object_id_type>() );
+         impacted.insert( oho_valid_pair.first.result.get<object_id_type>() );
       else
          graphene::app::operation_get_impacted_accounts( op.op, impacted );
 
@@ -156,7 +146,7 @@ void account_history_plugin_impl::update_account_histories( const signed_block& 
             // add history
             const auto& stats_obj = account_id(db).statistics(db);
             const auto& ath = db.create<account_transaction_history_object>( [&]( account_transaction_history_object& obj ){
-                obj.operation_id = oho.id;
+                obj.operation_id = oho_valid_pair.first.id;
                 obj.account = account_id;
                 obj.sequence = stats_obj.total_ops+1;
                 obj.next = stats_obj.most_recent_op;
@@ -176,7 +166,7 @@ void account_history_plugin_impl::update_account_histories( const signed_block& 
                // add history
                const auto& stats_obj = account_id(db).statistics(db);
                const auto& ath = db.create<account_transaction_history_object>( [&]( account_transaction_history_object& obj ){
-                   obj.operation_id = oho.id;
+                   obj.operation_id = oho_valid_pair.first.id;
                    obj.next = stats_obj.most_recent_op;
                });
                db.modify( stats_obj, [&]( account_statistics_object& obj ){

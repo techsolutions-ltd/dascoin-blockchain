@@ -574,18 +574,6 @@ BOOST_AUTO_TEST_CASE( get_block_with_wirtual_operations )
                    ("n", account.name)("c", cash)("r", reserved)("ec", expected_cash)("er", expected_reserved));
     };
 
-    // const auto issue_request = [this](const account_object& account, share_type cash, share_type reserved)
-    // {
-    //     const issue_asset_request_object* p = issue_webasset(account.id, cash, reserved);
-    //     FC_ASSERT( p, "Asset request object for '${n}' was not created",("n",account.name));
-    //     // ilog( "Creating asset request for '${n}'", ("n", (p->receiver)(db).name));
-    //     FC_ASSERT( p->issuer == get_webasset_issuer_id() );
-    //     FC_ASSERT( p->receiver == account.id, "Receiver: '${n}', Account: '${an}'", ("n", (p->receiver)(db).name)("an", account.name));
-    //     FC_ASSERT( p->amount == cash );
-    //     FC_ASSERT( p->asset_id == get_web_asset_id() );
-    //     FC_ASSERT( p->reserved_amount == reserved );
-    // };
-
     const auto issue_assets = [&, this](share_type web_assets, share_type web_assets_reserved, share_type expected_web_assets, share_type web_assets_reserved_expected)
     {
         set_expiration( db, trx );
@@ -663,7 +651,7 @@ BOOST_AUTO_TEST_CASE( get_block_with_wirtual_operations )
            for(operation& op : blc.block.virtual_operations)
            {
               count_vops++;
-              BOOST_CHECK( op.wich() == 69 || op.wich() == 64) );
+              BOOST_CHECK( (op.which() == 69 || op.which() == 64) );
 
 //              string s = fc::json::to_string( op );
 //              std::cout << s;

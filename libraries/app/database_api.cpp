@@ -1436,21 +1436,22 @@ market_hi_low_volume database_api_impl::get_24_hi_low_volume( const string& base
    try {
       if( base_id > quote_id ) std::swap(base_id, quote_id);
 
-      uint32_t sec_in_24h = 86400;
       auto now = fc::time_point_sec( fc::time_point::now() );
+      auto ts = now - fc::days(1).to_seconds();
 
-      auto trades = get_trade_history( base, quote, now, fc::time_point_sec( now.sec_since_epoch() - sec_in_24h ), 100 );
+      auto trades = get_trade_history( base, quote, now, ts, 100 );
 
-      if(trades.size() > 0){
+      if( !trades.empty() )
+      {
          result.high = trades[0].price;
          result.low = trades[0].price;
       }
 
       for ( market_trade t: trades )
       {
-         if(result.high < t.price)
+         if( result.high < t.price )
             result.high = t.price;
-         if(result.low > t.price)
+         if( result.low > t.price )
             result.low = t.price;
 
          result.base_volume += t.value;
@@ -1459,13 +1460,13 @@ market_hi_low_volume database_api_impl::get_24_hi_low_volume( const string& base
 
       while (trades.size() == 100)
       {
-         trades = get_trade_history( base, quote, trades[99].date, fc::time_point_sec( now.sec_since_epoch() - sec_in_24h ), 100 );
+         trades = get_trade_history_by_sequence( base, quote, trades[99].sequence, ts, 100 );
 
          for ( market_trade t: trades )
          {
-           if(result.high < t.price)
+           if( result.high < t.price )
               result.high = t.price;
-           if(result.low > t.price)
+           if( result.low > t.price )
               result.low = t.price;
 
            result.base_volume += t.value;

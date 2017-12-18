@@ -4,6 +4,7 @@
 #include <graphene/chain/license_objects.hpp>
 #include <graphene/chain/queue_objects.hpp>
 #include <graphene/chain/issued_asset_record_object.hpp>
+#include <graphene/chain/virtaul_operation_helper.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 
@@ -49,11 +50,19 @@ vector<signed_block_with_virtual_operations_and_num> database_access_layer::get_
 {
     FC_ASSERT(count > 0, "Must fetch at least one block");
     FC_ASSERT(count <= 100, "Too many blocks to fetch, limit is 100");
+    FC_ASSERT(start_block_num > 0, "Starting block must be higher than 0.");
+
     auto head_block_num = _db.head_block_num();
     FC_ASSERT(start_block_num <= head_block_num,
               "Starting block ${start_n} is higher than current block height ${head_n}",
               ("start_n", start_block_num)
               ("head_n", head_block_num));
+
+    for(auto operation_id : virtual_operation_ids)
+    {
+          FC_ASSERT(is_virtual_operation(operation_id), "Operation id ${op_id} is not valid virtual operation id.",
+                ("op_id", operation_id));
+    }
 
     vector<signed_block_with_virtual_operations_and_num> result;
     result.reserve(count);

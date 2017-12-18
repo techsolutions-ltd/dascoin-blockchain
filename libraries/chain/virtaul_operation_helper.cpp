@@ -91,4 +91,16 @@ bool is_virtual_operation(const operation& op)
    return op.visit( vivo );
 }
 
+bool is_virtual_operation(const unsigned operation_num)
+{
+   unsigned limit = 61;
+
+   if(operation_num > limit)
+   {
+      return true;
+   }
+
+   return false;
+}
+
 } }

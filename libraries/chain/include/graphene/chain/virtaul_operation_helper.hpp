@@ -11,7 +11,6 @@
 namespace graphene { namespace chain {
 
 bool is_virtual_operation(const graphene::chain::operation& op);
-
-
+bool is_virtual_operation(const unsigned operation_num);
 
 } } // graphene::app

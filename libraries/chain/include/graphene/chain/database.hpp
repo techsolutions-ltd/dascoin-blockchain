@@ -681,7 +681,7 @@ private:
          /**
           * Contains the set of virtual ops that are in the process of being applied from
           * the current block.  It contains real virtual operations in the
-          * order they occur and is cleared after account history plagin is updated
+          * order they occur and is cleared after account history plugin is updated
           */
          vector<optional<operation_history_object> >  _virtual_ops;
 

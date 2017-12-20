@@ -4,7 +4,7 @@
 #include <graphene/chain/license_objects.hpp>
 #include <graphene/chain/queue_objects.hpp>
 #include <graphene/chain/issued_asset_record_object.hpp>
-#include <graphene/chain/virtaul_operation_helper.hpp>
+#include <graphene/chain/virtual_operation_helper.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 

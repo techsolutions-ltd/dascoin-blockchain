@@ -35,7 +35,7 @@
 #include <graphene/chain/protocol/fee_schedule.hpp>
 #include <graphene/chain/exceptions.hpp>
 #include <graphene/chain/evaluator.hpp>
-#include <graphene/chain/virtaul_operation_helper.hpp>
+#include <graphene/chain/virtual_operation_helper.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 
@@ -88,22 +88,9 @@ optional<signed_block_with_virtual_operations> database::fetch_block_with_virtua
    else
       ret = _block_id_to_block.fetch_by_number(block_num);
 
-
    signed_block_with_virtual_operations ret_v(*ret);
 
    const auto& hist_idx = get_index_type<operation_history_index>();
-//   const auto& by_vop_idx = hist_idx.indices().get<by_blnum_and_vop>();
-//
-//   for(auto vop_id : virtual_op_id_vec)
-//   {
-//      auto itr = by_vop_idx.lower_bound( boost::make_tuple( block_num, vop_id ) );
-//      while ( itr != by_vop_idx.end() )
-//      {
-//         ret_v.virtual_operations.push_back(itr->op);
-//         ++itr;
-//      }
-//   }
-
    const auto& by_blnum_idx = hist_idx.indices().get<by_blnum>();
    auto itr = by_blnum_idx.lower_bound( block_num );
    auto end = by_blnum_idx.upper_bound( block_num );
@@ -121,7 +108,6 @@ optional<signed_block_with_virtual_operations> database::fetch_block_with_virtua
       }
       itr++;
    }
-
 
    return ret_v;
 }

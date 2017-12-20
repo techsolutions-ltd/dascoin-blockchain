@@ -557,7 +557,7 @@ BOOST_AUTO_TEST_CASE( get_queue_submissions_with_pos_for_accounts_unit_test )
 
 } FC_LOG_AND_RETHROW() }*/
 
-BOOST_AUTO_TEST_CASE( get_block_with_wirtual_operations )
+BOOST_AUTO_TEST_CASE( get_block_with_virtual_operations )
 { try {
     ACTOR(alicew);
     ACTOR(bobw);
@@ -639,7 +639,6 @@ BOOST_AUTO_TEST_CASE( get_block_with_wirtual_operations )
     vector<uint16_t> virtual_op_ids;
     virtual_op_ids.push_back(69);
     virtual_op_ids.push_back(64);
-
     // Starting from block #2, fetch the following 20 blocks:
     results = _dal.get_blocks_with_virtual_operations(1, 20,virtual_op_ids);
 

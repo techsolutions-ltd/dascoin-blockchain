@@ -162,6 +162,17 @@ namespace graphene { namespace chain {
 
    /// @} // operations group
 
+   // this struct keeps index from which to which operation is regular operation
+   // and from which to which operation is virtual operation
+   // and needs to be updated accordingly when new operations are added
+   struct operation_type_limits
+   {
+      const static unsigned regular_index_start = 0;
+      const static unsigned regular_index_end = 61;
+      const static unsigned virtual_index_start = 62;
+      const static unsigned virtual_index_end = 70;
+   };
+
    /**
     *  Appends required authorites to the result vector.  The authorities appended are not the
     *  same as those returned by get_required_auth

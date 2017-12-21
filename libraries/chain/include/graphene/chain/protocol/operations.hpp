@@ -162,6 +162,17 @@ namespace graphene { namespace chain {
 
    /// @} // operations group
 
+   // this struct keeps index from which to which operation is regular operation
+   // and from which to which operation is virtual operation
+   // and needs to be updated accordingly when new operations are added
+   struct operation_type_limits
+   {
+      static bool is_virtual_operation(const operation& op);
+      static bool is_virtual_operation(const unsigned uop);
+   private:
+      static operation first_virtual_operation;
+   };
+
    /**
     *  Appends required authorites to the result vector.  The authorities appended are not the
     *  same as those returned by get_required_auth

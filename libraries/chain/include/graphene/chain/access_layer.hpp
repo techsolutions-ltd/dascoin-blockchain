@@ -195,6 +195,17 @@ struct signed_block_with_num
     : num(num), block_id(block_id), block(block) {}
 };
 
+struct signed_block_with_virtual_operations_and_num
+{
+  uint32_t num;
+  block_id_type block_id;
+  signed_block_with_virtual_operations block;
+
+  signed_block_with_virtual_operations_and_num() = default;
+  explicit signed_block_with_virtual_operations_and_num(uint32_t num, block_id_type block_id, signed_block_with_virtual_operations block)
+    : num(num), block_id(block_id), block(block) {}
+};
+
 class database;
 class global_property_object;
 class reward_queue_object;
@@ -211,7 +222,9 @@ class database_access_layer {
     // Transactions and blocks:
     // TODO: expose get_block through this interface.
     vector<signed_block_with_num> get_blocks(uint32_t start_block_num, uint32_t count) const;
-
+    vector<signed_block_with_virtual_operations_and_num> get_blocks_with_virtual_operations(uint32_t start_block_num,
+                                                                                            uint32_t count,
+                                                                                            std::vector<uint16_t> virtual_operation_ids) const;
     // Global objects:
     global_property_object get_global_properties() const;
 

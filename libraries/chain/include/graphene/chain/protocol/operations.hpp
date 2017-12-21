@@ -167,10 +167,10 @@ namespace graphene { namespace chain {
    // and needs to be updated accordingly when new operations are added
    struct operation_type_limits
    {
-      const static unsigned regular_index_start = 0;
-      const static unsigned regular_index_end = 61;
-      const static unsigned virtual_index_start = 62;
-      const static unsigned virtual_index_end = 70;
+      static bool is_virtual_operation(const operation& op);
+      static bool is_virtual_operation(const unsigned uop);
+   private:
+      static operation first_virtual_operation;
    };
 
    /**

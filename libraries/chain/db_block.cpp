@@ -35,7 +35,6 @@
 #include <graphene/chain/protocol/fee_schedule.hpp>
 #include <graphene/chain/exceptions.hpp>
 #include <graphene/chain/evaluator.hpp>
-#include <graphene/chain/virtual_operation_helper.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 
@@ -526,7 +525,7 @@ void database::applied_ops_to_virtual_ops( )
       if(ooho.valid())
       {
          operation_history_object& oho = *ooho;
-         if( is_virtual_operation(oho.op) )
+         if( operation_type_limits::is_virtual_operation(oho.op) )
          {
             vector<optional< operation_history_object > >::iterator it = std::find_if(_virtual_ops.begin(),_virtual_ops.end(),
                   [&oho](optional<operation_history_object > const& e){

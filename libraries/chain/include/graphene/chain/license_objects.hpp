@@ -216,7 +216,7 @@ FC_REFLECT( graphene::chain::license_information_object::license_history_record,
             (issued_on_blockchain)
           )
 
-FC_REFLECT( graphene::chain::license_information_object,
+FC_REFLECT_DERIVED( graphene::chain::license_information_object, (graphene::db::object),
             (account)
             (history)
             (max_license)

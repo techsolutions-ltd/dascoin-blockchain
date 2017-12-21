@@ -86,6 +86,7 @@ struct order_book
 
 struct market_ticker
 {
+   time_point_sec             time;
    string                     base;
    string                     quote;
    double                     latest;
@@ -108,10 +109,13 @@ struct market_hi_low_volume
 
 struct market_trade
 {
+   int64_t                    sequence = 0;
    fc::time_point_sec         date;
    double                     price;
    double                     amount;
    double                     value;
+   account_id_type            side1_account_id = GRAPHENE_NULL_ACCOUNT;
+   account_id_type            side2_account_id = GRAPHENE_NULL_ACCOUNT;
 };
 
 // agregated limit orders with same price
@@ -456,16 +460,28 @@ class database_api
       order_book get_order_book( const string& base, const string& quote, unsigned limit = 50 )const;
 
       /**
-       * @brief Returns recent trades for the market assetA:assetB
-       * Note: Currentlt, timezone offsets are not supported. The time must be UTC.
+       * @brief Returns recent trades for the market assetA:assetB, ordered by time, most recent first. The range is [stop, start)
+       * Note: Currently, timezone offsets are not supported. The time must be UTC.
        * @param a String name of the first asset
        * @param b String name of the second asset
-       * @param stop Stop time as a UNIX timestamp
+       * @param stop Stop time as a UNIX timestamp, the earliest trade to retrieve
        * @param limit Number of trasactions to retrieve, capped at 100
-       * @param start Start time as a UNIX timestamp
+       * @param start Start time as a UNIX timestamp, the latest trade to retrieve
        * @return Recent transactions in the market
        */
       vector<market_trade> get_trade_history( const string& base, const string& quote, fc::time_point_sec start, fc::time_point_sec stop, unsigned limit = 100 )const;
+
+      /**
+       * @brief Returns trades for the market assetA:assetB, ordered by time, most recent first. The range is [stop, start)
+       * Note: Currently, timezone offsets are not supported. The time must be UTC.
+       * @param a String name of the first asset
+       * @param b String name of the second asset
+       * @param stop Stop time as a UNIX timestamp, the earliest trade to retrieve
+       * @param limit Number of trasactions to retrieve, capped at 100
+       * @param start Start sequence as an Integer, the latest trade to retrieve
+       * @return Transactions in the market
+       */
+      vector<market_trade> get_trade_history_by_sequence( const string& base, const string& quote, int64_t start, fc::time_point_sec stop, unsigned limit = 100 )const;
 
       /**
        * @brief Check if an asset issue with the corresponding unique was completed on the chain.
@@ -736,9 +752,9 @@ class database_api
 
 FC_REFLECT( graphene::app::order, (price)(quote)(base) );
 FC_REFLECT( graphene::app::order_book, (base)(quote)(bids)(asks) );
-FC_REFLECT( graphene::app::market_ticker, (base)(quote)(latest)(lowest_ask)(highest_bid)(percent_change)(base_volume)(quote_volume) );
+FC_REFLECT( graphene::app::market_ticker, (time)(base)(quote)(latest)(lowest_ask)(highest_bid)(percent_change)(base_volume)(quote_volume) );
 FC_REFLECT( graphene::app::market_hi_low_volume, (base)(quote)(high)(low)(base_volume)(quote_volume) );
-FC_REFLECT( graphene::app::market_trade, (date)(price)(amount)(value) );
+FC_REFLECT( graphene::app::market_trade, (sequence)(date)(price)(amount)(value) );
 FC_REFLECT( graphene::app::agregated_limit_orders_with_same_price, (price)(base_volume)(quote_volume)(count) );
 FC_REFLECT( graphene::app::limit_orders_grouped_by_price, (buy)(sell) );
 
@@ -804,6 +820,7 @@ FC_API( graphene::app::database_api,
    (get_ticker)
    (get_24_hi_low_volume)
    (get_trade_history)
+   (get_trade_history_by_sequence)
    (check_issued_asset)
    (check_issued_webeur)
 

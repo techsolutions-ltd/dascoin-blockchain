@@ -25,6 +25,19 @@
 
 namespace graphene { namespace chain {
 
+operation operation_type_limits::first_virtual_operation = operation(record_submit_reserve_cycles_to_queue_operation());
+
+bool operation_type_limits::is_virtual_operation(const operation& op)
+{
+
+   return op.which() >= first_virtual_operation.which() && op.which() < operation::count();
+}
+
+bool operation_type_limits::is_virtual_operation(const unsigned uop)
+{
+   return uop >= first_virtual_operation.which() && uop < operation::count();
+}
+
 uint64_t base_operation::calculate_data_fee( uint64_t bytes, uint64_t price_per_kbyte )
 {
    auto result = (fc::uint128(bytes) * price_per_kbyte) / 1024;

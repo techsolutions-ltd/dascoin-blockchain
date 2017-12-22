@@ -116,13 +116,14 @@ namespace graphene { namespace chain {
           *  @return true if the block is in our fork DB or saved to disk as
           *  part of the official chain, otherwise return false
           */
-         bool                       is_known_block( const block_id_type& id )const;
-         bool                       is_known_transaction( const transaction_id_type& id )const;
-         block_id_type              get_block_id_for_num( uint32_t block_num )const;
-         optional<signed_block>     fetch_block_by_id( const block_id_type& id )const;
-         optional<signed_block>     fetch_block_by_number( uint32_t num )const;
-         const signed_transaction&  get_recent_transaction( const transaction_id_type& trx_id )const;
-         std::vector<block_id_type> get_block_ids_on_fork(block_id_type head_of_fork) const;
+         bool                                            is_known_block( const block_id_type& id )const;
+         bool                                            is_known_transaction( const transaction_id_type& id )const;
+         block_id_type                                   get_block_id_for_num( uint32_t block_num )const;
+         optional<signed_block>                          fetch_block_by_id( const block_id_type& id )const;
+         optional<signed_block>                          fetch_block_by_number( uint32_t num )const;
+         optional<signed_block_with_virtual_operations>  fetch_block_with_virtual_operations_by_number( uint32_t num, std::vector<uint16_t> virtual_op_id_vec)const;
+         const signed_transaction&                       get_recent_transaction( const transaction_id_type& trx_id )const;
+         std::vector<block_id_type>                      get_block_ids_on_fork(block_id_type head_of_fork) const;
 
          /**
           *  Calculate the percent of block production slots that were missed in the
@@ -168,7 +169,9 @@ namespace graphene { namespace chain {
           */
          uint32_t  push_applied_operation( const operation& op );
          void      set_applied_operation_result( uint32_t op_id, const operation_result& r );
+         void      applied_ops_to_virtual_ops();
          const vector<optional< operation_history_object > >& get_applied_operations()const;
+         vector<optional< operation_history_object > > get_virtual_ops_and_clear_collection();
 
          string to_pretty_string(const asset& a) const;
          string to_pretty_string(const asset_reserved& a) const;
@@ -514,13 +517,16 @@ namespace graphene { namespace chain {
          /**
           * @return true if the order was completely filled and thus freed.
           */
-         bool fill_order( const limit_order_object& order, const asset& pays, const asset& receives, bool cull_if_small );
-         bool fill_order( const call_order_object& order, const asset& pays, const asset& receives );
-         bool fill_order( const force_settlement_object& settle, const asset& pays, const asset& receives );
+         bool fill_order( const limit_order_object& order, const asset& pays, const asset& receives, bool cull_if_small,
+                          const price& fill_price, const bool is_maker );
+         bool fill_order( const call_order_object& order, const asset& pays, const asset& receives,
+                          const price& fill_price, const bool is_maker);
+         bool fill_order( const force_settlement_object& settle, const asset& pays, const asset& receives,
+                          const price& fill_price, const bool is_maker);
 
          void push_fill_order_operation( const fill_order_operation &fill_order, bool set_dascoin_price = true );
 
-         bool check_call_orders( const asset_object& mia, bool enable_black_swan = true );
+         bool check_call_orders( const asset_object& mia, bool enable_black_swan = true, bool for_new_limit_order = false );
 
          // helpers to fill_order
          void pay_order( const account_object& receiver, const asset& receives, const asset& pays );
@@ -673,6 +679,13 @@ private:
           * emited.
           */
          vector<optional<operation_history_object> >  _applied_ops;
+
+         /**
+          * Contains the set of virtual ops that are in the process of being applied from
+          * the current block.  It contains real virtual operations in the
+          * order they occur and is cleared after account history plugin is updated
+          */
+         vector<optional<operation_history_object> >  _virtual_ops;
 
          uint32_t                          _current_block_num    = 0;
          uint16_t                          _current_trx_in_block = 0;

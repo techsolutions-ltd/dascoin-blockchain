@@ -43,6 +43,43 @@ vector<signed_block_with_num> database_access_layer::get_blocks(uint32_t start_b
     return result;
 }
 
+vector<signed_block_with_virtual_operations_and_num> database_access_layer::get_blocks_with_virtual_operations(uint32_t start_block_num,
+                                                                                          uint32_t count,
+                                                                                          std::vector<uint16_t> virtual_operation_ids) const
+{
+    FC_ASSERT(count > 0, "Must fetch at least one block");
+    FC_ASSERT(count <= 100, "Too many blocks to fetch, limit is 100");
+    FC_ASSERT(start_block_num > 0, "Starting block must be higher than 0.");
+
+    auto head_block_num = _db.head_block_num();
+    FC_ASSERT(start_block_num <= head_block_num,
+              "Starting block ${start_n} is higher than current block height ${head_n}",
+              ("start_n", start_block_num)
+              ("head_n", head_block_num));
+
+    for(auto operation_id : virtual_operation_ids)
+    {
+          FC_ASSERT(operation_type_limits::is_virtual_operation(operation_id), "Operation id ${op_id} is not valid virtual operation id.",
+                ("op_id", operation_id));
+    }
+
+    vector<signed_block_with_virtual_operations_and_num> result;
+    result.reserve(count);
+    auto end = start_block_num + count;
+    if (end > head_block_num)
+        end = head_block_num;
+    for (auto i = start_block_num; i < end; ++i) {
+        auto signed_block = _db.fetch_block_with_virtual_operations_by_number(i, virtual_operation_ids);
+        FC_ASSERT(signed_block.valid(),
+                  "Block number ${num} could not be retreived",
+                  ("num", i)
+                 );
+        const auto block_id = signed_block->id();
+        result.emplace_back(i, block_id, *signed_block);
+    }
+    return result;
+}
+
 // Balances:
 acc_id_share_t_res database_access_layer::get_free_cycle_balance(account_id_type id) const
 {

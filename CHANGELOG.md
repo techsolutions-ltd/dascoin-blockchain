@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.2.6] - 2017-11-22
+### Added
+ - Added 'history-trade-ticks-size' (max tracked trade ticks) to market-history-plugin config
+
+### Updated
+ - Renamed 'history-per-size' to 'history-per-bucket-size'
+
 ## [0.2.5] - 2017-11-16
 ### Added
  - Get license types grouped by kind to database api

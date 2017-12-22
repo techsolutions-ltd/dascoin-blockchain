@@ -78,6 +78,39 @@ optional<signed_block> database::fetch_block_by_number( uint32_t num )const
    return optional<signed_block>();
 }
 
+optional<signed_block_with_virtual_operations> database::fetch_block_with_virtual_operations_by_number( uint32_t block_num, std::vector<uint16_t> virtual_op_id_vec)const
+{
+   auto results = _fork_db.fetch_block_by_number(block_num);
+   optional<signed_block> ret;
+   if( results.size() == 1 )
+      ret = results[0]->data;
+   else
+      ret = _block_id_to_block.fetch_by_number(block_num);
+
+   signed_block_with_virtual_operations ret_v(*ret);
+
+   const auto& hist_idx = get_index_type<operation_history_index>();
+   const auto& by_blnum_idx = hist_idx.indices().get<by_blnum>();
+   auto itr = by_blnum_idx.lower_bound( block_num );
+   auto end = by_blnum_idx.upper_bound( block_num );
+
+   while ( itr != end )
+   {
+      int jk = itr->op.which();
+      for(auto vop_id : virtual_op_id_vec)
+      {
+
+         if( jk == vop_id)
+         {
+            ret_v.virtual_operations.push_back(itr->op);
+         }
+      }
+      itr++;
+   }
+
+   return ret_v;
+}
+
 const signed_transaction& database::get_recent_transaction(const transaction_id_type& trx_id) const
 {
    auto& index = get_index_type<transaction_index>().indices().get<by_trx_id>();
@@ -485,10 +518,41 @@ void database::apply_block( const signed_block& next_block, uint32_t skip )
    return;
 }
 
+void database::applied_ops_to_virtual_ops( )
+{
+   for(auto& ooho : _applied_ops)
+   {
+      if(ooho.valid())
+      {
+         operation_history_object& oho = *ooho;
+         if( operation_type_limits::is_virtual_operation(oho.op) )
+         {
+            vector<optional< operation_history_object > >::iterator it = std::find_if(_virtual_ops.begin(),_virtual_ops.end(),
+                  [&oho](optional<operation_history_object > const& e){
+                     return e->virtual_op == oho.virtual_op;
+            });
+
+            if(it == _virtual_ops.end())
+            {
+               _virtual_ops.push_back(ooho);
+            }
+         }
+      }
+   }
+}
+
+vector<optional< operation_history_object > > database::get_virtual_ops_and_clear_collection( )
+{
+   vector<optional< operation_history_object > > ret;
+   std::swap(ret, _virtual_ops);
+   return std::move(ret);
+}
+
 void database::_apply_block( const signed_block& next_block )
 { try {
    uint32_t next_block_num = next_block.block_num();
    uint32_t skip = get_node_properties().skip_flags;
+   applied_ops_to_virtual_ops();
    _applied_ops.clear();
 
    FC_ASSERT( (skip & skip_merkle_check) || next_block.transaction_merkle_root == next_block.calculate_merkle_root(), "", ("next_block.transaction_merkle_root",next_block.transaction_merkle_root)("calc",next_block.calculate_merkle_root())("next_block",next_block)("id",next_block.id()) );

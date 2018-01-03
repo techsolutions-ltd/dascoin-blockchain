@@ -132,7 +132,7 @@ void_result update_witness_evaluator::do_evaluate( const update_witness_operatio
    database& _db = db();
    perform_root_authority_check(_db, op.authority);
 
-   const auto& wit = op.witness(_db);
+   op.witness(_db);
    if(op.witness_account.valid())
    {
       const auto& account_obj = (*op.witness_account)(_db);
@@ -145,7 +145,7 @@ void_result update_witness_evaluator::do_evaluate( const update_witness_operatio
 void_result update_witness_evaluator::do_apply( const update_witness_operation& op )
 { try {
 
-   const auto& new_witness_delegate_data_object = db().create<witness_delegate_data_object>( [&]( witness_delegate_data_object& obj ){
+   db().create<witness_delegate_data_object>( [&]( witness_delegate_data_object& obj ){
 
       update_witness_delegate_data uwdd;
       uwdd.witness = op.witness;
@@ -167,7 +167,7 @@ void_result remove_witness_evaluator::do_evaluate( const remove_witness_operatio
    database& _db = db();
    perform_root_authority_check(_db, op.authority);
 
-   const auto& wit = op.witness(_db);
+   op.witness(_db);
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
@@ -175,7 +175,7 @@ void_result remove_witness_evaluator::do_evaluate( const remove_witness_operatio
 void_result remove_witness_evaluator::do_apply( const remove_witness_operation& op )
 { try {
 
-   const auto& new_witness_delegate_data_object = db().create<witness_delegate_data_object>( [&]( witness_delegate_data_object& obj ){
+   db().create<witness_delegate_data_object>( [&]( witness_delegate_data_object& obj ){
 
       remove_witness_delegate_data rwdd;
       rwdd.witness = op.witness;
@@ -190,7 +190,7 @@ void_result activate_witness_evaluator::do_evaluate( const activate_witness_oper
 { try {
    database& _db = db();
    perform_root_authority_check(_db, op.authority);
-   const auto& wit = op.witness(_db);
+   op.witness(_db);
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
@@ -198,7 +198,7 @@ void_result activate_witness_evaluator::do_evaluate( const activate_witness_oper
 void_result activate_witness_evaluator::do_apply( const activate_witness_operation& op )
 { try {
 
-   const auto& new_witness_delegate_data_object = db().create<witness_delegate_data_object>( [&]( witness_delegate_data_object& obj ){
+   db().create<witness_delegate_data_object>( [&]( witness_delegate_data_object& obj ){
 
       activate_witness_delegate_data awdd;
       awdd.witness = op.witness;
@@ -213,14 +213,14 @@ void_result deactivate_witness_evaluator::do_evaluate( const deactivate_witness_
 { try {
    database& _db = db();
    perform_root_authority_check(_db, op.authority);
-   const auto& wit = op.witness(_db);
+   op.witness(_db);
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
 void_result deactivate_witness_evaluator::do_apply( const deactivate_witness_operation& op )
 { try {
-   const auto& new_witness_delegate_data_object = db().create<witness_delegate_data_object>( [&]( witness_delegate_data_object& obj ){
+   db().create<witness_delegate_data_object>( [&]( witness_delegate_data_object& obj ){
 
       deactivate_witness_delegate_data dwdd;
       dwdd.witness = op.witness;
@@ -232,8 +232,7 @@ void_result deactivate_witness_evaluator::do_apply( const deactivate_witness_ope
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
 void witness_delegate_data_visitor::operator ()(const update_witness_delegate_data& o)
-{
-   try {
+{ try {
       db.modify(
          db.get(o.witness), [&]( witness_object& obj ){
             if(o.witness_account.valid())
@@ -248,23 +247,20 @@ void witness_delegate_data_visitor::operator ()(const update_witness_delegate_da
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
 void witness_delegate_data_visitor::operator ()(const remove_witness_delegate_data& o)
-{
-   try {
+{ try {
       auto& obj = db.get(o.witness);
       db.remove(obj);
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
 void witness_delegate_data_visitor::operator ()(const activate_witness_delegate_data& o)
-{
-   try {
+{ try {
       db.modify(db.get_global_properties(), [&](global_property_object& gpo) {
          gpo.active_witnesses.insert(o.witness);
       });
 } FC_CAPTURE_AND_RETHROW( (o) ) }
 
 void witness_delegate_data_visitor::operator ()(const deactivate_witness_delegate_data& o)
-{
-   try {
+{ try {
       db.modify(db.get_global_properties(), [&](global_property_object& gpo) {
          auto itr = gpo.active_witnesses.find(o.witness);
          if(itr != gpo.active_witnesses.end())

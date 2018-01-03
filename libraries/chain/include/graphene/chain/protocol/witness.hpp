@@ -24,8 +24,8 @@
 #pragma once
 #include <graphene/chain/protocol/base.hpp>
 #include <graphene/db/object.hpp>
-#include <boost/multi_index_container.hpp>
 #include <graphene/db/generic_index.hpp>
+#include <boost/multi_index_container.hpp>
 
 namespace graphene { namespace chain { 
 

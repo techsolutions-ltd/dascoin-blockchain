@@ -119,7 +119,6 @@ node_property_object& database::node_properties()
 
 uint32_t database::last_non_undoable_block_num() const
 {
-   ilog("DEBUG>>> head_block_num = ${hbn} _undo_db.size() = ${uds}", ("hbn",head_block_num())("uds",_undo_db.size()));
    return head_block_num() - _undo_db.size();
 }
 

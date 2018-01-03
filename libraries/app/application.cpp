@@ -825,13 +825,11 @@ namespace detail {
           // true_high_block_num is the ending block number after the network code appends any item ids it
           // knows about that we don't
           uint32_t true_high_block_num = high_block_num + number_of_blocks_after_reference_point;
-          ilog("DEBUG>>> high_block_num = ${hbn}", ("hbn",high_block_num));
           do
           {
             // for each block in the synopsis, figure out where to pull the block id from.
             // if it's <= non_fork_high_block_num, we grab it from the main blockchain;
             // if it's not, we pull it from the fork history
-            ilog("DEBUG>>> low_block_num = ${hbn} true_high_block_num = ${uds}", ("hbn",low_block_num)("uds",true_high_block_num));
             if (low_block_num <= non_fork_high_block_num)
               synopsis.push_back(_chain_db->get_block_id_for_num(low_block_num));
             else

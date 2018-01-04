@@ -260,7 +260,6 @@ BOOST_AUTO_TEST_CASE( update_license_unit_test )
   const share_type bonus_percent = 50;
   share_type frequency_lock = 20;
   const time_point_sec issue_time = db.head_block_time();
-  const uint32_t amount = DASCOIN_BASE_STANDARD_CYCLES + (50 * DASCOIN_BASE_STANDARD_CYCLES) / 100;
   const uint32_t amount_after = DASCOIN_BASE_STANDARD_CYCLES + (40 * DASCOIN_BASE_STANDARD_CYCLES) / 100;
 
   // Issue standard locked license:
@@ -285,6 +284,14 @@ BOOST_AUTO_TEST_CASE( update_license_unit_test )
   BOOST_CHECK_EQUAL( license_record.bonus_percent.value, 40 );
   BOOST_CHECK_EQUAL( license_record.frequency_lock.value, 10 );
   BOOST_CHECK( license_record.activated_at == issue_time + 3600 );
+
+  auto executive_locked = *(_dal.get_license_type("executive_locked"));
+
+  // This ought to fail, this license has not been issued to the vault:
+  GRAPHENE_REQUIRE_THROW( do_op(update_license_operation(get_license_issuer_id(), vault_id, executive_locked.id, 40, 10, issue_time + 3600)), fc::exception );
+
+  // This ought to fail, frequency lock cannot be zero:
+  GRAPHENE_REQUIRE_THROW( do_op(update_license_operation(get_license_issuer_id(), vault_id, standard_locked.id, 30, 0, issue_time + 3600)), fc::exception );
 
 } FC_LOG_AND_RETHROW() }
 

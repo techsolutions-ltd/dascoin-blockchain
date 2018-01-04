@@ -252,6 +252,42 @@ BOOST_AUTO_TEST_CASE( different_license_kinds_unit_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( update_license_unit_test )
+{ try {
+  VAULT_ACTOR(vault);
+
+  auto standard_locked = *(_dal.get_license_type("standard_locked"));
+  const share_type bonus_percent = 50;
+  share_type frequency_lock = 20;
+  const time_point_sec issue_time = db.head_block_time();
+  const uint32_t amount = DASCOIN_BASE_STANDARD_CYCLES + (50 * DASCOIN_BASE_STANDARD_CYCLES) / 100;
+  const uint32_t amount_after = DASCOIN_BASE_STANDARD_CYCLES + (40 * DASCOIN_BASE_STANDARD_CYCLES) / 100;
+
+  // Issue standard locked license:
+  do_op(issue_license_operation(get_license_issuer_id(), vault_id, standard_locked.id,
+                                bonus_percent, frequency_lock, issue_time));
+
+  do_op(update_license_operation(get_license_issuer_id(), vault_id, standard_locked.id, 40, 10, issue_time + 3600));
+
+  const auto& license_information_obj = (*vault.license_information)(db);
+
+  BOOST_CHECK( license_information_obj.account == vault_id );
+
+  const auto& license_history = license_information_obj.history;
+
+  BOOST_CHECK_EQUAL( license_history.size(), 1 );
+
+  const auto& license_record = license_history[0];
+
+  BOOST_CHECK( license_record.license == standard_locked.id );
+  BOOST_CHECK_EQUAL( license_record.amount.value, amount_after );
+  BOOST_CHECK_EQUAL( license_record.base_amount.value, DASCOIN_BASE_STANDARD_CYCLES );
+  BOOST_CHECK_EQUAL( license_record.bonus_percent.value, 40 );
+  BOOST_CHECK_EQUAL( license_record.frequency_lock.value, 10 );
+  BOOST_CHECK( license_record.activated_at == issue_time + 3600 );
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

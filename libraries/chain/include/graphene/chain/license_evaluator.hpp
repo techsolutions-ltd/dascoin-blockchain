@@ -47,4 +47,17 @@ private:
   license_kind _license_kind;
 };
 
+class update_license_evaluator : public evaluator<update_license_evaluator>
+{
+public:
+  typedef update_license_operation operation_type;
+
+  void_result do_evaluate(const operation_type& op);
+  void_result do_apply(const operation_type& op);
+
+private:
+  const license_information_object* _license_information_obj = nullptr;
+  uint32_t _index;
+};
+
 } } // graphene::chain

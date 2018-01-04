@@ -201,4 +201,78 @@ object_id_type issue_license_evaluator::do_apply(const issue_license_operation& 
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
+void_result update_license_evaluator::do_evaluate(const operation_type& op)
+{ try {
+
+  const auto& d = db();
+  const auto issuer_id = d.get_chain_authorities().license_issuer;
+  const auto op_authority_obj = op.authority(d);
+
+  d.perform_chain_authority_check("license issuing", issuer_id, op_authority_obj);
+
+  const auto& account_obj = op.account(d);
+  const auto& license_obj = op.license(d);
+
+  FC_ASSERT( account_obj.is_vault(),
+             "Account '${n}' is not a vault account",
+             ("n", account_obj.name)
+           );
+
+  if ( op.frequency_lock.valid() )
+  {
+    FC_ASSERT( *(op.frequency_lock) != 0,
+               "Cannot update license ${l_n} on account ${a}, frequency lock cannot be zero",
+               ("l_n", license_obj.name)
+               ("a", account_obj.name)
+             );
+  }
+
+  FC_ASSERT ( account_obj.license_information.valid(),
+              "Cannot update a license on an account which doesn't have an issued license" );
+
+  const auto& license_information_obj = (*account_obj.license_information)(d);
+
+  bool found = false;
+  for (uint32_t i = 0; i < license_information_obj.history.size(); ++i)
+  {
+    if (license_information_obj.history[i].license == op.license)
+    {
+      found = true;
+      _index = i;
+      break;
+    }
+  }
+
+  FC_ASSERT( found,
+             "Cannot update license of type '${type}' on account ${a} because that license hasn't been issued",
+             ("type", op.license)
+             ("a", account_obj.name)
+           );
+
+  _license_information_obj = &license_information_obj;
+
+  return {};
+
+} FC_CAPTURE_AND_RETHROW( (op) ) }
+
+void_result update_license_evaluator::do_apply(const operation_type& op)
+{ try {
+  auto& d = db();
+
+  d.modify(*_license_information_obj, [op, this](license_information_object &obj) {
+    if (op.frequency_lock.valid())
+      obj.history[_index].frequency_lock = *(op.frequency_lock);
+    if (op.bonus_percentage.valid())
+    {
+      obj.history[_index].bonus_percent = *(op.bonus_percentage);
+      obj.history[_index].amount = detail::apply_percentage(obj.history[_index].base_amount, *(op.bonus_percentage));
+    }
+    if (op.activated_at.valid())
+      obj.history[_index].activated_at = *(op.activated_at);
+  });
+
+  return {};
+
+} FC_CAPTURE_AND_RETHROW( (op) ) }
+
 } } // namespace graphene::chain

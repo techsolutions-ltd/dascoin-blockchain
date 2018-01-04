@@ -239,6 +239,7 @@ void database::initialize_evaluators()
    register_evaluator<edit_license_type_evaluator>();
    register_evaluator<update_euro_limit_evaluator>();
    register_evaluator<submit_cycles_to_queue_by_license_evaluator>();
+   register_evaluator<update_license_evaluator>();
 }
 
 void database::initialize_indexes()

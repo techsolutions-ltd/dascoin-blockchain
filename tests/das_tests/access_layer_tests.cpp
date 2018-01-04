@@ -637,10 +637,14 @@ BOOST_AUTO_TEST_CASE( get_block_with_virtual_operations )
     vector<signed_block_with_virtual_operations_and_num> results;
 
     vector<uint16_t> virtual_op_ids;
-    virtual_op_ids.push_back(69);
-    virtual_op_ids.push_back(64);
+    operation opad = record_distribute_dascoin_operation();
+    operation opfo = fill_order_operation();
+
+    virtual_op_ids.push_back(opfo.which());
+    virtual_op_ids.push_back(opad.which());
     // Starting from block #2, fetch the following 20 blocks:
     results = _dal.get_blocks_with_virtual_operations(1, 20,virtual_op_ids);
+
 
     int count_vops = 0;
     for(auto& blc : results)
@@ -650,7 +654,7 @@ BOOST_AUTO_TEST_CASE( get_block_with_virtual_operations )
            for(operation& op : blc.block.virtual_operations)
            {
               count_vops++;
-              BOOST_CHECK( (op.which() == 69 || op.which() == 64) );
+              BOOST_CHECK( (op.which() == opfo.which() || op.which() == opad.which()) );
 
 //              string s = fc::json::to_string( op );
 //              std::cout << s;

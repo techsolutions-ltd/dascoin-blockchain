@@ -97,6 +97,7 @@ namespace detail {
             initial_state.initial_parameters.block_interval);
 
       auto master_key = make_account("sys.master");
+      initial_state.initial_root_authority = {"sys.master"};
 
       // Initial witness accounts:
       for( uint64_t i = 0; i < initial_state.initial_active_witnesses; ++i )

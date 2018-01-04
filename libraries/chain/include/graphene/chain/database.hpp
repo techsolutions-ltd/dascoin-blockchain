@@ -248,6 +248,8 @@ namespace graphene { namespace chain {
           */
          uint32_t get_slot_at_time(fc::time_point_sec when)const;
 
+         void update_witnesses();
+         void update_witness_schedule_impl(const witness_schedule_object& wso, const global_property_object& gpo);
          void update_witness_schedule();
 
          //////////////////// db_getter.cpp ////////////////////
@@ -700,6 +702,7 @@ private:
          node_property_object              _node_property_object;
 
          transaction_evaluation_state      _genesis_eval_state;
+
    };
 
    namespace detail

@@ -144,6 +144,7 @@ namespace graphene { namespace chain {
             submit_cycles_to_queue_by_license_operation,
 
             issue_cycles_to_license_operation,
+            update_license_operation,
 
             // Virtual operations below this point:
 

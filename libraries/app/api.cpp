@@ -391,6 +391,8 @@ namespace graphene { namespace app {
                   break;
                  case impl_frequency_history_record_object_type:
                   break;
+                 case impl_witness_delegate_data_colection_object_type:
+                  break;
           }
        }
        return result;

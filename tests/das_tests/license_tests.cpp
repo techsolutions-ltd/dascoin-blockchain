@@ -260,13 +260,13 @@ BOOST_AUTO_TEST_CASE( update_license_unit_test )
   const share_type bonus_percent = 50;
   share_type frequency_lock = 20;
   const time_point_sec issue_time = db.head_block_time();
-  const uint32_t amount_after = DASCOIN_BASE_STANDARD_CYCLES + (40 * DASCOIN_BASE_STANDARD_CYCLES) / 100;
+  const uint32_t amount_after = DASCOIN_BASE_STANDARD_CYCLES + (55 * DASCOIN_BASE_STANDARD_CYCLES) / 100;
 
   // Issue standard locked license:
   do_op(issue_license_operation(get_license_issuer_id(), vault_id, standard_locked.id,
                                 bonus_percent, frequency_lock, issue_time));
 
-  do_op(update_license_operation(get_license_issuer_id(), vault_id, standard_locked.id, 40, 10, issue_time + 3600));
+  do_op(update_license_operation(get_license_issuer_id(), vault_id, standard_locked.id, 55, 10, issue_time + 3600));
 
   const auto& license_information_obj = (*vault.license_information)(db);
 
@@ -281,7 +281,7 @@ BOOST_AUTO_TEST_CASE( update_license_unit_test )
   BOOST_CHECK( license_record.license == standard_locked.id );
   BOOST_CHECK_EQUAL( license_record.amount.value, amount_after );
   BOOST_CHECK_EQUAL( license_record.base_amount.value, DASCOIN_BASE_STANDARD_CYCLES );
-  BOOST_CHECK_EQUAL( license_record.bonus_percent.value, 40 );
+  BOOST_CHECK_EQUAL( license_record.bonus_percent.value, 55 );
   BOOST_CHECK_EQUAL( license_record.frequency_lock.value, 10 );
   BOOST_CHECK( license_record.activated_at == issue_time + 3600 );
 
@@ -291,7 +291,10 @@ BOOST_AUTO_TEST_CASE( update_license_unit_test )
   GRAPHENE_REQUIRE_THROW( do_op(update_license_operation(get_license_issuer_id(), vault_id, executive_locked.id, 40, 10, issue_time + 3600)), fc::exception );
 
   // This ought to fail, frequency lock cannot be zero:
-  GRAPHENE_REQUIRE_THROW( do_op(update_license_operation(get_license_issuer_id(), vault_id, standard_locked.id, 30, 0, issue_time + 3600)), fc::exception );
+  GRAPHENE_REQUIRE_THROW( do_op(update_license_operation(get_license_issuer_id(), vault_id, standard_locked.id, 40, 0, issue_time + 3600)), fc::exception );
+
+  // This ought to fail, bonus percentage cannot be decreased:
+  GRAPHENE_REQUIRE_THROW( do_op(update_license_operation(get_license_issuer_id(), vault_id, standard_locked.id, 30, 10, issue_time + 3600)), fc::exception );
 
 } FC_LOG_AND_RETHROW() }
 

@@ -277,6 +277,7 @@ BOOST_AUTO_TEST_CASE( update_license_unit_test )
   BOOST_CHECK_EQUAL( license_history.size(), 1 );
 
   const auto& license_record = license_history[0];
+  auto res = _dal.get_vault_info(vault_id);
 
   BOOST_CHECK( license_record.license == standard_locked.id );
   BOOST_CHECK_EQUAL( license_record.amount.value, amount_after );
@@ -284,6 +285,7 @@ BOOST_AUTO_TEST_CASE( update_license_unit_test )
   BOOST_CHECK_EQUAL( license_record.bonus_percent.value, 55 );
   BOOST_CHECK_EQUAL( license_record.frequency_lock.value, 10 );
   BOOST_CHECK( license_record.activated_at == issue_time + 3600 );
+  BOOST_CHECK_EQUAL( res->free_cycle_balance.value, amount_after );
 
   auto executive_locked = *(_dal.get_license_type("executive_locked"));
 

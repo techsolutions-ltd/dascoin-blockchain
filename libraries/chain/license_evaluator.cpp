@@ -249,6 +249,16 @@ void_result update_license_evaluator::do_evaluate(const operation_type& op)
              ("a", account_obj.name)
            );
 
+  if ( op.bonus_percentage.valid() )
+  {
+    FC_ASSERT ( license_information_obj.history[_index].bonus_percent <= *(op.bonus_percentage),
+                "Cannot update license of type '${type}' on account ${a} because bonus percentage cannot be decreased (now is ${percentage})",
+                ("type", op.license)
+                ("a", account_obj.name)
+                ("percentage", license_information_obj.history[_index].bonus_percent)
+              );
+  }
+
   _license_information_obj = &license_information_obj;
 
   return {};

@@ -237,8 +237,7 @@ void_result issue_cycles_to_license_evaluator::do_apply(const operation_type& op
   }
   else if ( _kind == license_kind::chartered || _kind == license_kind::promo )
   {
-    auto origin = fc::reflector<dascoin_origin_kind>::to_string(charter_license);
-    d.push_queue_submission(origin, {op.license}, op.account, op.amount, _frequency_lock, op.comment);
+    d.push_queue_submission(op.origin, {op.license}, op.account, op.amount, _frequency_lock, op.comment);
     // TODO: should we use a virtual op here?
     d.push_applied_operation(
             record_submit_charter_license_cycles_operation(op.authority, op.account, op.amount, _frequency_lock)

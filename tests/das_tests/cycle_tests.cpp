@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE( issue_cycles_to_license_test )
   BOOST_CHECK_EQUAL( license_record.base_amount.value, DASCOIN_BASE_STANDARD_CYCLES );
 
   // Issue 200 cycles:
-  do_op(issue_cycles_to_license_operation(get_cycle_issuer_id(), vault_id, standard_locked.id, 200, "", ""));
+  do_op(issue_cycles_to_license_operation(get_cycle_issuer_id(), vault_id, standard_locked.id, 200, "foo", "bar"));
 
   const auto& license_information_obj2 = (*vault.license_information)(db);
   const auto& license_history2 = license_information_obj2.history;
@@ -80,12 +80,22 @@ BOOST_AUTO_TEST_CASE( issue_cycles_to_license_test )
                                 10, 200, db.head_block_time()));
 
   toggle_reward_queue(true);
+
   generate_blocks(db.head_block_time() + fc::hours(24));
 
   BOOST_CHECK_EQUAL( get_balance(charter_id, get_dascoin_asset_id()), 605 * DASCOIN_DEFAULT_ASSET_PRECISION );
 
   // Issue 200 cycles to charter vault:
-  do_op(issue_cycles_to_license_operation(get_cycle_issuer_id(), charter_id, lic_typ.id, 200, "", ""));
+  do_op(issue_cycles_to_license_operation(get_cycle_issuer_id(), charter_id, lic_typ.id, 200, "foo", "bar"));
+
+  auto result_vec = *_dal.get_queue_submissions_with_pos(charter_id).result;
+  BOOST_CHECK_EQUAL( result_vec.size(), 1 );
+
+  BOOST_CHECK_EQUAL( result_vec[0].position, 0 );
+
+  auto rqo = result_vec[0].submission;
+  BOOST_CHECK_EQUAL( rqo.origin, "foo" );
+  BOOST_CHECK_EQUAL( rqo.comment, "bar" );
 
   generate_blocks(db.head_block_time() + fc::hours(24));
 

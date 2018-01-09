@@ -75,4 +75,18 @@ namespace graphene { namespace chain {
       const account_cycle_balance_object* _cycle_balance_obj = nullptr;
   };
 
+  class issue_cycles_to_license_evaluator : public evaluator<issue_cycles_to_license_evaluator>
+  {
+  public:
+    typedef issue_cycles_to_license_operation operation_type;
+
+    void_result do_evaluate(const operation_type& op);
+    void_result do_apply(const operation_type& op);
+
+  private:
+    const license_information_object* _license_information_obj = nullptr;
+    license_kind _kind;
+    frequency_type _frequency_lock;
+  };
+
 } }  // namespace graphene::chain

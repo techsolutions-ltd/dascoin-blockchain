@@ -194,7 +194,7 @@ object_id_type issue_license_evaluator::do_apply(const issue_license_operation& 
   const auto limit = d.get_dascoin_limit(*_account_obj, dgpo.last_daily_dascoin_price);
   if (limit.valid())
   {
-      d.adjust_balance_limit(*_account_obj, d.get_dascoin_asset_id(), *limit);
+    d.adjust_balance_limit(*_account_obj, d.get_dascoin_asset_id(), *limit);
   }
 
   return lic_info_id;

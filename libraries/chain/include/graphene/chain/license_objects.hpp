@@ -29,7 +29,7 @@ namespace graphene { namespace chain {
       {
         if (p == standard)
           return policy_class::get_amount_to_upgrade(upgradeable);
-        return policy_class::get_amount_to_upgrade_predident(upgradeable);
+        return policy_class::get_amount_to_upgrade_president(upgradeable);
       }
 
     private:
@@ -40,7 +40,7 @@ namespace graphene { namespace chain {
       }
 
       template<typename T>
-      static share_type get_amount_to_upgrade_predident(const T& upgradeable)
+      static share_type get_amount_to_upgrade_president(const T& upgradeable)
       {
         return upgradeable.base_amount + upgradeable.base_amount * upgradeable.bonus_percent / 100;
       }

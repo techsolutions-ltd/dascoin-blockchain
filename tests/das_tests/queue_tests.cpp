@@ -335,6 +335,21 @@ BOOST_AUTO_TEST_CASE( submit_cycles_to_queue_by_license_operation_test )
   const auto& balance2 = get_cycle_balance(vault_id);
   BOOST_CHECK_EQUAL( balance2.value, remaining_cycles - 1000 );
 
+  // Issue 200 cycles:
+  do_op(issue_cycles_to_license_operation(get_cycle_issuer_id(), vault_id, manager_locked.id, 200, "foo", "bar"));
+
+  // Submit 100:
+  do_op(submit_cycles_to_queue_by_license_operation(vault_id, 100, manager_locked.id, 200, "TEST"));
+
+  const auto& license_information_obj3 = (*vault.license_information)(db);
+  const auto& license_history3 = license_information_obj3.history;
+  const auto& license_record3 = license_history3[0];
+
+  // Cycles are first submitted from non_upgradeable_amount:
+  BOOST_CHECK_EQUAL( license_record3.non_upgradeable_amount.value, 100 );
+  const auto& balance3 = get_cycle_balance(vault_id);
+  BOOST_CHECK_EQUAL( balance3.value, remaining_cycles - 900 );
+
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_CASE( submit_cycles_to_queue_operation_test )

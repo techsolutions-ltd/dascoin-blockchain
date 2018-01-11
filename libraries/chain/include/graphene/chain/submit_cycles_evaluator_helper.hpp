@@ -41,7 +41,7 @@ namespace graphene { namespace chain { namespace detail {
                );
 
       // Assure we have enough funds to submit:
-      FC_ASSERT( license->amount >= op.amount,
+      FC_ASSERT( license->total_cycles() >= op.amount,
                  "Cannot submit ${am} cycles, account '${n}' license cycle balance is ${b}",
                  ("am", op.amount)
                  ("n", account_obj.name)

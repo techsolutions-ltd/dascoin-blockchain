@@ -74,7 +74,11 @@ BOOST_AUTO_TEST_CASE( issue_cycles_to_license_test )
   const auto& license_history2 = license_information_obj2.history;
   const auto& license_record2 = license_history2[0];
 
-  BOOST_CHECK_EQUAL( license_record2.amount.value, amount + 200 );
+  // Total cycles should be increased by 200:
+  BOOST_CHECK_EQUAL( license_record2.total_cycles().value, amount + 200 );
+
+  // But in fact non_upgradeable_amount is 200:
+  BOOST_CHECK_EQUAL( license_record2.non_upgradeable_amount.value, 200 );
 
   do_op(issue_license_operation(get_license_issuer_id(), charter_id, lic_typ.id,
                                 10, 200, db.head_block_time()));

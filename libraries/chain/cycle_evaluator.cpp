@@ -245,7 +245,7 @@ void_result issue_cycles_to_license_evaluator::do_apply(const operation_type& op
   }
 
   d.modify(*_license_information_obj, [&](license_information_object& lio) {
-    lio.add_cycles(op.license, op.amount);
+    lio.add_non_upgradeable_cycles(op.license, op.amount);
   });
 
   return {};

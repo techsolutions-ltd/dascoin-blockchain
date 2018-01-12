@@ -52,4 +52,11 @@ void issue_free_cycles_operation::validate() const
   FC_ASSERT( comment.length() <= DASCOIN_MAX_COMMENT_LENGTH );
 }
 
+void issue_cycles_to_license_operation::validate() const
+{
+  FC_ASSERT( amount > 0 );
+  FC_ASSERT( origin.length() <= DASCOIN_MAX_COMMENT_LENGTH );
+  FC_ASSERT( comment.length() <= DASCOIN_MAX_COMMENT_LENGTH );
+}
+
 } } // namespace graphene::chain

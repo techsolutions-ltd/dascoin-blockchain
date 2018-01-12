@@ -25,6 +25,7 @@ namespace graphene { namespace chain {
         share_type amount;
         share_type base_amount;
         share_type bonus_percent;
+        share_type non_upgradeable_amount = 0;
         frequency_type frequency_lock;
         time_point_sec activated_at;
         time_point_sec issued_on_blockchain;
@@ -44,6 +45,11 @@ namespace graphene { namespace chain {
               frequency_lock(frequency_lock),
               activated_at(activated_at),
               issued_on_blockchain(issued_on_blockchain) {}
+
+        share_type total_cycles() const
+        {
+          return amount + non_upgradeable_amount;
+        }
       };
       typedef vector<license_history_record> array_t;
 
@@ -70,13 +76,34 @@ namespace graphene { namespace chain {
 
       void subtract_cycles(license_type_id_type license_type, const share_type& amount)
       {
-        auto found = find_if(history.begin(), history.end(), [license_type](const license_history_record& record){
+        auto found = find_if(history.begin(), history.end(), [license_type](const license_history_record& record) {
           return record.license == license_type;
         });
         if (found != history.end())
         {
-          FC_ASSERT( found->amount >= amount, "Insufficient cycle balance" );
-          found->amount -= amount;
+          FC_ASSERT( found->total_cycles() >= amount, "Insufficient cycle balance" );
+          if (found->non_upgradeable_amount >= amount)
+          {
+            found->non_upgradeable_amount -= amount;
+          }
+          else
+          {
+            share_type tmp = amount;
+            tmp -= found->non_upgradeable_amount;
+            found->non_upgradeable_amount = 0;
+            found->amount -= tmp;
+          }
+        }
+      }
+
+      void add_non_upgradeable_cycles(license_type_id_type license_type, const share_type& amount)
+      {
+        auto found = find_if(history.begin(), history.end(), [license_type](const license_history_record& record) {
+          return record.license == license_type;
+        });
+        if (found != history.end())
+        {
+          found->non_upgradeable_amount += amount;
         }
       }
 
@@ -211,6 +238,7 @@ FC_REFLECT( graphene::chain::license_information_object::license_history_record,
             (amount)
             (base_amount)
             (bonus_percent)
+            (non_upgradeable_amount)
             (frequency_lock)
             (activated_at)
             (issued_on_blockchain)

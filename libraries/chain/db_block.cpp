@@ -598,6 +598,7 @@ void database::_apply_block( const signed_block& next_block )
    // update_global_dynamic_data() as perhaps these methods only need
    // to be called for header validation?
    update_maintenance_flag( maint_needed );
+   update_witnesses();
    update_witness_schedule();
 
    reset_spending_limits();

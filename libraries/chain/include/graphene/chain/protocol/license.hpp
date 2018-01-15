@@ -125,6 +125,46 @@ namespace graphene { namespace chain {
     share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
 
+   /**
+    * @brief Update a license issued to an account
+    * @ingroup operations
+    *
+    * Update a license issued to an account. This operation must be signed by the current license_issuer authority.
+   */
+  struct update_license_operation : public base_operation
+  {
+    struct fee_parameters_type {};  // No fees are paid for this operation.
+
+    asset fee;
+    account_id_type authority;
+
+    account_id_type account;                  // The account to update the license.
+    license_type_id_type license;             // The license to be updated.
+    optional<share_type> bonus_percentage;    // Optional bonus multiplier of base license cycles.
+    optional<frequency_type> frequency_lock;  // Optional frequency lock on this license, zero for none.
+    optional<time_point_sec> activated_at;    // Optional Time point of activation.
+
+    extensions_type extensions;
+
+    update_license_operation() = default;
+    explicit update_license_operation(account_id_type authority,
+                                     account_id_type account,
+                                     license_type_id_type license,
+                                     optional<share_type> bonus_percentage,
+                                     optional<frequency_type> frequency_lock,
+                                     optional<time_point_sec> activated_at)
+        : authority(authority),
+          account(account),
+          license(license),
+          bonus_percentage(bonus_percentage),
+          frequency_lock(frequency_lock),
+          activated_at(activated_at) {}
+
+    account_id_type fee_payer() const { return authority; }
+    void validate() const;
+    share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+  };
+
 } }  // namespace graphene::chain
 
 ///////////////////////////////
@@ -165,3 +205,15 @@ FC_REFLECT( graphene::chain::issue_license_operation,
             (activated_at)
             (extensions)
           )
+
+FC_REFLECT( graphene::chain::update_license_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::update_license_operation,
+            (fee)
+            (authority)
+            (account)
+            (license)
+            (bonus_percentage)
+            (frequency_lock)
+            (activated_at)
+            (extensions)
+)

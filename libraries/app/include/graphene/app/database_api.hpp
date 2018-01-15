@@ -568,21 +568,6 @@ class database_api
        */
       vector<worker_object> get_workers_by_account(account_id_type account)const;
 
-
-      ///////////
-      // Votes //
-      ///////////
-
-      /**
-       *  @brief Given a set of votes, return the objects they are voting for.
-       *
-       *  This will be a mixture of committee_member_object, witness_objects, and worker_objects
-       *
-       *  The results will be in the same order as the votes.  Null will be returned for
-       *  any vote ids that are not found.
-       */
-      vector<variant> lookup_vote_ids( const vector<vote_id_type>& votes )const;
-
       ////////////////////////////
       // Authority / validation //
       ////////////////////////////
@@ -845,8 +830,6 @@ FC_API( graphene::app::database_api,
 
    // workers
    (get_workers_by_account)
-   // Votes
-   (lookup_vote_ids)
 
    // Authority / validation
    (get_transaction_hex)

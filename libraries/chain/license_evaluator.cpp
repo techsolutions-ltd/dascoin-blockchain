@@ -196,10 +196,96 @@ object_id_type issue_license_evaluator::do_apply(const issue_license_operation& 
   const auto limit = d.get_dascoin_limit(*_account_obj, dgpo.last_daily_dascoin_price);
   if (limit.valid())
   {
-      d.adjust_balance_limit(*_account_obj, d.get_dascoin_asset_id(), *limit);
+    d.adjust_balance_limit(*_account_obj, d.get_dascoin_asset_id(), *limit);
   }
 
   return lic_info_id;
+
+} FC_CAPTURE_AND_RETHROW( (op) ) }
+
+void_result update_license_evaluator::do_evaluate(const operation_type& op)
+{ try {
+
+  const auto& d = db();
+  const auto issuer_id = d.get_chain_authorities().license_issuer;
+  const auto op_authority_obj = op.authority(d);
+
+  d.perform_chain_authority_check("license issuing", issuer_id, op_authority_obj);
+
+  const auto& account_obj = op.account(d);
+  const auto& license_obj = op.license(d);
+
+  FC_ASSERT( account_obj.is_vault(),
+             "Account '${n}' is not a vault account",
+             ("n", account_obj.name)
+           );
+
+  if ( op.frequency_lock.valid() )
+  {
+    FC_ASSERT( *(op.frequency_lock) != 0,
+               "Cannot update license ${l_n} on account ${a}, frequency lock cannot be zero",
+               ("l_n", license_obj.name)
+               ("a", account_obj.name)
+             );
+  }
+
+  FC_ASSERT ( account_obj.license_information.valid(),
+              "Cannot update a license on an account which doesn't have an issued license" );
+
+  const auto& license_information_obj = (*account_obj.license_information)(d);
+
+  bool found = false;
+  for (uint32_t i = 0; i < license_information_obj.history.size(); ++i)
+  {
+    if (license_information_obj.history[i].license == op.license)
+    {
+      found = true;
+      _index = i;
+      break;
+    }
+  }
+
+  FC_ASSERT( found,
+             "Cannot update license of type '${type}' on account ${a} because that license hasn't been issued",
+             ("type", op.license)
+             ("a", account_obj.name)
+           );
+
+  if ( op.bonus_percentage.valid() )
+  {
+    FC_ASSERT ( license_information_obj.history[_index].bonus_percent <= *(op.bonus_percentage),
+                "Cannot update license of type '${type}' on account ${a} because bonus percentage cannot be decreased (now is ${percentage})",
+                ("type", op.license)
+                ("a", account_obj.name)
+                ("percentage", license_information_obj.history[_index].bonus_percent)
+              );
+  }
+
+  _license_information_obj = &license_information_obj;
+
+  return {};
+
+} FC_CAPTURE_AND_RETHROW( (op) ) }
+
+void_result update_license_evaluator::do_apply(const operation_type& op)
+{ try {
+  auto& d = db();
+
+  d.modify(*_license_information_obj, [op, &d, this](license_information_object &obj) {
+    if (op.frequency_lock.valid())
+      obj.history[_index].frequency_lock = *(op.frequency_lock);
+    if (op.bonus_percentage.valid())
+    {
+      const auto old_amount = obj.history[_index].amount;
+      obj.history[_index].bonus_percent = *(op.bonus_percentage);
+      obj.history[_index].amount = detail::apply_percentage(obj.history[_index].base_amount, *(op.bonus_percentage));
+      d.issue_cycles(op.account, obj.history[_index].amount - old_amount);
+    }
+    if (op.activated_at.valid())
+      obj.history[_index].activated_at = *(op.activated_at);
+  });
+
+  return {};
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 

@@ -147,8 +147,17 @@ namespace graphene { namespace chain {
             create_upgrade_event_operation,
             update_upgrade_event_operation,
             delete_upgrade_event_operation,
+            update_license_operation,
+            issue_cycles_to_license_operation,
 
             // Virtual operations below this point:
+
+            remove_root_authority_operation,
+            create_witness_operation,
+            update_witness_operation,
+            remove_witness_operation,
+            activate_witness_operation,
+            deactivate_witness_operation,
 
             record_submit_reserve_cycles_to_queue_operation,  // TODO: should we keep this op?
             record_submit_charter_license_cycles_operation,  // TODO: should we keep this op?

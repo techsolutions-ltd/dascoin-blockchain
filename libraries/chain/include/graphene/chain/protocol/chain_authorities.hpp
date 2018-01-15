@@ -12,6 +12,7 @@ namespace graphene { namespace chain {
 
   struct chain_authorities : public linkable_struct<account_id_type>
   {
+    account_id_type root_administrator;
     // License related:
     account_id_type license_administrator;
     account_id_type license_issuer;
@@ -30,6 +31,7 @@ namespace graphene { namespace chain {
     account_id_type wire_out_handler;
 
     LINK_ENUM_TO_FIELDS( chain_authority_kind,
+                         (root_administrator)
                          (license_administrator)
                          (license_issuer)
                          (license_authenticator)
@@ -47,6 +49,7 @@ namespace graphene { namespace chain {
 } } // namespace graphene::chain
 
 FC_REFLECT( graphene::chain::chain_authorities,
+            (root_administrator)
             (license_administrator)
             (license_issuer)
             (license_authenticator)

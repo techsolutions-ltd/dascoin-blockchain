@@ -137,6 +137,7 @@ struct genesis_state_type {
    /**
     * Initial chain authorities.
     */
+   initial_chain_authority_type             initial_root_authority;
    initial_chain_authority_type             initial_license_administration_authority;
    initial_chain_authority_type             initial_license_issuing_authority;
    initial_chain_authority_type             initial_license_authentication_authority;
@@ -259,6 +260,7 @@ FC_REFLECT( graphene::chain::genesis_state_type,
             (initial_committee_candidates)
             (initial_worker_candidates)
             (historic_upgrade_events)
+            (initial_root_authority)
             (initial_license_administration_authority)
             (initial_license_issuing_authority)
             (initial_license_authentication_authority)

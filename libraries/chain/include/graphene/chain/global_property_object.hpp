@@ -162,6 +162,12 @@ namespace graphene { namespace chain {
           */
          price last_daily_dascoin_price;
 
+         /**
+          * This flag is used for enabling use of root authority
+          * which is used for granting operation for adding multiple master nodes.
+          */
+         bool is_root_authority_enabled_flag = true;
+
          enum dynamic_flag_bits
          {
             /**
@@ -201,6 +207,7 @@ FC_REFLECT_DERIVED( graphene::chain::dynamic_global_property_object, (graphene::
                     (last_irreversible_block_num)
                     (next_dascoin_reward_time)
                     (next_spend_limit_reset)
+                    (is_root_authority_enabled_flag)
                     (last_dascoin_price)
                   )
 

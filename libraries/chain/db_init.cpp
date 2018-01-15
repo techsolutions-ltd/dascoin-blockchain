@@ -205,6 +205,12 @@ void database::initialize_evaluators()
    register_evaluator<proposal_delete_evaluator>();
    register_evaluator<vesting_balance_create_evaluator>();
    register_evaluator<vesting_balance_withdraw_evaluator>();
+   register_evaluator<remove_root_authority_evaluator>();
+   register_evaluator<create_witness_evaluator>();
+   register_evaluator<update_witness_evaluator>();
+   register_evaluator<remove_witness_evaluator>();
+   register_evaluator<activate_witness_evaluator>();
+   register_evaluator<deactivate_witness_evaluator>();
    register_evaluator<witness_create_evaluator>();
    register_evaluator<witness_update_evaluator>();
    register_evaluator<withdraw_permission_create_evaluator>();
@@ -241,6 +247,8 @@ void database::initialize_evaluators()
    register_evaluator<create_upgrade_event_evaluator>();
    register_evaluator<update_upgrade_event_evaluator>();
    register_evaluator<delete_upgrade_event_evaluator>();
+   register_evaluator<update_license_evaluator>();
+   register_evaluator<issue_cycles_to_license_evaluator>();
 }
 
 void database::initialize_indexes()
@@ -296,6 +304,7 @@ void database::initialize_indexes()
    add_index<primary_index<license_information_index>>();
    add_index<primary_index<issued_asset_record_index>>();
    add_index<primary_index<frequency_history_record_index>>();
+   add_index<primary_index< witness_delegate_data_index > >();
 }
 
 account_id_type database::initialize_chain_authority(const string& kind_name, const string& acc_name)
@@ -778,6 +787,8 @@ void database::init_genesis(const genesis_state_type& genesis_state)
 
        apply_operation(_genesis_eval_state, std::move(op));
    });
+
+   initialize_chain_authority("root_administrator", genesis_state.initial_root_authority.owner_name);
 
    initialize_chain_authority("license_administrator", genesis_state.initial_license_administration_authority.owner_name);
    initialize_chain_authority("license_issuer", genesis_state.initial_license_issuing_authority.owner_name);

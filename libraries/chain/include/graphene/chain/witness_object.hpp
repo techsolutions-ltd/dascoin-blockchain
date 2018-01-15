@@ -61,10 +61,10 @@ namespace graphene { namespace chain {
          >,
          ordered_unique< tag<by_account>,
             member<witness_object, account_id_type, &witness_object::witness_account>
-         >,
-         ordered_unique< tag<by_vote_id>,
-            member<witness_object, vote_id_type, &witness_object::vote_id>
          >
+//         ordered_unique< tag<by_vote_id>,
+//            member<witness_object, vote_id_type, &witness_object::vote_id>
+//         >
       >
    >;
    using witness_index = generic_index<witness_object, witness_multi_index_type>;

@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.2.7] - 2017-12-21
+### Added
+ - Query to get trade history by sequence
+
+### Updated
+ - Fill order now keeps track of match price (should prevent 0 price seen on
+   the chart, this was cherry picked from bitshares PR-455)
+ - get_24_hi_low_volume will now use all trades made in the same block,
+   not only the first 100
+
 ## [0.2.6] - 2017-11-22
 ### Added
  - Added 'history-trade-ticks-size' (max tracked trade ticks) to market-history-plugin config

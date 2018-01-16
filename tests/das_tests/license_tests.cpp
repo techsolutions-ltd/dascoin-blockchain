@@ -676,6 +676,9 @@ BOOST_AUTO_TEST_CASE( upgrade_executed_test )
                                        activated_time + fc::hours(72),
                                        {{dgpo.next_maintenance_time + 4 * gpo.parameters.maintenance_interval}}, "foo_upgrade"));
 
+  // Issue 200 cycles to foo, those should not be upgraded:
+  do_op(issue_cycles_to_license_operation(get_cycle_issuer_id(), foo_id, standard_locked.id, 200, "foo", "bar"));
+
   generate_blocks(activated_time + fc::hours(48));
 
   BOOST_CHECK_EQUAL( get_cycle_balance(foo_id).value, 2 * DASCOIN_BASE_STANDARD_CYCLES );

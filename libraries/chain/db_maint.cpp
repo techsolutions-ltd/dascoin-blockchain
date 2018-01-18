@@ -764,6 +764,8 @@ void database::perform_upgrades(const account_object& account, const upgrade_eve
 
    if (update_balance)
    {
+      // Apply the upgrade operation and modify cycle balance:
+      push_applied_operation(upgrade_account_cycles_operation{account.id});
       modify(cycle_balance_obj, [&](account_cycle_balance_object& acb){
         acb.balance = new_balance;
       });
@@ -772,9 +774,6 @@ void database::perform_upgrades(const account_object& account, const upgrade_eve
    // Second, perform the requeue upgrades:
 
    // Third, perform the return upgrades:
-
-   // Last, apply the upgrade operation:
-   push_applied_operation(upgrade_account_cycles_operation{account.id});
 }
 
 void database::perform_upgrades()

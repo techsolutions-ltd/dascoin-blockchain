@@ -762,7 +762,7 @@ void database::perform_upgrades(const account_object& account, const upgrade_eve
       }
    });
 
-   if (update_balance)
+   if (update_balance && !upgrade.historic)
    {
       // Apply the upgrade operation and modify cycle balance:
       push_applied_operation(upgrade_account_cycles_operation{account.id});

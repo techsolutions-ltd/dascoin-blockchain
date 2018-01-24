@@ -90,7 +90,10 @@ void database::reindex(fc::path data_dir)
             fc::optional< block_id_type > last_id = _block_id_to_block.last_id();
             // this can trigger if we attempt to e.g. read a file that has block #2 but no block #1
             if( !last_id.valid() )
-               break;
+            {
+              elog( "No valid last index entry found!" );
+              break;
+            }
             // we've caught up to the gap
             if( block_header::num_from_id( *last_id ) <= i )
                break;

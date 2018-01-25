@@ -30,6 +30,7 @@
 #include <graphene/chain/block_database.hpp>
 #include <graphene/chain/genesis_state.hpp>
 #include <graphene/chain/evaluator.hpp>
+#include <graphene/chain/license_objects.hpp>
 
 #include <graphene/db/object_database.hpp>
 #include <graphene/db/object.hpp>
@@ -560,7 +561,8 @@ namespace graphene { namespace chain {
                                             upgrade_multiplier_type balance_multipliers,
                                             upgrade_multiplier_type requeue_multipliers,
                                             upgrade_multiplier_type return_multipliers,
-                                            share_type eur_limit);
+                                            share_type eur_limit,
+                                            license_type_object::upgrade_policy up_policy = license_type_object::upgrade_policy::standard);
 
          optional<license_information_object> get_license_information(account_id_type account_id) const;
 
@@ -645,7 +647,8 @@ private:
          void perform_chain_maintenance(const signed_block& next_block, const global_property_object& global_props);
          void update_active_witnesses();
          void update_active_committee_members();
-         void perform_upgrades(const account_object& account);
+         void perform_upgrades(const account_object& account, const upgrade_event_object& upgrade);
+         void perform_upgrades();
          void update_worker_votes();
 
          template<typename IndexType, typename IndexBy, class... HelperTypes>

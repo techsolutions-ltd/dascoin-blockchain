@@ -305,7 +305,8 @@ namespace graphene { namespace app {
                result.push_back( aobj->worker_account );
                break;
             } case balance_object_type:
-              case license_type_object_type:{
+              case license_type_object_type:
+              case upgrade_event_object_type:{
                /** these are free from any accounts */
                break;
             }

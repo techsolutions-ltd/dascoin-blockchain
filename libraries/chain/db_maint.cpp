@@ -717,36 +717,121 @@ void deprecate_annual_members( database& db )
 }
 
 // TODO: refactor this method completely!
-void database::perform_upgrades(const account_object& account)
+void database::perform_upgrades(const account_object& account, const upgrade_event_object& upgrade)
 {
-   share_type new_balance;
+   share_type new_balance{0};
    share_type requeue_amount;
    share_type return_amount;
+   bool update_balance{false};
 
    // NOTE: special accounts are not upgraded!
    if ( account.kind == account_kind::special )
       return;
 
+   if ( !account.license_information.valid() )
+      return;
+
    const auto& cycle_balance_obj = get_cycle_balance_object(account.id);
    const auto& license_info_obj = (*account.license_information)(*this);
+   const auto& cutoff_time = upgrade.cutoff_time.valid() ? *(upgrade.cutoff_time) : upgrade.execution_time;
 
+   // Upgrade each license. fixme: check license type
    modify(license_info_obj, [&](license_information_object& lio) {
-      new_balance = lio.balance_upgrade(cycle_balance_obj.balance);
+      for (auto& license_history : lio.history)
+      {
+         auto upgrade_it = std::find_if(license_history.upgrades.begin(), license_history.upgrades.end(),
+                                        [&upgrade](const pair<upgrade_event_id_type, time_point_sec>& upgrade_and_time){
+                                            return upgrade_and_time.first == upgrade.id;
+                                      });
+         // If not upgraded by this upgrade, proceed with it:
+         if ( license_history.upgrades.end() == upgrade_it && license_history.balance_upgrade.has_remaining_upgrades() )
+         {
+            // If the license has been issued before the cutoff time, execute it:
+            if ( license_history.activated_at <= cutoff_time )
+            {
+               // If this upgrade event is one of the historic upgrades, then do not touch the amount:
+               if (upgrade.historic)
+                  license_history.balance_upgrade(0);
+               else
+                  license_history.amount = license_history.balance_upgrade(license_history.amount_to_upgrade());
+               new_balance += license_history.amount;
+               update_balance = true;
+               license_history.upgrades.emplace_back(std::make_pair(upgrade.id, head_block_time()));
+            }
+         }
+      }
    });
 
-   // First, perform the balance_upgrade:
-   modify(cycle_balance_obj, [&](account_cycle_balance_object& acb){
-      acb.balance = new_balance;
-   });
+   if (update_balance && !upgrade.historic)
+   {
+      // Apply the upgrade operation and modify cycle balance:
+      push_applied_operation(upgrade_account_cycles_operation{account.id});
+      modify(cycle_balance_obj, [&](account_cycle_balance_object& acb){
+        acb.balance = new_balance;
+      });
+   }
 
    // Second, perform the requeue upgrades:
 
    // Third, perform the return upgrades:
+}
 
-   // Last, apply the upgrade operation:
-   upgrade_account_cycles_operation vop;
-   vop.account = account.id;
-   push_applied_operation(vop);
+void database::perform_upgrades()
+{
+   class perform_upgrades_helper
+   {
+   public:
+     explicit perform_upgrades_helper(database& d, const upgrade_event_object& upgrade)
+         : d(d), upgrade(upgrade) {}
+
+     void operator()(const account_object& a) { d.perform_upgrades(a, upgrade); }
+
+   private:
+     database& d;
+     const upgrade_event_object& upgrade;
+   };
+
+   // Helper lambda which returns true if upgrade should be executed:
+   const auto should_execute_upgrade_event = [this](const upgrade_event_object& upgrade) -> bool {
+     // If executed already, do not execute:
+     if (upgrade.executed)
+        return false;
+     // If head block time is greater than execution time or any of the subsequent execution times, do execute:
+     const auto hbt = head_block_time();
+     if ( upgrade.execution_time <= hbt ||
+         std::find_if(upgrade.subsequent_execution_times.begin(), upgrade.subsequent_execution_times.end(),
+                      [&hbt](const time_point_sec& time) {
+                          return hbt >= time;
+                      }) != upgrade.subsequent_execution_times.end() )
+     {
+        return true;
+     }
+     return false;
+   };
+
+   optional<upgrade_event_object> last_upgrade{};
+   const auto& idx = get_index_type<upgrade_event_index>().indices().get<by_id>();
+   for ( auto it = idx.cbegin(); it != idx.cend(); ++it )
+   {
+      if ( !should_execute_upgrade_event(*it) )
+         continue;
+
+      last_upgrade = *it;
+      perform_upgrades_helper upgrades_helper(*this, *it);
+      perform_helpers<account_index, by_name>(std::tie(upgrades_helper));
+   }
+
+   // If we performed an upgrade, mark all older upgrade events as executed:
+   if (last_upgrade.valid())
+   {
+      for ( auto it = idx.begin(); it != idx.end(); ++it )
+      {
+         if ( (*it).execution_time < (*last_upgrade).execution_time )
+            modify(*it, [](upgrade_event_object& obj){
+              obj.executed = true;
+            });
+      }
+   }
 }
 
 void database::perform_chain_maintenance(const signed_block& next_block, const global_property_object& global_props)
@@ -834,24 +919,7 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
 
    } fee_helper(*this, gpo);
 
-   auto next_upgrade_event = get<dynamic_global_property_object>(dynamic_global_property_id_type()).next_upgrade_event;
-   auto total_upgrade_events = get<dynamic_global_property_object>(dynamic_global_property_id_type()).total_upgrade_events;
-   if ( next_upgrade_event <= head_block_time() )
-   {
-      // Perform upgrades on each account:
-      perform_helpers<account_index, by_name>(std::tie(tally_helper, fee_helper));
-      // Set the next upgrade interval:
-      next_upgrade_event = head_block_time() + fc::days(gpo.parameters.upgrade_event_interval_days);
-      total_upgrade_events++;
-
-      ilog( "Head block number on upgrade: '${n}'; head block time: '${h}'; next upgrade event scheduled at: '${t}'",
-            ("n", head_block_num())
-            ("h", head_block_time())
-            ("t", next_upgrade_event)
-          );
-   }
-   else
-      perform_helpers<account_index, by_name>(std::tie(tally_helper, fee_helper));
+   perform_helpers<account_index, by_name>(std::tie(tally_helper, fee_helper));
 
    struct clear_canary {
       clear_canary(vector<uint64_t>& target): target(target){}
@@ -867,6 +935,7 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
    //update_active_witnesses();
    update_active_committee_members();
    update_worker_votes();
+   perform_upgrades();
 
    modify(gpo, [this](global_property_object& p) {
       // Remove scaling of account registration fee
@@ -890,13 +959,6 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
       {
          next_maintenance_time = time_point_sec() +
                (((next_block.timestamp.sec_since_epoch() / maintenance_interval) + 1) * maintenance_interval);
-         next_upgrade_event = head_block_time() + fc::days(gpo.parameters.upgrade_event_interval_days);
-
-         ilog( "Head block number: '${n}'; head block time: '${h}'; first upgrade event scheduled at: '${t}'",
-               ("n", head_block_num())
-               ("h", head_block_time())
-               ("t", next_upgrade_event)
-             );
       }
       else
       {
@@ -924,10 +986,8 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
       deprecate_annual_members(*this);
 
    modify(dgpo,
-      [next_maintenance_time, next_upgrade_event, total_upgrade_events](dynamic_global_property_object& d) {
+      [next_maintenance_time](dynamic_global_property_object& d) {
       d.next_maintenance_time = next_maintenance_time;
-      d.next_upgrade_event = next_upgrade_event;
-      d.total_upgrade_events = total_upgrade_events;
       d.accounts_registered_this_interval = 0;
    });
 

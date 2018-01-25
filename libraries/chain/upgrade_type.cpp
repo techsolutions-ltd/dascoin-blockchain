@@ -20,7 +20,7 @@ namespace graphene { namespace chain {
     if ( multipliers.size() < new_upgrade.multipliers.size() )
     {
       multipliers = new_upgrade.multipliers;
-      max = new_upgrade.multipliers.size();
+      max = static_cast<uint8_t>(new_upgrade.multipliers.size());
     }
   }
 

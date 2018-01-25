@@ -333,6 +333,21 @@ struct get_impacted_account_visitor
       _impacted.insert( op.account );
    }
 
+   void operator() ( const create_upgrade_event_operation& op )
+   {
+      _impacted.insert( op.upgrade_creator );
+   }
+
+   void operator() ( const update_upgrade_event_operation& op )
+   {
+     _impacted.insert( op.upgrade_creator );
+   }
+
+   void operator() ( const delete_upgrade_event_operation& op )
+   {
+     _impacted.insert( op.upgrade_creator );
+   }
+
    void operator() ( const update_license_operation& op )
    {
       _impacted.insert( op.authority );
@@ -434,6 +449,8 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
             } case balance_object_type:
               case license_type_object_type:{
                /** these are free from any accounts */
+               break;
+            } case upgrade_event_object_type:{
                break;
             }
          }

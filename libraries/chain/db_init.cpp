@@ -46,6 +46,7 @@
 #include <graphene/chain/special_authority_object.hpp>
 #include <graphene/chain/transaction_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
+#include <graphene/chain/upgrade_event_object.hpp>
 #include <graphene/chain/wire_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
 #include <graphene/chain/witness_object.hpp>
@@ -66,6 +67,7 @@
 #include <graphene/chain/proposal_evaluator.hpp>
 #include <graphene/chain/transfer_evaluator.hpp>
 #include <graphene/chain/vesting_balance_evaluator.hpp>
+#include <graphene/chain/upgrade_event_evaluator.hpp>
 #include <graphene/chain/wire_evaluator.hpp>
 #include <graphene/chain/withdraw_permission_evaluator.hpp>
 #include <graphene/chain/witness_evaluator.hpp>
@@ -161,6 +163,9 @@ const uint8_t issued_asset_record_object::type_id;
 const uint8_t frequency_history_record_object::space_id;
 const uint8_t frequency_history_record_object::type_id;
 
+const uint8_t upgrade_event_object::space_id;
+const uint8_t upgrade_event_object::type_id;
+
 void database::initialize_genesis_transaction_state()
 {
   // Since this is the database initialization, skip checking signatures:
@@ -239,6 +244,9 @@ void database::initialize_evaluators()
    register_evaluator<edit_license_type_evaluator>();
    register_evaluator<update_euro_limit_evaluator>();
    register_evaluator<submit_cycles_to_queue_by_license_evaluator>();
+   register_evaluator<create_upgrade_event_evaluator>();
+   register_evaluator<update_upgrade_event_evaluator>();
+   register_evaluator<delete_upgrade_event_evaluator>();
    register_evaluator<update_license_evaluator>();
    register_evaluator<issue_cycles_to_license_evaluator>();
 }
@@ -288,6 +296,7 @@ void database::initialize_indexes()
    add_index< primary_index< simple_index< fba_accumulator_object       > > >();
 
    add_index<primary_index<license_type_index>>();
+   add_index<primary_index<upgrade_event_index>>();
    add_index<primary_index<account_cycle_balance_index>>();
    add_index<primary_index<issue_asset_request_index>>();
    add_index<primary_index<wire_out_holder_index>>();
@@ -813,19 +822,31 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       create_license_type(license_kind::regular, "vice_president", DASCOIN_BASE_VICE_PRESIDENT_CYCLES, {2,2}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_VICE_PRESIDENT);
       create_license_type(license_kind::regular, "president", DASCOIN_BASE_PRESIDENT_CYCLES, {2,2,2}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_PRESIDENT);
 
-      create_license_type(license_kind::chartered, "standard_charter", DASCOIN_BASE_STANDARD_CYCLES, {}, {1}, {}, DASCOIN_DEFAULT_EUR_LIMIT_STANDARD);
-      create_license_type(license_kind::chartered, "manager_charter", DASCOIN_BASE_MANAGER_CYCLES, {}, {1}, {}, DASCOIN_DEFAULT_EUR_LIMIT_MANAGER);
-      create_license_type(license_kind::chartered, "pro_charter", DASCOIN_BASE_PRO_CYCLES, {}, {1}, {}, DASCOIN_DEFAULT_EUR_LIMIT_PRO);
-      create_license_type(license_kind::chartered, "executive_charter", DASCOIN_BASE_EXECUTIVE_CYCLES, {}, {1,2}, {}, DASCOIN_DEFAULT_EUR_LIMIT_EXECUTIVE);
+      create_license_type(license_kind::chartered, "standard_charter", DASCOIN_BASE_STANDARD_CYCLES, {1}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_STANDARD);
+      create_license_type(license_kind::chartered, "manager_charter", DASCOIN_BASE_MANAGER_CYCLES, {1}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_MANAGER);
+      create_license_type(license_kind::chartered, "pro_charter", DASCOIN_BASE_PRO_CYCLES, {1}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_PRO);
+      create_license_type(license_kind::chartered, "executive_charter", DASCOIN_BASE_EXECUTIVE_CYCLES, {1,2}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_EXECUTIVE);
       create_license_type(license_kind::chartered, "vice_president_charter", DASCOIN_BASE_VICE_PRESIDENT_CYCLES, {1,2}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_VICE_PRESIDENT);
-      create_license_type(license_kind::chartered, "president_charter", DASCOIN_BASE_PRESIDENT_CYCLES, {}, {1,2,4}, {}, DASCOIN_DEFAULT_EUR_LIMIT_PRESIDENT);
+      create_license_type(license_kind::chartered, "president_charter", DASCOIN_BASE_PRESIDENT_CYCLES, {1,2,4}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_PRESIDENT);
 
       create_license_type(license_kind::locked_frequency, "standard_locked", DASCOIN_BASE_STANDARD_CYCLES, {2}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_STANDARD);
       create_license_type(license_kind::locked_frequency, "manager_locked", DASCOIN_BASE_MANAGER_CYCLES, {2}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_MANAGER);
       create_license_type(license_kind::locked_frequency, "pro_locked", DASCOIN_BASE_PRO_CYCLES, {2}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_PRO);
       create_license_type(license_kind::locked_frequency, "executive_locked", DASCOIN_BASE_EXECUTIVE_CYCLES, {2,2}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_EXECUTIVE);
       create_license_type(license_kind::locked_frequency, "vice_president_locked", DASCOIN_BASE_VICE_PRESIDENT_CYCLES, {2,2}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_VICE_PRESIDENT);
-      create_license_type(license_kind::locked_frequency, "president_locked", DASCOIN_BASE_PRESIDENT_CYCLES, {2,2,2}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_PRESIDENT);
+      create_license_type(license_kind::locked_frequency, "president_locked", DASCOIN_BASE_PRESIDENT_CYCLES, {2,4,8}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_PRESIDENT, license_type_object::upgrade_policy::president);
+   }
+
+   // Create historic upgrade events:
+   for (const auto& historic_upgrade : genesis_state.historic_upgrade_events)
+   {
+     create<upgrade_event_object>([&historic_upgrade](upgrade_event_object &o) {
+       o.execution_time = historic_upgrade.execution_time;
+       o.cutoff_time = historic_upgrade.cutoff_time;
+       o.subsequent_execution_times = historic_upgrade.subsequent_executions;
+       o.comment = historic_upgrade.comment;
+       o.historic = true;
+     });
    }
 
    // Set active witnesses

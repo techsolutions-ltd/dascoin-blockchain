@@ -753,7 +753,14 @@ void database::perform_upgrades(const account_object& account, const upgrade_eve
                if (upgrade.historic)
                   license_history.balance_upgrade(0);
                else
-                  license_history.amount = license_history.balance_upgrade(license_history.amount_to_upgrade());
+               {
+                 auto amount = license_history.balance_upgrade(license_history.amount_to_upgrade());
+                 // If this is a president license, add upgraded amount to the current amount:
+                 if (license_history.base_amount == DASCOIN_BASE_PRESIDENT_CYCLES)
+                    license_history.amount += amount;
+                 else
+                    license_history.amount = amount;
+               }
                new_balance += license_history.amount;
                update_balance = true;
                license_history.upgrades.emplace_back(std::make_pair(upgrade.id, head_block_time()));

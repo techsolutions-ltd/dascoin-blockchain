@@ -545,7 +545,7 @@ BOOST_AUTO_TEST_CASE( upgrade_cycles_test )
 
   BOOST_CHECK_EQUAL( get_cycle_balance(foo_id).value, 2 * DASCOIN_BASE_STANDARD_CYCLES );
   BOOST_CHECK_EQUAL( get_cycle_balance(bar_id).value, 2 * DASCOIN_BASE_EXECUTIVE_CYCLES );
-  BOOST_CHECK_EQUAL( get_cycle_balance(foobar_id).value, 2 * DASCOIN_BASE_PRESIDENT_CYCLES );
+  BOOST_CHECK_EQUAL( get_cycle_balance(foobar_id).value, DASCOIN_BASE_PRESIDENT_CYCLES );
   BOOST_CHECK_EQUAL( get_cycle_balance(alice_id).value, 2 * (DASCOIN_BASE_EXECUTIVE_CYCLES - 1000) + 2 * (DASCOIN_BASE_VICE_PRESIDENT_CYCLES - 2000) );
 
   const auto& license_information_obj = (*alice.license_information)(db);
@@ -568,7 +568,7 @@ BOOST_AUTO_TEST_CASE( upgrade_cycles_test )
 
   BOOST_CHECK_EQUAL( get_cycle_balance(foo_id).value, 2 * DASCOIN_BASE_STANDARD_CYCLES );
   BOOST_CHECK_EQUAL( get_cycle_balance(bar_id).value, 4 * DASCOIN_BASE_EXECUTIVE_CYCLES );
-  BOOST_CHECK_EQUAL( get_cycle_balance(foobar_id).value, 4 * DASCOIN_BASE_PRESIDENT_CYCLES );
+  BOOST_CHECK_EQUAL( get_cycle_balance(foobar_id).value, 3 * DASCOIN_BASE_PRESIDENT_CYCLES );
   BOOST_CHECK_EQUAL( get_cycle_balance(alice_id).value, 4 * (DASCOIN_BASE_EXECUTIVE_CYCLES - 1000) + 4 * (DASCOIN_BASE_VICE_PRESIDENT_CYCLES - 2000) );
 
   // Wait for the maintenance interval to trigger:
@@ -584,8 +584,61 @@ BOOST_AUTO_TEST_CASE( upgrade_cycles_test )
 
   BOOST_CHECK_EQUAL( get_cycle_balance(foo_id).value, 2 * DASCOIN_BASE_STANDARD_CYCLES );
   BOOST_CHECK_EQUAL( get_cycle_balance(bar_id).value, 4 * DASCOIN_BASE_EXECUTIVE_CYCLES );
-  BOOST_CHECK_EQUAL( get_cycle_balance(foobar_id).value, 8 * DASCOIN_BASE_PRESIDENT_CYCLES );
+  BOOST_CHECK_EQUAL( get_cycle_balance(foobar_id).value, 7 * DASCOIN_BASE_PRESIDENT_CYCLES );
   BOOST_CHECK_EQUAL( get_cycle_balance(alice_id).value, 4 * (DASCOIN_BASE_EXECUTIVE_CYCLES - 1000) + 4 * (DASCOIN_BASE_VICE_PRESIDENT_CYCLES - 2000) );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( upgrade_president_cycles_test )
+{ try {
+  VAULT_ACTOR(foo);
+  auto president_locked = *(_dal.get_license_type("president_locked"));
+  const share_type bonus_percent = 0;
+  const share_type frequency_lock = 100;
+  const time_point_sec issue_time = db.head_block_time();
+  const auto& dgpo = db.get_dynamic_global_properties();
+  const auto& gpo = db.get_global_properties();
+
+  do_op(issue_license_operation(get_license_issuer_id(), foo_id, president_locked.id,
+                                bonus_percent, frequency_lock, issue_time));
+
+  generate_blocks(db.head_block_time() + fc::hours(24));
+
+  // Submit 1000 cycles, these cannot be upgraded because they are spent:
+  do_op(submit_cycles_to_queue_by_license_operation(foo_id, 1000, president_locked.id, 100, "TEST"));
+
+  do_op(create_upgrade_event_operation(get_license_administrator_id(),
+                                       dgpo.next_maintenance_time,
+                                       {}, {}, "foo"));
+
+  // Wait for the next maintenance interval:
+  generate_blocks(dgpo.next_maintenance_time + gpo.parameters.maintenance_interval);
+
+  BOOST_CHECK_EQUAL( get_cycle_balance(foo_id).value, 2 * DASCOIN_BASE_PRESIDENT_CYCLES - 1000 );
+
+  do_op(create_upgrade_event_operation(get_license_administrator_id(),
+                                       dgpo.next_maintenance_time + 2 * gpo.parameters.maintenance_interval,
+                                       {}, {}, "foo"));
+
+  // Submit 2000 cycles:
+  do_op(submit_cycles_to_queue_by_license_operation(foo_id, 2000, president_locked.id, 100, "TEST"));
+
+  // Wait for the next maintenance interval and subsequent upgrade:
+  generate_blocks(dgpo.next_maintenance_time + 3 * gpo.parameters.maintenance_interval);
+
+  BOOST_CHECK_EQUAL( get_cycle_balance(foo_id).value, 4 * DASCOIN_BASE_PRESIDENT_CYCLES - 3000 );
+
+  // Submit 3000 cycles:
+  do_op(submit_cycles_to_queue_by_license_operation(foo_id, 3000, president_locked.id, 100, "TEST"));
+
+  do_op(create_upgrade_event_operation(get_license_administrator_id(),
+                                       dgpo.next_maintenance_time + 3 * gpo.parameters.maintenance_interval,
+                                       {}, {}, "foo"));
+
+  // Wait for the next maintenance interval and subsequent upgrade:
+  generate_blocks(dgpo.next_maintenance_time + 4 * gpo.parameters.maintenance_interval);
+
+  BOOST_CHECK_EQUAL( get_cycle_balance(foo_id).value, 8 * DASCOIN_BASE_PRESIDENT_CYCLES - 6000 );
 
 } FC_LOG_AND_RETHROW() }
 

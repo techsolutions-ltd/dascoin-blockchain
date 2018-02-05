@@ -642,6 +642,37 @@ BOOST_AUTO_TEST_CASE( upgrade_president_cycles_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( upgrade_charter_license_test )
+{ try {
+  VAULT_ACTOR(foo);
+  auto standard_charter = *(_dal.get_license_type("standard_charter"));
+  const share_type bonus_percent = 0;
+  const share_type frequency_lock = 100;
+  const time_point_sec issue_time = db.head_block_time();
+  const auto &dgpo = db.get_dynamic_global_properties();
+  const auto &gpo = db.get_global_properties();
+
+  do_op(issue_license_operation(get_license_issuer_id(), foo_id, standard_charter.id,
+                                bonus_percent, frequency_lock, issue_time));
+
+  generate_blocks(db.head_block_time() + fc::hours(24));
+
+  do_op(create_upgrade_event_operation(get_license_administrator_id(),
+                                       dgpo.next_maintenance_time,
+                                       {}, {}, "foo"));
+
+  // Wait for the next maintenance interval:
+  generate_blocks(dgpo.next_maintenance_time + gpo.parameters.maintenance_interval);
+
+  auto result_vec = *_dal.get_queue_submissions_with_pos(foo_id).result;
+  BOOST_CHECK_EQUAL( result_vec.size(), 2 );
+  auto rqo = result_vec[1].submission;
+  BOOST_CHECK_EQUAL( rqo.origin, "reserve_cycles" );
+  BOOST_CHECK_EQUAL( rqo.comment, "Licence Standard Upgrade 1/1" );
+  BOOST_CHECK_EQUAL( rqo.amount.value, DASCOIN_BASE_STANDARD_CYCLES );
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_CASE( upgrade_not_executed_test )
 { try {
   VAULT_ACTOR(foo);

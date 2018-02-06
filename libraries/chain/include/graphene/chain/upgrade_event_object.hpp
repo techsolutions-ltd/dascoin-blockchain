@@ -30,6 +30,7 @@ namespace graphene { namespace chain {
       string comment;
       bool executed = false;
       bool historic = false;
+      int num_of_executions = 0;
 
       extensions_type extensions;
 
@@ -78,5 +79,6 @@ FC_REFLECT_DERIVED( graphene::chain::upgrade_event_object, (graphene::db::object
                     (subsequent_execution_times)
                     (comment)
                     (executed)
+                    (num_of_executions)
                     (extensions)
                   )

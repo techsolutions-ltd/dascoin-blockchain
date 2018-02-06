@@ -646,13 +646,18 @@ BOOST_AUTO_TEST_CASE( upgrade_president_cycles_test )
 BOOST_AUTO_TEST_CASE( upgrade_charter_license_test )
 { try {
   VAULT_ACTOR(foo);
+  VAULT_ACTOR(bar);
   auto standard_charter = *(_dal.get_license_type("standard_charter"));
+  auto president_charter = *(_dal.get_license_type("president_charter"));
   const share_type bonus_percent = 0;
   const share_type frequency_lock = 100;
   const time_point_sec issue_time = db.head_block_time();
   const auto &dgpo = db.get_dynamic_global_properties();
 
   do_op(issue_license_operation(get_license_issuer_id(), foo_id, standard_charter.id,
+                                bonus_percent, frequency_lock, issue_time));
+
+  do_op(issue_license_operation(get_license_issuer_id(), bar_id, president_charter.id,
                                 bonus_percent, frequency_lock, issue_time));
 
   generate_blocks(db.head_block_time() + fc::hours(24));
@@ -670,6 +675,24 @@ BOOST_AUTO_TEST_CASE( upgrade_charter_license_test )
   BOOST_CHECK_EQUAL( rqo.origin, "reserve_cycles" );
   BOOST_CHECK_EQUAL( rqo.comment, "Licence Standard Upgrade 1/1" );
   BOOST_CHECK_EQUAL( rqo.amount.value, DASCOIN_BASE_STANDARD_CYCLES );
+
+  auto result_vec2 = *_dal.get_queue_submissions_with_pos(bar_id).result;
+  BOOST_CHECK_EQUAL( result_vec2.size(), 2 );
+  auto rqo2 = result_vec2[1].submission;
+  BOOST_CHECK_EQUAL( rqo2.origin, "reserve_cycles" );
+  BOOST_CHECK_EQUAL( rqo2.comment, "Licence President Upgrade 1/3" );
+  BOOST_CHECK_EQUAL( rqo2.amount.value, DASCOIN_BASE_PRESIDENT_CYCLES );
+
+  const auto& license_information_obj = (*bar.license_information)(db);
+
+  const auto& license_history = license_information_obj.history;
+
+  BOOST_CHECK_EQUAL( license_history.size(), 1 );
+
+  const auto& license_record = license_history[0];
+  auto res = _dal.get_vault_info(bar_id);
+
+  BOOST_CHECK_EQUAL( license_record.amount.value, DASCOIN_BASE_PRESIDENT_CYCLES );
 
 } FC_LOG_AND_RETHROW() }
 

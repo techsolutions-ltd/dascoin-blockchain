@@ -784,11 +784,11 @@ void database::perform_upgrades(const account_object& account, const upgrade_eve
                              << (int) license_history.balance_upgrade.used
                              << "/"
                              << (int) license_history.balance_upgrade.max;
-                     push_queue_submission(origin, license_history.license, account.id, license_history.amount, license_history.frequency_lock, comment.str());
+                     push_queue_submission(origin, license_history.license, account.id, amount, license_history.frequency_lock, comment.str());
                      push_applied_operation(
-                             record_submit_charter_license_cycles_operation(get_chain_authorities().license_issuer, account.id, license_history.amount, license_history.frequency_lock)
+                             record_submit_charter_license_cycles_operation(get_chain_authorities().license_issuer, account.id, amount, license_history.frequency_lock)
                      );
-                     license_history.amount = 0;
+                     license_history.amount -= amount;
                   }
                   else
                   {
@@ -851,6 +851,10 @@ void database::perform_upgrades()
    {
       if ( !should_execute_upgrade_event(*it) )
          continue;
+
+      modify(*it, [](upgrade_event_object& obj){
+         obj.num_of_executions++;
+      });
 
       last_upgrade = *it;
       perform_upgrades_helper upgrades_helper(*this, *it);

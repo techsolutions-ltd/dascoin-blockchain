@@ -56,7 +56,10 @@ namespace graphene { namespace chain {
     auto& d = db();
     return d.create<upgrade_event_object>([&](upgrade_event_object& ueo){
       ueo.execution_time = op.execution_time;
-      ueo.cutoff_time = op.cutoff_time;
+      if (op.cutoff_time.valid())
+        ueo.cutoff_time = op.cutoff_time;
+      else
+        ueo.cutoff_time = op.execution_time;
       ueo.subsequent_execution_times = op.subsequent_execution_times;
       ueo.comment = op.comment;
     }).id;

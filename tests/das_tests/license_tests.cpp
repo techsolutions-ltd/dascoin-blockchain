@@ -312,6 +312,7 @@ BOOST_AUTO_TEST_CASE( create_upgrade_event_test )
   FC_ASSERT( !upgrades[0].executed );
   FC_ASSERT( upgrades[0].comment.compare("foo") == 0 );
   FC_ASSERT( upgrades[0].execution_time == dgpo.next_maintenance_time );
+  FC_ASSERT( *(upgrades[0].cutoff_time) == upgrades[0].execution_time );
 
   // Fails, cannot create upgrade event at the same time as the previously created event:
   GRAPHENE_REQUIRE_THROW( do_op(create_upgrade_event_operation(license_administrator_id, dgpo.next_maintenance_time,

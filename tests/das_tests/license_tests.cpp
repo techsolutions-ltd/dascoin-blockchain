@@ -372,7 +372,7 @@ BOOST_AUTO_TEST_CASE( upgrade_event_executed_test )
                                        {}, {}, "foo"));
 
   // Wait for the next maintenance interval:
-  generate_blocks(dgpo.next_maintenance_time + gpo.parameters.maintenance_interval);
+  generate_blocks(dgpo.next_maintenance_time);
 
   vector<upgrade_event_object> upgrades;
   get_upgrade_events(upgrades);
@@ -384,7 +384,7 @@ BOOST_AUTO_TEST_CASE( upgrade_event_executed_test )
                                        {}, {}, "bar"));
 
   // Wait for the next maintenance interval:
-  generate_blocks(dgpo.next_maintenance_time + 3 * gpo.parameters.maintenance_interval);
+  generate_blocks(dgpo.next_maintenance_time + 2 * gpo.parameters.maintenance_interval);
 
   upgrades.clear();
   get_upgrade_events(upgrades);
@@ -522,7 +522,7 @@ BOOST_AUTO_TEST_CASE( upgrade_cycles_test )
   do_op(issue_license_operation(get_license_issuer_id(), alice_id, vice_president_locked.id,
                                 bonus_percent, frequency_lock, issue_time));
 
-  generate_blocks(db.head_block_time() + fc::hours(24));
+//  generate_blocks(db.head_block_time() + fc::hours(24));
 
   // No upgrade happened yet!
 //  BOOST_CHECK_EQUAL( db.get_dynamic_global_properties().total_upgrade_events, 0 );
@@ -539,7 +539,7 @@ BOOST_AUTO_TEST_CASE( upgrade_cycles_test )
                                        {}, {}, "foo"));
 
   // Wait for the next maintenance interval:
-  generate_blocks(dgpo.next_maintenance_time + gpo.parameters.maintenance_interval);
+  generate_blocks(dgpo.next_maintenance_time);
 
   // One upgrade event has happened:
 //  BOOST_CHECK_EQUAL( db.get_dynamic_global_properties().total_upgrade_events, 1 );
@@ -562,7 +562,7 @@ BOOST_AUTO_TEST_CASE( upgrade_cycles_test )
                                        dgpo.next_maintenance_time + 2 * gpo.parameters.maintenance_interval,
                                        {}, {}, "foo"));
 
-  generate_blocks(dgpo.next_maintenance_time + 3 * gpo.parameters.maintenance_interval);
+  generate_blocks(dgpo.next_maintenance_time + 2 * gpo.parameters.maintenance_interval);
 
   // Second upgrade event has happened:
 //  BOOST_CHECK_EQUAL( db.get_dynamic_global_properties().total_upgrade_events, 2 );
@@ -578,7 +578,7 @@ BOOST_AUTO_TEST_CASE( upgrade_cycles_test )
                                        dgpo.next_maintenance_time + 3 * gpo.parameters.maintenance_interval,
                                        {}, {}, "foo"));
 
-  generate_blocks(dgpo.next_maintenance_time + 4 * gpo.parameters.maintenance_interval);
+  generate_blocks(dgpo.next_maintenance_time + 3 * gpo.parameters.maintenance_interval);
 
   // Third upgrade event has happened:
 //  BOOST_CHECK_EQUAL( db.get_dynamic_global_properties().total_upgrade_events, 3 );
@@ -613,7 +613,7 @@ BOOST_AUTO_TEST_CASE( upgrade_president_cycles_test )
                                        {}, {}, "foo"));
 
   // Wait for the next maintenance interval:
-  generate_blocks(dgpo.next_maintenance_time + gpo.parameters.maintenance_interval);
+  generate_blocks(dgpo.next_maintenance_time);
 
   BOOST_CHECK_EQUAL( get_cycle_balance(foo_id).value, 2 * DASCOIN_BASE_PRESIDENT_CYCLES - 1000 );
 
@@ -625,7 +625,7 @@ BOOST_AUTO_TEST_CASE( upgrade_president_cycles_test )
   do_op(submit_cycles_to_queue_by_license_operation(foo_id, 2000, president_locked.id, 100, "TEST"));
 
   // Wait for the next maintenance interval and subsequent upgrade:
-  generate_blocks(dgpo.next_maintenance_time + 3 * gpo.parameters.maintenance_interval);
+  generate_blocks(dgpo.next_maintenance_time + 2 * gpo.parameters.maintenance_interval);
 
   BOOST_CHECK_EQUAL( get_cycle_balance(foo_id).value, 4 * DASCOIN_BASE_PRESIDENT_CYCLES - 3000 );
 
@@ -637,7 +637,7 @@ BOOST_AUTO_TEST_CASE( upgrade_president_cycles_test )
                                        {}, {}, "foo"));
 
   // Wait for the next maintenance interval and subsequent upgrade:
-  generate_blocks(dgpo.next_maintenance_time + 4 * gpo.parameters.maintenance_interval);
+  generate_blocks(dgpo.next_maintenance_time + 3 * gpo.parameters.maintenance_interval);
 
   BOOST_CHECK_EQUAL( get_cycle_balance(foo_id).value, 8 * DASCOIN_BASE_PRESIDENT_CYCLES - 6000 );
 
@@ -651,7 +651,6 @@ BOOST_AUTO_TEST_CASE( upgrade_charter_license_test )
   const share_type frequency_lock = 100;
   const time_point_sec issue_time = db.head_block_time();
   const auto &dgpo = db.get_dynamic_global_properties();
-  const auto &gpo = db.get_global_properties();
 
   do_op(issue_license_operation(get_license_issuer_id(), foo_id, standard_charter.id,
                                 bonus_percent, frequency_lock, issue_time));
@@ -663,7 +662,7 @@ BOOST_AUTO_TEST_CASE( upgrade_charter_license_test )
                                        {}, {}, "foo"));
 
   // Wait for the next maintenance interval:
-  generate_blocks(dgpo.next_maintenance_time + gpo.parameters.maintenance_interval);
+  generate_blocks(dgpo.next_maintenance_time);
 
   auto result_vec = *_dal.get_queue_submissions_with_pos(foo_id).result;
   BOOST_CHECK_EQUAL( result_vec.size(), 2 );
@@ -757,14 +756,15 @@ BOOST_AUTO_TEST_CASE( upgrade_executed_test )
                                 bonus_percent, frequency_lock, activated_time + fc::hours(26)));
 
   do_op(create_upgrade_event_operation(get_license_administrator_id(),
-                                       dgpo.next_maintenance_time + gpo.parameters.maintenance_interval,
+                                       dgpo.next_maintenance_time,
                                        activated_time + fc::hours(72),
-                                       {{dgpo.next_maintenance_time + 4 * gpo.parameters.maintenance_interval}}, "foo_upgrade"));
+                                       {{dgpo.next_maintenance_time + 4 * gpo.parameters.maintenance_interval},
+                                        {dgpo.next_maintenance_time + 7 * gpo.parameters.maintenance_interval}}, "foo_upgrade"));
 
   // Issue 200 cycles to foo, those should not be upgraded:
   do_op(issue_cycles_to_license_operation(get_cycle_issuer_id(), foo_id, standard_locked.id, 200, "foo", "bar"));
 
-  generate_blocks(activated_time + fc::hours(48));
+  generate_blocks(dgpo.next_maintenance_time);
 
   BOOST_CHECK_EQUAL( get_cycle_balance(foo_id).value, 2 * DASCOIN_BASE_STANDARD_CYCLES );
   BOOST_CHECK_EQUAL( get_cycle_balance(bar_id).value, 2 * DASCOIN_BASE_MANAGER_CYCLES );
@@ -773,7 +773,7 @@ BOOST_AUTO_TEST_CASE( upgrade_executed_test )
   do_op(issue_license_operation(get_license_issuer_id(), foobar_id, pro_locked.id,
                                 bonus_percent, frequency_lock, activated_time + fc::hours(28)));
 
-  generate_blocks(db.head_block_time() + fc::hours(25));
+  generate_blocks(dgpo.next_maintenance_time + 3 * gpo.parameters.maintenance_interval);
 
   // Balance for the first two should remain the same:
   BOOST_CHECK_EQUAL( get_cycle_balance(foo_id).value, 2 * DASCOIN_BASE_STANDARD_CYCLES );
@@ -790,7 +790,7 @@ BOOST_AUTO_TEST_CASE( upgrade_executed_test )
   do_op(issue_license_operation(get_license_issuer_id(), foofoobar_id, vp_locked.id,
                                 bonus_percent, frequency_lock, activated_time + fc::hours(48)));
 
-  generate_blocks(db.head_block_time() + fc::hours(25));
+  generate_blocks(dgpo.next_maintenance_time + 2 * gpo.parameters.maintenance_interval);
 
   // Balance for the first three should remain the same:
   BOOST_CHECK_EQUAL( get_cycle_balance(foo_id).value, 2 * DASCOIN_BASE_STANDARD_CYCLES );

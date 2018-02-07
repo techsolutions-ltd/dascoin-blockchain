@@ -770,10 +770,6 @@ void database::perform_upgrades(const account_object& account, const upgrade_eve
                {
                   auto amount = license_history.balance_upgrade(license_history.amount_to_upgrade());
                   // If this is a president license, add upgraded amount to the current amount:
-                  if (license_history.base_amount == DASCOIN_BASE_PRESIDENT_CYCLES)
-                     license_history.amount += amount;
-                  else
-                     license_history.amount = amount;
                   if (lio.vault_license_kind == chartered)
                   {
                      auto origin = fc::reflector<dascoin_origin_kind>::to_string(dascoin_origin_kind::reserve_cycles);
@@ -788,12 +784,15 @@ void database::perform_upgrades(const account_object& account, const upgrade_eve
                      push_applied_operation(
                              record_submit_charter_license_cycles_operation(get_chain_authorities().license_issuer, account.id, amount, license_history.frequency_lock)
                      );
-                     license_history.amount -= amount;
                   }
                   else
                   {
-                     new_balance += license_history.amount;
-                     update_balance = true;
+                    if (license_history.base_amount == DASCOIN_BASE_PRESIDENT_CYCLES)
+                      license_history.amount += amount;
+                    else
+                      license_history.amount = amount;
+                    new_balance += license_history.amount;
+                    update_balance = true;
                   }
                }
                license_history.upgrades.emplace_back(std::make_pair(upgrade.id, head_block_time()));

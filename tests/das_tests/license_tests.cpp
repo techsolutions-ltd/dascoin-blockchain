@@ -647,14 +647,20 @@ BOOST_AUTO_TEST_CASE( upgrade_charter_license_test )
 { try {
   VAULT_ACTOR(foo);
   VAULT_ACTOR(bar);
+  VAULT_ACTOR(foobar);
   auto standard_charter = *(_dal.get_license_type("standard_charter"));
+  auto executive_charter = *(_dal.get_license_type("executive_charter"));
   auto president_charter = *(_dal.get_license_type("president_charter"));
   const share_type bonus_percent = 0;
   const share_type frequency_lock = 100;
   const time_point_sec issue_time = db.head_block_time();
   const auto &dgpo = db.get_dynamic_global_properties();
+  const auto& gpo = db.get_global_properties();
 
   do_op(issue_license_operation(get_license_issuer_id(), foo_id, standard_charter.id,
+                                bonus_percent, frequency_lock, issue_time));
+
+  do_op(issue_license_operation(get_license_issuer_id(), foobar_id, executive_charter.id,
                                 bonus_percent, frequency_lock, issue_time));
 
   do_op(issue_license_operation(get_license_issuer_id(), bar_id, president_charter.id,
@@ -693,6 +699,24 @@ BOOST_AUTO_TEST_CASE( upgrade_charter_license_test )
   auto res = _dal.get_vault_info(bar_id);
 
   BOOST_CHECK_EQUAL( license_record.amount.value, DASCOIN_BASE_PRESIDENT_CYCLES );
+
+  do_op(create_upgrade_event_operation(get_license_administrator_id(),
+                                       dgpo.next_maintenance_time + 2 * gpo.parameters.maintenance_interval,
+                                       {}, {}, "foo"));
+
+  // Wait for the next maintenance interval:
+  generate_blocks(dgpo.next_maintenance_time + 2 * gpo.parameters.maintenance_interval);
+
+  auto result_vec3 = *_dal.get_queue_submissions_with_pos(foobar_id).result;
+  BOOST_CHECK_EQUAL( result_vec3.size(), 3 );
+  auto rqo3 = result_vec3[1].submission;
+  BOOST_CHECK_EQUAL( rqo3.origin, "reserve_cycles" );
+  BOOST_CHECK_EQUAL( rqo3.comment, "Licence Executive Upgrade 1/2" );
+  BOOST_CHECK_EQUAL( rqo3.amount.value, DASCOIN_BASE_EXECUTIVE_CYCLES );
+  auto rqo4 = result_vec3[2].submission;
+  BOOST_CHECK_EQUAL( rqo4.origin, "reserve_cycles" );
+  BOOST_CHECK_EQUAL( rqo4.comment, "Licence Executive Upgrade 2/2" );
+  BOOST_CHECK_EQUAL( rqo4.amount.value, 2 * DASCOIN_BASE_EXECUTIVE_CYCLES );
 
 } FC_LOG_AND_RETHROW() }
 

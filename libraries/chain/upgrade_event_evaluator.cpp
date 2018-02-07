@@ -78,7 +78,7 @@ namespace graphene { namespace chain {
 
     d.perform_chain_authority_check("license administration", license_admin_id, op_creator_obj);
 
-    FC_ASSERT( !o.executed, "Cannot update upgrade event which has been executed." );
+    FC_ASSERT( !o.executed(), "Cannot update upgrade event which has been executed." );
 
     if (op.execution_time.valid())
     {
@@ -167,7 +167,7 @@ namespace graphene { namespace chain {
 
     d.perform_chain_authority_check("license administration", license_admin_id, op_creator_obj);
 
-    FC_ASSERT( !o.executed, "Cannot delete upgrade event which has been executed" );
+    FC_ASSERT( !o.executed(), "Cannot delete upgrade event which has been executed" );
 
     _upgrade_event = &o;
 

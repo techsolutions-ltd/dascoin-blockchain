@@ -309,7 +309,7 @@ BOOST_AUTO_TEST_CASE( create_upgrade_event_test )
   get_upgrade_events(upgrades);
 
   FC_ASSERT( upgrades.size() == 1 );
-  FC_ASSERT( !upgrades[0].executed );
+  FC_ASSERT( !upgrades[0].executed() );
   FC_ASSERT( upgrades[0].comment.compare("foo") == 0 );
   FC_ASSERT( upgrades[0].execution_time == dgpo.next_maintenance_time );
   FC_ASSERT( *(upgrades[0].cutoff_time) == upgrades[0].execution_time );
@@ -327,7 +327,7 @@ BOOST_AUTO_TEST_CASE( create_upgrade_event_test )
   get_upgrade_events(upgrades);
 
   FC_ASSERT( upgrades.size() == 2 );
-  FC_ASSERT( !upgrades[1].executed );
+  FC_ASSERT( !upgrades[1].executed() );
   FC_ASSERT( upgrades[1].comment.compare("bar") == 0 );
   FC_ASSERT( upgrades[1].execution_time == dgpo.next_maintenance_time + gpo.parameters.maintenance_interval );
 
@@ -341,7 +341,7 @@ BOOST_AUTO_TEST_CASE( create_upgrade_event_test )
   get_upgrade_events(upgrades);
 
   FC_ASSERT( upgrades.size() == 3 );
-  FC_ASSERT( !upgrades[2].executed );
+  FC_ASSERT( !upgrades[2].executed() );
   FC_ASSERT( upgrades[2].comment.compare("foobar") == 0 );
   FC_ASSERT( upgrades[2].execution_time == dgpo.next_maintenance_time + 2 * gpo.parameters.maintenance_interval );
   FC_ASSERT( upgrades[2].subsequent_execution_times.size() == 1 );
@@ -377,7 +377,7 @@ BOOST_AUTO_TEST_CASE( upgrade_event_executed_test )
   vector<upgrade_event_object> upgrades;
   get_upgrade_events(upgrades);
 
-  FC_ASSERT( !upgrades[0].executed );
+  FC_ASSERT( upgrades[0].executed() );
 
   do_op(create_upgrade_event_operation(get_license_administrator_id(),
                                        dgpo.next_maintenance_time + 2 * gpo.parameters.maintenance_interval,
@@ -389,8 +389,8 @@ BOOST_AUTO_TEST_CASE( upgrade_event_executed_test )
   upgrades.clear();
   get_upgrade_events(upgrades);
 
-  // At this point, the first upgrade event has been marked as executed:
-  FC_ASSERT( upgrades[0].executed );
+  // At this point, the second upgrade event has been marked as executed:
+  FC_ASSERT( upgrades[1].executed() );
 
 } FC_LOG_AND_RETHROW() }
 

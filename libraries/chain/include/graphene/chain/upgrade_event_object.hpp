@@ -28,9 +28,8 @@ namespace graphene { namespace chain {
       optional<time_point_sec> cutoff_time;
       vector<time_point_sec> subsequent_execution_times;
       string comment;
-      bool executed = false;
       bool historic = false;
-      int num_of_executions = 0;
+      uint16_t num_of_executions = 0;
 
       extensions_type extensions;
 
@@ -42,6 +41,11 @@ namespace graphene { namespace chain {
         subsequent_execution_times(std::move(subsequent_execution_times)),
         comment(move(comment))
       {}
+
+      bool executed() const
+      {
+        return num_of_executions >= subsequent_execution_times.size() + 1;
+      }
   };
 
   ///////////////////////////////
@@ -78,7 +82,6 @@ FC_REFLECT_DERIVED( graphene::chain::upgrade_event_object, (graphene::db::object
                     (cutoff_time)
                     (subsequent_execution_times)
                     (comment)
-                    (executed)
                     (num_of_executions)
                     (extensions)
                   )

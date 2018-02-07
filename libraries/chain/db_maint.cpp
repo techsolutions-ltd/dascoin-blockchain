@@ -830,7 +830,7 @@ void database::perform_upgrades()
    // Helper lambda which returns true if upgrade should be executed:
    const auto should_execute_upgrade_event = [this](const upgrade_event_object& upgrade) -> bool {
      // If executed already, do not execute:
-     if (upgrade.executed)
+     if (upgrade.executed())
         return false;
      // If head block time is greater than execution time or any of the subsequent execution times, do execute:
      const auto hbt = head_block_time();
@@ -859,18 +859,6 @@ void database::perform_upgrades()
       last_upgrade = *it;
       perform_upgrades_helper upgrades_helper(*this, *it);
       perform_helpers<account_index, by_name>(std::tie(upgrades_helper));
-   }
-
-   // If we performed an upgrade, mark all older upgrade events as executed:
-   if (last_upgrade.valid())
-   {
-      for ( auto it = idx.begin(); it != idx.end(); ++it )
-      {
-         if ( (*it).execution_time < (*last_upgrade).execution_time )
-            modify(*it, [](upgrade_event_object& obj){
-              obj.executed = true;
-            });
-      }
    }
 }
 

@@ -905,6 +905,15 @@ BOOST_AUTO_TEST_CASE( update_license_unit_test )
   // This ought to fail, bonus percentage cannot be decreased:
   GRAPHENE_REQUIRE_THROW( do_op(update_license_operation(get_license_issuer_id(), vault_id, standard_locked.id, 30, 10, issue_time + 3600)), fc::exception );
 
+  // Now submit 1000 cycles:
+  do_op(submit_cycles_to_queue_by_license_operation(vault_id, 1000, standard_locked.id, 10, "TEST"));
+
+  do_op(update_license_operation(get_license_issuer_id(), vault_id, standard_locked.id, 60, 20, {}));
+
+  auto res2 = _dal.get_vault_info(vault_id);
+  // Now we should have 55 cycles extra, but 1000 is spent:
+  BOOST_CHECK_EQUAL( res2->free_cycle_balance.value, amount_after + 55 - 1000 );
+
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_SUITE_END()

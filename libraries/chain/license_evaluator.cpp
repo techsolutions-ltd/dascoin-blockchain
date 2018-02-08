@@ -276,10 +276,11 @@ void_result update_license_evaluator::do_apply(const operation_type& op)
       obj.history[_index].frequency_lock = *(op.frequency_lock);
     if (op.bonus_percentage.valid())
     {
-      const auto old_amount = obj.history[_index].amount;
+      const auto old_amount = detail::apply_percentage(obj.history[_index].base_amount, obj.history[_index].bonus_percent);
       obj.history[_index].bonus_percent = *(op.bonus_percentage);
-      obj.history[_index].amount = detail::apply_percentage(obj.history[_index].base_amount, *(op.bonus_percentage));
-      d.issue_cycles(op.account, obj.history[_index].amount - old_amount);
+      const auto new_amount = detail::apply_percentage(obj.history[_index].base_amount, *(op.bonus_percentage));
+      obj.history[_index].amount += new_amount - old_amount;
+      d.issue_cycles(op.account, new_amount - old_amount);
     }
     if (op.activated_at.valid())
       obj.history[_index].activated_at = *(op.activated_at);

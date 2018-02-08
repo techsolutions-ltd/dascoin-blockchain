@@ -369,6 +369,7 @@ struct get_impacted_account_visitor
    void operator() ( const issue_cycles_to_license_operation& op )
    {
       _impacted.insert( op.authority );
+      _impacted.insert( op.account );
    }
 };
 

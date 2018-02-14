@@ -97,6 +97,7 @@ namespace detail {
             initial_state.initial_parameters.block_interval);
 
       auto master_key = make_account("sys.master");
+      initial_state.initial_root_authority = {"sys.master"};
 
       // Initial witness accounts:
       for( uint64_t i = 0; i < initial_state.initial_active_witnesses; ++i )
@@ -175,6 +176,26 @@ namespace detail {
                   ilog("Adding seed node ${endpoint}", ("endpoint", endpoint));
                   _p2p_network->add_node(endpoint);
                   _p2p_network->connect_to_endpoint(endpoint);
+               }
+            }
+         }
+
+         if( _options->count("seed-nodes") )
+         {
+            auto seeds_str = _options->at("seed-nodes").as<string>();
+            auto seeds = fc::json::from_string(seeds_str).as<vector<string>>();
+            for( const string& endpoint_string : seeds )
+            {
+               try {
+                  std::vector<fc::ip::endpoint> endpoints = resolve_string_to_ip_endpoints(endpoint_string);
+                  for (const fc::ip::endpoint& endpoint : endpoints)
+                  {
+                     ilog("Adding seed node ${endpoint}", ("endpoint", endpoint));
+                     _p2p_network->add_node(endpoint);
+                  }
+               } catch( const fc::exception& e ) {
+                  wlog( "caught exception ${e} while adding seed node ${endpoint}",
+                           ("e", e.to_detail_string())("endpoint", endpoint_string) );
                }
             }
          }
@@ -277,7 +298,6 @@ namespace detail {
 
       ~application_impl()
       {
-         fc::remove_all(_data_dir / "blockchain/dblock");
       }
 
       void set_dbg_init_key( genesis_state_type& genesis, const std::string& init_key )
@@ -291,8 +311,7 @@ namespace detail {
 
       void startup()
       { try {
-         bool clean = !fc::exists(_data_dir / "blockchain/dblock");
-         fc::create_directories(_data_dir / "blockchain/dblock");
+         fc::create_directories(_data_dir / "blockchain");
 
          auto initial_state = [&] {
             ilog("Initializing database...");
@@ -304,7 +323,7 @@ namespace detail {
                bool modified_genesis = false;
                if( _options->count("genesis-timestamp") )
                {
-                  genesis.initial_timestamp = fc::time_point_sec( graphene::time::now() ) + genesis.initial_parameters.block_interval + _options->at("genesis-timestamp").as<uint32_t>();
+                  genesis.initial_timestamp = fc::time_point_sec( fc::time_point::now() ) + genesis.initial_parameters.block_interval + _options->at("genesis-timestamp").as<uint32_t>();
                   genesis.initial_timestamp -= genesis.initial_timestamp.sec_since_epoch() % genesis.initial_parameters.block_interval;
                   modified_genesis = true;
                   std::cerr << "Used genesis timestamp:  " << genesis.initial_timestamp.to_iso_string() << " (PLEASE RECORD THIS)\n";
@@ -356,78 +375,16 @@ namespace detail {
          _chain_db->add_checkpoints( loaded_checkpoints );
 
          if( _options->count("replay-blockchain") )
+            _chain_db->wipe( _data_dir / "blockchain", false );
+
+         try
          {
-            ilog("Replaying blockchain on user request.");
-            _chain_db->reindex(_data_dir/"blockchain", initial_state());
-         } else if( clean ) {
-
-            auto is_new = [&]() -> bool
-            {
-               // directory doesn't exist
-               if( !fc::exists( _data_dir ) )
-                  return true;
-               // if directory exists but is empty, return true; else false.
-               return ( fc::directory_iterator( _data_dir ) == fc::directory_iterator() );
-            };
-
-            auto is_outdated = [&]() -> bool
-            {
-               if( !fc::exists( _data_dir / "db_version" ) )
-                  return true;
-               std::string version_str;
-               fc::read_file_contents( _data_dir / "db_version", version_str );
-               return (version_str != GRAPHENE_CURRENT_DB_VERSION);
-            };
-
-            bool need_reindex = (!is_new() && is_outdated());
-            std::string reindex_reason = "version upgrade";
-
-            if( !need_reindex )
-            {
-               try
-               {
-                  _chain_db->open(_data_dir / "blockchain", initial_state);
-               }
-               catch( const fc::exception& e )
-               {
-                  ilog( "caught exception ${e} in open()", ("e", e.to_detail_string()) );
-                  need_reindex = true;
-                  reindex_reason = "exception in open()";
-               }
-            }
-
-            if( need_reindex )
-            {
-               ilog("Replaying blockchain due to ${reason}", ("reason", reindex_reason) );
-
-               fc::remove_all( _data_dir / "db_version" );
-               _chain_db->reindex(_data_dir / "blockchain", initial_state());
-
-               // doing this down here helps ensure that DB will be wiped
-               // if any of the above steps were interrupted on a previous run
-               if( !fc::exists( _data_dir / "db_version" ) )
-               {
-                  std::ofstream db_version(
-                     (_data_dir / "db_version").generic_string().c_str(),
-                     std::ios::out | std::ios::binary | std::ios::trunc );
-                  std::string version_string = GRAPHENE_CURRENT_DB_VERSION;
-                  db_version.write( version_string.c_str(), version_string.size() );
-                  db_version.close();
-               }
-            }
-         } else {
-            wlog("Detected unclean shutdown. Replaying blockchain...");
-            _chain_db->reindex(_data_dir / "blockchain", initial_state());
+            _chain_db->open( _data_dir / "blockchain", initial_state, GRAPHENE_CURRENT_DB_VERSION );
          }
-
-         if (!_options->count("genesis-json") &&
-             _chain_db->get_chain_id() != graphene::egenesis::get_egenesis_chain_id()) {
-            elog("Detected old database. Nuking and starting over.");
-            _chain_db->wipe(_data_dir / "blockchain", true);
-            _chain_db.reset();
-            _chain_db = std::make_shared<chain::database>();
-            _chain_db->add_checkpoints(loaded_checkpoints);
-            _chain_db->open(_data_dir / "blockchain", initial_state);
+         catch( const fc::exception& e )
+         {
+            elog( "Caught exception ${e} in open(), you might want to force a replay", ("e", e.to_detail_string()) );
+            throw;
          }
 
          if( _options->count("force-validate") )
@@ -436,11 +393,21 @@ namespace detail {
             _force_validate = true;
          }
 
-         graphene::time::now();
+         if( _options->count("api-access") ) {
 
-         if( _options->count("api-access") )
-            _apiaccess = fc::json::from_file( _options->at("api-access").as<boost::filesystem::path>() )
-               .as<api_access>();
+            if(fc::exists(_options->at("api-access").as<boost::filesystem::path>()))
+            {
+              _apiaccess = fc::json::from_file( _options->at("api-access").as<boost::filesystem::path>() ).as<api_access>();
+              ilog( "Using api access file from ${path}",
+                    ("path", _options->at("api-access").as<boost::filesystem::path>().string()) );
+            }
+            else
+            {
+              elog("Failed to load file from ${path}",
+                 ("path", _options->at("api-access").as<boost::filesystem::path>().string()));
+              std::exit(EXIT_FAILURE);
+            }
+         }
          else
          {
             // TODO:  Remove this generous default access policy
@@ -506,7 +473,7 @@ namespace detail {
                                 std::vector<fc::uint160_t>& contained_transaction_message_ids) override
       { try {
 
-         auto latency = graphene::time::now() - blk_msg.block.timestamp;
+         auto latency = fc::time_point::now() - blk_msg.block.timestamp;
          if (!sync_mode || blk_msg.block.block_num() % 10000 == 0)
          {
             const auto& witness = blk_msg.block.witness(*_chain_db);
@@ -519,6 +486,7 @@ namespace detail {
                  ("w",witness_account.name)
                  ("i",last_irr)("d",blk_msg.block.block_num()-last_irr) );
          }
+         FC_ASSERT( (latency.count()/1000) > -5000, "Rejecting block with timestamp in the future" );
 
          try {
             // TODO: in the case where this block is valid but on a fork that's too old for us to switch to,
@@ -944,6 +912,7 @@ void application::set_program_options(boost::program_options::options_descriptio
    configuration_file_options.add_options()
          ("p2p-endpoint", bpo::value<string>(), "Endpoint for P2P node to listen on")
          ("seed-node,s", bpo::value<vector<string>>()->composing(), "P2P nodes to connect to on startup (may specify multiple times)")
+         ("seed-nodes,ms", bpo::value<string>()->composing(), "P2P nodes to connect to on startup")
          ("checkpoint,c", bpo::value<vector<string>>()->composing(), "Pairs of [BLOCK_NUM,BLOCK_ID] that should be enforced as checkpoints.")
          ("rpc-endpoint", bpo::value<string>()->implicit_value("127.0.0.1:8090"), "Endpoint for websocket RPC to listen on")
          ("rpc-tls-endpoint", bpo::value<string>()->implicit_value("127.0.0.1:8089"), "Endpoint for TLS websocket RPC to listen on")

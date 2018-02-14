@@ -11,6 +11,7 @@
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/frequency_history_record_object.hpp>
 #include <graphene/chain/license_objects.hpp>
+#include <graphene/chain/upgrade_event_object.hpp>
 
 #include "../common/database_fixture.hpp"
 
@@ -249,6 +250,669 @@ BOOST_AUTO_TEST_CASE( different_license_kinds_unit_test )
   // This should fail, different license kind:
   GRAPHENE_REQUIRE_THROW( do_op(issue_license_operation(get_license_issuer_id(), vault_id, standard.id,
                           bonus_percent, frequency_lock, issue_time)), fc::exception );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( upgrade_event_index_test )
+{ try {
+
+  db.create<upgrade_event_object>([&](upgrade_event_object& lio){});
+  db.create<upgrade_event_object>([&](upgrade_event_object& lio){});
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( create_upgrade_event_test )
+{ try {
+
+  auto license_administrator_id = db.get_global_properties().authorities.license_administrator;
+  auto license_issuer_id = db.get_global_properties().authorities.license_issuer;
+  const auto hbt = db.head_block_time();
+  const auto& dgpo = db.get_dynamic_global_properties();
+  const auto& gpo = db.get_global_properties();
+
+  const auto get_upgrade_events = [this](vector<upgrade_event_object> &upgrades) {
+    const auto& idx = db.get_index_type<upgrade_event_index>().indices().get<by_id>();
+    for ( auto it = idx.begin(); it != idx.end(); ++it )
+      upgrades.emplace_back(*it);
+  };
+
+  // This should fail, wrong authority:
+  GRAPHENE_REQUIRE_THROW( do_op(create_upgrade_event_operation(license_issuer_id, hbt, {}, {}, "")), fc::exception );
+
+  // Should also fail, event's execution time is not a multiply of maintenance interval:
+  GRAPHENE_REQUIRE_THROW( do_op(create_upgrade_event_operation(license_administrator_id,
+                                                               dgpo.next_maintenance_time - fc::seconds(1),
+                                                               {}, {}, "")), fc::exception );
+
+  // Should also fail, event is scheduled in the past:
+  GRAPHENE_REQUIRE_THROW( do_op(create_upgrade_event_operation(license_administrator_id,
+                                                               dgpo.next_maintenance_time - 2 * gpo.parameters.maintenance_interval,
+                                                               {}, {}, "")), fc::exception );
+
+  // Should also fail, subsequent event is scheduled in the past:
+  GRAPHENE_REQUIRE_THROW( do_op(create_upgrade_event_operation(license_administrator_id,
+                                                               dgpo.next_maintenance_time,
+                                                               hbt + 60,
+                                                               {dgpo.next_maintenance_time - 2 * gpo.parameters.maintenance_interval}, "")), fc::exception );
+
+  // Should also fail, subsequent event is scheduled before the main execution time:
+  GRAPHENE_REQUIRE_THROW( do_op(create_upgrade_event_operation(license_administrator_id,
+                                                               dgpo.next_maintenance_time + 2 * gpo.parameters.maintenance_interval,
+                                                               hbt + 60,
+                                                               {dgpo.next_maintenance_time + gpo.parameters.maintenance_interval}, "")), fc::exception );
+
+  // This ought to work, execute time in future, no cutoff, no subsequent events:
+  do_op(create_upgrade_event_operation(license_administrator_id,
+                                       dgpo.next_maintenance_time, {}, {}, "foo"));
+
+  vector<upgrade_event_object> upgrades;
+  get_upgrade_events(upgrades);
+
+  FC_ASSERT( upgrades.size() == 1 );
+  FC_ASSERT( !upgrades[0].executed() );
+  FC_ASSERT( upgrades[0].comment.compare("foo") == 0 );
+  FC_ASSERT( upgrades[0].execution_time == dgpo.next_maintenance_time );
+  FC_ASSERT( *(upgrades[0].cutoff_time) == upgrades[0].execution_time );
+
+  // Fails, cannot create upgrade event at the same time as the previously created event:
+  GRAPHENE_REQUIRE_THROW( do_op(create_upgrade_event_operation(license_administrator_id, dgpo.next_maintenance_time,
+                                                               {}, {}, "")), fc::exception );
+
+  // This ought to work, execute time in future, cutoff in the future, no subsequent events:
+  do_op(create_upgrade_event_operation(license_administrator_id,
+                                       dgpo.next_maintenance_time + gpo.parameters.maintenance_interval,
+                                       hbt + 60, {}, "bar"));
+
+  upgrades.clear();
+  get_upgrade_events(upgrades);
+
+  FC_ASSERT( upgrades.size() == 2 );
+  FC_ASSERT( !upgrades[1].executed() );
+  FC_ASSERT( upgrades[1].comment.compare("bar") == 0 );
+  FC_ASSERT( upgrades[1].execution_time == dgpo.next_maintenance_time + gpo.parameters.maintenance_interval );
+
+  // This ought to work, execute time in future, cutoff in the future, subsequent event in the future:
+  do_op(create_upgrade_event_operation(license_administrator_id,
+                                       dgpo.next_maintenance_time + 2 * gpo.parameters.maintenance_interval,
+                                       hbt + 60,
+                                       {dgpo.next_maintenance_time + 3 * gpo.parameters.maintenance_interval}, "foobar"));
+
+  upgrades.clear();
+  get_upgrade_events(upgrades);
+
+  FC_ASSERT( upgrades.size() == 3 );
+  FC_ASSERT( !upgrades[2].executed() );
+  FC_ASSERT( upgrades[2].comment.compare("foobar") == 0 );
+  FC_ASSERT( upgrades[2].execution_time == dgpo.next_maintenance_time + 2 * gpo.parameters.maintenance_interval );
+  FC_ASSERT( upgrades[2].subsequent_execution_times.size() == 1 );
+  FC_ASSERT( upgrades[2].subsequent_execution_times[0] == dgpo.next_maintenance_time + 3 * gpo.parameters.maintenance_interval );
+
+  // This fails, second subsequent event is not in the future:
+  GRAPHENE_REQUIRE_THROW( do_op(create_upgrade_event_operation(license_administrator_id,
+                                                               dgpo.next_maintenance_time + 3 * gpo.parameters.maintenance_interval,
+                                                               hbt + 60,
+                                                               {dgpo.next_maintenance_time + 4 * gpo.parameters.maintenance_interval,
+                                                                dgpo.next_maintenance_time - 4 * gpo.parameters.maintenance_interval}, "")), fc::exception );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( upgrade_event_executed_test )
+{ try {
+  const auto& dgpo = db.get_dynamic_global_properties();
+  const auto& gpo = db.get_global_properties();
+
+  const auto get_upgrade_events = [this](vector<upgrade_event_object> &upgrades) {
+    const auto& idx = db.get_index_type<upgrade_event_index>().indices().get<by_id>();
+    for ( auto it = idx.begin(); it != idx.end(); ++it )
+      upgrades.emplace_back(*it);
+  };
+
+  do_op(create_upgrade_event_operation(get_license_administrator_id(),
+                                       dgpo.next_maintenance_time,
+                                       {}, {}, "foo"));
+
+  // Wait for the next maintenance interval:
+  generate_blocks(dgpo.next_maintenance_time);
+
+  vector<upgrade_event_object> upgrades;
+  get_upgrade_events(upgrades);
+
+  FC_ASSERT( upgrades[0].executed() );
+
+  do_op(create_upgrade_event_operation(get_license_administrator_id(),
+                                       dgpo.next_maintenance_time + 2 * gpo.parameters.maintenance_interval,
+                                       {}, {}, "bar"));
+
+  // Wait for the next maintenance interval:
+  generate_blocks(dgpo.next_maintenance_time + 2 * gpo.parameters.maintenance_interval);
+
+  upgrades.clear();
+  get_upgrade_events(upgrades);
+
+  // At this point, the second upgrade event has been marked as executed:
+  FC_ASSERT( upgrades[1].executed() );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( update_upgrade_event_test )
+{ try {
+  auto license_administrator_id = db.get_global_properties().authorities.license_administrator;
+  auto license_issuer_id = db.get_global_properties().authorities.license_issuer;
+  const auto hbt = db.head_block_time();
+  const auto& dgpo = db.get_dynamic_global_properties();
+  const auto& gpo = db.get_global_properties();
+
+  const auto get_upgrade_events = [this](vector<upgrade_event_object> &upgrades) {
+    const auto& idx = db.get_index_type<upgrade_event_index>().indices().get<by_id>();
+    for ( auto it = idx.begin(); it != idx.end(); ++it )
+      upgrades.emplace_back(*it);
+  };
+
+  do_op(create_upgrade_event_operation(license_administrator_id, dgpo.next_maintenance_time, {}, {}, "foo"));
+
+  vector<upgrade_event_object> upgrades;
+  get_upgrade_events(upgrades);
+  FC_ASSERT( upgrades.size() == 1 );
+
+  // Fails because of invalid authority:
+  GRAPHENE_REQUIRE_THROW( do_op(update_upgrade_event_operation(license_issuer_id, upgrades[0].id, hbt, {}, {}, "bar")), fc::exception );
+
+  // Fails because execution time is in the past:
+  GRAPHENE_REQUIRE_THROW( do_op(update_upgrade_event_operation(license_administrator_id,
+                                                               upgrades[0].id,
+                                                               dgpo.next_maintenance_time - 4 * gpo.parameters.maintenance_interval,
+                                                               {}, {}, "bar")), fc::exception );
+
+  // Fails because cutoff time is in the past:
+  GRAPHENE_REQUIRE_THROW( do_op(update_upgrade_event_operation(license_administrator_id,
+                                                               upgrades[0].id,
+                                                               dgpo.next_maintenance_time,
+                                                               hbt, {}, "bar")), fc::exception );
+
+  // Fails because subsequent execution time is in the past:
+  GRAPHENE_REQUIRE_THROW( do_op(update_upgrade_event_operation(license_administrator_id,
+                                                               upgrades[0].id,
+                                                               dgpo.next_maintenance_time,
+                                                               hbt + 60,
+                                                               vector<time_point_sec>{dgpo.next_maintenance_time - 4 * gpo.parameters.maintenance_interval}, "bar")), fc::exception );
+
+  // This should succeed:
+  do_op(update_upgrade_event_operation(license_administrator_id,
+                                       upgrades[0].id,
+                                       dgpo.next_maintenance_time + 2 * gpo.parameters.maintenance_interval,
+                                       hbt + 120, vector<time_point_sec>{dgpo.next_maintenance_time + 4 * gpo.parameters.maintenance_interval}, "bar"));
+
+  upgrades.clear();
+  get_upgrade_events(upgrades);
+
+  // There's still one upgrade event:
+  FC_ASSERT( upgrades.size() == 1 );
+  // But updated accordingly:
+  FC_ASSERT( upgrades[0].execution_time == dgpo.next_maintenance_time + 2 * gpo.parameters.maintenance_interval );
+  FC_ASSERT( upgrades[0].cutoff_time == hbt + 120 );
+  FC_ASSERT( upgrades[0].subsequent_execution_times.size() == 1 );
+  FC_ASSERT( upgrades[0].subsequent_execution_times[0] == dgpo.next_maintenance_time + 4 * gpo.parameters.maintenance_interval );
+  FC_ASSERT( upgrades[0].comment.compare("bar") == 0 );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( delete_upgrade_event_test )
+{ try {
+  auto license_administrator_id = db.get_global_properties().authorities.license_administrator;
+  auto license_issuer_id = db.get_global_properties().authorities.license_issuer;
+  const auto& dgpo = db.get_dynamic_global_properties();
+
+  const auto get_upgrade_events = [this](vector<upgrade_event_object> &upgrades) {
+    const auto& idx = db.get_index_type<upgrade_event_index>().indices().get<by_id>();
+    for ( auto it = idx.begin(); it != idx.end(); ++it )
+      upgrades.emplace_back(*it);
+  };
+
+  do_op(create_upgrade_event_operation(license_administrator_id, dgpo.next_maintenance_time, {}, {}, "foo"));
+
+  vector<upgrade_event_object> upgrades;
+  get_upgrade_events(upgrades);
+  FC_ASSERT( upgrades.size() == 1 );
+
+  // Fails because of invalid authority:
+  GRAPHENE_REQUIRE_THROW( do_op(delete_upgrade_event_operation(license_issuer_id, upgrades[0].id)), fc::exception );
+  auto id = upgrades[0].id;
+  ++id;
+  // Fails because of invalid id:
+  GRAPHENE_REQUIRE_THROW( do_op(delete_upgrade_event_operation(license_administrator_id, id)), fc::exception );
+
+  do_op(delete_upgrade_event_operation(license_administrator_id, upgrades[0].id));
+  upgrades.clear();
+  get_upgrade_events(upgrades);
+
+  // No active upgrade events at this point:
+  FC_ASSERT( upgrades.empty() );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( upgrade_cycles_test )
+{ try {
+  VAULT_ACTOR(foo);
+  VAULT_ACTOR(bar);
+  VAULT_ACTOR(foobar);
+  VAULT_ACTOR(alice);
+
+  auto standard_locked = *(_dal.get_license_type("standard_locked"));
+  auto executive_locked = *(_dal.get_license_type("executive_locked"));
+  auto vice_president_locked = *(_dal.get_license_type("vice_president_locked"));
+  auto president_locked = *(_dal.get_license_type("president_locked"));
+  const share_type bonus_percent = 0;
+  const share_type frequency_lock = 100;
+  const time_point_sec issue_time = db.head_block_time();
+  const auto& dgpo = db.get_dynamic_global_properties();
+  const auto& gpo = db.get_global_properties();
+
+  do_op(issue_license_operation(get_license_issuer_id(), foo_id, standard_locked.id,
+                                bonus_percent, frequency_lock, issue_time));
+
+  do_op(issue_license_operation(get_license_issuer_id(), bar_id, executive_locked.id,
+                                bonus_percent, frequency_lock, issue_time));
+
+  do_op(issue_license_operation(get_license_issuer_id(), foobar_id, president_locked.id,
+                                bonus_percent, frequency_lock, issue_time));
+
+  do_op(issue_license_operation(get_license_issuer_id(), alice_id, executive_locked.id,
+                                bonus_percent, frequency_lock, issue_time));
+
+  do_op(issue_license_operation(get_license_issuer_id(), alice_id, vice_president_locked.id,
+                                bonus_percent, frequency_lock, issue_time));
+
+//  generate_blocks(db.head_block_time() + fc::hours(24));
+
+  // No upgrade happened yet!
+//  BOOST_CHECK_EQUAL( db.get_dynamic_global_properties().total_upgrade_events, 0 );
+
+  // Alice is spender:
+  do_op(submit_cycles_to_queue_by_license_operation(alice_id, 1000, executive_locked.id, 100, "TEST"));
+  do_op(submit_cycles_to_queue_by_license_operation(alice_id, 2000, vice_president_locked.id, 100, "TEST"));
+
+  // FooBar wasted its balance:
+  do_op(submit_cycles_to_queue_by_license_operation(foobar_id, DASCOIN_BASE_PRESIDENT_CYCLES, president_locked.id, 100, "TEST"));
+
+  do_op(create_upgrade_event_operation(get_license_administrator_id(),
+                                       dgpo.next_maintenance_time,
+                                       {}, {}, "foo"));
+
+  // Wait for the next maintenance interval:
+  generate_blocks(dgpo.next_maintenance_time);
+
+  // One upgrade event has happened:
+//  BOOST_CHECK_EQUAL( db.get_dynamic_global_properties().total_upgrade_events, 1 );
+
+  BOOST_CHECK_EQUAL( get_cycle_balance(foo_id).value, 2 * DASCOIN_BASE_STANDARD_CYCLES );
+  BOOST_CHECK_EQUAL( get_cycle_balance(bar_id).value, 2 * DASCOIN_BASE_EXECUTIVE_CYCLES );
+  BOOST_CHECK_EQUAL( get_cycle_balance(foobar_id).value, DASCOIN_BASE_PRESIDENT_CYCLES );
+  BOOST_CHECK_EQUAL( get_cycle_balance(alice_id).value, 2 * (DASCOIN_BASE_EXECUTIVE_CYCLES - 1000) + 2 * (DASCOIN_BASE_VICE_PRESIDENT_CYCLES - 2000) );
+
+  const auto& license_information_obj = (*alice.license_information)(db);
+  const auto& license_history = license_information_obj.history;
+  const auto& executive_license_record = license_history[0];
+  const auto& vice_president_license_record = license_history[1];
+  const uint32_t executive_remaining_cycles = 2 * (DASCOIN_BASE_EXECUTIVE_CYCLES - 1000);
+  const uint32_t vice_president_remaining_cycles = 2 * (DASCOIN_BASE_VICE_PRESIDENT_CYCLES - 2000);
+  BOOST_CHECK_EQUAL( executive_license_record.amount.value, executive_remaining_cycles );
+  BOOST_CHECK_EQUAL( vice_president_license_record.amount.value, vice_president_remaining_cycles );
+
+  do_op(create_upgrade_event_operation(get_license_administrator_id(),
+                                       dgpo.next_maintenance_time + 2 * gpo.parameters.maintenance_interval,
+                                       {}, {}, "foo"));
+
+  generate_blocks(dgpo.next_maintenance_time + 2 * gpo.parameters.maintenance_interval);
+
+  // Second upgrade event has happened:
+//  BOOST_CHECK_EQUAL( db.get_dynamic_global_properties().total_upgrade_events, 2 );
+
+  BOOST_CHECK_EQUAL( get_cycle_balance(foo_id).value, 2 * DASCOIN_BASE_STANDARD_CYCLES );
+  BOOST_CHECK_EQUAL( get_cycle_balance(bar_id).value, 4 * DASCOIN_BASE_EXECUTIVE_CYCLES );
+  BOOST_CHECK_EQUAL( get_cycle_balance(foobar_id).value, 3 * DASCOIN_BASE_PRESIDENT_CYCLES );
+  BOOST_CHECK_EQUAL( get_cycle_balance(alice_id).value, 4 * (DASCOIN_BASE_EXECUTIVE_CYCLES - 1000) + 4 * (DASCOIN_BASE_VICE_PRESIDENT_CYCLES - 2000) );
+
+  // Wait for the maintenance interval to trigger:
+//  generate_blocks(db.head_block_time() + fc::days(120));
+  do_op(create_upgrade_event_operation(get_license_administrator_id(),
+                                       dgpo.next_maintenance_time + 3 * gpo.parameters.maintenance_interval,
+                                       {}, {}, "foo"));
+
+  generate_blocks(dgpo.next_maintenance_time + 3 * gpo.parameters.maintenance_interval);
+
+  // Third upgrade event has happened:
+//  BOOST_CHECK_EQUAL( db.get_dynamic_global_properties().total_upgrade_events, 3 );
+
+  BOOST_CHECK_EQUAL( get_cycle_balance(foo_id).value, 2 * DASCOIN_BASE_STANDARD_CYCLES );
+  BOOST_CHECK_EQUAL( get_cycle_balance(bar_id).value, 4 * DASCOIN_BASE_EXECUTIVE_CYCLES );
+  BOOST_CHECK_EQUAL( get_cycle_balance(foobar_id).value, 7 * DASCOIN_BASE_PRESIDENT_CYCLES );
+  BOOST_CHECK_EQUAL( get_cycle_balance(alice_id).value, 4 * (DASCOIN_BASE_EXECUTIVE_CYCLES - 1000) + 4 * (DASCOIN_BASE_VICE_PRESIDENT_CYCLES - 2000) );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( upgrade_president_cycles_test )
+{ try {
+  VAULT_ACTOR(foo);
+  auto president_locked = *(_dal.get_license_type("president_locked"));
+  const share_type bonus_percent = 0;
+  const share_type frequency_lock = 100;
+  const time_point_sec issue_time = db.head_block_time();
+  const auto& dgpo = db.get_dynamic_global_properties();
+  const auto& gpo = db.get_global_properties();
+
+  do_op(issue_license_operation(get_license_issuer_id(), foo_id, president_locked.id,
+                                bonus_percent, frequency_lock, issue_time));
+
+  generate_blocks(db.head_block_time() + fc::hours(24));
+
+  // Submit 1000 cycles, these cannot be upgraded because they are spent:
+  do_op(submit_cycles_to_queue_by_license_operation(foo_id, 1000, president_locked.id, 100, "TEST"));
+
+  do_op(create_upgrade_event_operation(get_license_administrator_id(),
+                                       dgpo.next_maintenance_time,
+                                       {}, {}, "foo"));
+
+  // Wait for the next maintenance interval:
+  generate_blocks(dgpo.next_maintenance_time);
+
+  BOOST_CHECK_EQUAL( get_cycle_balance(foo_id).value, 2 * DASCOIN_BASE_PRESIDENT_CYCLES - 1000 );
+
+  do_op(create_upgrade_event_operation(get_license_administrator_id(),
+                                       dgpo.next_maintenance_time + 2 * gpo.parameters.maintenance_interval,
+                                       {}, {}, "foo"));
+
+  // Submit 2000 cycles:
+  do_op(submit_cycles_to_queue_by_license_operation(foo_id, 2000, president_locked.id, 100, "TEST"));
+
+  // Wait for the next maintenance interval and subsequent upgrade:
+  generate_blocks(dgpo.next_maintenance_time + 2 * gpo.parameters.maintenance_interval);
+
+  BOOST_CHECK_EQUAL( get_cycle_balance(foo_id).value, 4 * DASCOIN_BASE_PRESIDENT_CYCLES - 3000 );
+
+  // Submit 3000 cycles:
+  do_op(submit_cycles_to_queue_by_license_operation(foo_id, 3000, president_locked.id, 100, "TEST"));
+
+  do_op(create_upgrade_event_operation(get_license_administrator_id(),
+                                       dgpo.next_maintenance_time + 3 * gpo.parameters.maintenance_interval,
+                                       {}, {}, "foo"));
+
+  // Wait for the next maintenance interval and subsequent upgrade:
+  generate_blocks(dgpo.next_maintenance_time + 3 * gpo.parameters.maintenance_interval);
+
+  BOOST_CHECK_EQUAL( get_cycle_balance(foo_id).value, 8 * DASCOIN_BASE_PRESIDENT_CYCLES - 6000 );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( upgrade_charter_license_test )
+{ try {
+  VAULT_ACTOR(foo);
+  VAULT_ACTOR(bar);
+  VAULT_ACTOR(foobar);
+  auto standard_charter = *(_dal.get_license_type("standard_charter"));
+  auto executive_charter = *(_dal.get_license_type("executive_charter"));
+  auto president_charter = *(_dal.get_license_type("president_charter"));
+  const share_type bonus_percent = 0;
+  const share_type frequency_lock = 100;
+  const time_point_sec issue_time = db.head_block_time();
+  const auto &dgpo = db.get_dynamic_global_properties();
+  const auto& gpo = db.get_global_properties();
+
+  do_op(issue_license_operation(get_license_issuer_id(), foo_id, standard_charter.id,
+                                bonus_percent, frequency_lock, issue_time));
+
+  do_op(issue_license_operation(get_license_issuer_id(), foobar_id, executive_charter.id,
+                                bonus_percent, frequency_lock, issue_time));
+
+  do_op(issue_license_operation(get_license_issuer_id(), bar_id, president_charter.id,
+                                bonus_percent, frequency_lock, issue_time));
+
+  generate_blocks(db.head_block_time() + fc::hours(24));
+
+  do_op(create_upgrade_event_operation(get_license_administrator_id(),
+                                       dgpo.next_maintenance_time,
+                                       {}, {}, "foo"));
+
+  // Wait for the next maintenance interval:
+  generate_blocks(dgpo.next_maintenance_time);
+
+  auto result_vec = *_dal.get_queue_submissions_with_pos(foo_id).result;
+  BOOST_CHECK_EQUAL( result_vec.size(), 2 );
+  auto rqo = result_vec[1].submission;
+  BOOST_CHECK_EQUAL( rqo.origin, "reserve_cycles" );
+  BOOST_CHECK_EQUAL( rqo.comment, "Licence Standard Upgrade 1/1" );
+  BOOST_CHECK_EQUAL( rqo.amount.value, DASCOIN_BASE_STANDARD_CYCLES );
+
+  auto result_vec2 = *_dal.get_queue_submissions_with_pos(bar_id).result;
+  BOOST_CHECK_EQUAL( result_vec2.size(), 2 );
+  auto rqo2 = result_vec2[1].submission;
+  BOOST_CHECK_EQUAL( rqo2.origin, "reserve_cycles" );
+  BOOST_CHECK_EQUAL( rqo2.comment, "Licence President Upgrade 1/3" );
+  BOOST_CHECK_EQUAL( rqo2.amount.value, DASCOIN_BASE_PRESIDENT_CYCLES );
+
+  const auto& license_information_obj = (*bar.license_information)(db);
+
+  const auto& license_history = license_information_obj.history;
+
+  BOOST_CHECK_EQUAL( license_history.size(), 1 );
+
+  const auto& license_record = license_history[0];
+  auto res = _dal.get_vault_info(bar_id);
+
+  BOOST_CHECK_EQUAL( license_record.amount.value, DASCOIN_BASE_PRESIDENT_CYCLES );
+
+  do_op(create_upgrade_event_operation(get_license_administrator_id(),
+                                       dgpo.next_maintenance_time + 2 * gpo.parameters.maintenance_interval,
+                                       {}, {}, "foo"));
+
+  // Wait for the next maintenance interval:
+  generate_blocks(dgpo.next_maintenance_time + 2 * gpo.parameters.maintenance_interval);
+
+  auto result_vec3 = *_dal.get_queue_submissions_with_pos(foobar_id).result;
+  BOOST_CHECK_EQUAL( result_vec3.size(), 3 );
+  auto rqo3 = result_vec3[1].submission;
+  BOOST_CHECK_EQUAL( rqo3.origin, "reserve_cycles" );
+  BOOST_CHECK_EQUAL( rqo3.comment, "Licence Executive Upgrade 1/2" );
+  BOOST_CHECK_EQUAL( rqo3.amount.value, DASCOIN_BASE_EXECUTIVE_CYCLES );
+  auto rqo4 = result_vec3[2].submission;
+  BOOST_CHECK_EQUAL( rqo4.origin, "reserve_cycles" );
+  BOOST_CHECK_EQUAL( rqo4.comment, "Licence Executive Upgrade 2/2" );
+  BOOST_CHECK_EQUAL( rqo4.amount.value, 2 * DASCOIN_BASE_EXECUTIVE_CYCLES );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( upgrade_not_executed_test )
+{ try {
+  VAULT_ACTOR(foo);
+
+  auto standard_locked = *(_dal.get_license_type("standard_locked"));
+  const share_type bonus_percent = 0;
+  const share_type frequency_lock = 100;
+  const time_point_sec activated_time = db.head_block_time();
+  const auto& dgpo = db.get_dynamic_global_properties();
+  const auto& gpo = db.get_global_properties();
+
+  do_op(issue_license_operation(get_license_issuer_id(), foo_id, standard_locked.id,
+                                bonus_percent, frequency_lock,
+                                dgpo.next_maintenance_time + 2 * gpo.parameters.maintenance_interval));
+
+  // This will not upgrade foo, because the execution time is before license's activation time:
+  do_op(create_upgrade_event_operation(get_license_administrator_id(),
+                                       dgpo.next_maintenance_time + gpo.parameters.maintenance_interval, {}, {},
+                                       "upgrade1"));
+
+  // Will not upgrade foo, because cutoff time is before license's activation time:
+  do_op(create_upgrade_event_operation(get_license_administrator_id(),
+                                       dgpo.next_maintenance_time + 2 * gpo.parameters.maintenance_interval,
+                                       activated_time + 60, {}, "upgrade2"));
+
+  // Will not upgrade foo even in subsequent executions:
+  do_op(create_upgrade_event_operation(get_license_administrator_id(),
+                                       dgpo.next_maintenance_time + 3 * gpo.parameters.maintenance_interval,
+                                       {activated_time + 60},
+                                       {{dgpo.next_maintenance_time + 4 * gpo.parameters.maintenance_interval}}, "upgrade3"));
+
+  generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
+
+  BOOST_CHECK_EQUAL( get_cycle_balance(foo_id).value, DASCOIN_BASE_STANDARD_CYCLES );
+
+  do_op(create_upgrade_event_operation(get_license_administrator_id(),
+                                       dgpo.next_maintenance_time + 4 * gpo.parameters.maintenance_interval,
+                                       activated_time - 60, {}, "foo"));
+
+  generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
+
+  BOOST_CHECK_EQUAL( get_cycle_balance(foo_id).value, DASCOIN_BASE_STANDARD_CYCLES );
+
+  do_op(create_upgrade_event_operation(get_license_administrator_id(),
+                                       dgpo.next_maintenance_time + 5 * gpo.parameters.maintenance_interval,
+                                       activated_time - 60, {}, "foo"));
+
+  generate_blocks(db.get_dynamic_global_properties().next_maintenance_time);
+
+  BOOST_CHECK_EQUAL( get_cycle_balance(foo_id).value, DASCOIN_BASE_STANDARD_CYCLES );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( upgrade_executed_test )
+{ try {
+  VAULT_ACTOR(foo);
+  VAULT_ACTOR(bar);
+  VAULT_ACTOR(foobar);
+  VAULT_ACTOR(barfoo);
+  VAULT_ACTOR(foofoobar);
+  VAULT_ACTOR(barbarfoo);
+
+  auto standard_locked = *(_dal.get_license_type("standard_locked"));
+  auto manager_locked = *(_dal.get_license_type("manager_locked"));
+  auto pro_locked = *(_dal.get_license_type("pro_locked"));
+  auto executive_locked = *(_dal.get_license_type("executive_locked"));
+  auto vp_locked = *(_dal.get_license_type("vice_president_locked"));
+  auto p_locked = *(_dal.get_license_type("president_locked"));
+  const share_type bonus_percent = 0;
+  const share_type frequency_lock = 100;
+  const time_point_sec activated_time = db.head_block_time();
+  const auto& dgpo = db.get_dynamic_global_properties();
+  const auto& gpo = db.get_global_properties();
+
+  // License activated before upgrade event, so it should be upgraded:
+  do_op(issue_license_operation(get_license_issuer_id(), foo_id, standard_locked.id,
+                                bonus_percent, frequency_lock, activated_time));
+
+  // License activated before cutoff time, so it should be upgraded too:
+  do_op(issue_license_operation(get_license_issuer_id(), bar_id, manager_locked.id,
+                                bonus_percent, frequency_lock, activated_time + fc::hours(26)));
+
+  do_op(create_upgrade_event_operation(get_license_administrator_id(),
+                                       dgpo.next_maintenance_time,
+                                       activated_time + fc::hours(72),
+                                       {{dgpo.next_maintenance_time + 4 * gpo.parameters.maintenance_interval},
+                                        {dgpo.next_maintenance_time + 7 * gpo.parameters.maintenance_interval}}, "foo_upgrade"));
+
+  // Issue 200 cycles to foo, those should not be upgraded:
+  do_op(issue_cycles_to_license_operation(get_cycle_issuer_id(), foo_id, standard_locked.id, 200, "foo", "bar"));
+
+  generate_blocks(dgpo.next_maintenance_time);
+
+  BOOST_CHECK_EQUAL( get_cycle_balance(foo_id).value, 2 * DASCOIN_BASE_STANDARD_CYCLES );
+  BOOST_CHECK_EQUAL( get_cycle_balance(bar_id).value, 2 * DASCOIN_BASE_MANAGER_CYCLES );
+
+  // License created after the first execution of upgrade event, but activated before cutoff time, so it should be upgraded too:
+  do_op(issue_license_operation(get_license_issuer_id(), foobar_id, pro_locked.id,
+                                bonus_percent, frequency_lock, activated_time + fc::hours(28)));
+
+  generate_blocks(dgpo.next_maintenance_time + 3 * gpo.parameters.maintenance_interval);
+
+  // Balance for the first two should remain the same:
+  BOOST_CHECK_EQUAL( get_cycle_balance(foo_id).value, 2 * DASCOIN_BASE_STANDARD_CYCLES );
+  BOOST_CHECK_EQUAL( get_cycle_balance(bar_id).value, 2 * DASCOIN_BASE_MANAGER_CYCLES );
+
+  // Upgrade is executed for foobar:
+  BOOST_CHECK_EQUAL( get_cycle_balance(foobar_id).value, 2 * DASCOIN_BASE_PRO_CYCLES );
+
+  // License created after cutoff time, but activated before upgrade execution time, so it should be upgraded in encore event:
+  do_op(issue_license_operation(get_license_issuer_id(), barfoo_id, executive_locked.id,
+                                bonus_percent, frequency_lock, activated_time));
+
+  // License created after cutoff time, but activated before cutoff time, so it should be upgraded in encore event:
+  do_op(issue_license_operation(get_license_issuer_id(), foofoobar_id, vp_locked.id,
+                                bonus_percent, frequency_lock, activated_time + fc::hours(48)));
+
+  generate_blocks(dgpo.next_maintenance_time + 2 * gpo.parameters.maintenance_interval);
+
+  // Balance for the first three should remain the same:
+  BOOST_CHECK_EQUAL( get_cycle_balance(foo_id).value, 2 * DASCOIN_BASE_STANDARD_CYCLES );
+  BOOST_CHECK_EQUAL( get_cycle_balance(bar_id).value, 2 * DASCOIN_BASE_MANAGER_CYCLES );
+  BOOST_CHECK_EQUAL( get_cycle_balance(foobar_id).value, 2 * DASCOIN_BASE_PRO_CYCLES );
+
+  // barfoo should be upgraded now:
+  BOOST_CHECK_EQUAL( get_cycle_balance(barfoo_id).value, 2 * DASCOIN_BASE_EXECUTIVE_CYCLES );
+  // foofoobar also:
+  BOOST_CHECK_EQUAL( get_cycle_balance(foofoobar_id).value, 2 * DASCOIN_BASE_VICE_PRESIDENT_CYCLES );
+
+  // License activated after cutoff time, should not be upgraded even in encore:
+  do_op(issue_license_operation(get_license_issuer_id(), barbarfoo_id, p_locked.id,
+                                bonus_percent, frequency_lock, activated_time + fc::hours(78)));
+  generate_blocks(db.head_block_time() + fc::hours(25));
+
+  // Cycles remain:
+  BOOST_CHECK_EQUAL( get_cycle_balance(barbarfoo_id).value, DASCOIN_BASE_PRESIDENT_CYCLES );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( update_license_unit_test )
+{ try {
+  VAULT_ACTOR(vault);
+
+  auto standard_locked = *(_dal.get_license_type("standard_locked"));
+  const share_type bonus_percent = 50;
+  share_type frequency_lock = 20;
+  const time_point_sec issue_time = db.head_block_time();
+  const uint32_t amount_after = DASCOIN_BASE_STANDARD_CYCLES + (55 * DASCOIN_BASE_STANDARD_CYCLES) / 100;
+
+  // Issue standard locked license:
+  do_op(issue_license_operation(get_license_issuer_id(), vault_id, standard_locked.id,
+                                bonus_percent, frequency_lock, issue_time));
+
+  do_op(update_license_operation(get_license_issuer_id(), vault_id, standard_locked.id, 55, 10, issue_time + 3600));
+
+  const auto& license_information_obj = (*vault.license_information)(db);
+
+  BOOST_CHECK( license_information_obj.account == vault_id );
+
+  const auto& license_history = license_information_obj.history;
+
+  BOOST_CHECK_EQUAL( license_history.size(), 1 );
+
+  const auto& license_record = license_history[0];
+  auto res = _dal.get_vault_info(vault_id);
+
+  BOOST_CHECK( license_record.license == standard_locked.id );
+  BOOST_CHECK_EQUAL( license_record.amount.value, amount_after );
+  BOOST_CHECK_EQUAL( license_record.base_amount.value, DASCOIN_BASE_STANDARD_CYCLES );
+  BOOST_CHECK_EQUAL( license_record.bonus_percent.value, 55 );
+  BOOST_CHECK_EQUAL( license_record.frequency_lock.value, 10 );
+  BOOST_CHECK( license_record.activated_at == issue_time + 3600 );
+  BOOST_CHECK_EQUAL( res->free_cycle_balance.value, amount_after );
+
+  auto executive_locked = *(_dal.get_license_type("executive_locked"));
+
+  // This ought to fail, this license has not been issued to the vault:
+  GRAPHENE_REQUIRE_THROW( do_op(update_license_operation(get_license_issuer_id(), vault_id, executive_locked.id, 40, 10, issue_time + 3600)), fc::exception );
+
+  // This ought to fail, frequency lock cannot be zero:
+  GRAPHENE_REQUIRE_THROW( do_op(update_license_operation(get_license_issuer_id(), vault_id, standard_locked.id, 40, 0, issue_time + 3600)), fc::exception );
+
+  // This ought to fail, bonus percentage cannot be decreased:
+  GRAPHENE_REQUIRE_THROW( do_op(update_license_operation(get_license_issuer_id(), vault_id, standard_locked.id, 30, 10, issue_time + 3600)), fc::exception );
+
+  // Now submit 1000 cycles:
+  do_op(submit_cycles_to_queue_by_license_operation(vault_id, 1000, standard_locked.id, 10, "TEST"));
+
+  do_op(update_license_operation(get_license_issuer_id(), vault_id, standard_locked.id, 60, 20, {}));
+
+  auto res2 = _dal.get_vault_info(vault_id);
+  // Now we should have 55 cycles extra, but 1000 is spent:
+  BOOST_CHECK_EQUAL( res2->free_cycle_balance.value, amount_after + 55 - 1000 );
 
 } FC_LOG_AND_RETHROW() }
 

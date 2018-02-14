@@ -66,6 +66,17 @@ namespace graphene { namespace chain {
          uint16_t          virtual_op = 0;
    };
 
+   struct by_blnum;
+   typedef multi_index_container<
+      operation_history_object,
+      indexed_by<
+         ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
+         ordered_non_unique< tag<by_blnum>, member<operation_history_object, uint32_t, &operation_history_object::block_num> >
+      >
+   > operation_history_multi_index_type;
+
+   typedef generic_index<operation_history_object, operation_history_multi_index_type> operation_history_index;
+
    /**
     *  @brief a node in a linked list of operation_history_objects
     *  @ingroup implementation

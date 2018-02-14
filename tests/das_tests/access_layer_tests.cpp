@@ -25,7 +25,6 @@ BOOST_AUTO_TEST_CASE( get_free_cycle_balance_non_existant_id_unit_test )
   auto res = _dal.get_free_cycle_balance(bogus_id);
   BOOST_CHECK( res.account_id == bogus_id );
   BOOST_CHECK( !res.result.valid() );
-
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_CASE( get_free_cycle_balance_unit_test )
@@ -557,6 +556,116 @@ BOOST_AUTO_TEST_CASE( get_queue_submissions_with_pos_for_accounts_unit_test )
   BOOST_CHECK_EQUAL( pos_vec.size(), 0 );
 
 } FC_LOG_AND_RETHROW() }*/
+
+BOOST_AUTO_TEST_CASE( get_block_with_virtual_operations )
+{ try {
+    ACTOR(alicew);
+    ACTOR(bobw);
+    VAULT_ACTOR(bob);
+    VAULT_ACTOR(alice);
+
+    const auto check_balances = [this](const account_object& account, share_type expected_cash,
+                                       share_type expected_reserved)
+    {
+        share_type cash, reserved;
+        std::tie(cash, reserved) = get_web_asset_amounts(account.id);
+        bool amount_ok = (cash == expected_cash && reserved == expected_reserved);
+        FC_ASSERT( amount_ok, "On account '${n}': balance = (${c}/${r}), expected = (${ec}/${er})",
+                   ("n", account.name)("c", cash)("r", reserved)("ec", expected_cash)("er", expected_reserved));
+    };
+
+    const auto issue_assets = [&, this](share_type web_assets, share_type web_assets_reserved, share_type expected_web_assets, share_type web_assets_reserved_expected)
+    {
+        set_expiration( db, trx );
+        issue_webasset("1", alice_id, web_assets, web_assets_reserved);
+
+        adjust_dascoin_reward(500 * DASCOIN_DEFAULT_ASSET_PRECISION);
+        adjust_frequency(200);
+
+        do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), bob_id, 200, 200, ""));
+        toggle_reward_queue(true);
+
+        // Wait for the cycles to be distributed:
+        generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
+        check_balances(alice, expected_web_assets, web_assets_reserved_expected);
+        BOOST_CHECK_EQUAL( get_balance(bob_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
+    };
+
+    issue_assets(1000, 100, 1000, 100);
+
+    tether_accounts(bobw_id, bob_id);
+    tether_accounts(alicew_id, alice_id);
+
+    // Set limit to 100 dascoin
+    db.adjust_balance_limit(bob, get_dascoin_asset_id(), 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+    transfer_dascoin_vault_to_wallet(bob_id, bobw_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+    transfer_webasset_vault_to_wallet(alice_id, alicew_id, {1000, 100});
+
+    // at this point, alice got 1000+100 web assets and bobw got 100 dascoins
+
+    set_expiration( db, trx );
+
+    // place two orders which will produce a match
+    create_sell_order(alicew_id, asset{1 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()},
+                      asset{10 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()});
+    create_sell_order(bobw_id, asset{10 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()},
+                      asset{1 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()});
+
+    // balances: alice 900+100, bob 0
+    check_balances(alicew, 900, 100);
+    BOOST_CHECK_EQUAL( get_balance(bobw_id, get_dascoin_asset_id()), 90 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+    const auto &dgpo = get_dynamic_global_properties();
+    const auto &dprice = dgpo.last_dascoin_price;
+    const price expected_price{ asset{10 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()},
+                                asset{1 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()} };
+    BOOST_CHECK( dprice == expected_price );
+
+    create_sell_order(alicew_id, asset{2 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()},
+                      asset{10 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()});
+    create_sell_order(bobw_id, asset{10 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()},
+                      asset{2 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()});
+    const auto &dgpo2 = get_dynamic_global_properties();
+    const auto &dprice2 = dgpo2.last_dascoin_price;
+    const price expected_price2{ asset{10 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()},
+                                 asset{2 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()}};
+    BOOST_CHECK( dprice2 == expected_price2 );
+
+    generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
+
+    vector<signed_block_with_virtual_operations_and_num> results;
+
+    vector<uint16_t> virtual_op_ids;
+    operation opad = record_distribute_dascoin_operation();
+    operation opfo = fill_order_operation();
+
+    virtual_op_ids.push_back(opfo.which());
+    virtual_op_ids.push_back(opad.which());
+    // Starting from block #2, fetch the following 20 blocks:
+    results = _dal.get_blocks_with_virtual_operations(1, 20,virtual_op_ids);
+
+
+    int count_vops = 0;
+    for(auto& blc : results)
+    {
+       if(blc.block.virtual_operations.size() > 0)
+       {
+           for(operation& op : blc.block.virtual_operations)
+           {
+              count_vops++;
+              BOOST_CHECK( (op.which() == opfo.which() || op.which() == opad.which()) );
+
+//              string s = fc::json::to_string( op );
+//              std::cout << s;
+//              BOOST_CHECK( true );
+           }
+       }
+    }
+
+    BOOST_CHECK( count_vops == 5 );
+
+} FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_SUITE_END()
 

@@ -30,6 +30,7 @@
 #include <graphene/chain/block_database.hpp>
 #include <graphene/chain/genesis_state.hpp>
 #include <graphene/chain/evaluator.hpp>
+#include <graphene/chain/license_objects.hpp>
 
 #include <graphene/db/object_database.hpp>
 #include <graphene/db/object.hpp>
@@ -90,8 +91,12 @@ namespace graphene { namespace chain {
           *
           * @param data_dir Path to open or create database in
           * @param genesis_loader A callable object which returns the genesis state to initialize new databases on
+          * @param db_version a version string that changes when the internal database format and/or logic is modified
           */
-          void open(const fc::path& data_dir, std::function<genesis_state_type()> genesis_loader);
+          void open(
+             const fc::path& data_dir,
+             std::function<genesis_state_type()> genesis_loader,
+             const std::string& db_version );
 
          /**
           * @brief Rebuild object graph from block history and open detabase
@@ -99,7 +104,7 @@ namespace graphene { namespace chain {
           * This method may be called after or instead of @ref database::open, and will rebuild the object graph by
           * replaying blockchain history. When this method exits successfully, the database will be open.
           */
-         void reindex(fc::path data_dir, const genesis_state_type& initial_allocation = genesis_state_type());
+         void reindex(fc::path data_dir);
 
          /**
           * @brief wipe Delete database from disk, and potentially the raw chain as well.
@@ -116,13 +121,14 @@ namespace graphene { namespace chain {
           *  @return true if the block is in our fork DB or saved to disk as
           *  part of the official chain, otherwise return false
           */
-         bool                       is_known_block( const block_id_type& id )const;
-         bool                       is_known_transaction( const transaction_id_type& id )const;
-         block_id_type              get_block_id_for_num( uint32_t block_num )const;
-         optional<signed_block>     fetch_block_by_id( const block_id_type& id )const;
-         optional<signed_block>     fetch_block_by_number( uint32_t num )const;
-         const signed_transaction&  get_recent_transaction( const transaction_id_type& trx_id )const;
-         std::vector<block_id_type> get_block_ids_on_fork(block_id_type head_of_fork) const;
+         bool                                            is_known_block( const block_id_type& id )const;
+         bool                                            is_known_transaction( const transaction_id_type& id )const;
+         block_id_type                                   get_block_id_for_num( uint32_t block_num )const;
+         optional<signed_block>                          fetch_block_by_id( const block_id_type& id )const;
+         optional<signed_block>                          fetch_block_by_number( uint32_t num )const;
+         optional<signed_block_with_virtual_operations>  fetch_block_with_virtual_operations_by_number( uint32_t num, std::vector<uint16_t> virtual_op_id_vec)const;
+         const signed_transaction&                       get_recent_transaction( const transaction_id_type& trx_id )const;
+         std::vector<block_id_type>                      get_block_ids_on_fork(block_id_type head_of_fork) const;
 
          /**
           *  Calculate the percent of block production slots that were missed in the
@@ -168,7 +174,9 @@ namespace graphene { namespace chain {
           */
          uint32_t  push_applied_operation( const operation& op );
          void      set_applied_operation_result( uint32_t op_id, const operation_result& r );
+         void      applied_ops_to_virtual_ops();
          const vector<optional< operation_history_object > >& get_applied_operations()const;
+         vector<optional< operation_history_object > > get_virtual_ops_and_clear_collection();
 
          string to_pretty_string(const asset& a) const;
          string to_pretty_string(const asset_reserved& a) const;
@@ -245,6 +253,8 @@ namespace graphene { namespace chain {
           */
          uint32_t get_slot_at_time(fc::time_point_sec when)const;
 
+         void update_witnesses();
+         void update_witness_schedule_impl(const witness_schedule_object& wso, const global_property_object& gpo);
          void update_witness_schedule();
 
          //////////////////// db_getter.cpp ////////////////////
@@ -551,7 +561,8 @@ namespace graphene { namespace chain {
                                             upgrade_multiplier_type balance_multipliers,
                                             upgrade_multiplier_type requeue_multipliers,
                                             upgrade_multiplier_type return_multipliers,
-                                            share_type eur_limit);
+                                            share_type eur_limit,
+                                            license_type_object::upgrade_policy up_policy = license_type_object::upgrade_policy::standard);
 
          optional<license_information_object> get_license_information(account_id_type account_id) const;
 
@@ -636,7 +647,8 @@ private:
          void perform_chain_maintenance(const signed_block& next_block, const global_property_object& global_props);
          void update_active_witnesses();
          void update_active_committee_members();
-         void perform_upgrades(const account_object& account);
+         void perform_upgrades(const account_object& account, const upgrade_event_object& upgrade);
+         void perform_upgrades();
          void update_worker_votes();
 
          template<typename IndexType, typename IndexBy, class... HelperTypes>
@@ -675,6 +687,13 @@ private:
           */
          vector<optional<operation_history_object> >  _applied_ops;
 
+         /**
+          * Contains the set of virtual ops that are in the process of being applied from
+          * the current block.  It contains real virtual operations in the
+          * order they occur and is cleared after account history plugin is updated
+          */
+         vector<optional<operation_history_object> >  _virtual_ops;
+
          uint32_t                          _current_block_num    = 0;
          uint16_t                          _current_trx_in_block = 0;
          uint16_t                          _current_op_in_trx    = 0;
@@ -690,6 +709,7 @@ private:
          node_property_object              _node_property_object;
 
          transaction_evaluation_state      _genesis_eval_state;
+
    };
 
    namespace detail

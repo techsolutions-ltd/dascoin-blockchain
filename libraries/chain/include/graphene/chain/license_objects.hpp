@@ -13,6 +13,40 @@
 
 namespace graphene { namespace chain {
 
+  namespace detail {
+
+    enum policy
+    {
+      standard,
+      president
+    };
+
+    class policy_class
+    {
+    public:
+      template<typename T>
+      static share_type get_amount_to_upgrade(const T& upgradeable, policy p)
+      {
+        if (p == standard)
+          return policy_class::get_amount_to_upgrade(upgradeable);
+        return policy_class::get_amount_to_upgrade_president(upgradeable);
+      }
+
+    private:
+      template<typename T>
+      static share_type get_amount_to_upgrade(const T& upgradeable)
+      {
+        return upgradeable.amount;
+      }
+
+      template<typename T>
+      static share_type get_amount_to_upgrade_president(const T& upgradeable)
+      {
+        return upgradeable.base_amount + upgradeable.base_amount * upgradeable.bonus_percent / 100;
+      }
+    };
+  }
+
   class license_information_object : public graphene::db::abstract_object<license_information_object>
   {
     public:
@@ -25,9 +59,16 @@ namespace graphene { namespace chain {
         share_type amount;
         share_type base_amount;
         share_type bonus_percent;
+        share_type non_upgradeable_amount = 0;
         frequency_type frequency_lock;
         time_point_sec activated_at;
         time_point_sec issued_on_blockchain;
+        upgrade_type balance_upgrade;
+        vector<pair<upgrade_event_id_type, time_point_sec>> upgrades;
+
+        using upgrade_policy = detail::policy;
+
+        upgrade_policy up_policy;
 
         license_history_record() = default;
         explicit license_history_record(license_type_id_type license,
@@ -36,14 +77,28 @@ namespace graphene { namespace chain {
                                         share_type bonus_percent,
                                         frequency_type frequency_lock,
                                         time_point_sec activated_at,
-                                        time_point_sec issued_on_blockchain)
+                                        time_point_sec issued_on_blockchain,
+                                        upgrade_type balance_upgrade,
+                                        upgrade_policy up_policy)
             : license(license),
               amount(amount),
               base_amount(base_amount),
               bonus_percent(bonus_percent),
               frequency_lock(frequency_lock),
               activated_at(activated_at),
-              issued_on_blockchain(issued_on_blockchain) {}
+              issued_on_blockchain(issued_on_blockchain),
+              balance_upgrade(balance_upgrade),
+              up_policy(up_policy) {}
+
+        share_type amount_to_upgrade()
+        {
+          return detail::policy_class::get_amount_to_upgrade(*this, up_policy);
+        }
+
+        share_type total_cycles() const
+        {
+          return amount + non_upgradeable_amount;
+        }
       };
       typedef vector<license_history_record> array_t;
 
@@ -54,29 +109,51 @@ namespace graphene { namespace chain {
       frequency_type frequency_lock;
       license_kind vault_license_kind;
 
-      upgrade_type balance_upgrade;
       upgrade_type requeue_upgrade;
       upgrade_type return_upgrade;
 
       void add_license(license_type_id_type license_id, share_type amount, share_type base_amount,
                        share_type bonus_percentage, frequency_type f_lock,
                        time_point_sec activated_at,
-                       time_point_sec issued_on_blockchain) {
+                       time_point_sec issued_on_blockchain,
+                       upgrade_type up_type,
+                       license_history_record::upgrade_policy up_policy) {
         history.emplace_back(license_id, amount, base_amount, bonus_percentage, f_lock,
-                             activated_at, issued_on_blockchain);
+                             activated_at, issued_on_blockchain, up_type, up_policy);
         max_license = license_id;
         frequency_lock = f_lock;
       }
 
       void subtract_cycles(license_type_id_type license_type, const share_type& amount)
       {
-        auto found = find_if(history.begin(), history.end(), [license_type](const license_history_record& record){
+        auto found = find_if(history.begin(), history.end(), [license_type](const license_history_record& record) {
           return record.license == license_type;
         });
         if (found != history.end())
         {
-          FC_ASSERT( found->amount >= amount, "Insufficient cycle balance" );
-          found->amount -= amount;
+          FC_ASSERT( found->total_cycles() >= amount, "Insufficient cycle balance" );
+          if (found->non_upgradeable_amount >= amount)
+          {
+            found->non_upgradeable_amount -= amount;
+          }
+          else
+          {
+            share_type tmp = amount;
+            tmp -= found->non_upgradeable_amount;
+            found->non_upgradeable_amount = 0;
+            found->amount -= tmp;
+          }
+        }
+      }
+
+      void add_non_upgradeable_cycles(license_type_id_type license_type, const share_type& amount)
+      {
+        auto found = find_if(history.begin(), history.end(), [license_type](const license_history_record& record) {
+          return record.license == license_type;
+        });
+        if (found != history.end())
+        {
+          found->non_upgradeable_amount += amount;
         }
       }
 
@@ -126,13 +203,20 @@ namespace graphene { namespace chain {
       // The eur limit used parameter used for vault to wallet transfers in the system:
       share_type eur_limit;
 
+      using upgrade_policy = license_information_object::license_history_record::upgrade_policy;
+
+      // Upgrade policy for this license:
+      upgrade_policy up_policy;
+
       extensions_type extensions;
 
       license_type_object() = default;
       explicit license_type_object(string name, share_type amount, license_kind kind, upgrade_type balance_upgrade,
-                                   upgrade_type requeue_upgrade, upgrade_type return_upgrade, share_type eur_limit)
+                                   upgrade_type requeue_upgrade, upgrade_type return_upgrade,
+                                   share_type eur_limit,
+                                   upgrade_policy up_policy)
           : name(name), amount(amount), kind(kind), balance_upgrade(balance_upgrade), requeue_upgrade(requeue_upgrade), 
-            return_upgrade(return_upgrade), eur_limit(eur_limit) {}
+            return_upgrade(return_upgrade), eur_limit(eur_limit), up_policy(up_policy) {}
 
       void validate() const;
   };
@@ -211,9 +295,12 @@ FC_REFLECT( graphene::chain::license_information_object::license_history_record,
             (amount)
             (base_amount)
             (bonus_percent)
+            (non_upgradeable_amount)
             (frequency_lock)
             (activated_at)
             (issued_on_blockchain)
+            (balance_upgrade)
+            (upgrades)
           )
 
 FC_REFLECT_DERIVED( graphene::chain::license_information_object, (graphene::db::object),
@@ -222,7 +309,6 @@ FC_REFLECT_DERIVED( graphene::chain::license_information_object, (graphene::db::
             (max_license)
             (frequency_lock)
             (vault_license_kind)
-            (balance_upgrade)
             (requeue_upgrade)
             (return_upgrade)
           )

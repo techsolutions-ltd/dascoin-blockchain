@@ -136,9 +136,6 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       fc::optional<committee_member_object> get_committee_member_by_account(account_id_type account)const;
       map<string, committee_member_id_type> lookup_committee_member_accounts(const string& lower_bound_name, uint32_t limit)const;
 
-      // Votes
-      vector<variant> lookup_vote_ids( const vector<vote_id_type>& votes )const;
-
       // Authority / validation
       std::string get_transaction_hex(const signed_transaction& trx)const;
       set<public_key_type> get_required_signatures( const signed_transaction& trx, const flat_set<public_key_type>& available_keys )const;
@@ -163,6 +160,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<license_types_grouped_by_kind_res> get_license_type_names_ids_grouped_by_kind() const;
       vector<license_objects_grouped_by_kind_res> get_license_objects_grouped_by_kind() const;
       vector<optional<license_information_object>> get_license_information(const vector<account_id_type>& account_ids) const;
+      vector<upgrade_event_object> get_upgrade_events() const;
 
       // Access:
       acc_id_share_t_res get_free_cycle_balance(account_id_type account_id) const;
@@ -745,7 +743,7 @@ std::map<std::string, full_account> database_api_impl::get_full_accounts( const 
       acnt.registrar_name = account->registrar(_db).name;
       acnt.referrer_name = account->referrer(_db).name;
       acnt.lifetime_referrer_name = account->lifetime_referrer(_db).name;
-      acnt.votes = lookup_vote_ids( vector<vote_id_type>(account->options.votes.begin(),account->options.votes.end()) );
+      acnt.votes.clear();
 
       // Add the account itself, its statistics object, cashback balance, and referral account names
       /*
@@ -1925,73 +1923,6 @@ map<string, committee_member_id_type> database_api_impl::lookup_committee_member
 
 //////////////////////////////////////////////////////////////////////
 //                                                                  //
-// Votes                                                            //
-//                                                                  //
-//////////////////////////////////////////////////////////////////////
-
-vector<variant> database_api::lookup_vote_ids( const vector<vote_id_type>& votes )const
-{
-   return my->lookup_vote_ids( votes );
-}
-
-vector<variant> database_api_impl::lookup_vote_ids( const vector<vote_id_type>& votes )const
-{
-   FC_ASSERT( votes.size() < 1000, "Only 1000 votes can be queried at a time" );
-
-   const auto& witness_idx = _db.get_index_type<witness_index>().indices().get<by_vote_id>();
-   const auto& committee_idx = _db.get_index_type<committee_member_index>().indices().get<by_vote_id>();
-   const auto& for_worker_idx = _db.get_index_type<worker_index>().indices().get<by_vote_for>();
-   const auto& against_worker_idx = _db.get_index_type<worker_index>().indices().get<by_vote_against>();
-
-   vector<variant> result;
-   result.reserve( votes.size() );
-   for( auto id : votes )
-   {
-      switch( id.type() )
-      {
-         case vote_id_type::committee:
-         {
-            auto itr = committee_idx.find( id );
-            if( itr != committee_idx.end() )
-               result.emplace_back( variant( *itr ) );
-            else
-               result.emplace_back( variant() );
-            break;
-         }
-         case vote_id_type::witness:
-         {
-            auto itr = witness_idx.find( id );
-            if( itr != witness_idx.end() )
-               result.emplace_back( variant( *itr ) );
-            else
-               result.emplace_back( variant() );
-            break;
-         }
-         case vote_id_type::worker:
-         {
-            auto itr = for_worker_idx.find( id );
-            if( itr != for_worker_idx.end() ) {
-               result.emplace_back( variant( *itr ) );
-            }
-            else {
-               auto itr = against_worker_idx.find( id );
-               if( itr != against_worker_idx.end() ) {
-                  result.emplace_back( variant( *itr ) );
-               }
-               else {
-                  result.emplace_back( variant() );
-               }
-            }
-            break;
-         }
-         case vote_id_type::VOTE_TYPE_COUNT: break; // supress unused enum value warnings
-      }
-   }
-   return result;
-}
-
-//////////////////////////////////////////////////////////////////////
-//                                                                  //
 // Authority / validation                                           //
 //                                                                  //
 //////////////////////////////////////////////////////////////////////
@@ -2385,6 +2316,17 @@ vector<optional<license_information_object>> database_api_impl::get_license_info
       return {};
    });
    return result;
+}
+
+vector<upgrade_event_object> database_api::get_upgrade_events() const
+{
+  return my->get_upgrade_events();
+}
+
+vector<upgrade_event_object> database_api_impl::get_upgrade_events() const
+{
+  const auto& idx = _db.get_index_type<upgrade_event_index>().indices().get<by_id>();
+  return vector<upgrade_event_object>(idx.begin(), idx.end());
 }
 
 //////////////////////////////////////////////////////////////////////

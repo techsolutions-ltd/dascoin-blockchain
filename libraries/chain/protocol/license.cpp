@@ -37,4 +37,9 @@ namespace graphene { namespace chain {
              );
   }
 
+  void update_license_operation::validate() const
+  {
+
+  }
+
 } } // namespace graphene::chain

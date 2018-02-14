@@ -110,6 +110,12 @@ struct genesis_state_type {
      share_type base_amount;
      share_type quote_amount;
    };
+   struct historic_upgrade_event_type {
+     time_point_sec execution_time;
+     time_point_sec cutoff_time;
+     vector<time_point_sec> subsequent_executions;
+     string comment;
+   };
 
    time_point_sec                           initial_timestamp;
    share_type                               max_core_supply = GRAPHENE_MAX_SHARE_SUPPLY;
@@ -126,10 +132,12 @@ struct genesis_state_type {
    vector<initial_witness_type>             initial_witness_candidates;
    vector<initial_committee_member_type>    initial_committee_candidates;
    vector<initial_worker_type>              initial_worker_candidates;
+   vector<historic_upgrade_event_type>      historic_upgrade_events;
 
    /**
     * Initial chain authorities.
     */
+   initial_chain_authority_type             initial_root_authority;
    initial_chain_authority_type             initial_license_administration_authority;
    initial_chain_authority_type             initial_license_issuing_authority;
    initial_chain_authority_type             initial_license_authentication_authority;
@@ -220,6 +228,13 @@ FC_REFLECT( graphene::chain::genesis_state_type::initial_worker_type,
             (daily_pay)
           )
 
+FC_REFLECT( graphene::chain::genesis_state_type::historic_upgrade_event_type,
+            (execution_time)
+            (cutoff_time)
+            (subsequent_executions)
+            (comment)
+          )
+
 FC_REFLECT( graphene::chain::genesis_state_type::initial_chain_authority_type,
             (owner_name)
           )
@@ -244,6 +259,8 @@ FC_REFLECT( graphene::chain::genesis_state_type,
             (initial_witness_candidates)
             (initial_committee_candidates)
             (initial_worker_candidates)
+            (historic_upgrade_events)
+            (initial_root_authority)
             (initial_license_administration_authority)
             (initial_license_issuing_authority)
             (initial_license_authentication_authority)

@@ -120,6 +120,7 @@ namespace graphene { namespace chain {
       registrar = 8,
       pi_validator = 9,
       wire_out_handler = 10,
+      root_administrator = 11,
       CHAIN_AUTHORITY_KIND_COUNT
    };
 
@@ -224,6 +225,7 @@ namespace graphene { namespace chain {
       worker_object_type,
       balance_object_type,
       license_type_object_type,
+      upgrade_event_object_type,
       OBJECT_TYPE_COUNT ///< Sentry value which contains the number of different object types
    };
 
@@ -252,7 +254,8 @@ namespace graphene { namespace chain {
       impl_reward_queue_object_type,
       impl_license_information_object_type,
       impl_issued_asset_record_object_type,
-      impl_frequency_history_record_object_type
+      impl_frequency_history_record_object_type,
+      impl_witness_delegate_data_colection_object_type
    };
 
    //typedef fc::unsigned_int            object_id_type;
@@ -273,6 +276,7 @@ namespace graphene { namespace chain {
    class balance_object;
    class blinded_balance_object;
    class license_type_object;
+   class upgrade_event_object;
 
    typedef object_id< protocol_ids, account_object_type,            account_object>               account_id_type;
    typedef object_id< protocol_ids, asset_object_type,              asset_object>                 asset_id_type;
@@ -289,9 +293,8 @@ namespace graphene { namespace chain {
    typedef object_id< protocol_ids, worker_object_type,             worker_object>                worker_id_type;
    typedef object_id< protocol_ids, balance_object_type,            balance_object>               balance_id_type;
 
-   typedef object_id<
-      protocol_ids, license_type_object_type, license_type_object
-   > license_type_id_type;
+   typedef object_id< protocol_ids, license_type_object_type, license_type_object>                license_type_id_type;
+   typedef object_id< protocol_ids, upgrade_event_object_type, upgrade_event_object>              upgrade_event_id_type;
 
    // implementation types
    class global_property_object;
@@ -316,6 +319,7 @@ namespace graphene { namespace chain {
    class license_information_object;
    class issued_asset_record_object;
    class frequency_history_record_object;
+   class witness_delegate_data_colection_type;
 
    typedef object_id< implementation_ids, impl_global_property_object_type,  global_property_object>                    global_property_id_type;
    typedef object_id< implementation_ids, impl_dynamic_global_property_object_type,  dynamic_global_property_object>    dynamic_global_property_id_type;
@@ -364,6 +368,10 @@ namespace graphene { namespace chain {
    typedef object_id<
       implementation_ids, impl_frequency_history_record_object_type, frequency_history_record_object
    > frequency_history_record_id_type;
+
+   typedef object_id<
+         implementation_ids, impl_witness_delegate_data_colection_object_type, witness_delegate_data_colection_type
+      > witness_delegate_data_colection_id_type;
 
    typedef fc::array<char, GRAPHENE_MAX_ASSET_SYMBOL_LENGTH>    symbol_type;
    typedef fc::ripemd160                                        block_id_type;
@@ -504,6 +512,7 @@ REFLECT_ENUM_CHECK( graphene::chain::chain_authority_kind,
                     (registrar)
                     (pi_validator)
                     (wire_out_handler)
+                    (root_administrator)
                     (CHAIN_AUTHORITY_KIND_COUNT)
                   )
 
@@ -546,6 +555,7 @@ FC_REFLECT_ENUM( graphene::chain::object_type,
                  (worker_object_type)
                  (balance_object_type)
                  (license_type_object_type)
+                 (upgrade_event_object_type)
                  (OBJECT_TYPE_COUNT)
                )
 FC_REFLECT_ENUM( graphene::chain::impl_object_type,
@@ -573,6 +583,7 @@ FC_REFLECT_ENUM( graphene::chain::impl_object_type,
                  (impl_license_information_object_type)
                  (impl_issued_asset_record_object_type)
                  (impl_frequency_history_record_object_type)
+                 (impl_witness_delegate_data_colection_object_type)
                )
 
 FC_REFLECT_TYPENAME( graphene::chain::share_type )
@@ -605,6 +616,7 @@ FC_REFLECT_TYPENAME( graphene::chain::special_authority_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::buyback_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::fba_accumulator_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::license_type_id_type )
+FC_REFLECT_TYPENAME( graphene::chain::upgrade_event_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::account_cycle_balance_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::issue_asset_request_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::wire_out_holder_id_type )
@@ -613,6 +625,7 @@ FC_REFLECT_TYPENAME( graphene::chain::upgrade_multiplier_type )
 FC_REFLECT_TYPENAME( graphene::chain::license_information_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::issued_asset_record_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::frequency_history_record_id_type )
+FC_REFLECT_TYPENAME( graphene::chain::witness_delegate_data_colection_id_type )
 
 FC_REFLECT( graphene::chain::void_t, )
 

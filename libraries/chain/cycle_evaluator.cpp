@@ -156,7 +156,7 @@ void_result issue_free_cycles_evaluator::do_evaluate(const issue_free_cycles_ope
   const auto& authority_obj = op.authority(d);
   const auto cycle_issuer_id = d.get_chain_authorities().cycle_issuer;
 
-  // Make sure that this is the current license issuer:
+  // Make sure that this is the current cycle issuer:
   d.perform_chain_authority_check("cycle issuing", cycle_issuer_id, authority_obj);
 
   const auto& account_obj = op.account(d);
@@ -176,6 +176,77 @@ void_result issue_free_cycles_evaluator::do_apply(const issue_free_cycles_operat
 { try {
 
   db().issue_cycles(*_cycle_balance_obj, op.amount);
+
+  return {};
+
+} FC_CAPTURE_AND_RETHROW((op)) }
+
+void_result issue_cycles_to_license_evaluator::do_evaluate(const operation_type& op)
+{ try {
+
+  const auto& d = db();
+  const auto& authority_obj = op.authority(d);
+  const auto cycle_issuer_id = d.get_chain_authorities().cycle_issuer;
+
+  // Make sure that this is the current cycle issuer:
+  d.perform_chain_authority_check("cycle issuing", cycle_issuer_id, authority_obj);
+
+  const auto& account_obj = op.account(d);
+  const auto& license = op.license(d);
+
+  FC_ASSERT( account_obj.is_vault(),
+             "Account '${name}' must be a vault account",
+             ("name", account_obj.name)
+  );
+
+  FC_ASSERT ( account_obj.license_information.valid(),
+              "Cannot issue cycles to a license on an account which doesn't have an issued license" );
+
+  const auto& license_information_obj = (*account_obj.license_information)(d);
+
+  bool found = false;
+  for (uint32_t i = 0; i < license_information_obj.history.size(); ++i)
+  {
+    if (license_information_obj.history[i].license == op.license)
+    {
+      found = true;
+      _frequency_lock = license_information_obj.history[i].frequency_lock;
+      break;
+    }
+  }
+
+  FC_ASSERT( found,
+             "Cannot issue cycle to a license of type '${type}' on account ${a} because that license hasn't been issued",
+             ("type", op.license)
+             ("a", account_obj.name)
+           );
+
+  _license_information_obj = &license_information_obj;
+  _kind = license.kind;
+  return {};
+
+} FC_CAPTURE_AND_RETHROW((op)) }
+
+void_result issue_cycles_to_license_evaluator::do_apply(const operation_type& op)
+{ try {
+  auto& d = db();
+
+  if ( _kind == license_kind::regular || _kind == license_kind::locked_frequency )
+  {
+    d.issue_cycles(op.account, op.amount);
+  }
+  else if ( _kind == license_kind::chartered || _kind == license_kind::promo )
+  {
+    d.push_queue_submission(op.origin, {op.license}, op.account, op.amount, _frequency_lock, op.comment);
+    // TODO: should we use a virtual op here?
+    d.push_applied_operation(
+            record_submit_charter_license_cycles_operation(op.authority, op.account, op.amount, _frequency_lock)
+    );
+  }
+
+  d.modify(*_license_information_obj, [&](license_information_object& lio) {
+    lio.add_non_upgradeable_cycles(op.license, op.amount);
+  });
 
   return {};
 

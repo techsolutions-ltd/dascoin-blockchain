@@ -38,6 +38,7 @@
 #include <graphene/chain/protocol/proposal.hpp>
 #include <graphene/chain/protocol/transfer.hpp>
 #include <graphene/chain/protocol/vesting.hpp>
+#include <graphene/chain/protocol/upgrade.hpp>
 #include <graphene/chain/protocol/wire.hpp>
 #include <graphene/chain/protocol/withdraw_permission.hpp>
 #include <graphene/chain/protocol/witness.hpp>
@@ -143,6 +144,20 @@ namespace graphene { namespace chain {
 
             submit_cycles_to_queue_by_license_operation,
 
+            update_license_operation,
+            issue_cycles_to_license_operation,
+
+            remove_root_authority_operation,
+            create_witness_operation,
+            update_witness_operation,
+            remove_witness_operation,
+            activate_witness_operation,
+            deactivate_witness_operation,
+
+            create_upgrade_event_operation,
+            update_upgrade_event_operation,
+            delete_upgrade_event_operation,
+
             // Virtual operations below this point:
 
             record_submit_reserve_cycles_to_queue_operation,  // TODO: should we keep this op?
@@ -161,6 +176,17 @@ namespace graphene { namespace chain {
          > operation;
 
    /// @} // operations group
+
+   // this struct keeps index from which to which operation is regular operation
+   // and from which to which operation is virtual operation
+   // and needs to be updated accordingly when new operations are added
+   struct operation_type_limits
+   {
+      static bool is_virtual_operation(const operation& op);
+      static bool is_virtual_operation(const unsigned uop);
+   private:
+      static operation first_virtual_operation;
+   };
 
    /**
     *  Appends required authorites to the result vector.  The authorities appended are not the

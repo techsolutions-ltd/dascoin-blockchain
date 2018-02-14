@@ -55,14 +55,27 @@ ChainTypes.operations=
     transfer_wallet_to_vault: 53
     submit_reserve_cycles_to_queue: 54
     submit_cycles_to_queue: 55
-    record_submit_reserve_cycles_to_queue: 56
-    record_submit_charter_license_cycles: 57
-    record_distribute_dascoin: 58
-    asset_distribute_completed_request: 59
-    upgrade_account_cycles: 60
-    fba_distribute: 61
-    asset_settle_cancel: 62
-    fill_order: 63
+    change_public_keys: 56
+    update_global_frequency: 57
+    issue_free_cycles: 58
+    edit_license: 59
+    update_euro_limit: 60
+    submit_cycles_to_queue_by_license: 61
+    remove_root_authority: 62
+    create_witness: 63
+    update_witness: 64
+    remove_witness: 65
+    activate_witness: 66
+    deactivate_witness: 67
+    record_submit_reserve_cycles_to_queue: 68
+    record_submit_charter_license_cycles: 69
+    record_distribute_dascoin: 70
+    asset_distribute_completed_request: 71
+    upgrade_account_cycles: 72
+    fba_distribute: 73
+    asset_settle_cancel: 74
+    fill_order: 75
+    wire_out_result: 76
 
 transfer_operation_fee_parameters = new Serializer( 
     "transfer_operation_fee_parameters"
@@ -339,6 +352,60 @@ submit_cycles_to_queue_operation_fee_parameters = new Serializer(
     "submit_cycles_to_queue_operation_fee_parameters"
 )
 
+change_public_keys_operation_fee_parameters = new Serializer( 
+    "change_public_keys_operation_fee_parameters"
+)
+
+update_global_frequency_operation_fee_parameters = new Serializer( 
+    "update_global_frequency_operation_fee_parameters"
+)
+
+issue_free_cycles_operation_fee_parameters = new Serializer( 
+    "issue_free_cycles_operation_fee_parameters"
+)
+
+edit_license_type_operation_fee_parameters = new Serializer( 
+    "edit_license_type_operation_fee_parameters"
+)
+
+update_euro_limit_operation_fee_parameters = new Serializer( 
+    "update_euro_limit_operation_fee_parameters"
+)
+
+submit_cycles_to_queue_by_license_operation_fee_parameters = new Serializer( 
+    "submit_cycles_to_queue_by_license_operation_fee_parameters"
+)
+
+remove_root_authority_operation_fee_parameters = new Serializer( 
+    "remove_root_authority_operation_fee_parameters"
+    fee: uint64
+)
+
+create_witness_operation_fee_parameters = new Serializer( 
+    "create_witness_operation_fee_parameters"
+    fee: uint64
+)
+
+update_witness_operation_fee_parameters = new Serializer( 
+    "update_witness_operation_fee_parameters"
+    fee: uint64
+)
+
+remove_witness_operation_fee_parameters = new Serializer( 
+    "remove_witness_operation_fee_parameters"
+    fee: uint64
+)
+
+activate_witness_operation_fee_parameters = new Serializer( 
+    "activate_witness_operation_fee_parameters"
+    fee: uint64
+)
+
+deactivate_witness_operation_fee_parameters = new Serializer( 
+    "deactivate_witness_operation_fee_parameters"
+    fee: uint64
+)
+
 record_submit_reserve_cycles_to_queue_operation_fee_parameters = new Serializer( 
     "record_submit_reserve_cycles_to_queue_operation_fee_parameters"
 )
@@ -369,6 +436,10 @@ asset_settle_cancel_operation_fee_parameters = new Serializer(
 
 fill_order_operation_fee_parameters = new Serializer( 
     "fill_order_operation_fee_parameters"
+)
+
+wire_out_result_operation_fee_parameters = new Serializer( 
+    "wire_out_result_operation_fee_parameters"
 )
 
 fee_parameters = static_variant [
@@ -428,6 +499,18 @@ fee_parameters = static_variant [
     transfer_wallet_to_vault_operation_fee_parameters    
     submit_reserve_cycles_to_queue_operation_fee_parameters    
     submit_cycles_to_queue_operation_fee_parameters    
+    change_public_keys_operation_fee_parameters    
+    update_global_frequency_operation_fee_parameters    
+    issue_free_cycles_operation_fee_parameters    
+    edit_license_type_operation_fee_parameters    
+    update_euro_limit_operation_fee_parameters    
+    submit_cycles_to_queue_by_license_operation_fee_parameters    
+    remove_root_authority_operation_fee_parameters    
+    create_witness_operation_fee_parameters    
+    update_witness_operation_fee_parameters    
+    remove_witness_operation_fee_parameters    
+    activate_witness_operation_fee_parameters    
+    deactivate_witness_operation_fee_parameters    
     record_submit_reserve_cycles_to_queue_operation_fee_parameters    
     record_submit_charter_license_cycles_operation_fee_parameters    
     record_distribute_dascoin_operation_fee_parameters    
@@ -435,7 +518,8 @@ fee_parameters = static_variant [
     upgrade_account_cycles_operation_fee_parameters    
     fba_distribute_operation_fee_parameters    
     asset_settle_cancel_operation_fee_parameters    
-    fill_order_operation_fee_parameters
+    fill_order_operation_fee_parameters    
+    wire_out_result_operation_fee_parameters
 ]
 
 fee_schedule = new Serializer( 
@@ -530,6 +614,8 @@ limit_order_create = new Serializer(
     seller: protocol_id_type "account"
     amount_to_sell: asset
     min_to_receive: asset
+    reserved_amount: int64
+    account_to_credit: optional protocol_id_type "account"
     expiration: time_point_sec
     fill_or_kill: bool
     extensions: set future_extensions
@@ -1118,6 +1204,7 @@ create_license = new Serializer(
     balance_multipliers: array uint8
     requeue_multipliers: array uint8
     return_multipliers: array uint8
+    eur_limit: int64
 )
 
 issue_license = new Serializer( 
@@ -1148,6 +1235,8 @@ asset_create_issue_request = new Serializer(
     amount: int64
     asset_id: protocol_id_type "asset"
     reserved_amount: int64
+    unique_id: string
+    comment: string
     extensions: set future_extensions
 )
 
@@ -1217,7 +1306,119 @@ submit_cycles_to_queue = new Serializer(
     fee: asset
     account: protocol_id_type "account"
     amount: int64
+    frequency: int64
+    comment: string
     extensions: set future_extensions
+)
+
+change_public_keys = new Serializer( 
+    "change_public_keys"
+    fee: asset
+    account: protocol_id_type "account"
+    active: optional authority
+    owner: optional authority
+)
+
+update_global_frequency = new Serializer( 
+    "update_global_frequency"
+    fee: asset
+    authority: protocol_id_type "account"
+    frequency: int64
+)
+
+issue_free_cycles = new Serializer( 
+    "issue_free_cycles"
+    fee: asset
+    authority: protocol_id_type "account"
+    origin: uint8
+    account: protocol_id_type "account"
+    amount: int64
+    comment: string
+    extensions: set future_extensions
+)
+
+edit_license = new Serializer( 
+    "edit_license"
+    fee: asset
+    authority: protocol_id_type "account"
+    license_type: protocol_id_type "license"
+    name: optional string
+    amount: optional int64
+    eur_limit: optional int64
+)
+
+update_euro_limit = new Serializer( 
+    "update_euro_limit"
+    fee: asset
+    authority: protocol_id_type "account"
+    account: protocol_id_type "account"
+    disable_limit: bool
+    eur_limit: optional int64
+    comment: string
+    extensions: set future_extensions
+)
+
+submit_cycles_to_queue_by_license = new Serializer( 
+    "submit_cycles_to_queue_by_license"
+    fee: asset
+    account: protocol_id_type "account"
+    amount: int64
+    license_type: protocol_id_type "license"
+    frequency_lock: int64
+    comment: string
+    extensions: set future_extensions
+)
+
+remove_root_authority = new Serializer( 
+    "remove_root_authority"
+    fee: asset
+    root_account: protocol_id_type "account"
+    comment: string
+)
+
+create_witness = new Serializer( 
+    "create_witness"
+    fee: asset
+    authority: protocol_id_type "account"
+    witness_account: protocol_id_type "account"
+    block_signing_key: public_key
+    url: string
+    comment: string
+)
+
+update_witness = new Serializer( 
+    "update_witness"
+    fee: asset
+    witness: protocol_id_type "witness"
+    authority: protocol_id_type "account"
+    witness_account: optional protocol_id_type "account"
+    block_signing_key: optional public_key
+    url: optional string
+    comment: optional string
+)
+
+remove_witness = new Serializer( 
+    "remove_witness"
+    fee: asset
+    witness: protocol_id_type "witness"
+    authority: protocol_id_type "account"
+    comment: optional string
+)
+
+activate_witness = new Serializer( 
+    "activate_witness"
+    fee: asset
+    witness: protocol_id_type "witness"
+    authority: protocol_id_type "account"
+    comment: optional string
+)
+
+deactivate_witness = new Serializer( 
+    "deactivate_witness"
+    fee: asset
+    witness: protocol_id_type "witness"
+    authority: protocol_id_type "account"
+    comment: optional string
 )
 
 record_submit_reserve_cycles_to_queue = new Serializer( 
@@ -1298,6 +1499,16 @@ fill_order = new Serializer(
     receives: asset
 )
 
+wire_out_result = new Serializer( 
+    "wire_out_result"
+    account: protocol_id_type "account"
+    completed: bool
+    amount: int64
+    asset_id: protocol_id_type "asset"
+    memo: string
+    timestamp: time_point_sec
+)
+
 operation = static_variant [
     transfer    
     limit_order_create    
@@ -1355,6 +1566,18 @@ operation = static_variant [
     transfer_wallet_to_vault    
     submit_reserve_cycles_to_queue    
     submit_cycles_to_queue    
+    change_public_keys    
+    update_global_frequency    
+    issue_free_cycles    
+    edit_license    
+    update_euro_limit    
+    submit_cycles_to_queue_by_license    
+    remove_root_authority    
+    create_witness    
+    update_witness    
+    remove_witness    
+    activate_witness    
+    deactivate_witness    
     record_submit_reserve_cycles_to_queue    
     record_submit_charter_license_cycles    
     record_distribute_dascoin    
@@ -1362,7 +1585,8 @@ operation = static_variant [
     upgrade_account_cycles    
     fba_distribute    
     asset_settle_cancel    
-    fill_order
+    fill_order    
+    wire_out_result
 ]
 
 transaction = new Serializer( 

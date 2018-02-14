@@ -42,6 +42,7 @@
 #include <graphene/chain/operation_history_object.hpp>
 #include <graphene/chain/proposal_object.hpp>
 #include <graphene/chain/queue_objects.hpp>
+#include <graphene/chain/upgrade_event_object.hpp>
 #include <graphene/chain/worker_object.hpp>
 #include <graphene/chain/wire_object.hpp>
 #include <graphene/chain/witness_object.hpp>
@@ -567,21 +568,6 @@ class database_api
        */
       vector<worker_object> get_workers_by_account(account_id_type account)const;
 
-
-      ///////////
-      // Votes //
-      ///////////
-
-      /**
-       *  @brief Given a set of votes, return the objects they are voting for.
-       *
-       *  This will be a mixture of committee_member_object, witness_objects, and worker_objects
-       *
-       *  The results will be in the same order as the votes.  Null will be returned for
-       *  any vote ids that are not found.
-       */
-      vector<variant> lookup_vote_ids( const vector<vote_id_type>& votes )const;
-
       ////////////////////////////
       // Authority / validation //
       ////////////////////////////
@@ -679,6 +665,13 @@ class database_api
       vector<optional<license_type_object>> lookup_license_type_names(const vector<string>& names_or_ids)const;
 
       vector<optional<license_information_object>> get_license_information(const vector<account_id_type>& account_ids) const;
+
+      /**
+       * @brief Get a list of upgrade events
+       * @return A list of upgrade events, scheduled or executed
+       *
+       */
+      vector<upgrade_event_object> get_upgrade_events() const;
 
       /////////////
       // Access  //
@@ -837,8 +830,6 @@ FC_API( graphene::app::database_api,
 
    // workers
    (get_workers_by_account)
-   // Votes
-   (lookup_vote_ids)
 
    // Authority / validation
    (get_transaction_hex)
@@ -866,6 +857,7 @@ FC_API( graphene::app::database_api,
    (list_license_types_by_amount)
    (lookup_license_type_names)
    (get_license_information)
+   (get_upgrade_events)
 
    // Access
    (get_free_cycle_balance)

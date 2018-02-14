@@ -90,6 +90,12 @@ struct get_impacted_account_visitor
    void operator()( const asset_settle_operation& op ) {}
    void operator()( const asset_global_settle_operation& op ) {}
    void operator()( const asset_publish_feed_operation& op ) {}
+   void operator()( const remove_root_authority_operation& op ) {}
+   void operator()( const create_witness_operation& op ) {}
+   void operator()( const update_witness_operation& op ) {}
+   void operator()( const remove_witness_operation& op ) {}
+   void operator()( const activate_witness_operation& op ) {}
+   void operator()( const deactivate_witness_operation& op ) {}
    void operator()( const witness_create_operation& op )
    {
       _impacted.insert( op.witness_account );
@@ -326,6 +332,32 @@ struct get_impacted_account_visitor
       _impacted.insert( op.authority );
       _impacted.insert( op.account );
    }
+
+   void operator() ( const create_upgrade_event_operation& op )
+   {
+      _impacted.insert( op.upgrade_creator );
+   }
+
+   void operator() ( const update_upgrade_event_operation& op )
+   {
+     _impacted.insert( op.upgrade_creator );
+   }
+
+   void operator() ( const delete_upgrade_event_operation& op )
+   {
+     _impacted.insert( op.upgrade_creator );
+   }
+
+   void operator() ( const update_license_operation& op )
+   {
+      _impacted.insert( op.authority );
+   }
+
+   void operator() ( const issue_cycles_to_license_operation& op )
+   {
+      _impacted.insert( op.authority );
+      _impacted.insert( op.account );
+   }
 };
 
 void operation_get_impacted_accounts( const operation& op, flat_set<account_id_type>& result )
@@ -419,6 +451,8 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
               case license_type_object_type:{
                /** these are free from any accounts */
                break;
+            } case upgrade_event_object_type:{
+               break;
             }
          }
       }
@@ -498,6 +532,8 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
             case impl_reward_queue_object_type:
                break;
             case impl_frequency_history_record_object_type:
+               break;
+            case impl_witness_delegate_data_colection_object_type:
                break;
       }
    }

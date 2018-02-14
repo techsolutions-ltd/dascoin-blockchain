@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.2.8] - 2018-01-14
+### Added
+ - Upgrades are now done internally, on chain
+ - Support for multiple master nodes is reworked to better suit our needs
+ - New operation: issue cycles to a license
+ - New operation: update license
+
+### Updated
+ - Merged changes from BitShares related to block database. Indexing should
+   be more robust now
+ - Charter licenses didn't have proper multipliers vector set. This is now
+   fixed.
+
 ## [0.2.7] - 2017-12-21
 ### Added
  - Query to get trade history by sequence

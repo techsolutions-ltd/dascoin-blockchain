@@ -1,5 +1,5 @@
 {
-  "initial_timestamp": "2017-03-26T14:07:55",
+  "initial_timestamp": "2017-03-26T14:07:00",
   "max_core_supply": "1000000000000000",
   "max_dascoin_supply": "8800000000",
   "initial_parameters": {
@@ -337,6 +337,9 @@
   "initial_vesting_balances": [],
   "initial_issued_cycles": [],
   "initial_active_witnesses": 1,
+  "initial_root_authority": {
+    "owner_name": "sys.master"
+  },
   "initial_witness_candidates": [{
       "owner_name": "sys.witness0",
       "block_signing_key": "GPH6KXx5gnuZxumkBfHQhZQFPMaca2yAVtjMMhRTLMo4aaiyiKchp"

@@ -720,8 +720,6 @@ void deprecate_annual_members( database& db )
 void database::perform_upgrades(const account_object& account, const upgrade_event_object& upgrade)
 {
    share_type new_balance{0};
-   share_type requeue_amount;
-   share_type return_amount;
    bool update_balance{false};
 
    const auto& license_id_to_string = [&](const share_type amount) -> string {

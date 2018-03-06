@@ -152,6 +152,9 @@ namespace graphene { namespace chain {
 
          void_result do_evaluate(const asset_create_issue_request_operation& op);
          object_id_type do_apply(const asset_create_issue_request_operation& op);
+
+      private:
+         bool _create_new_balance_object_for_cycles = false;
    };
 
    class asset_deny_issue_request_evaluator : public evaluator<asset_deny_issue_request_evaluator>

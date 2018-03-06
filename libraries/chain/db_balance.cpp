@@ -46,6 +46,13 @@ asset database::get_balance(const account_object& owner, const asset_object& ass
    return get_balance(owner.get_id(), asset_obj.get_id());
 }
 
+bool database::check_if_balance_object_exists(account_id_type owner, asset_id_type asset_id) const
+{
+   auto& index = get_index_type<account_balance_index>().indices().get<by_account_asset>();
+   auto itr = index.find(boost::make_tuple(owner, asset_id));
+   return itr != index.end();
+}
+
 const account_balance_object& database::get_balance_object(account_id_type owner, asset_id_type asset_id) const
 {
    auto& index = get_index_type<account_balance_index>().indices().get<by_account_asset>();

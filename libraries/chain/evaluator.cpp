@@ -50,77 +50,61 @@ database& generic_evaluator::db()const { return trx_state->db(); }
       return result;
    } FC_CAPTURE_AND_RETHROW() }
 
-   void generic_evaluator::prepare_fee(account_id_type account_id, asset fee)
+   void generic_evaluator::prepare_fee(account_id_type account_id, asset fee, operation op)
    {
       const database& d = db();
-      fee_from_account = fee;
       FC_ASSERT( fee.amount >= 0 );
       fee_paying_account = &account_id(d);
-      fee_paying_account_statistics = &fee_paying_account->statistics(d);
 
       fee_asset = &fee.asset_id(d);
       fee_asset_dyn_data = &fee_asset->dynamic_asset_data_id(d);
 
-      if( d.head_block_time() > HARDFORK_419_TIME )
+      // if asset is core just leave this part
+      if(fee.asset_id == asset_id_type())
       {
-         FC_ASSERT( is_authorized_asset( d, *fee_paying_account, *fee_asset ), "Account ${acct} '${name}' attempted to pay fee by using asset ${a} '${sym}', which is unauthorized due to whitelist / blacklist",
-            ("acct", fee_paying_account->id)("name", fee_paying_account->name)("a", fee_asset->id)("sym", fee_asset->symbol) );
+         fee_paid = 0;
+         return;
       }
 
-      if( fee_from_account.asset_id == asset_id_type() )
-         core_fee_paid = fee_from_account.amount;
-      else
-      {
-         asset fee_from_pool = fee_from_account * fee_asset->options.core_exchange_rate;
-         FC_ASSERT( fee_from_pool.asset_id == asset_id_type() );
-         core_fee_paid = fee_from_pool.amount;
-         FC_ASSERT( core_fee_paid <= fee_asset_dyn_data->fee_pool,
-                    "Fee pool balance of '${b}' is less than the ${r} required to convert ${c}",
-                    ("r", db().to_pretty_string(fee_from_pool))
-                    ("b", fee_asset_dyn_data->fee_pool)
-                    ("c", db().to_pretty_string(fee))
-                  );
-      }
-   }
+      FC_ASSERT( fee.asset_id == d.get_cycle_asset_id(), "Attempted to pay fee by using asset ${a} '${sym}', which is unauthorized",
+        ("a", fee.asset_id)("sym", fee_asset->symbol) );
 
-   void generic_evaluator::convert_fee()
-   {
-      if( !trx_state->skip_fee ) {
-         if( fee_asset->get_id() != asset_id_type() )
-         {
-            db().modify(*fee_asset_dyn_data, [this](asset_dynamic_data_object& d) {
-               d.accumulated_fees += fee_from_account.amount;
-               d.fee_pool -= core_fee_paid;
-            });
-         }
-      }
+      fee_paid = calculate_fee_for_operation(op);
+
+      account_fee_balance_object = &(d.get_balance_object(account_id, d.get_cycle_asset_id()));
+
+      auto balance = account_fee_balance_object->get_balance();
+      FC_ASSERT( fee_paid < balance.amount, "Low balance. Not enough to pay fee.");
+
    }
 
    void generic_evaluator::pay_fee()
    { try {
-      if( !trx_state->skip_fee ) {
+      if( !trx_state->skip_fee && fee_paid > 0) {
          database& d = db();
-         /// TODO: db().pay_fee( account_id, core_fee );
-         d.modify(*fee_paying_account_statistics, [&](account_statistics_object& s)
+
+         d.modify(*account_fee_balance_object, [&](account_balance_object& b)
          {
-            s.pay_fee( core_fee_paid, d.get_global_properties().parameters.cashback_vesting_threshold );
+            b.balance -= fee_paid;
          });
+
+         /// TODO: put fee in some fee pool
       }
    } FC_CAPTURE_AND_RETHROW() }
 
    void generic_evaluator::pay_fba_fee( uint64_t fba_id )
    {
-      database& d = db();
-      const fba_accumulator_object& fba = d.get< fba_accumulator_object >( fba_accumulator_id_type( fba_id ) );
-      if( !fba.is_configured(d) )
-      {
-         generic_evaluator::pay_fee();
-         return;
-      }
-      d.modify( fba, [&]( fba_accumulator_object& _fba )
-      {
-         _fba.accumulated_fba_fees += core_fee_paid;
-      } );
+//      database& d = db();
+//      const fba_accumulator_object& fba = d.get< fba_accumulator_object >( fba_accumulator_id_type( fba_id ) );
+//      if( !fba.is_configured(d) )
+//      {
+//         generic_evaluator::pay_fee();
+//         return;
+//      }
+//      d.modify( fba, [&]( fba_accumulator_object& _fba )
+//      {
+//         _fba.accumulated_fba_fees += core_fee_paid;
+//      } );
    }
 
    share_type generic_evaluator::calculate_fee_for_operation(const operation& op) const

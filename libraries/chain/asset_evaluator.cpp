@@ -81,7 +81,7 @@ void_result asset_create_evaluator::do_evaluate( const asset_create_operation& o
       }
    }
 
-   core_fee_paid -= core_fee_paid.value/2;
+//   core_fee_paid -= core_fee_paid.value/2;
 
    if( op.bitasset_opts )
    {
@@ -114,7 +114,7 @@ object_id_type asset_create_evaluator::do_apply( const asset_create_operation& o
    const asset_dynamic_data_object& dyn_asset =
       db().create<asset_dynamic_data_object>( [&]( asset_dynamic_data_object& a ) {
          a.current_supply = 0;
-         a.fee_pool = core_fee_paid; //op.calculate_fee(db().current_fee_schedule()).value / 2;
+         a.fee_pool = 0; //core_fee_paid; //op.calculate_fee(db().current_fee_schedule()).value / 2;
       });
 
    asset_bitasset_data_id_type bit_asset_id;
@@ -578,7 +578,7 @@ void_result asset_create_issue_request_evaluator::do_evaluate(const asset_create
 
    // Check if we are transferring web assets:
    // NOTE: this check must be modified to apply for every kind of web asset there is.
-   FC_ASSERT( op.asset_id == d.get_web_asset_id(), "Can only issue web assets" );
+   FC_ASSERT( op.asset_id == d.get_web_asset_id() || op.asset_id == d.get_cycle_asset_id(), "Can only issue web or cycle assets" );
 
    const auto& a = op.asset_id(d);
    FC_ASSERT( a.is_dual_auth_issue(),
@@ -596,6 +596,13 @@ void_result asset_create_issue_request_evaluator::do_evaluate(const asset_create
    const account_object& reciever = op.receiver(d);
    FC_ASSERT( is_authorized_asset( d, reciever, a ) );
 
+   // if we do not have cycle asset balance we have to create it
+   if(op.asset_id == d.get_cycle_asset_id())
+   {
+      if(!d.check_if_balance_object_exists(op.receiver, op.asset_id))
+         _create_new_balance_object_for_cycles = true;
+   }
+
    const auto& asset_dyn_data = a.dynamic_asset_data_id(d);
    FC_ASSERT( (asset_dyn_data.current_supply + op.amount) <= a.options.max_supply );
 
@@ -612,6 +619,8 @@ object_id_type asset_create_issue_request_evaluator::do_apply(const asset_create
 { try {
 
    auto& d = db();
+   if(_create_new_balance_object_for_cycles)
+      d.create_empty_balance(op.receiver, op.asset_id);
 
    d.issue_asset(op.receiver, op.amount, op.asset_id, op.reserved_amount);
 

@@ -2200,9 +2200,9 @@ public:
 
       m["list_account_balances"] = [this](variant result, const fc::variants& a)
       {
-         auto r = result.as<vector<asset>>();
+         auto r = result.as<vector<asset_reserved>>();
          vector<asset_object> asset_recs;
-         std::transform(r.begin(), r.end(), std::back_inserter(asset_recs), [this](const asset& a) {
+         std::transform(r.begin(), r.end(), std::back_inserter(asset_recs), [this](const asset_reserved& a) {
             return get_asset(a.asset_id);
          });
 

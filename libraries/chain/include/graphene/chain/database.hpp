@@ -676,6 +676,8 @@ public:
        share_type get_licence_max_reward_in_dascoin(const license_type_object& lto, share_type bonus_percentage, share_type frequency) const;
 	   share_type get_total_dascoin_amount_in_system() const;
 
+         void perform_root_authority_check(const account_id_type& authority_account_id);
+
 private:
          vector< processed_transaction >        _pending_tx;
          fork_database                          _fork_db;

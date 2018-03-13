@@ -88,7 +88,22 @@ database& generic_evaluator::db()const { return trx_state->db(); }
             b.balance -= fee_paid;
          });
 
+
          /// TODO: put fee in some fee pool
+
+         const auto& dynamic_properties = db().get_dynamic_global_properties();
+         if(dynamic_properties.fee_pool_account_id != account_id_type())
+         {
+
+         }
+         else // this meens that we have to burn fee asset
+         {
+
+            d.modify(d.get_cycle_asset().dynamic_asset_data_id(d), [&](asset_dynamic_data_object& addo)
+            {
+               addo.current_supply -= fee_paid;
+            });
+         }
       }
    } FC_CAPTURE_AND_RETHROW() }
 

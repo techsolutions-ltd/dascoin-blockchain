@@ -160,6 +160,7 @@ namespace graphene { namespace chain {
             delete_upgrade_event_operation,
 
             change_fee_for_operation,
+            change_fee_pool_account_operation,
 
             // Virtual operations below this point:
 

@@ -15,6 +15,55 @@ BOOST_FIXTURE_TEST_SUITE( dascoin_tests, database_fixture )
 
 BOOST_FIXTURE_TEST_SUITE( fee_tests, database_fixture )
 
+BOOST_AUTO_TEST_CASE( issued_cycle_asset_test )
+{ try {
+  ACTOR(wallet);
+
+  const auto created_record = issue_cycleasset("CL1", wallet_id, 100, 100);
+  BOOST_CHECK( created_record != nullptr );
+  BOOST_CHECK_EQUAL( created_record->unique_id, "CL1" );
+  BOOST_CHECK( created_record->issuer == get_webasset_issuer_id() );
+  BOOST_CHECK( created_record->receiver == wallet_id );
+  BOOST_CHECK( created_record->asset_type == get_cycle_asset_id() );
+  BOOST_CHECK_EQUAL( created_record->amount.value, 100 );
+  BOOST_CHECK_EQUAL( created_record->reserved.value, 100 );
+
+  const auto fetched_record = _dal.get_issued_asset_record("CL1", get_cycle_asset_id());
+  BOOST_CHECK( fetched_record.valid() );
+  BOOST_CHECK_EQUAL( fetched_record->unique_id, "CL1" );
+  BOOST_CHECK( fetched_record->issuer == get_webasset_issuer_id() );
+  BOOST_CHECK( fetched_record->receiver == wallet_id );
+  BOOST_CHECK( fetched_record->asset_type == get_cycle_asset_id() );
+  BOOST_CHECK_EQUAL( fetched_record->amount.value, 100 );
+  BOOST_CHECK_EQUAL( fetched_record->reserved.value, 100 );
+
+  GRAPHENE_REQUIRE_THROW( issue_cycleasset("CL1", wallet_id, 100, 100), fc::exception );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( check_issued_cycle_test )
+{ try {
+  ACTOR(wallet);
+
+  auto created_record = issue_cycleasset("CL1", wallet_id, 100, 100);
+  BOOST_CHECK( created_record != nullptr );
+  bool found = _dal.check_issued_asset("CL1", DASCOIN_CYCLE_ASSET_SYMBOL);
+  BOOST_CHECK( found );
+
+  // This was issued also:
+  found = _dal.check_issued_asset("CL1", DASCOIN_CYCLE_ASSET_SYMBOL);
+  BOOST_CHECK( found );
+
+  // Issue another one, different unique id:
+  created_record = issue_cycleasset("CL2", wallet_id, 100, 100);
+  BOOST_CHECK( created_record != nullptr );
+
+  // The first one should still be reachable:
+  found = _dal.check_issued_asset("CL1", DASCOIN_CYCLE_ASSET_SYMBOL);
+  BOOST_CHECK( found );
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_CASE( successful_fee_change_test )
 { try {
 
@@ -73,54 +122,7 @@ BOOST_AUTO_TEST_CASE( successful_fee_change_test )
 
 } FC_LOG_AND_RETHROW() }
 
-BOOST_AUTO_TEST_CASE( issued_asset_record_object_created_test )
-{ try {
-  ACTOR(wallet);
 
-  const auto created_record = issue_cycleasset("CL1", wallet_id, 100, 100);
-  BOOST_CHECK( created_record != nullptr );
-  BOOST_CHECK_EQUAL( created_record->unique_id, "CL1" );
-  BOOST_CHECK( created_record->issuer == get_webasset_issuer_id() );
-  BOOST_CHECK( created_record->receiver == wallet_id );
-  BOOST_CHECK( created_record->asset_type == get_cycle_asset_id() );
-  BOOST_CHECK_EQUAL( created_record->amount.value, 100 );
-  BOOST_CHECK_EQUAL( created_record->reserved.value, 100 );
-
-  const auto fetched_record = _dal.get_issued_asset_record("CL1", get_cycle_asset_id());
-  BOOST_CHECK( fetched_record.valid() );
-  BOOST_CHECK_EQUAL( fetched_record->unique_id, "CL1" );
-  BOOST_CHECK( fetched_record->issuer == get_webasset_issuer_id() );
-  BOOST_CHECK( fetched_record->receiver == wallet_id );
-  BOOST_CHECK( fetched_record->asset_type == get_cycle_asset_id() );
-  BOOST_CHECK_EQUAL( fetched_record->amount.value, 100 );
-  BOOST_CHECK_EQUAL( fetched_record->reserved.value, 100 );
-
-  GRAPHENE_REQUIRE_THROW( issue_cycleasset("CL1", wallet_id, 100, 100), fc::exception );
-
-} FC_LOG_AND_RETHROW() }
-
-BOOST_AUTO_TEST_CASE( check_issued_cycle_test )
-{ try {
-  ACTOR(wallet);
-
-  auto created_record = issue_cycleasset("CL1", wallet_id, 100, 100);
-  BOOST_CHECK( created_record != nullptr );
-  bool found = _dal.check_issued_asset("CL1", DASCOIN_CYCLE_ASSET_SYMBOL);
-  BOOST_CHECK( found );
-
-  // This was issued also:
-  found = _dal.check_issued_asset("CL1", DASCOIN_CYCLE_ASSET_SYMBOL);
-  BOOST_CHECK( found );
-
-  // Issue another one, different unique id:
-  created_record = issue_cycleasset("CL2", wallet_id, 100, 100);
-  BOOST_CHECK( created_record != nullptr );
-
-  // The first one should still be reachable:
-  found = _dal.check_issued_asset("CL1", DASCOIN_CYCLE_ASSET_SYMBOL);
-  BOOST_CHECK( found );
-
-} FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_SUITE_END()
 

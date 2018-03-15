@@ -1,7 +1,7 @@
 {
   "initial_timestamp": "2017-03-26T14:07:00",
   "max_core_supply": "1000000000000000",
-  "max_dascoin_supply": "8800000000",
+  "max_dascoin_supply": "8589934592",
   "initial_parameters": {
     "current_fees": {
       "parameters": [[

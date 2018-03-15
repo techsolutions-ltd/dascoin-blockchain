@@ -56,7 +56,15 @@ namespace graphene { namespace chain { namespace detail {
                  ("lf", license->frequency_lock)
                );
 
-      return &license_information_obj;
+      // Assure that amount of cycles submitted would not exceed DASCOIN_MAX_DASCOIN_SUPPLY limit.
+      FC_ASSERT(_db.cycles_to_dascoin(op.amount, frequency) + _db.get_total_dascoin_amount_in_system() <= (DASCOIN_MAX_DASCOIN_SUPPLY * DASCOIN_DEFAULT_ASSET_PRECISION),
+                "Cannot submit ${am} cycles, on frequency (${f}), cause that amount of dascoins(${dsc}), would exceed DASCOIN_MAX_DASCOIN_SUPPLY limit",
+                ("am", op.amount)
+                ("f", frequency)
+                ("dsc", _db.cycles_to_dascoin(op.amount, frequency))
+               );
+
+	    return &license_information_obj;
     }
 
     template<typename OperationType>

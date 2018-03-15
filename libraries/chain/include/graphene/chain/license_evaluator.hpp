@@ -10,6 +10,10 @@
 
 namespace graphene { namespace chain {
 
+namespace detail {
+	share_type apply_percentage(share_type val, share_type percent);
+}  // namespace graphene::chain::detail
+
 class create_license_type_evaluator : public evaluator<create_license_type_evaluator>
 {
 public:

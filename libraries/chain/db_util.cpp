@@ -2,6 +2,8 @@
  * DASCOIN!
 */
 
+#include <cmath>
+
 #include <graphene/chain/database.hpp>
 
 namespace graphene { namespace chain {
@@ -25,6 +27,25 @@ void database::perform_chain_authority_check(const string& auth_type_name, accou
              ("auth_name", auth_id(*this).name)
              ("a", acc_obj.name)
           );
+}
+
+share_type database::get_licence_max_reward_in_dascoin(const license_type_object& lto, share_type bonus_percentage, share_type frequency) const
+{
+  share_type initial_licence_cycles = detail::apply_percentage(lto.amount, bonus_percentage);
+  share_type max_licence_cycles = initial_licence_cycles * std::pow(2, lto.balance_upgrade.multipliers.size());
+
+  return cycles_to_dascoin(max_licence_cycles, frequency) / DASCOIN_FREQUENCY_PRECISION;
+}
+
+share_type database::get_total_dascoin_amount_in_system() const
+{
+  const auto& dgpo = get_dynamic_global_properties();
+  const auto& queue = get_index_type<reward_queue_index>().indices().get<by_time>();
+
+  if (queue.size() == 0)
+    return dgpo.total_dascoin_minted;
+
+  return queue.rbegin()->historic_sum;
 }
 
 } }  // namespace graphene::chain

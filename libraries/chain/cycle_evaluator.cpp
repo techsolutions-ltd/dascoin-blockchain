@@ -33,6 +33,14 @@ void_result submit_reserve_cycles_to_queue_evaluator::do_evaluate(const submit_r
              ("name", account_obj.name)
            );
 
+  // Assure that amount of cycles submitted would not exceed DASCOIN_MAX_DASCOIN_SUPPLY limit.
+  FC_ASSERT(d.cycles_to_dascoin(op.amount, op.frequency_lock) + d.get_total_dascoin_amount_in_system() <= (DASCOIN_MAX_DASCOIN_SUPPLY * DASCOIN_DEFAULT_ASSET_PRECISION),
+            "Cannot submit ${am} cycles, on frequency (${f}), cause that amount of dascoins(${dsc}), would exceed DASCOIN_MAX_DASCOIN_SUPPLY limit",
+            ("am", op.amount)
+            ("f", op.frequency_lock)
+            ("dsc", d.cycles_to_dascoin(op.amount, op.frequency_lock))
+  );
+
   return {};
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
@@ -220,6 +228,17 @@ void_result issue_cycles_to_license_evaluator::do_evaluate(const operation_type&
              ("type", op.license)
              ("a", account_obj.name)
            );
+
+  // Assure that amount of cycles submitted would not exceed DASCOIN_MAX_DASCOIN_SUPPLY limit.
+  if (license.kind == license_kind::chartered)
+  {
+    FC_ASSERT(d.cycles_to_dascoin(op.amount, _frequency_lock) + d.get_total_dascoin_amount_in_system() <= (DASCOIN_MAX_DASCOIN_SUPPLY * DASCOIN_DEFAULT_ASSET_PRECISION),
+              "Cannot issue ${am} cycles, on frequency (${f}), cause that amount of dascoins(${dsc}), would exceed DASCOIN_MAX_DASCOIN_SUPPLY limit",
+              ("am", op.amount)
+              ("f", _frequency_lock)
+              ("dsc", d.cycles_to_dascoin(op.amount, _frequency_lock))
+    );
+  }
 
   _license_information_obj = &license_information_obj;
   _kind = license.kind;

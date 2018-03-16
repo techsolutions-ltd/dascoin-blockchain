@@ -144,6 +144,16 @@ BOOST_AUTO_TEST_CASE( frequency_record_index_test )
 BOOST_AUTO_TEST_CASE( update_global_frequency_unit_test )
 { try {
 
+  // Try to update global frequency using the wrong authority:
+  GRAPHENE_REQUIRE_THROW( do_op(update_global_frequency_operation(get_license_administrator_id(), 450, "TEST")), fc::exception );
+
+  // Try to update global frequency to zero:
+  GRAPHENE_REQUIRE_THROW( do_op(update_global_frequency_operation(get_license_issuer_id(), 0, "TEST")), fc::exception );
+
+  // Try to update global frequency with too long comment:
+  GRAPHENE_REQUIRE_THROW( do_op(update_global_frequency_operation(get_license_issuer_id(), 0,
+                                                                  "0123456789012345678901234567890123456789012345678901234567890123456789")), fc::exception );
+
   do_op(update_global_frequency_operation(get_license_issuer_id(), 450, "TEST"));
 
   auto frequency = db.get_dynamic_global_properties().frequency;

@@ -219,6 +219,7 @@
 #define DASCOIN_MAX_DASCOIN_SUPPLY int64_t(8589934592LL)    // 2^33
 ///}@
 
+
 /**
  * Frequency_type parameters:
  */

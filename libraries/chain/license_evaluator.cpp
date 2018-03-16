@@ -139,11 +139,16 @@ void_result issue_license_evaluator::do_evaluate(const issue_license_operation& 
   {
     share_type license_max_reward_in_dascoin = d.get_licence_max_reward_in_dascoin(new_license_obj, op.frequency_lock, op.bonus_percentage);
 
-    FC_ASSERT(license_max_reward_in_dascoin + d.get_total_dascoin_amount_in_system() <= (DASCOIN_MAX_DASCOIN_SUPPLY * DASCOIN_DEFAULT_ASSET_PRECISION),
-              "Cannot issue license ${l_n} on account ${a}, licence max reward in dascoin ${l_m_r_i_d} would exceed DASCOIN_MAX_DASCOIN_SUPPLY limit",
+    FC_ASSERT(license_max_reward_in_dascoin + d.get_total_dascoin_amount_in_system() <= DASCOIN_MAX_DASCOIN_SUPPLY * DASCOIN_DEFAULT_ASSET_PRECISION,
+              "Cannot issue license ${l_n} on account ${a}, "
+              "cause license max reward ${dsc_reward} DSC , "
+              "plus amount ${dsc_system} DSC in system, "
+              "would exceed DASCOIN_MAX_DASCOIN_SUPPLY limit ${dsc_max_limit} DSC",
               ("l_n", new_license_obj.name)
               ("a", account_obj.name)
-              ("l_m_r_i_d", license_max_reward_in_dascoin)
+              ("dsc_reward", license_max_reward_in_dascoin)
+              ("dsc_system", d.get_total_dascoin_amount_in_system())
+              ("dsc_max_limit", DASCOIN_MAX_DASCOIN_SUPPLY * DASCOIN_DEFAULT_ASSET_PRECISION)
     );
   }
 

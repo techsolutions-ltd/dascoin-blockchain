@@ -26,87 +26,88 @@ BOOST_AUTO_TEST_CASE( max_dascoins_supply_limit_test )
     VAULT_ACTORS((first)(second))
     ACTOR(wallet)
 
+    auto standard_charter = *(_dal.get_license_type("standard_charter"));
+    auto vp_locked = *(_dal.get_license_type("vice_president_locked"));
+    variant v;
+    fc::to_variant(vp_locked.id, v);
+    const uint32_t bonus_percent = 10;
+    const uint32_t frequency_lock = 1;
+    const uint32_t standard_amount = DASCOIN_BASE_STANDARD_CYCLES + (bonus_percent * DASCOIN_BASE_STANDARD_CYCLES) / 100;
+
     // Frequency is 1 (easier math)
-    adjust_frequency(1 * DASCOIN_FREQUENCY_PRECISION);
+    adjust_frequency(frequency_lock * DASCOIN_FREQUENCY_PRECISION);
 
     // System has 0 DSC issued
     BOOST_CHECK_EQUAL(db.get_total_dascoin_amount_in_system().value, 0);
 
     // Required to throw cause amount of cycles issued would exceed DASCOIN_MAX_DASCOIN_SUPPLY
-    GRAPHENE_REQUIRE_THROW(do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), first_id, DASCOIN_MAX_DASCOIN_SUPPLY + 1, 1 * DASCOIN_FREQUENCY_PRECISION, "")), fc::exception);
+    GRAPHENE_REQUIRE_THROW(do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), first_id, DASCOIN_MAX_DASCOIN_SUPPLY + 1, frequency_lock * DASCOIN_FREQUENCY_PRECISION, "")), fc::exception);
 
     // Issue 8589709593 reserved cycles to first account
-    do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), first_id, 8589709593, 1 * DASCOIN_FREQUENCY_PRECISION, ""));
+    do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), first_id, 8589709593, frequency_lock * DASCOIN_FREQUENCY_PRECISION, ""));
 
     // Check to see if total amount of coins is 8589709593
     BOOST_CHECK_EQUAL(db.get_total_dascoin_amount_in_system().value / DASCOIN_DEFAULT_ASSET_PRECISION, 8589709593);
 
-    // Required to fail cause issuing 225000 would exceed DASCOIN_MAX_DASCOIN_SUPPLY
-    GRAPHENE_REQUIRE_THROW(do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), first_id, 225000, 1 * DASCOIN_FREQUENCY_PRECISION, "")), fc::exception);
-
-    auto standard_charter = *(_dal.get_license_type("standard_charter"));
-    auto vp_locked = *(_dal.get_license_type("vice_president_locked"));
-
-    variant v;
-    fc::to_variant(vp_locked.id, v);
+    // Required to fail cause issuing DASCOIN_BASE_VICE_PRESIDENT_CYCLES would exceed DASCOIN_MAX_DASCOIN_SUPPLY
+    GRAPHENE_REQUIRE_THROW(do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), first_id, DASCOIN_BASE_VICE_PRESIDENT_CYCLES, frequency_lock * DASCOIN_FREQUENCY_PRECISION, "")), fc::exception);
 
     // Issue VP_LOCKED license for first account
-    do_op(issue_license_operation(get_license_issuer_id(), first_id, vp_locked.id, 10, 1 * DASCOIN_FREQUENCY_PRECISION, db.head_block_time()));
+    do_op(issue_license_operation(get_license_issuer_id(), first_id, vp_locked.id, bonus_percent, frequency_lock * DASCOIN_FREQUENCY_PRECISION, db.head_block_time()));
 
-    // Required to fail cause submitting 225000 to queue would exceed DASCOIN_MAX_DASCOIN_SUPPLY
-    GRAPHENE_REQUIRE_THROW(do_op(submit_cycles_to_queue_operation(first_id, 225000, 1 * DASCOIN_FREQUENCY_PRECISION, v.as_string())), fc::exception);
+    // Required to fail cause submitting DASCOIN_BASE_VICE_PRESIDENT_CYCLES to queue would exceed DASCOIN_MAX_DASCOIN_SUPPLY
+    GRAPHENE_REQUIRE_THROW(do_op(submit_cycles_to_queue_operation(first_id, DASCOIN_BASE_VICE_PRESIDENT_CYCLES, frequency_lock * DASCOIN_FREQUENCY_PRECISION, v.as_string())), fc::exception);
 
-    // Required to fail cause submitting 225000 to queue would exceed DASCOIN_MAX_DASCOIN_SUPPLY
-    GRAPHENE_REQUIRE_THROW(do_op(submit_cycles_to_queue_by_license_operation(first_id, 225000, vp_locked.id, 1 * DASCOIN_FREQUENCY_PRECISION, "TEST")), fc::exception);
+    // Required to fail cause submitting DASCOIN_BASE_VICE_PRESIDENT_CYCLES to queue would exceed DASCOIN_MAX_DASCOIN_SUPPLY
+    GRAPHENE_REQUIRE_THROW(do_op(submit_cycles_to_queue_by_license_operation(first_id, DASCOIN_BASE_VICE_PRESIDENT_CYCLES, vp_locked.id, frequency_lock * DASCOIN_FREQUENCY_PRECISION, "TEST")), fc::exception);
 
     // Issue PRESIDENT_CHARTER license for second account
     auto p_charter = *(_dal.get_license_type("president_charter"));
 
     // Required to fail cause issuing this license would submit cycles to queue which would exceed DASCOIN_MAX_DASCOIN_SUPPLY
-    GRAPHENE_REQUIRE_THROW(do_op(issue_license_operation(get_license_issuer_id(), second_id, p_charter.id, 10, 1 * DASCOIN_FREQUENCY_PRECISION, db.head_block_time())), fc::exception);
+    GRAPHENE_REQUIRE_THROW(do_op(issue_license_operation(get_license_issuer_id(), second_id, p_charter.id, bonus_percent, frequency_lock * DASCOIN_FREQUENCY_PRECISION, db.head_block_time())), fc::exception);
 
     // Issue STANDARD_CHARTER license for second account
-    do_op(issue_license_operation(get_license_issuer_id(), second_id, standard_charter.id, 10, 1 * DASCOIN_FREQUENCY_PRECISION, db.head_block_time()));
+    do_op(issue_license_operation(get_license_issuer_id(), second_id, standard_charter.id, bonus_percent, frequency_lock * DASCOIN_FREQUENCY_PRECISION, db.head_block_time()));
 
     // Required to fail cause issuing additional cycles to second account license would exceed DASCOIN_MAX_DASCOIN_SUPPLY
-//    GRAPHENE_REQUIRE_THROW(do_op(issue_cycles_to_license_operation(get_cycle_issuer_id(), second_id, standard_charter.id, 225000, "ORIGIN", "COMMENT")), fc::exception );
-
+    // GRAPHENE_REQUIRE_THROW(do_op(issue_cycles_to_license_operation(get_cycle_issuer_id(), second_id, standard_charter.id, DASCOIN_BASE_VICE_PRESIDENT_CYCLES, "ORIGIN", "COMMENT")), fc::exception );
 
     // Empty reward queue
     adjust_dascoin_reward(1000000000 * DASCOIN_DEFAULT_ASSET_PRECISION);
-    BOOST_CHECK_EQUAL(db.get_total_dascoin_amount_in_system().value / DASCOIN_DEFAULT_ASSET_PRECISION, 8589709593 + 1210);
+    BOOST_CHECK_EQUAL(db.get_total_dascoin_amount_in_system().value / DASCOIN_DEFAULT_ASSET_PRECISION, 8589709593 + standard_amount);
     BOOST_CHECK_EQUAL(_dal.get_reward_queue_size(), 2);
 
     auto queue = _dal.get_reward_queue();
     BOOST_CHECK_EQUAL(queue[0].amount.value, 8589709593);
-    BOOST_CHECK_EQUAL(queue[1].amount.value, 1210);
+    BOOST_CHECK_EQUAL(queue[1].amount.value, standard_amount);
 
     toggle_reward_queue(true);
     for (int i = 0; i < 9; i++)
-      generate_blocks(db.head_block_time() + fc::seconds(600));
+      generate_blocks(db.head_block_time() + fc::seconds(get_chain_parameters().reward_interval_time_seconds));
 
     BOOST_CHECK_EQUAL(_dal.get_reward_queue().size(), 0);
-    BOOST_CHECK_EQUAL(db.get_total_dascoin_amount_in_system().value / DASCOIN_DEFAULT_ASSET_PRECISION, 8589709593 + 1210);
+    BOOST_CHECK_EQUAL(db.get_total_dascoin_amount_in_system().value / DASCOIN_DEFAULT_ASSET_PRECISION, 8589709593 + standard_amount);
 
     BOOST_CHECK_EQUAL(get_balance(first_id, get_dascoin_asset_id()), 8589709593 * DASCOIN_DEFAULT_ASSET_PRECISION);
-    BOOST_CHECK_EQUAL(get_balance(second_id, get_dascoin_asset_id()), 1210 * DASCOIN_DEFAULT_ASSET_PRECISION);
+    BOOST_CHECK_EQUAL(get_balance(second_id, get_dascoin_asset_id()), standard_amount * DASCOIN_DEFAULT_ASSET_PRECISION);
 
     // Queue is empty, amount of DSC in system is in total_dascoin_minted, repeat tests..
 
-    // Required to fail cause submitting 225000 would exceed DASCOIN_MAX_DASCOIN_SUPPLY
-    GRAPHENE_REQUIRE_THROW(do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), first_id, 225000, 1 * DASCOIN_FREQUENCY_PRECISION, "")), fc::exception);
+    // Required to fail cause submitting DASCOIN_BASE_VICE_PRESIDENT_CYCLES would exceed DASCOIN_MAX_DASCOIN_SUPPLY
+    GRAPHENE_REQUIRE_THROW(do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), first_id, DASCOIN_BASE_VICE_PRESIDENT_CYCLES, frequency_lock * DASCOIN_FREQUENCY_PRECISION, "")), fc::exception);
 
-    // Required to fail cause submitting 225000 to queue would exceed DASCOIN_MAX_DASCOIN_SUPPLY
-    GRAPHENE_REQUIRE_THROW(do_op(submit_cycles_to_queue_operation(first_id, 225000, 1 * DASCOIN_FREQUENCY_PRECISION, v.as_string())), fc::exception);
+    // Required to fail cause submitting DASCOIN_BASE_VICE_PRESIDENT_CYCLES to queue would exceed DASCOIN_MAX_DASCOIN_SUPPLY
+    GRAPHENE_REQUIRE_THROW(do_op(submit_cycles_to_queue_operation(first_id, DASCOIN_BASE_VICE_PRESIDENT_CYCLES, frequency_lock * DASCOIN_FREQUENCY_PRECISION, v.as_string())), fc::exception);
 
-    // Required to fail cause submitting 225000 to queue would exceed DASCOIN_MAX_DASCOIN_SUPPLY
-    GRAPHENE_REQUIRE_THROW(do_op(submit_cycles_to_queue_by_license_operation(first_id, 225000, vp_locked.id, 1 * DASCOIN_FREQUENCY_PRECISION, "TEST")), fc::exception);
+    // Required to fail cause submitting DASCOIN_BASE_VICE_PRESIDENT_CYCLES to queue would exceed DASCOIN_MAX_DASCOIN_SUPPLY
+    GRAPHENE_REQUIRE_THROW(do_op(submit_cycles_to_queue_by_license_operation(first_id, DASCOIN_BASE_VICE_PRESIDENT_CYCLES, vp_locked.id, frequency_lock * DASCOIN_FREQUENCY_PRECISION, "TEST")), fc::exception);
 
     // Required to fail cause issuing this license would submit cycles to queue which would exceed DASCOIN_MAX_DASCOIN_SUPPLY
-    GRAPHENE_REQUIRE_THROW(do_op(issue_license_operation(get_license_issuer_id(), second_id, p_charter.id, 10, 1 * DASCOIN_FREQUENCY_PRECISION, db.head_block_time())), fc::exception);
+    GRAPHENE_REQUIRE_THROW(do_op(issue_license_operation(get_license_issuer_id(), second_id, p_charter.id, bonus_percent, frequency_lock * DASCOIN_FREQUENCY_PRECISION, db.head_block_time())), fc::exception);
 
     // Required to fail cause issuing additional cycles to second account license would exceed DASCOIN_MAX_DASCOIN_SUPPLY
-    GRAPHENE_REQUIRE_THROW(do_op(issue_cycles_to_license_operation(get_cycle_issuer_id(), second_id, standard_charter.id, 225000, "ORIGIN", "COMMENT")), fc::exception );
+    GRAPHENE_REQUIRE_THROW(do_op(issue_cycles_to_license_operation(get_cycle_issuer_id(), second_id, standard_charter.id, DASCOIN_BASE_VICE_PRESIDENT_CYCLES, "ORIGIN", "COMMENT")), fc::exception );
 
   }
   FC_LOG_AND_RETHROW()

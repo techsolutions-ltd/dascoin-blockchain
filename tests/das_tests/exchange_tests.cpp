@@ -61,6 +61,43 @@ BOOST_AUTO_TEST_CASE( successful_orders_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( transfer_wallet_to_wallet )
+{ try {
+    ACTOR(alice);
+    ACTOR(bob);
+    VAULT_ACTOR(alicev);
+
+    tether_accounts(alice_id, alicev_id);
+    disable_vault_to_wallet_limit(alicev_id);
+
+    // Issue a bunch of assets
+    issue_dascoin(alicev_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+    issue_dascoin(alice_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+    issue_webasset("1", alice_id, 100, 100);
+    BOOST_CHECK_EQUAL( get_balance(alicev_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
+    BOOST_CHECK_EQUAL( get_balance(alice_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
+    BOOST_CHECK_EQUAL( get_balance(alice_id, get_web_asset_id()), 100 );
+
+    // Expect Success: Transfer from wallet to wallet
+    transfer(alice_id, bob_id, asset{5 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()} );
+    BOOST_CHECK_EQUAL( get_dascoin_balance(alice_id), 95 * DASCOIN_DEFAULT_ASSET_PRECISION );
+    BOOST_CHECK_EQUAL( get_dascoin_balance(bob_id), 5 * DASCOIN_DEFAULT_ASSET_PRECISION );
+    transfer(bob_id, alice_id, asset{5 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()} );
+    BOOST_CHECK_EQUAL( get_dascoin_balance(alice_id), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
+    BOOST_CHECK_EQUAL( get_dascoin_balance(bob_id), 0 );
+
+    // Expect to Fail: transfer of asset other than dascoin
+    GRAPHENE_REQUIRE_THROW( transfer(alice_id, bob_id, asset{5, get_web_asset_id()}), fc::exception);
+
+    // Expect to Fail: transfer from account with insufficient balance
+    GRAPHENE_REQUIRE_THROW( transfer(alice_id, bob_id, asset{105 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}), fc::exception);
+
+    // Expect to Fail: transfer when source or destination is not a wallet
+    GRAPHENE_REQUIRE_THROW( transfer(alicev_id, alice_id, asset{5 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}), fc::exception);
+    GRAPHENE_REQUIRE_THROW( transfer(alice_id, alicev_id, asset{5 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}), fc::exception);
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_CASE( order_not_enough_assets_test )
 { try {
     ACTOR(alice);

@@ -93,7 +93,7 @@ namespace graphene { namespace chain {
       wallet = 0x0,
       vault = 0x1,
       special = 0x02,
-	  custodian = 0x03,
+      custodian = 0x03,
       VAULT_KIND_COUNT
    };
 
@@ -498,7 +498,7 @@ REFLECT_ENUM_CHECK( graphene::chain::account_kind,
                     (wallet)
                     (vault)
                     (special)
-					(custodian)
+                    (custodian)
                     (VAULT_KIND_COUNT)
                   )
 

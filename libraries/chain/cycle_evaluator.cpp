@@ -252,4 +252,43 @@ void_result issue_cycles_to_license_evaluator::do_apply(const operation_type& op
 
 } FC_CAPTURE_AND_RETHROW((op)) }
 
+void_result purchase_cycles_evaluator::do_evaluate(const operation_type& op)
+{ try {
+
+  const auto& d = db();
+  const auto& wallet_obj = op.wallet_id(d);
+
+  FC_ASSERT( wallet_obj.is_wallet(), "Cycles can be purchased only from a wallet account, '${w}' is vault", ("w", wallet_obj.name) );
+
+  const auto& current_frequency = d.get_dynamic_global_properties().frequency;
+  FC_ASSERT( current_frequency == op.frequency, "Current frequency is ${cf}, ${opf} given", ("cf", current_frequency)("opf", op.frequency) );
+
+  const auto& balance_obj = d.get_balance_object(op.wallet_id, d.get_dascoin_asset_id());
+  // Check if we have enough dascoin balance:
+  FC_ASSERT( balance_obj.balance >= op.amount,
+             "Insufficient balance on wallet ${w}: ${balance}, unable to spent '${amount}' DSC on cycle purchase",
+             ("w",wallet_obj.name)
+             ("balance",d.to_pretty_string(balance_obj.get_balance()))
+             ("amount",op.amount)
+           );
+
+  _account_balance_obj = &balance_obj;
+  return {};
+
+} FC_CAPTURE_AND_RETHROW((op)) }
+
+void_result purchase_cycles_evaluator::do_apply(const operation_type& op)
+{ try {
+
+  auto& d = db();
+
+  d.modify(*_account_balance_obj, [&](account_balance_object& acc_b){
+    acc_b.balance -= op.amount;
+    acc_b.spent += op.amount;
+  });
+
+  return {};
+
+} FC_CAPTURE_AND_RETHROW((op)) }
+
 } }  // namespace graphene::chain

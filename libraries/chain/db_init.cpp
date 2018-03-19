@@ -249,6 +249,7 @@ void database::initialize_evaluators()
    register_evaluator<delete_upgrade_event_evaluator>();
    register_evaluator<update_license_evaluator>();
    register_evaluator<issue_cycles_to_license_evaluator>();
+   register_evaluator<purchase_cycles_evaluator>();
 }
 
 void database::initialize_indexes()

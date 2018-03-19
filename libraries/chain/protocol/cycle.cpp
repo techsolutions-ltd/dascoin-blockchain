@@ -64,6 +64,8 @@ void purchase_cycles_operation::validate() const
   FC_ASSERT( amount > 0 );
   FC_ASSERT( frequency > 0 );
   FC_ASSERT( expected_amount > 0 );
+  // Make sure we get an integer value of cycles:
+  FC_ASSERT( (amount * frequency) % (DASCOIN_DEFAULT_ASSET_PRECISION * DASCOIN_FREQUENCY_PRECISION) == 0 );
 }
 
 } } // namespace graphene::chain

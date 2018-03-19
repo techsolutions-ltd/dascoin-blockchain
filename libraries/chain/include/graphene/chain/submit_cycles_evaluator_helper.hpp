@@ -59,7 +59,7 @@ namespace graphene { namespace chain { namespace detail {
       // Assure that amount of cycles submitted would not exceed DASCOIN_MAX_DASCOIN_SUPPLY limit.
       FC_ASSERT(_db.cycles_to_dascoin(op.amount, frequency) + _db.get_total_dascoin_amount_in_system() <= DASCOIN_MAX_DASCOIN_SUPPLY * DASCOIN_DEFAULT_ASSET_PRECISION,
                 "Cannot submit ${am} cycles with frequency (${f}), "
-                "cause with amount (${dsc_system} DSC in system, "
+                "because with amount (${dsc_system} DSC in system, "
                 "it would exceed DASCOIN_MAX_DASCOIN_SUPPLY limit ${dsc_max_limit} DSC",
                 ("am", op.amount)
                 ("f", frequency)

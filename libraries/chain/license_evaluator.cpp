@@ -141,7 +141,7 @@ void_result issue_license_evaluator::do_evaluate(const issue_license_operation& 
 
     FC_ASSERT(license_max_reward_in_dascoin + d.get_total_dascoin_amount_in_system() <= DASCOIN_MAX_DASCOIN_SUPPLY * DASCOIN_DEFAULT_ASSET_PRECISION,
               "Cannot issue license ${l_n} on account ${a}, "
-              "cause license max reward ${dsc_reward} DSC , "
+              "because license max reward ${dsc_reward} DSC , "
               "plus amount ${dsc_system} DSC in system, "
               "would exceed DASCOIN_MAX_DASCOIN_SUPPLY limit ${dsc_max_limit} DSC",
               ("l_n", new_license_obj.name)

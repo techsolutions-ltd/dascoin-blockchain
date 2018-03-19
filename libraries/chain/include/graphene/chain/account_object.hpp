@@ -358,6 +358,11 @@ namespace graphene { namespace chain {
          {
             return kind == account_kind::special;
          }
+         /// @return true if account is a custodian wallet account.
+         bool is_custodian() const
+         {
+        	 return kind == account_kind::custodian;
+         }
          /// @return true if the account is in this accounts parent list
          bool has_in_parents(account_id_type account)const
          {

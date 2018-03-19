@@ -35,7 +35,7 @@ void_result submit_reserve_cycles_to_queue_evaluator::do_evaluate(const submit_r
 
   // Assure that amount of cycles submitted would not exceed DASCOIN_MAX_DASCOIN_SUPPLY limit.
   FC_ASSERT(d.cycles_to_dascoin(op.amount, op.frequency_lock) + d.get_total_dascoin_amount_in_system() <= DASCOIN_MAX_DASCOIN_SUPPLY * DASCOIN_DEFAULT_ASSET_PRECISION,
-            "Cannot submit ${am} cycles, on frequency (${f}), "
+            "Cannot submit ${am} cycles with frequency (${f}), "
             "cause with amount (${dsc_system} DSC in system, "
             "it would exceed DASCOIN_MAX_DASCOIN_SUPPLY limit ${dsc_max_limit} DSC",
             ("am", op.amount)
@@ -236,7 +236,7 @@ void_result issue_cycles_to_license_evaluator::do_evaluate(const operation_type&
   if (license.kind == license_kind::chartered)
   {
     FC_ASSERT(d.cycles_to_dascoin(op.amount, _frequency_lock) + d.get_total_dascoin_amount_in_system() <= DASCOIN_MAX_DASCOIN_SUPPLY * DASCOIN_DEFAULT_ASSET_PRECISION,
-              "Cannot submit ${am} cycles, on frequency (${f}), "
+              "Cannot submit ${am} cycles with frequency (${f}), "
               "cause with amount (${dsc_system} DSC in system, "
               "it would exceed DASCOIN_MAX_DASCOIN_SUPPLY limit ${dsc_max_limit} DSC",
               ("am", op.amount)

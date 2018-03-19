@@ -92,7 +92,7 @@ namespace graphene { namespace chain {
   class purchase_cycles_evaluator : public evaluator<purchase_cycles_evaluator>
   {
   public:
-    typedef purchase_cycles_operation operation_type;
+    typedef purchase_cycle_asset_operation operation_type;
 
     void_result do_evaluate(const operation_type& op);
     void_result do_apply(const operation_type& op);

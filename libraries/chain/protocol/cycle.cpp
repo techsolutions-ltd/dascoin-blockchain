@@ -59,7 +59,7 @@ void issue_cycles_to_license_operation::validate() const
   FC_ASSERT( comment.length() <= DASCOIN_MAX_COMMENT_LENGTH );
 }
 
-void purchase_cycles_operation::validate() const
+void purchase_cycle_asset_operation::validate() const
 {
   FC_ASSERT( amount > 0 );
   FC_ASSERT( frequency > 0 );

@@ -158,7 +158,7 @@ namespace graphene { namespace chain {
             update_upgrade_event_operation,
             delete_upgrade_event_operation,
 
-            purchase_cycles_operation,
+            purchase_cycle_asset_operation,
 
             // Virtual operations below this point:
 

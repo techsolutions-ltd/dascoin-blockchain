@@ -365,7 +365,7 @@ struct get_impacted_account_visitor
       _impacted.insert( op.account );
    }
 
-   void operator() ( const purchase_cycles_operation& op )
+   void operator() ( const purchase_cycle_asset_operation& op )
    {
       _impacted.insert( op.wallet_id );
    }

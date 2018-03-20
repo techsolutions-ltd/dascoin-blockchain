@@ -177,13 +177,19 @@ namespace graphene { namespace chain {
       result_type operator()(  const limit_order_create_operation& op ) const
       {
          param.get<typename limit_order_create_operation::fee_parameters_type>().fee = new_fee;
-         ilog( "new fee = ${p}", ("p", param.get<typename limit_order_create_operation::fee_parameters_type>().fee) );
+         ilog( "limit_order_create_operation new fee = ${p}", ("p", param.get<typename limit_order_create_operation::fee_parameters_type>().fee) );
       }
+
+      result_type operator()(  const transfer_operation& op ) const
+ 	  {
+	     param.get<typename transfer_operation::fee_parameters_type>().fee = new_fee;
+	     ilog( "transfer_operation new fee = ${p}", ("p", param.get<typename transfer_operation::fee_parameters_type>().fee) );
+ 	  }
 
       template<typename OpType>
       result_type operator()(  const OpType& op ) const
       {
-
+    	  FC_ASSERT( false, "Undefined call operator for fee change operation in set_new_fee_visitor" );
       }
    };
 
@@ -191,17 +197,10 @@ namespace graphene { namespace chain {
    {
       fee_parameters params; params.set_which(op.which());
       auto itr = parameters.find(params);
-      if( itr != parameters.end() ) //params = *itr;
+      if( itr != parameters.end() )
       {
          op.visit( set_new_fee_visitor( *itr, new_fee ) );
       }
-
-//      for( int i = 0; i < parameters.size(); ++i )
-//      {
-//         parameters[i];
-//         result.parameters.insert(x);
-//      }
-
    }
 
    void chain_parameters::validate()const

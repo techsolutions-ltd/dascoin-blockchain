@@ -65,9 +65,8 @@ void purchase_cycle_asset_operation::validate() const
   FC_ASSERT( frequency > 0 );
   FC_ASSERT( expected_amount > 0 );
   // Make sure we get an integer value of cycles:
-  auto cycles_to_receive = (amount * frequency) % (DASCOIN_DEFAULT_ASSET_PRECISION * DASCOIN_FREQUENCY_PRECISION);
-  FC_ASSERT( cycles_to_receive == 0 );
-  FC_ASSERT( cycles_to_receive == expected_amount );
+  FC_ASSERT( (amount * frequency) % (DASCOIN_DEFAULT_ASSET_PRECISION * DASCOIN_FREQUENCY_PRECISION) == 0 );
+  FC_ASSERT( (amount * frequency) / (DASCOIN_DEFAULT_ASSET_PRECISION * DASCOIN_FREQUENCY_PRECISION) == expected_amount );
 }
 
 } } // namespace graphene::chain

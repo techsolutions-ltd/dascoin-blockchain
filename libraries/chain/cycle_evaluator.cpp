@@ -287,6 +287,12 @@ void_result purchase_cycles_evaluator::do_apply(const operation_type& op)
     acc_b.spent += op.amount;
   });
 
+  // Burn dascoin
+  const auto& asset_obj = (*_account_balance_obj).asset_type(d);
+  d.modify(asset_obj.dynamic_asset_data_id(d), [&](asset_dynamic_data_object& data){
+    data.current_supply -= op.amount;
+  });
+
   return {};
 
 } FC_CAPTURE_AND_RETHROW((op)) }

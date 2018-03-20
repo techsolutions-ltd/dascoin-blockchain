@@ -266,10 +266,10 @@ void_result purchase_cycles_evaluator::do_evaluate(const operation_type& op)
   const auto& balance_obj = d.get_balance_object(op.wallet_id, d.get_dascoin_asset_id());
   // Check if we have enough dascoin balance:
   FC_ASSERT( balance_obj.balance >= op.amount,
-             "Insufficient balance on wallet ${w}: ${balance}, unable to spent '${amount}' DSC on cycle purchase",
+             "Insufficient balance on wallet ${w}: ${balance}, unable to spent ${amount} on cycle purchase",
              ("w", wallet_obj.name)
              ("balance", d.to_pretty_string(balance_obj.get_balance()))
-             ("amount", op.amount)
+             ("amount", d.to_pretty_string(asset(op.amount, d.get_dascoin_asset_id())))
            );
 
   _account_balance_obj = &balance_obj;

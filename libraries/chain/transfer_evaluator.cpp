@@ -40,18 +40,21 @@ void_result transfer_evaluator::do_evaluate( const transfer_operation& op )
    try {
 
       // Check if we are transferring dascoin
-      FC_ASSERT ( op.amount.asset_id == d.get_dascoin_asset_id(), "Can only transfer dascoins" );
+      FC_ASSERT( op.amount.asset_id == d.get_dascoin_asset_id(), "Can only transfer dascoins" );
 
-      // Check if we are doing transfer between wallets
-      FC_ASSERT( from_account.is_wallet(), "Source '${f}' must be a wallet account", ("f", from_account.name) );
-      FC_ASSERT( to_account.is_wallet(), "Destination '${f}' must be a wallet account", ("f", to_account.name) );
+     // Check if account types are valid
+      FC_ASSERT( (from_account.is_wallet() && to_account.is_custodian()) ||
+                 (from_account.is_custodian() && to_account.is_wallet()),
+                  "One of the accounts must be a wallet account and other one must be a custodian account"  );
 
+     // Check if there is enough cash balance in the source account
       bool insufficient_balance = d.get_balance( from_account, asset_type ).amount >= op.amount.amount;
       FC_ASSERT( insufficient_balance,
                  "Insufficient Balance: ${balance}, unable to transfer '${total_transfer}' from account '${a}' to '${t}'",
                  ("a",from_account.name)("t",to_account.name)("total_transfer",d.to_pretty_string(op.amount))("balance",d.to_pretty_string(d.get_balance(from_account, asset_type))) );
 
       return void_result();
+
    } FC_RETHROW_EXCEPTIONS( error, "Unable to transfer ${a} from ${f} to ${t}", ("a",d.to_pretty_string(op.amount))("f",op.from(d).name)("t",op.to(d).name) );
 
 }  FC_CAPTURE_AND_RETHROW( (op) ) }

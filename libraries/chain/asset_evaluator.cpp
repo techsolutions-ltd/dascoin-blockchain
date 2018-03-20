@@ -580,6 +580,12 @@ void_result asset_create_issue_request_evaluator::do_evaluate(const asset_create
    // NOTE: this check must be modified to apply for every kind of web asset there is.
    FC_ASSERT( op.asset_id == d.get_web_asset_id() || op.asset_id == d.get_cycle_asset_id(), "Can only issue web or cycle assets" );
 
+   //TODO check if account kind is Castodian or wallet account type if asset_id is cycle asset id
+   auto& receiver_account_obj = op.receiver(d);
+   FC_ASSERT( op.asset_id != d.get_cycle_asset_id() ||
+		   	   (receiver_account_obj.kind == account_kind::wallet || receiver_account_obj.kind == account_kind::custodian),
+			   "Can only issue cycle assets to wallet or custodian account kind." );
+
    const auto& a = op.asset_id(d);
    FC_ASSERT( a.is_dual_auth_issue(),
               "Cannot do a dual authority issue on a single issuer based asset '{asset_id}'.",

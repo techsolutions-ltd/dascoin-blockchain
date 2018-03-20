@@ -82,20 +82,6 @@ namespace graphene { namespace chain {
        */
       void prepare_fee(account_id_type account_id, asset fee, operation op);
 
-      /**
-       * Convert the fee into BTS through the exchange pool.
-       *
-       * Reads core_fee_paid field for how much CORE is deducted from the exchange pool,
-       * and fee_from_account for how much USD is added to the pool.
-       *
-       * Since prepare_fee() does the validation checks ensuring the account and fee pool
-       * have sufficient balance and the exchange rate is correct,
-       * those validation checks are not replicated here.
-       *
-       * Rather than returning a value, this method fills in core_fee_paid field.
-       */
-      void convert_fee();
-
       object_id_type get_relative_id( object_id_type rel_id )const;
 
       /**

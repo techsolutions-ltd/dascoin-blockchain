@@ -251,6 +251,7 @@ void database::initialize_evaluators()
    register_evaluator<update_license_evaluator>();
    register_evaluator<issue_cycles_to_license_evaluator>();
    register_evaluator<change_fee_evaluator>();
+   register_evaluator<change_fee_pool_account_evaluator>();
 }
 
 void database::initialize_indexes()

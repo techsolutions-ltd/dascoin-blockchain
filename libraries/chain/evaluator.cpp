@@ -88,17 +88,17 @@ database& generic_evaluator::db()const { return trx_state->db(); }
             b.balance -= fee_paid;
          });
 
-
-         /// TODO: put fee in some fee pool
-
-         const auto& dynamic_properties = db().get_dynamic_global_properties();
+         /// put fee in fee pool or burn it if pool is not set
+         const auto& dynamic_properties = d.get_dynamic_global_properties();
          if(dynamic_properties.fee_pool_account_id != account_id_type())
          {
-
+        	 d.modify(d.get_balance_object(dynamic_properties.fee_pool_account_id, d.get_cycle_asset_id()), [&](account_balance_object& b)
+			 {
+        		 b.balance += fee_paid;
+			 });
          }
          else // this meens that we have to burn fee asset
          {
-
             d.modify(d.get_cycle_asset().dynamic_asset_data_id(d), [&](asset_dynamic_data_object& addo)
             {
                addo.current_supply -= fee_paid;

@@ -80,7 +80,7 @@ namespace chain {
 }  // namespace chain
 }  // namespace graphene
 
-FC_REFLECT( graphene::chain::issued_asset_record_object,
+FC_REFLECT_DERIVED( graphene::chain::issued_asset_record_object, (graphene::db::object),
             (unique_id)
             (issuer)
             (receiver)

@@ -622,6 +622,7 @@ object_id_type asset_create_issue_request_evaluator::do_apply(const asset_create
       iaro.asset_type = op.asset_id;
       iaro.amount = op.amount;
       iaro.reserved = op.reserved_amount;
+      iaro.comment = op.comment;
    }).id;
 
    // TODO: figure out a way to do dual issuing for web assets (via hard fork?)

@@ -66,6 +66,7 @@ BOOST_AUTO_TEST_CASE( transfer_custodian )
     ACTOR(alice);
     VAULT_ACTOR(alicev);
     CUSTODIAN_ACTOR(bob);
+    CUSTODIAN_ACTOR(charlie);
 
     tether_accounts(alice_id, alicev_id);
 
@@ -81,6 +82,9 @@ BOOST_AUTO_TEST_CASE( transfer_custodian )
     transfer(alice_id, bob_id, asset{50 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()} );
     BOOST_CHECK_EQUAL( get_dascoin_balance(alice_id), 50 * DASCOIN_DEFAULT_ASSET_PRECISION );
     BOOST_CHECK_EQUAL( get_dascoin_balance(bob_id), 50 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+    // Expect Fail: Transfer from custodian to custodian
+    GRAPHENE_REQUIRE_THROW( transfer(bob_id, charlie_id, asset{50 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()} ), fc::exception );
 
     // Expect Success: Transfer from custodian to wallet
     transfer(bob_id, alice_id, asset{50 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()} );

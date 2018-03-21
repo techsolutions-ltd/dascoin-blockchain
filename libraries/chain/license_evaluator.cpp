@@ -137,7 +137,7 @@ void_result issue_license_evaluator::do_evaluate(const issue_license_operation& 
   // Assure that (for chartered licenses) max reward in dascoin would not exceed DASCOIN_MAX_DASCOIN_SUPPLY limit.
   if (new_license_obj.kind == license_kind::chartered)
   {
-    share_type license_max_reward_in_dascoin = d.get_licence_max_reward_in_dascoin(new_license_obj, op.frequency_lock, op.bonus_percentage);
+    share_type license_max_reward_in_dascoin = d.get_licence_max_reward_in_dascoin(new_license_obj, op.bonus_percentage, op.frequency_lock);
 
     FC_ASSERT(license_max_reward_in_dascoin + d.get_total_dascoin_amount_in_system() <= DASCOIN_MAX_DASCOIN_SUPPLY * DASCOIN_DEFAULT_ASSET_PRECISION,
               "Cannot issue license ${l_n} on account ${a}, "

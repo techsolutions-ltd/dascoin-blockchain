@@ -107,6 +107,9 @@ database& generic_evaluator::db()const { return trx_state->db(); }
       }
    } FC_CAPTURE_AND_RETHROW() }
 
+   // this function is commented out in accordance with new implementation of fees
+   // in cycles, and we do not use blind transfer operation so we do not need this implementation reimplemented
+   // Jira task related to this is EXEX-70
    void generic_evaluator::pay_fba_fee( uint64_t fba_id )
    {
 //      database& d = db();

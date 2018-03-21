@@ -33,7 +33,7 @@ void_result change_fee_pool_account_evaluator::do_evaluate(const change_fee_pool
    // if account has no cycle balance object, throw exception
    // if account is null account than there is no balance object for it
    if(op.fee_pool_account_id != account_id_type())
-	   d.get_balance_object(op.fee_pool_account_id, d.get_cycle_asset_id());
+      d.get_balance_object(op.fee_pool_account_id, d.get_cycle_asset_id());
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 

@@ -5,6 +5,8 @@
 #include <cmath>
 
 #include <graphene/chain/database.hpp>
+#include <graphene/chain/license_evaluator.hpp>
+#include <graphene/chain/queue_objects.hpp>
 
 namespace graphene { namespace chain {
 

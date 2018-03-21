@@ -37,6 +37,7 @@
 #include <graphene/chain/upgrade_event_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
 #include <graphene/chain/wire_object.hpp>
+#include <graphene/chain/wire_out_with_fee_object.hpp>
 #include <graphene/chain/witness_object.hpp>
 #include <graphene/chain/worker_object.hpp>
 

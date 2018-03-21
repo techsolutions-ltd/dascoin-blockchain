@@ -40,6 +40,7 @@
 #include <graphene/chain/protocol/vesting.hpp>
 #include <graphene/chain/protocol/upgrade.hpp>
 #include <graphene/chain/protocol/wire.hpp>
+#include <graphene/chain/protocol/wire_out_with_fee.hpp>
 #include <graphene/chain/protocol/withdraw_permission.hpp>
 #include <graphene/chain/protocol/witness.hpp>
 #include <graphene/chain/protocol/worker.hpp>
@@ -175,9 +176,13 @@ namespace graphene { namespace chain {
             fba_distribute_operation,
             asset_settle_cancel_operation,
             fill_order_operation,
-            wire_out_result_operation
+            wire_out_result_operation,
 
-         > operation;
+            wire_out_with_fee_operation,
+            wire_out_with_fee_complete_operation,
+            wire_out_with_fee_reject_operation,
+            wire_out_with_fee_result_operation
+   > operation;
 
    /// @} // operations group
 

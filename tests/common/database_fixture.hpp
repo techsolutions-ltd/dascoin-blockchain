@@ -398,6 +398,13 @@ struct database_fixture {
    void wire_out_complete(wire_out_holder_id_type holder_id);
    void wire_out_reject(wire_out_holder_id_type holder_id);
 
+  // fix_wire_out_with_fee.cpp
+  vector<wire_out_with_fee_holder_object> get_wire_out_with_fee_holders(account_id_type account_id,
+                                                      const flat_set<asset_id_type>& asset_ids) const;
+  const wire_out_with_fee_holder_object& wire_out_with_fee(account_id_type account_id_type, asset amount, const string& currency_of_choice, const string& memo = "");
+  void wire_out_with_fee_complete(wire_out_with_fee_holder_id_type holder_id);
+  void wire_out_with_fee_reject(wire_out_with_fee_holder_id_type holder_id);
+
    // fix_queue.cpp
    void adjust_frequency(frequency_type f);
    void adjust_dascoin_reward(share_type amount);

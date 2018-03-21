@@ -2462,6 +2462,11 @@ vector<wire_out_holder_object> database_api::get_all_wire_out_holders() const
    return my->list_all_objects<wire_out_holder_index, by_id>();
 }
 
+vector<wire_out_with_fee_holder_object> database_api::get_all_wire_out_with_fee_holders() const
+{
+  return my->list_all_objects<wire_out_with_fee_holder_index, by_id>();
+}
+
 //////////////////////////////////////////////////////////////////////
 //                                                                  //
 // VAULTS:                                                          //

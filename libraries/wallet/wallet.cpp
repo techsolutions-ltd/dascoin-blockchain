@@ -2632,6 +2632,22 @@ public:
       return sign_transaction(tx, broadcast);
    }
 
+   signed_transaction wire_out_with_fee(const string& account_name, share_type amount, const string& currency_of_choice, bool broadcast)
+   {
+     auto account = get_account(account_name);
+
+     wire_out_with_fee_operation op;
+     op.account = account.id;
+     op.asset_to_wire = asset(amount, asset_id_type(DASCOIN_WEB_ASSET_INDEX));
+     op.currency_of_choice = currency_of_choice;
+
+     signed_transaction tx;
+     tx.operations.push_back(op);
+     set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
+
+     return sign_transaction(tx, broadcast);
+   }
+
    void dbg_make_uia(string creator, string symbol)
    {
       asset_options opts;
@@ -4582,6 +4598,11 @@ signed_transaction wallet_api::wire_out(const string& account, share_type amount
    return my->wire_out(account, amount, broadcast);
 }
 
+signed_transaction wallet_api::wire_out_with_fee(const string& account, share_type amount, const string& currency_of_choice, bool broadcast) const
+{
+  return my->wire_out_with_fee(account, amount, currency_of_choice, broadcast);
+}
+
 vector<issue_asset_request_object> wallet_api::get_all_webasset_issue_requests() const
 {
    return my->_remote_db->get_all_webasset_issue_requests();
@@ -4590,6 +4611,11 @@ vector<issue_asset_request_object> wallet_api::get_all_webasset_issue_requests()
 vector<wire_out_holder_object> wallet_api::get_all_wire_out_holders() const
 {
    return my->_remote_db->get_all_wire_out_holders();
+}
+
+vector<wire_out_with_fee_holder_object> wallet_api::get_all_wire_out_with_fee_holders() const
+{
+  return my->_remote_db->get_all_wire_out_with_fee_holders();
 }
 
 vector<reward_queue_object> wallet_api::get_reward_queue() const

@@ -13,6 +13,8 @@
 #include <graphene/chain/protocol/asset_ops.hpp>
 #include <graphene/chain/protocol/wire.hpp>
 #include <graphene/chain/wire_object.hpp>
+#include <graphene/chain/protocol/wire_out_with_fee.hpp>
+#include <graphene/chain/wire_out_with_fee_object.hpp>
 #include <graphene/chain/issued_asset_record_object.hpp>
 // #include <graphene/chain/account_object.hpp>
 // #include <graphene/chain/committee_member_object.hpp>

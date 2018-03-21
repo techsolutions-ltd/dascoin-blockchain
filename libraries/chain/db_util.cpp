@@ -30,6 +30,16 @@ void database::perform_chain_authority_check(const string& auth_type_name, accou
            );
 }
 
+void database::perform_root_authority_check(const account_id_type& authority_account_id)
+{
+   FC_ASSERT(get_dynamic_global_properties().is_root_authority_enabled_flag, "Your authority is deprecated!");
+
+   const auto root_administrator_id = get_global_properties().authorities.root_administrator;
+   const auto& op_authority_account_obj = authority_account_id(*this);
+
+   perform_chain_authority_check("root authority", root_administrator_id, op_authority_account_obj);
+}
+
 share_type database::get_licence_max_reward_in_dascoin(const license_type_object& lto, share_type bonus_percentage, share_type frequency) const
 {
   share_type initial_licence_cycles = detail::apply_percentage(lto.amount, bonus_percentage);

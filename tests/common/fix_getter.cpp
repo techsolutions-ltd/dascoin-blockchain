@@ -95,6 +95,10 @@ asset_id_type database_fixture::get_web_asset_id() const
 {
   return db.get_web_asset_id();
 }
+asset_id_type database_fixture::get_cycle_asset_id() const
+{
+  return db.get_cycle_asset_id();
+}
 
 asset_id_type database_fixture::get_dascoin_asset_id() const
 {

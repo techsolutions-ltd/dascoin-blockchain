@@ -168,6 +168,12 @@ namespace graphene { namespace chain {
           */
          bool is_root_authority_enabled_flag = true;
 
+         /**
+          * This is id of account that owns fee pool balance object
+          * It can be set or empy if empty cycles will be burned when fee is payed
+          */
+         account_id_type fee_pool_account_id;
+
          enum dynamic_flag_bits
          {
             /**

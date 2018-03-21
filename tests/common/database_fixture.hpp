@@ -151,6 +151,14 @@ extern uint32_t GRAPHENE_TESTING_GENESIS_TIMESTAMP;
 #define VAULT_ACTORS_IMPL(r, data, elem) VAULT_ACTOR(elem)
 #define VAULT_ACTORS(names) BOOST_PP_SEQ_FOR_EACH(VAULT_ACTORS_IMPL, ~, names)
 
+#define CUSTODIAN_ACTOR(name) \
+   PREP_ACTOR(name) \
+   const auto& name = create_new_custodian_account(get_registrar_id(), BOOST_PP_STRINGIZE(name), name ## _public_key); \
+   account_id_type name ## _id = name.id; (void)name ## _id;
+
+#define CUSTODIAN_ACTORS_IMPL(r, data, elem) CUSTODIAN_ACTOR(elem)
+#define CUSTODIAN_ACTORS(names) BOOST_PP_SEQ_FOR_EACH(CUSTODIAN_ACTORS_IMPL, ~, names)
+
 namespace graphene { namespace chain {
 
 struct database_fixture {
@@ -318,6 +326,9 @@ struct database_fixture {
    // Use this method to create vault accounts for DAS tests.
    const account_object& create_new_vault_account(const account_id_type registrar, const string& name,
                                                   const public_key_type& key = public_key_type());
+  // Use this method to create custodianaccounts for DAS tests.
+  const account_object& create_new_custodian_account(const account_id_type registrar, const string& name,
+                                                     const public_key_type& key = public_key_type());
 
    // fix_licenses.cpp
    const license_type_object& create_license_type(const string& kind, const string& name, share_type amount, 

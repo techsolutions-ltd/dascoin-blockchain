@@ -39,11 +39,10 @@ share_type database::get_licence_max_reward_in_dascoin(const license_type_object
 
 share_type database::get_total_dascoin_amount_in_system() const
 {
-  const auto& dgpo = get_dynamic_global_properties();
   const auto& queue = get_index_type<reward_queue_index>().indices().get<by_time>();
 
   if (queue.size() == 0)
-    return dgpo.total_dascoin_minted;
+    return get_dynamic_global_properties().total_dascoin_minted;
 
   return queue.rbegin()->historic_sum;
 }

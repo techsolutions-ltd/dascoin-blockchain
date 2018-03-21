@@ -520,7 +520,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
 
    // Create cycle assets:
    const auto& cycle_dyn_asset = create<asset_dynamic_data_object>([&](asset_dynamic_data_object& a){
-         a.current_supply = 0;  // Web starts with 0 initial supply.
+         a.current_supply = 0;  // Cycle starts with 0 initial supply.
       });
    const asset_object& cycle_asset =
       create<asset_object>( [&]( asset_object& a ) {

@@ -92,10 +92,10 @@ database& generic_evaluator::db()const { return trx_state->db(); }
          const auto& dynamic_properties = d.get_dynamic_global_properties();
          if(dynamic_properties.fee_pool_account_id != account_id_type())
          {
-        	 d.modify(d.get_balance_object(dynamic_properties.fee_pool_account_id, d.get_cycle_asset_id()), [&](account_balance_object& b)
-			 {
-        		 b.balance += fee_paid;
-			 });
+            d.modify(d.get_balance_object(dynamic_properties.fee_pool_account_id, d.get_cycle_asset_id()), [&](account_balance_object& b)
+            {
+               b.balance += fee_paid;
+            });
          }
          else // this meens that we have to burn fee asset
          {

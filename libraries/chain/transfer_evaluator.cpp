@@ -39,6 +39,31 @@ void_result transfer_evaluator::do_evaluate( const transfer_operation& op )
 
    try {
 
+      GRAPHENE_ASSERT(
+         is_authorized_asset( d, from_account, asset_type ),
+         transfer_from_account_not_whitelisted,
+         "'from' account ${from} is not whitelisted for asset ${asset}",
+         ("from",op.from)
+         ("asset",op.amount.asset_id)
+      );
+      GRAPHENE_ASSERT(
+         is_authorized_asset( d, to_account, asset_type ),
+         transfer_to_account_not_whitelisted,
+         "'to' account ${to} is not whitelisted for asset ${asset}",
+         ("to",op.to)
+         ("asset",op.amount.asset_id)
+      );
+
+      if( asset_type.is_transfer_restricted() )
+      {
+         GRAPHENE_ASSERT(
+            from_account.id == asset_type.issuer || to_account.id == asset_type.issuer,
+            transfer_restricted_transfer_asset,
+            "Asset {asset} has transfer_restricted flag enabled",
+            ("asset", op.amount.asset_id)
+         );
+      }
+
       // Check if we are transferring dascoin
       FC_ASSERT( op.amount.asset_id == d.get_dascoin_asset_id(), "Can only transfer dascoins" );
 

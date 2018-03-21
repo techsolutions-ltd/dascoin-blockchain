@@ -10,6 +10,7 @@ namespace graphene { namespace chain {
 
 share_type database::cycles_to_dascoin(share_type cycles, share_type frequency) const
 {
+  FC_ASSERT( frequency != 0 );
   return (cycles * DASCOIN_DEFAULT_ASSET_PRECISION * DASCOIN_FREQUENCY_PRECISION) / frequency;
 }
 
@@ -26,7 +27,7 @@ void database::perform_chain_authority_check(const string& auth_type_name, accou
              ("auth_type", auth_type_name)
              ("auth_name", auth_id(*this).name)
              ("a", acc_obj.name)
-          );
+           );
 }
 
 share_type database::get_licence_max_reward_in_dascoin(const license_type_object& lto, share_type bonus_percentage, share_type frequency) const
@@ -34,7 +35,7 @@ share_type database::get_licence_max_reward_in_dascoin(const license_type_object
   share_type initial_licence_cycles = detail::apply_percentage(lto.amount, bonus_percentage);
   share_type max_licence_cycles = initial_licence_cycles * std::pow(2, lto.balance_upgrade.multipliers.size());
 
-  return cycles_to_dascoin(max_licence_cycles, frequency) / DASCOIN_FREQUENCY_PRECISION;
+  return cycles_to_dascoin(max_licence_cycles, frequency);
 }
 
 share_type database::get_total_dascoin_amount_in_system() const

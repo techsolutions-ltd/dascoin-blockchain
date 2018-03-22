@@ -5,7 +5,7 @@
 
 namespace graphene { namespace chain {
 
-void_result change_fee_evaluator::do_evaluate(const change_fee_for_operation_operation& op)
+void_result change_fee_evaluator::do_evaluate(const change_operation_fee_operation& op)
 { try {
    database& d = db();
    d.perform_root_authority_check(op.issuer);
@@ -14,7 +14,7 @@ void_result change_fee_evaluator::do_evaluate(const change_fee_for_operation_ope
 
 } FC_CAPTURE_AND_RETHROW( (op) ) }
 
-void_result change_fee_evaluator::do_apply(const change_fee_for_operation_operation& op)
+void_result change_fee_evaluator::do_apply(const change_operation_fee_operation& op)
 { try {
 
    database& d = db();

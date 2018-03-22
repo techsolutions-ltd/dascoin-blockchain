@@ -1,3 +1,4 @@
+#include <fc/smart_ref_impl.hpp>
 #include <graphene/chain/change_fee_evaluator.hpp>
 #include <graphene/chain/database.hpp>
 #include <graphene/db/object_id.hpp>

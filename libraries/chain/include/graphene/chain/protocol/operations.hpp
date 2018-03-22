@@ -160,7 +160,7 @@ namespace graphene { namespace chain {
             update_upgrade_event_operation,
             delete_upgrade_event_operation,
 
-            change_fee_for_operation_operation,
+            change_operation_fee_operation,
             change_fee_pool_account_operation,
 
             wire_out_with_fee_operation,

@@ -23,9 +23,8 @@ namespace graphene { namespace chain {
     explicit change_fee_for_operation(account_id_type issuer, uint64_t new_fee, unsigned op_num, const string& comment)
         : issuer(issuer)
         , new_fee(new_fee)
-        , comment(comment)
-        , op_num(op_num) {}
-
+        , op_num(op_num)
+        , comment(comment) {}
 
     account_id_type fee_payer() const { return issuer; }
     void validate() const{}

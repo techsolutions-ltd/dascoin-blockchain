@@ -112,6 +112,7 @@ BOOST_AUTO_TEST_CASE( purchase_cycle_asset_test )
 { try {
   VAULT_ACTOR(vault)
   ACTOR(wallet)
+  ACTOR(feepool)
 
   tether_accounts(wallet_id, vault_id);
 
@@ -166,6 +167,19 @@ BOOST_AUTO_TEST_CASE( purchase_cycle_asset_test )
 
   // And we should end up with 20 cycles:
   BOOST_CHECK_EQUAL( get_balance(wallet_id, get_cycle_asset_id()), 20 );
+
+  // Set fee pool account:
+  auto root_id = db.get_global_properties().authorities.root_administrator;
+  change_fee_pool_account_operation cfpao;
+  cfpao.issuer = root_id;
+  cfpao.fee_pool_account_id = feepool_id;
+  do_op(cfpao);
+
+  // Purchase succeeds:
+  do_op(purchase_cycle_asset_operation(wallet_id, 10 * DASCOIN_DEFAULT_ASSET_PRECISION, 2 * DASCOIN_FREQUENCY_PRECISION, 20));
+
+  // Fee pool account should have 10 dsc now:
+  BOOST_CHECK_EQUAL( get_balance(feepool_id, get_dascoin_asset_id()), 10 * DASCOIN_DEFAULT_ASSET_PRECISION );
 
 } FC_LOG_AND_RETHROW() }
 

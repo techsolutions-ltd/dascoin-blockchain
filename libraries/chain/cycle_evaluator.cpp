@@ -328,11 +328,23 @@ void_result purchase_cycles_evaluator::do_apply(const operation_type& op)
     data.current_supply += op.expected_amount;
   });
 
-  // Burn dascoin
-  const auto& asset_obj = (*_dascoin_balance_obj).asset_type(d);
-  d.modify(asset_obj.dynamic_asset_data_id(d), [&](asset_dynamic_data_object& data){
-    data.current_supply -= op.amount;
-  });
+  const auto& dgp = d.get_dynamic_global_properties();
+  // If fee pool account is set, move dascoin to it:
+  if (dgp.fee_pool_account_id != account_id_type())
+  {
+    const auto& dascoin_balance_obj = d.get_balance_object(dgp.fee_pool_account_id, d.get_dascoin_asset_id());
+    d.modify(dascoin_balance_obj, [&](account_balance_object& acc_b){
+      acc_b.balance += op.amount;
+    });
+  }
+  else
+  {
+    // Burn dascoin
+    const auto& asset_obj = (*_dascoin_balance_obj).asset_type(d);
+    d.modify(asset_obj.dynamic_asset_data_id(d), [&](asset_dynamic_data_object& data){
+      data.current_supply -= op.amount;
+    });
+  }
 
   return {};
 

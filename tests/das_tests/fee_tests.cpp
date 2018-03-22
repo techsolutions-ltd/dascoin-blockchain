@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE( successful_fee_change_and_fee_charge_with_fee_burn_test )
 
    BOOST_CHECK( db.get_dynamic_global_properties().is_root_authority_enabled_flag );
 
-   change_fee_for_operation cffo;
+   change_fee_for_operation_operation cffo;
    cffo.issuer = root_id;
    cffo.new_fee = 30;
    cffo.op_num = 1;
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE( successful_pool_account_change_and_fee_charge_test )
 
    BOOST_CHECK( db.get_dynamic_global_properties().is_root_authority_enabled_flag );
 
-   change_fee_for_operation cffo;
+   change_fee_for_operation_operation cffo;
    cffo.issuer = root_id;
    cffo.new_fee = 30;
    cffo.op_num = 1;

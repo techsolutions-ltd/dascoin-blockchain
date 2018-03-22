@@ -95,6 +95,17 @@ const account_object& database_fixture::make_new_account_base(
 
   } FC_CAPTURE_AND_RETHROW() }
 
+  const account_object& database_fixture::create_new_custodian_account(
+          const account_id_type registrar,
+          const string& name,
+          const public_key_type& key /* = public_key_type() */)
+  { try {
+
+      return make_new_account_base( account_kind::custodian, registrar, name, key );
+
+    } FC_CAPTURE_AND_RETHROW() }
+
+
 void database_fixture::tether_accounts(const account_id_type wallet, const account_id_type vault)
 { try {
 

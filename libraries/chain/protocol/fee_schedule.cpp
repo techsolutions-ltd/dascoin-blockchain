@@ -119,7 +119,7 @@ namespace graphene { namespace chain {
       *this = get_default();
       for( fee_parameters& i : parameters )
          i.visit( zero_fee_visitor() );
-      this->scale = 0;
+      this->scale = GRAPHENE_100_PERCENT;
    }
 
    asset fee_schedule::calculate_fee( const operation& op, const price& core_exchange_rate )const
@@ -163,6 +163,44 @@ namespace graphene { namespace chain {
          }
       }
       return f_max;
+   }
+
+   struct set_new_fee_visitor
+   {
+      typedef void result_type;
+
+      fee_parameters& param;
+      uint64_t new_fee;
+
+      set_new_fee_visitor( fee_parameters& p , uint64_t new_fee):param(p),new_fee(new_fee){}
+
+      result_type operator()(  const limit_order_create_operation& op ) const
+      {
+         param.get<typename limit_order_create_operation::fee_parameters_type>().fee = new_fee;
+         ilog( "limit_order_create_operation new fee = ${p}", ("p", param.get<typename limit_order_create_operation::fee_parameters_type>().fee) );
+      }
+
+      result_type operator()(  const transfer_operation& op ) const
+ 	  {
+	     param.get<typename transfer_operation::fee_parameters_type>().fee = new_fee;
+	     ilog( "transfer_operation new fee = ${p}", ("p", param.get<typename transfer_operation::fee_parameters_type>().fee) );
+ 	  }
+
+      template<typename OpType>
+      result_type operator()(  const OpType& op ) const
+      {
+    	  FC_ASSERT( false, "Undefined call operator for fee change operation in set_new_fee_visitor" );
+      }
+   };
+
+   void fee_schedule::change_fee(operation& op, uint64_t new_fee)
+   {
+      fee_parameters params; params.set_which(op.which());
+      auto itr = parameters.find(params);
+      if( itr != parameters.end() )
+      {
+         op.visit( set_new_fee_visitor( *itr, new_fee ) );
+      }
    }
 
    void chain_parameters::validate()const

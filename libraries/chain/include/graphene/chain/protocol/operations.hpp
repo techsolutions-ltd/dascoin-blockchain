@@ -43,6 +43,7 @@
 #include <graphene/chain/protocol/withdraw_permission.hpp>
 #include <graphene/chain/protocol/witness.hpp>
 #include <graphene/chain/protocol/worker.hpp>
+#include <graphene/chain/protocol/fee_operations.hpp>
 
 namespace graphene { namespace chain {
 
@@ -158,6 +159,8 @@ namespace graphene { namespace chain {
             update_upgrade_event_operation,
             delete_upgrade_event_operation,
 
+            change_fee_for_operation,
+            change_fee_pool_account_operation,
             purchase_cycle_asset_operation,
 
             // Virtual operations below this point:

@@ -57,6 +57,16 @@ asset_id_type database::get_dascoin_asset_id() const
    return asset_id_type(DASCOIN_DASCOIN_INDEX);
 }
 
+const asset_object& database::get_cycle_asset() const
+{
+   return get(asset_id_type(DASCOIN_CYCLE_ASSET_INDEX));
+}
+
+asset_id_type database::get_cycle_asset_id() const
+{
+   return asset_id_type(DASCOIN_CYCLE_ASSET_INDEX);
+}
+
 const global_property_object& database::get_global_properties()const
 {
    return get( global_property_id_type() );

@@ -1533,9 +1533,11 @@ class wallet_api
       signed_transaction wire_out(const string& account, share_type amount, bool broadcast) const;
 
       /**
-      * Wire out some WebAsset.
-      * @param account Account ID.
-      * @param amount  Amount to wire.
+      * Wire out with fee some WebAsset.
+      * @param account             Account ID.
+      * @param amount              Amount to wire.
+      * @param currency_of_choice  Currency of choice (string abbreviation) in which user wants wire out.
+      * @param broadcast           True to broadcast the transaction on the network.
       */
       signed_transaction wire_out_with_fee(const string& account, share_type amount, const string& currency_of_choice, bool broadcast) const;
 

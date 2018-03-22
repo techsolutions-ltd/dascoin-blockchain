@@ -3,14 +3,8 @@
  */
 
 #include <boost/test/unit_test.hpp>
-
 #include <graphene/chain/database.hpp>
-#include <graphene/chain/exceptions.hpp>
-
-#include <graphene/chain/account_object.hpp>
 #include <graphene/chain/wire_out_with_fee_object.hpp>
-#include <graphene/chain/protocol/wire_out_with_fee.hpp>
-
 #include "../common/database_fixture.hpp"
 
 using namespace graphene::chain;
@@ -35,8 +29,8 @@ BOOST_AUTO_TEST_CASE( wire_out_with_fee_web_asset_test )
     BOOST_CHECK_EQUAL( reserved.value, expected_reserved.value );
   };
 
-  // Reject, insuficcient balance:
-  GRAPHENE_REQUIRE_THROW( wire_out_with_fee(wallet_id, web_asset(10000), "ZXC"), fc::exception );
+  // Reject, insufficient balance:
+  GRAPHENE_REQUIRE_THROW( wire_out_with_fee(wallet_id, web_asset(10000), "BTC"), fc::exception );
 
   issue_webasset("1", wallet_id, 15000, 15000);
   generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1)); // TODO: use global propety.
@@ -45,7 +39,7 @@ BOOST_AUTO_TEST_CASE( wire_out_with_fee_web_asset_test )
   // update_pi_limits(wallet_id, 99, {20000,20000,20000});
 
   // Wire out 10K:
-  wire_out_with_fee(wallet_id, web_asset(10000), "ZXC", "debit");
+  wire_out_with_fee(wallet_id, web_asset(10000), "BTC", "debit");
 
   // Check if the balance has been reduced:
   check_balances(wallet, 5000, 15000);
@@ -53,11 +47,11 @@ BOOST_AUTO_TEST_CASE( wire_out_with_fee_web_asset_test )
   // Check if the holder object exists:
   auto holders = get_wire_out_with_fee_holders(wallet_id, {get_web_asset_id()});
   BOOST_CHECK_EQUAL( holders.size(), 1 );
-  BOOST_CHECK_EQUAL( holders[0].currency_of_choice, "ZXC" );
+  BOOST_CHECK_EQUAL( holders[0].currency_of_choice, "BTC" );
   BOOST_CHECK_EQUAL( holders[0].memo, "debit" );
 
   // Wire out 5K:
-  wire_out_with_fee(wallet_id, web_asset(5000), "ZXC");
+  wire_out_with_fee(wallet_id, web_asset(5000), "BTC");
 
   // Check the balances are zero:
   check_balances(wallet, 0, 15000);
@@ -92,24 +86,26 @@ BOOST_AUTO_TEST_CASE( wire_out_with_fee_web_asset_history_test )
   generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
 
   // Wire out 10K:
-  wire_out_with_fee(wallet_id, web_asset(10000), "ZXC", "debit");
+  wire_out_with_fee(wallet_id, web_asset(10000), "BTC", "debit");
   generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
   auto holders = get_wire_out_with_fee_holders(wallet_id, {get_web_asset_id()});
   wire_out_with_fee_reject(holders[0].id);
   generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
   auto history = get_operation_history( wallet_id );
   BOOST_CHECK( !history.empty() );
+
   // Wire out result should be on top:
   wire_out_with_fee_result_operation op = history[0].op.get<wire_out_with_fee_result_operation>();
   BOOST_CHECK ( !op.completed );
 
   // Wire out 10K again:
-  wire_out_with_fee(wallet_id, web_asset(10000), "ZXC", "debit");
+  wire_out_with_fee(wallet_id, web_asset(10000), "BTC", "debit");
   generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
   holders = get_wire_out_with_fee_holders(wallet_id, {get_web_asset_id()});
   wire_out_with_fee_complete(holders[0].id);
   generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
   history = get_operation_history( wallet_id );
+
   // Wire out result should be on top:
   op = history[0].op.get<wire_out_with_fee_result_operation>();
   BOOST_CHECK ( op.completed );

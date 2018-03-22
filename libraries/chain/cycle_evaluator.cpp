@@ -288,16 +288,20 @@ void_result purchase_cycles_evaluator::do_evaluate(const operation_type& op)
   const auto& current_frequency = d.get_dynamic_global_properties().frequency;
   FC_ASSERT( current_frequency == op.frequency, "Current frequency is ${cf}, ${opf} given", ("cf", current_frequency)("opf", op.frequency) );
 
-  const auto& balance_obj = d.get_balance_object(op.wallet_id, d.get_dascoin_asset_id());
+  const auto& dascoin_balance_obj = d.get_balance_object(op.wallet_id, d.get_dascoin_asset_id());
   // Check if we have enough dascoin balance:
-  FC_ASSERT( balance_obj.balance >= op.amount,
+  FC_ASSERT( dascoin_balance_obj.balance >= op.amount,
              "Insufficient balance on wallet ${w}: ${balance}, unable to spent ${amount} on cycle purchase",
              ("w", wallet_obj.name)
-             ("balance", d.to_pretty_string(balance_obj.get_balance()))
+             ("balance", d.to_pretty_string(dascoin_balance_obj.get_balance()))
              ("amount", d.to_pretty_string(asset(op.amount, d.get_dascoin_asset_id())))
            );
 
-  _account_balance_obj = &balance_obj;
+  const auto& cycle_balance_obj = d.get_balance_object(op.wallet_id, d.get_cycle_asset_id());
+
+  _dascoin_balance_obj = &dascoin_balance_obj;
+  _cycle_balance_obj = &cycle_balance_obj;
+
   return {};
 
 } FC_CAPTURE_AND_RETHROW((op)) }
@@ -307,13 +311,25 @@ void_result purchase_cycles_evaluator::do_apply(const operation_type& op)
 
   auto& d = db();
 
-  d.modify(*_account_balance_obj, [&](account_balance_object& acc_b){
+  // Deduce dascoin from balance:
+  d.modify(*_dascoin_balance_obj, [&](account_balance_object& acc_b){
     acc_b.balance -= op.amount;
     acc_b.spent += op.amount;
   });
 
+  // Add cycles to cycle balance:
+  d.modify(*_cycle_balance_obj, [&](account_balance_object& acc_b){
+    acc_b.balance += op.expected_amount;
+  });
+
+  // Increase current supply:
+  const auto& cycle_asset_obj = (*_cycle_balance_obj).asset_type(d);
+  d.modify(cycle_asset_obj.dynamic_asset_data_id(d), [&](asset_dynamic_data_object& data){
+    data.current_supply += op.expected_amount;
+  });
+
   // Burn dascoin
-  const auto& asset_obj = (*_account_balance_obj).asset_type(d);
+  const auto& asset_obj = (*_dascoin_balance_obj).asset_type(d);
   d.modify(asset_obj.dynamic_asset_data_id(d), [&](asset_dynamic_data_object& data){
     data.current_supply -= op.amount;
   });

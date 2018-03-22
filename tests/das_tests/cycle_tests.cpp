@@ -164,6 +164,9 @@ BOOST_AUTO_TEST_CASE( purchase_cycle_asset_test )
   // There's 10 dascoin left:
   BOOST_CHECK_EQUAL( get_balance(wallet_id, get_dascoin_asset_id()), 90 * DASCOIN_DEFAULT_ASSET_PRECISION );
 
+  // And we should end up with 20 cycles:
+  BOOST_CHECK_EQUAL( get_balance(wallet_id, get_cycle_asset_id()), 20 );
+
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_SUITE_END()  // dascoin_tests::cycle_tests

@@ -98,7 +98,8 @@ namespace graphene { namespace chain {
     void_result do_apply(const operation_type& op);
 
   private:
-    const account_balance_object* _account_balance_obj = nullptr;
+    const account_balance_object* _dascoin_balance_obj = nullptr;
+    const account_balance_object* _cycle_balance_obj = nullptr;
   };
 
 } }  // namespace graphene::chain

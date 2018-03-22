@@ -247,6 +247,7 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
    // TODO: this needs to be done of every kind of web asset there is!
    db().create_empty_balance(new_acnt_object.id, db().get_dascoin_asset_id());
    db().create_empty_balance(new_acnt_object.id, db().get_web_asset_id());
+   db().create_empty_balance(new_acnt_object.id, db().get_cycle_asset_id());
 
    if ( new_acnt_object.is_vault() )
    {

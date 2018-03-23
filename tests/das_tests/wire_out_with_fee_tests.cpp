@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE( wire_out_with_fee_web_asset_test )
   GRAPHENE_REQUIRE_THROW( wire_out_with_fee(wallet_id, web_asset(10000), "BTC"), fc::exception );
 
   issue_webasset("1", wallet_id, 15000, 15000);
-  generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1)); // TODO: use global propety.
+  generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
 
   // Update the limits:
   // update_pi_limits(wallet_id, 99, {20000,20000,20000});

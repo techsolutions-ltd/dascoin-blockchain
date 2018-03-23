@@ -69,4 +69,9 @@ void purchase_cycle_asset_operation::validate() const
   FC_ASSERT( (amount * frequency) / (DASCOIN_DEFAULT_ASSET_PRECISION * DASCOIN_FREQUENCY_PRECISION) == expected_amount );
 }
 
+void transfer_cycles_from_licence_to_wallet_operation::validate() const
+{
+  FC_ASSERT ( amount > 0 );
+}
+
 } } // namespace graphene::chain

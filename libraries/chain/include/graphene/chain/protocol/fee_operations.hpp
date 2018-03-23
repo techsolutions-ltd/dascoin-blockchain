@@ -19,6 +19,8 @@ namespace graphene { namespace chain {
     unsigned op_num;
     string comment;
 
+    extensions_type extensions;
+
     change_operation_fee_operation() = default;
     explicit change_operation_fee_operation(account_id_type issuer, uint64_t new_fee, unsigned op_num, const string& comment)
         : issuer(issuer)
@@ -45,6 +47,8 @@ namespace graphene { namespace chain {
    account_id_type fee_pool_account_id;
    string comment;
 
+   extensions_type extensions;
+
    change_fee_pool_account_operation() = default;
    explicit change_fee_pool_account_operation(account_id_type issuer, account_id_type fee_pool_account_id, const string& comment)
        : issuer(issuer)
@@ -60,7 +64,7 @@ namespace graphene { namespace chain {
 } }
 
 FC_REFLECT( graphene::chain::change_operation_fee_operation::fee_parameters_type, )
-FC_REFLECT( graphene::chain::change_operation_fee_operation, (fee)(issuer)(new_fee)(op_num)(comment) )
+FC_REFLECT( graphene::chain::change_operation_fee_operation, (fee)(issuer)(new_fee)(op_num)(comment)(extensions) )
 
 FC_REFLECT( graphene::chain::change_fee_pool_account_operation::fee_parameters_type, )
-FC_REFLECT( graphene::chain::change_fee_pool_account_operation, (fee)(issuer)(fee_pool_account_id)(comment) )
+FC_REFLECT( graphene::chain::change_fee_pool_account_operation, (fee)(issuer)(fee_pool_account_id)(comment)(extensions) )

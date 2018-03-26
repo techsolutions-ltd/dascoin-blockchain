@@ -27,4 +27,20 @@ void database::perform_chain_authority_check(const string& auth_type_name, accou
           );
 }
 
+void database::remove_limit_from_all_vaults()
+{
+   const auto& accounts_by_id = get_index_type<account_index>().indices().get<by_id>();
+
+   for(auto itr = accounts_by_id.begin(); itr != accounts_by_id.end(); itr++)
+   {
+      if(itr->kind == account_kind::vault)
+      {
+         modify(*itr,[](account_object& account_obj){
+            account_obj.disable_vault_to_wallet_limit = true;
+         });
+      }
+   }
+
+}
+
 } }  // namespace graphene::chain

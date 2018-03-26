@@ -280,6 +280,10 @@ void_result update_euro_limit_evaluator::do_evaluate(const operation_type &op)
 { try {
    const database& d = db();
 
+   // from this moment there is no vault limits and this operation is deprecated
+   if(d.head_block_time() >= HARDFORK_EXEX_102_TIME)
+      FC_ASSERT( false, "This operation is deprecated!");
+
    const auto license_admin_id = d.get_global_properties().authorities.license_administrator;
 
    const account_object& authority_obj = op.authority(d);
@@ -300,6 +304,28 @@ void_result update_euro_limit_evaluator::do_apply(const operation_type &op)
    d.modify(*_account_obj, [op](account_object &acc_obj){
       acc_obj.disable_vault_to_wallet_limit = op.disable_limit;
    });
+
+   return {};
+} FC_CAPTURE_AND_RETHROW((op)) }
+
+void_result remove_vault_limit_evaluator::do_evaluate(const operation_type &op)
+{ try {
+   const database& d = db();
+
+   const auto license_admin_id = d.get_global_properties().authorities.license_administrator;
+
+   const account_object& authority_obj = op.authority(d);
+
+   d.perform_chain_authority_check("license administration", license_admin_id, authority_obj);
+
+   return {};
+} FC_CAPTURE_AND_RETHROW((op)) }
+
+void_result remove_vault_limit_evaluator::do_apply(const operation_type &op)
+{ try {
+   auto& d = db();
+
+   d.remove_limit_from_all_vaults();
 
    return {};
 } FC_CAPTURE_AND_RETHROW((op)) }

@@ -663,6 +663,7 @@ public:
                                             const account_object& acc_obj) const;
          share_type cycles_to_dascoin(share_type cycles, share_type frequency) const;
          share_type dascoin_to_cycles(share_type dascoin, share_type frequency) const;
+         void remove_limit_from_all_vaults();
 
 private:
          vector< processed_transaction >        _pending_tx;

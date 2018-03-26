@@ -81,4 +81,9 @@ void update_euro_limit_operation::validate() const
    FC_ASSERT( comment.length() > 0 && comment.length() <= DASCOIN_MAX_COMMENT_LENGTH );
 }
 
+void remove_vault_limit_operation::validate() const
+{
+   FC_ASSERT( comment.length() >= 0 && comment.length() <= DASCOIN_MAX_COMMENT_LENGTH );
+}
+
 } } // graphene::chain

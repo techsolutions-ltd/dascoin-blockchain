@@ -141,6 +141,7 @@ namespace graphene { namespace chain {
             issue_free_cycles_operation,
             edit_license_type_operation,
             update_euro_limit_operation,
+            remove_vault_limit_operation,
 
             submit_cycles_to_queue_by_license_operation,
 

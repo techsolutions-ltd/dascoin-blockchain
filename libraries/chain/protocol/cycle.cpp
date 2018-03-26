@@ -59,4 +59,14 @@ void issue_cycles_to_license_operation::validate() const
   FC_ASSERT( comment.length() <= DASCOIN_MAX_COMMENT_LENGTH );
 }
 
+void purchase_cycle_asset_operation::validate() const
+{
+  FC_ASSERT( amount > 0 );
+  FC_ASSERT( frequency > 0 );
+  FC_ASSERT( expected_amount > 0 );
+  // Make sure we get an integer value of cycles:
+  FC_ASSERT( (amount * frequency) % (DASCOIN_DEFAULT_ASSET_PRECISION * DASCOIN_FREQUENCY_PRECISION) == 0 );
+  FC_ASSERT( (amount * frequency) / (DASCOIN_DEFAULT_ASSET_PRECISION * DASCOIN_FREQUENCY_PRECISION) == expected_amount );
+}
+
 } } // namespace graphene::chain

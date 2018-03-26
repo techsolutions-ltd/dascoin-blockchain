@@ -108,5 +108,80 @@ BOOST_AUTO_TEST_CASE( issue_cycles_to_license_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( purchase_cycle_asset_test )
+{ try {
+  VAULT_ACTOR(vault)
+  ACTOR(wallet)
+  ACTOR(feepool)
+
+  tether_accounts(wallet_id, vault_id);
+
+  // Amount of dascoin submitted should be greater than zero:
+  GRAPHENE_REQUIRE_THROW( do_op(purchase_cycle_asset_operation(vault_id, 0, 10, 100)), fc::exception );
+
+  // Frequency should be greater than zero:
+  GRAPHENE_REQUIRE_THROW( do_op(purchase_cycle_asset_operation(vault_id, 10, 0, 100)), fc::exception );
+
+  // Expected amount should be greater than zero:
+  GRAPHENE_REQUIRE_THROW( do_op(purchase_cycle_asset_operation(vault_id, 10, 10, 0)), fc::exception );
+
+  // Expected amount should be greater than zero:
+  GRAPHENE_REQUIRE_THROW( do_op(purchase_cycle_asset_operation(vault_id, 10, 10, 0)), fc::exception );
+
+  // Calculated amount of cycles should be integer number:
+  GRAPHENE_REQUIRE_THROW( do_op(purchase_cycle_asset_operation(vault_id, 123456, 1 * DASCOIN_FREQUENCY_PRECISION, 12)), fc::exception );
+
+  // Expected amount should be equal to calculated cycle amount:
+  GRAPHENE_REQUIRE_THROW( do_op(purchase_cycle_asset_operation(vault_id, 10 * DASCOIN_DEFAULT_ASSET_PRECISION, 10 * DASCOIN_FREQUENCY_PRECISION, 1)), fc::exception );
+
+  // Cycles can be bought only from a wallet account:
+  GRAPHENE_REQUIRE_THROW( do_op(purchase_cycle_asset_operation(vault_id, 10 * DASCOIN_DEFAULT_ASSET_PRECISION, 10 * DASCOIN_FREQUENCY_PRECISION, 100)), fc::exception );
+
+  // Default frequency is 2, here 10 is given and that fails:
+  GRAPHENE_REQUIRE_THROW( do_op(purchase_cycle_asset_operation(wallet_id, 10 * DASCOIN_DEFAULT_ASSET_PRECISION, 10 * DASCOIN_FREQUENCY_PRECISION, 100)), fc::exception );
+
+  // No dascoin on the balance, so purchase fails:
+  GRAPHENE_REQUIRE_THROW( do_op(purchase_cycle_asset_operation(wallet_id, 10 * DASCOIN_DEFAULT_ASSET_PRECISION, 2 * DASCOIN_FREQUENCY_PRECISION, 20)), fc::exception );
+
+  auto president_charter = *(_dal.get_license_type("president_charter"));
+
+  adjust_dascoin_reward(500 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  adjust_frequency(200);
+
+  do_op(issue_license_operation(get_license_issuer_id(), vault_id, president_charter.id, 10, 2, db.head_block_time()));
+  toggle_reward_queue(true);
+  generate_blocks(db.head_block_time() + fc::hours(24));
+
+  BOOST_CHECK_EQUAL( get_balance(vault_id, get_dascoin_asset_id()), 4000 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+  db.adjust_balance_limit(vault, get_dascoin_asset_id(), 200 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  transfer_dascoin_vault_to_wallet(vault_id, wallet_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+  BOOST_CHECK_EQUAL( get_balance(wallet_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+  // Purchase succeeds:
+  do_op(purchase_cycle_asset_operation(wallet_id, 10 * DASCOIN_DEFAULT_ASSET_PRECISION, 2 * DASCOIN_FREQUENCY_PRECISION, 20));
+
+  // There's 10 dascoin left:
+  BOOST_CHECK_EQUAL( get_balance(wallet_id, get_dascoin_asset_id()), 90 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+  // And we should end up with 20 cycles:
+  BOOST_CHECK_EQUAL( get_balance(wallet_id, get_cycle_asset_id()), 20 );
+
+  // Set fee pool account:
+  auto root_id = db.get_global_properties().authorities.root_administrator;
+  change_fee_pool_account_operation cfpao;
+  cfpao.issuer = root_id;
+  cfpao.fee_pool_account_id = feepool_id;
+  do_op(cfpao);
+
+  // Purchase succeeds:
+  do_op(purchase_cycle_asset_operation(wallet_id, 10 * DASCOIN_DEFAULT_ASSET_PRECISION, 2 * DASCOIN_FREQUENCY_PRECISION, 20));
+
+  // Fee pool account should have 10 dsc now:
+  BOOST_CHECK_EQUAL( get_balance(feepool_id, get_dascoin_asset_id()), 10 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_SUITE_END()  // dascoin_tests::cycle_tests
 BOOST_AUTO_TEST_SUITE_END()  // dascoin_tests

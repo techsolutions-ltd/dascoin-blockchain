@@ -277,4 +277,78 @@ void_result issue_cycles_to_license_evaluator::do_apply(const operation_type& op
 
 } FC_CAPTURE_AND_RETHROW((op)) }
 
+void_result purchase_cycles_evaluator::do_evaluate(const operation_type& op)
+{ try {
+
+  const auto& d = db();
+  const auto& wallet_obj = op.wallet_id(d);
+  auto account_kind_string = fc::reflector<account_kind>::to_string(wallet_obj.kind);
+
+  FC_ASSERT( wallet_obj.is_wallet(), "Cycles can be purchased only from a wallet account, '${w}' is ${k}", ("w", wallet_obj.name)("k", account_kind_string) );
+
+  const auto& current_frequency = d.get_dynamic_global_properties().frequency;
+  FC_ASSERT( current_frequency == op.frequency, "Current frequency is ${cf}, ${opf} given", ("cf", current_frequency)("opf", op.frequency) );
+
+  const auto& dascoin_balance_obj = d.get_balance_object(op.wallet_id, d.get_dascoin_asset_id());
+  // Check if we have enough dascoin balance:
+  FC_ASSERT( dascoin_balance_obj.balance >= op.amount,
+             "Insufficient balance on wallet ${w}: ${balance}, unable to spent ${amount} on cycle purchase",
+             ("w", wallet_obj.name)
+             ("balance", d.to_pretty_string(dascoin_balance_obj.get_balance()))
+             ("amount", d.to_pretty_string(asset(op.amount, d.get_dascoin_asset_id())))
+           );
+
+  const auto& cycle_balance_obj = d.get_balance_object(op.wallet_id, d.get_cycle_asset_id());
+
+  _dascoin_balance_obj = &dascoin_balance_obj;
+  _cycle_balance_obj = &cycle_balance_obj;
+
+  return {};
+
+} FC_CAPTURE_AND_RETHROW((op)) }
+
+void_result purchase_cycles_evaluator::do_apply(const operation_type& op)
+{ try {
+
+  auto& d = db();
+
+  // Deduce dascoin from balance:
+  d.modify(*_dascoin_balance_obj, [&](account_balance_object& acc_b){
+    acc_b.balance -= op.amount;
+    acc_b.spent += op.amount;
+  });
+
+  // Add cycles to cycle balance:
+  d.modify(*_cycle_balance_obj, [&](account_balance_object& acc_b){
+    acc_b.balance += op.expected_amount;
+  });
+
+  // Increase current supply:
+  const auto& cycle_asset_obj = (*_cycle_balance_obj).asset_type(d);
+  d.modify(cycle_asset_obj.dynamic_asset_data_id(d), [&](asset_dynamic_data_object& data){
+    data.current_supply += op.expected_amount;
+  });
+
+  const auto& dgp = d.get_dynamic_global_properties();
+  // If fee pool account is set, move dascoin to it:
+  if (dgp.fee_pool_account_id != account_id_type())
+  {
+    const auto& dascoin_balance_obj = d.get_balance_object(dgp.fee_pool_account_id, d.get_dascoin_asset_id());
+    d.modify(dascoin_balance_obj, [&](account_balance_object& acc_b){
+      acc_b.balance += op.amount;
+    });
+  }
+  else
+  {
+    // Burn dascoin
+    const auto& asset_obj = (*_dascoin_balance_obj).asset_type(d);
+    d.modify(asset_obj.dynamic_asset_data_id(d), [&](asset_dynamic_data_object& data){
+      data.current_supply -= op.amount;
+    });
+  }
+
+  return {};
+
+} FC_CAPTURE_AND_RETHROW((op)) }
+
 } }  // namespace graphene::chain

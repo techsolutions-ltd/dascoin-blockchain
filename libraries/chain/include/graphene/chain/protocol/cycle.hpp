@@ -285,6 +285,33 @@ namespace graphene { namespace chain {
     share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
 
+  struct purchase_cycle_asset_operation : public base_operation
+  {
+    struct fee_parameters_type{};
+
+    asset fee;
+
+    account_id_type wallet_id;
+
+    share_type amount;
+    frequency_type frequency;
+    share_type expected_amount;
+
+    extensions_type extensions;
+
+    purchase_cycle_asset_operation() = default;
+    explicit purchase_cycle_asset_operation(account_id_type wallet_id, share_type amount, frequency_type frequency,
+                                            share_type expected_amount)
+            : wallet_id(wallet_id)
+            , amount(amount)
+            , frequency(frequency)
+            , expected_amount(expected_amount) {}
+
+    account_id_type fee_payer() const { return wallet_id; }
+    void validate() const;
+    share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+  };
+
 } }  // namespace graphene::chain
 
 ///////////////////////////////
@@ -380,5 +407,15 @@ FC_REFLECT( graphene::chain::issue_cycles_to_license_operation,
             (amount)
             (origin)
             (comment)
+            (extensions)
+)
+
+FC_REFLECT( graphene::chain::purchase_cycle_asset_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::purchase_cycle_asset_operation,
+            (fee)
+            (wallet_id)
+            (amount)
+            (frequency)
+            (expected_amount)
             (extensions)
 )

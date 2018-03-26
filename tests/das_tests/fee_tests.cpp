@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE( successful_fee_change_and_fee_charge_with_fee_burn_test )
 
    set_expiration( db, trx );
 
-   const auto created_record = issue_cycleasset("CL1", alice_id, 100, 100);
+   issue_cycleasset("CL1", alice_id, 100, 100);
 
    auto loco = limit_order_create_operation(alice_id, asset{0, get_web_asset_id()}, asset{100 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, 100,
                                              alicev_id, db.head_block_time() + fc::seconds(60));
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE( successful_pool_account_change_and_fee_charge_test )
 
    set_expiration( db, trx );
 
-   const auto created_record = issue_cycleasset("CL1", alice_id, 100, 100);
+   issue_cycleasset("CL1", alice_id, 100, 100);
 
    // set pool account
    ACTOR(pool);

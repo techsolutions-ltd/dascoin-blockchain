@@ -358,9 +358,11 @@ void_result transfer_cycles_from_licence_to_wallet_evaluator::do_evaluate(const 
   const auto& d = db();
   const auto& vault_obj = op.vault_id(d);
   const auto& wallet_obj = op.wallet_id(d);
+  auto vault_kind_string = fc::reflector<account_kind>::to_string(vault_obj.kind);
+  auto wallet_kind_string = fc::reflector<account_kind>::to_string(wallet_obj.kind);
 
-  FC_ASSERT( vault_obj.is_vault(), "Cycles can be transferred only from a vault account, '${w}' is wallet", ("w", vault_obj.name) );
-  FC_ASSERT( wallet_obj.is_wallet(), "Cycles can be transferred only to a wallet account, '${w}' is vault", ("w", wallet_obj.name) );
+  FC_ASSERT( vault_obj.is_vault(), "Cycles can be transferred only from a vault account, '${w}' is ${v}", ("w", vault_obj.name)("v", vault_kind_string) );
+  FC_ASSERT( wallet_obj.is_wallet(), "Cycles can be transferred only to a wallet account, '${w}' is ${v}", ("w", wallet_obj.name)("v", wallet_kind_string) );
 
   FC_ASSERT( wallet_obj.is_tethered_to(op.vault_id), "Cycles can be transferred only between tethered accounts");
 

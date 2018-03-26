@@ -6,6 +6,7 @@
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/frequency_history_record_object.hpp>
 #include <graphene/chain/hardfork.hpp>
+#include <graphene/chain/license_objects.hpp>
 #include <graphene/chain/queue_objects.hpp>
 #include <graphene/chain/submit_cycles_evaluator_helper.hpp>
 #include <graphene/db/object_id.hpp>
@@ -345,6 +346,67 @@ void_result purchase_cycles_evaluator::do_apply(const operation_type& op)
       data.current_supply -= op.amount;
     });
   }
+
+  return {};
+
+} FC_CAPTURE_AND_RETHROW((op)) }
+
+void_result transfer_cycles_from_licence_to_wallet_evaluator::do_evaluate(const operation_type& op)
+{ try {
+
+  const auto& d = db();
+  const auto& vault_obj = op.vault_id(d);
+  const auto& wallet_obj = op.wallet_id(d);
+
+  FC_ASSERT( vault_obj.is_vault(), "Cycles can be transferred only from a vault account, '${w}' is wallet", ("w", vault_obj.name) );
+  FC_ASSERT( wallet_obj.is_wallet(), "Cycles can be transferred only to a wallet account, '${w}' is vault", ("w", wallet_obj.name) );
+
+  FC_ASSERT( wallet_obj.is_tethered_to(op.vault_id), "Cycles can be transferred only between tethered accounts");
+
+  FC_ASSERT ( vault_obj.license_information.valid(), "Cannot transfer cycles from a vault which doesn't have any license issued" );
+
+  const auto& license_information_obj = (*vault_obj.license_information)(d);
+  const auto& license_iterator = std::find_if(license_information_obj.history.begin(), license_information_obj.history.end(),
+                                              [&op](const license_information_object::license_history_record& history_record) {
+                                                return history_record.license == op.license_id;
+                                              });
+
+  FC_ASSERT ( license_iterator != license_information_obj.history.end(), "License ${l} is not issued to account ${a}",
+              ("l", op.license_id)("a", op.vault_id)
+            );
+
+  FC_ASSERT ( (*license_iterator).amount >= op.amount, "Trying to transfer ${t} cycles from license ${l} of vault ${v}, while ${r} remaining",
+              ("t", op.amount)("l", op.license_id)("v", op.vault_id)("r", (*license_iterator).amount)
+            );
+
+  const auto& cycle_balance_obj = d.get_balance_object(op.wallet_id, d.get_cycle_asset_id());
+
+  _cycle_balance_obj = &cycle_balance_obj;
+  _license_information_obj = &license_information_obj;
+
+  return {};
+
+} FC_CAPTURE_AND_RETHROW((op)) }
+
+void_result transfer_cycles_from_licence_to_wallet_evaluator::do_apply(const operation_type& op)
+{ try {
+  auto& d = db();
+
+  d.modify(*_license_information_obj, [&](license_information_object& lio) {
+    lio.subtract_cycles(op.license_id, op.amount);
+  });
+
+  // Add cycles to wallet's cycle balance:
+  d.modify(*_cycle_balance_obj, [&](account_balance_object& acc_b){
+    acc_b.balance += op.amount;
+  });
+
+  // Increase current supply because at this moment cycles are becoming an asset:
+  const auto cycle_id = d.get_cycle_asset_id();
+  const auto& cycle_asset_obj = cycle_id(d);
+  d.modify(cycle_asset_obj.dynamic_asset_data_id(d), [&](asset_dynamic_data_object& data){
+    data.current_supply += op.amount;
+  });
 
   return {};
 

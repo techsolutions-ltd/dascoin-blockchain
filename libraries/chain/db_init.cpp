@@ -253,6 +253,7 @@ void database::initialize_evaluators()
    register_evaluator<change_fee_evaluator>();
    register_evaluator<change_fee_pool_account_evaluator>();
    register_evaluator<purchase_cycles_evaluator>();
+   register_evaluator<transfer_cycles_from_licence_to_wallet_evaluator>();
 }
 
 void database::initialize_indexes()

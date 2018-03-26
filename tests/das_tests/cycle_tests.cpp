@@ -110,9 +110,9 @@ BOOST_AUTO_TEST_CASE( issue_cycles_to_license_test )
 
 BOOST_AUTO_TEST_CASE( purchase_cycle_asset_test )
 { try {
-  VAULT_ACTOR(vault)
-  ACTOR(wallet)
-  ACTOR(feepool)
+  VAULT_ACTOR(vault);
+  ACTOR(wallet);
+  ACTOR(feepool);
 
   tether_accounts(wallet_id, vault_id);
 
@@ -180,6 +180,55 @@ BOOST_AUTO_TEST_CASE( purchase_cycle_asset_test )
 
   // Fee pool account should have 10 dsc now:
   BOOST_CHECK_EQUAL( get_balance(feepool_id, get_dascoin_asset_id()), 10 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( transfer_cycles_from_licence_to_wallet_test )
+{ try {
+  VAULT_ACTOR(vault);
+  VAULT_ACTOR(foo);
+  ACTOR(wallet);
+
+  auto standard_locked = *(_dal.get_license_type("standard_locked"));
+  auto executive_locked = *(_dal.get_license_type("executive_locked"));
+
+  // Cannot transfer 0 cycles:
+  GRAPHENE_REQUIRE_THROW( do_op(transfer_cycles_from_licence_to_wallet_operation(vault_id, standard_locked.id, 0, wallet_id)), fc::exception );
+
+  // Cannot transfer from wallet account:
+  GRAPHENE_REQUIRE_THROW( do_op(transfer_cycles_from_licence_to_wallet_operation(wallet_id, standard_locked.id, 10, vault_id)), fc::exception );
+
+  // Cannot transfer from wallet account:
+  GRAPHENE_REQUIRE_THROW( do_op(transfer_cycles_from_licence_to_wallet_operation(vault_id, standard_locked.id, 10, foo_id)), fc::exception );
+
+  // Cannot transfer between un-tethered accounts:
+  GRAPHENE_REQUIRE_THROW( do_op(transfer_cycles_from_licence_to_wallet_operation(vault_id, standard_locked.id, 10, wallet_id)), fc::exception );
+
+  tether_accounts(wallet_id, vault_id);
+
+  // Cannot transfer from a vault which doesn't have any license issued:
+  GRAPHENE_REQUIRE_THROW( do_op(transfer_cycles_from_licence_to_wallet_operation(vault_id, standard_locked.id, 10, wallet_id)), fc::exception );
+
+  do_op(issue_license_operation(get_license_issuer_id(), vault_id, standard_locked.id, 10, 2, db.head_block_time()));
+
+  // Cannot transfer from a vault and license which hasn't been issued:
+  GRAPHENE_REQUIRE_THROW( do_op(transfer_cycles_from_licence_to_wallet_operation(vault_id, executive_locked.id, 10, wallet_id)), fc::exception );
+
+  // Cannot transfer more cycles than there is on the vault's license:
+  GRAPHENE_REQUIRE_THROW( do_op(transfer_cycles_from_licence_to_wallet_operation(vault_id, standard_locked.id, 10000, wallet_id)), fc::exception );
+
+  // This will succeed:
+  do_op(transfer_cycles_from_licence_to_wallet_operation(vault_id, standard_locked.id, 1000, wallet_id));
+
+  // And there should be 1000 cycles on wallet's balance:
+  BOOST_CHECK_EQUAL( get_balance(wallet_id, get_cycle_asset_id()), 1000 );
+
+  const auto& license_information_obj = (*vault.license_information)(db);
+  const auto& license_history = license_information_obj.history;
+  const auto& license_record = license_history[0];
+
+  // On license there should be 210 cycles remaining:
+  BOOST_CHECK_EQUAL( license_record.amount.value, 210 );
 
 } FC_LOG_AND_RETHROW() }
 

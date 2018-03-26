@@ -312,6 +312,32 @@ namespace graphene { namespace chain {
     share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
 
+  struct transfer_cycles_from_licence_to_wallet_operation : public base_operation
+  {
+    struct fee_parameters_type{};
+
+    asset fee;
+
+    account_id_type vault_id;
+    license_type_id_type license_id;
+    share_type amount;
+    account_id_type wallet_id;
+
+    extensions_type extensions;
+
+    transfer_cycles_from_licence_to_wallet_operation() = default;
+    explicit transfer_cycles_from_licence_to_wallet_operation(account_id_type vault_id, license_type_id_type license_id, share_type amount,
+                                                              account_id_type wallet_id)
+            : vault_id(vault_id)
+            , license_id(license_id)
+            , amount(amount)
+            , wallet_id(wallet_id) {}
+
+    account_id_type fee_payer() const { return vault_id; }
+    void validate() const;
+    share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+  };
+
 } }  // namespace graphene::chain
 
 ///////////////////////////////
@@ -417,5 +443,15 @@ FC_REFLECT( graphene::chain::purchase_cycle_asset_operation,
             (amount)
             (frequency)
             (expected_amount)
+            (extensions)
+)
+
+FC_REFLECT( graphene::chain::transfer_cycles_from_licence_to_wallet_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::transfer_cycles_from_licence_to_wallet_operation,
+            (fee)
+            (vault_id)
+            (license_id)
+            (amount)
+            (wallet_id)
             (extensions)
 )

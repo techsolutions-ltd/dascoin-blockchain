@@ -1532,6 +1532,18 @@ class wallet_api
        */
       signed_transaction wire_out(const string& account, share_type amount, bool broadcast) const;
 
+      /**
+      * Wire out with fee some WebAsset.
+      * @param account             Account ID.
+      * @param amount              Amount to wire.
+      * @param currency_of_choice  Currency of choice (string abbreviation) in which user wants wire out.
+      * @param to_address          Destination blockchain address to which the amount needs to be wired.
+      * @param memo                Optional note.
+      * @param broadcast           True to broadcast the transaction on the network.
+      */
+      signed_transaction wire_out_with_fee(const string& account, share_type amount, const string& currency_of_choice,
+                                           const string& to_address, const string& memo, bool broadcast) const;
+
       //////////////////////////
       // REQUESTS:            //
       //////////////////////////
@@ -1553,6 +1565,12 @@ class wallet_api
        * @return Vector of wire out holder objects.
        */
       vector<wire_out_holder_object> get_all_wire_out_holders() const;
+
+      /**
+      * @brief Get all wire out holder objects.
+      * @return Vector of wire out holder objects.
+      */
+      vector<wire_out_with_fee_holder_object> get_all_wire_out_with_fee_holders() const;
 
       /**
        * @brief Return the entire reward queue.

@@ -48,6 +48,7 @@
 #include <graphene/chain/vesting_balance_object.hpp>
 #include <graphene/chain/upgrade_event_object.hpp>
 #include <graphene/chain/wire_object.hpp>
+#include <graphene/chain/wire_out_with_fee_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
 #include <graphene/chain/witness_object.hpp>
 #include <graphene/chain/witness_schedule_object.hpp>
@@ -69,6 +70,7 @@
 #include <graphene/chain/vesting_balance_evaluator.hpp>
 #include <graphene/chain/upgrade_event_evaluator.hpp>
 #include <graphene/chain/wire_evaluator.hpp>
+#include <graphene/chain/wire_out_with_fee_evaluator.hpp>
 #include <graphene/chain/withdraw_permission_evaluator.hpp>
 #include <graphene/chain/witness_evaluator.hpp>
 #include <graphene/chain/worker_evaluator.hpp>
@@ -151,6 +153,9 @@ const uint8_t issue_asset_request_object::type_id;
 
 const uint8_t wire_out_holder_object::space_id;
 const uint8_t wire_out_holder_object::type_id;
+
+const uint8_t wire_out_with_fee_holder_object::space_id;
+const uint8_t wire_out_with_fee_holder_object::type_id;
 
 const uint8_t reward_queue_object::space_id;
 const uint8_t reward_queue_object::type_id;
@@ -254,6 +259,9 @@ void database::initialize_evaluators()
    register_evaluator<change_fee_pool_account_evaluator>();
    register_evaluator<purchase_cycles_evaluator>();
    register_evaluator<transfer_cycles_from_licence_to_wallet_evaluator>();
+   register_evaluator<wire_out_with_fee_evaluator>();
+   register_evaluator<wire_out_with_fee_complete_evaluator>();
+   register_evaluator<wire_out_with_fee_reject_evaluator>();
 }
 
 void database::initialize_indexes()
@@ -309,7 +317,8 @@ void database::initialize_indexes()
    add_index<primary_index<license_information_index>>();
    add_index<primary_index<issued_asset_record_index>>();
    add_index<primary_index<frequency_history_record_index>>();
-   add_index<primary_index< witness_delegate_data_index > >();
+   add_index<primary_index<witness_delegate_data_index > >();
+   add_index<primary_index<wire_out_with_fee_holder_index>>();
 }
 
 account_id_type database::initialize_chain_authority(const string& kind_name, const string& acc_name)

@@ -256,7 +256,8 @@ namespace graphene { namespace chain {
       impl_license_information_object_type,
       impl_issued_asset_record_object_type,
       impl_frequency_history_record_object_type,
-      impl_witness_delegate_data_colection_object_type
+      impl_witness_delegate_data_colection_object_type,
+      impl_wire_out_with_fee_holder_object_type,
    };
 
    //typedef fc::unsigned_int            object_id_type;
@@ -321,6 +322,7 @@ namespace graphene { namespace chain {
    class issued_asset_record_object;
    class frequency_history_record_object;
    class witness_delegate_data_colection_type;
+   class wire_out_with_fee_holder_object;
 
    typedef object_id< implementation_ids, impl_global_property_object_type,  global_property_object>                    global_property_id_type;
    typedef object_id< implementation_ids, impl_dynamic_global_property_object_type,  dynamic_global_property_object>    dynamic_global_property_id_type;
@@ -353,6 +355,10 @@ namespace graphene { namespace chain {
    typedef object_id<
       implementation_ids, impl_wire_out_holder_object_type, wire_out_holder_object
    > wire_out_holder_id_type;
+
+    typedef object_id<
+       implementation_ids, impl_wire_out_with_fee_holder_object_type, wire_out_with_fee_holder_object
+    > wire_out_with_fee_holder_id_type;
 
    typedef object_id<
       implementation_ids, impl_reward_queue_object_type, reward_queue_object
@@ -586,6 +592,7 @@ FC_REFLECT_ENUM( graphene::chain::impl_object_type,
                  (impl_issued_asset_record_object_type)
                  (impl_frequency_history_record_object_type)
                  (impl_witness_delegate_data_colection_object_type)
+                 (impl_wire_out_with_fee_holder_object_type)
                )
 
 FC_REFLECT_TYPENAME( graphene::chain::share_type )
@@ -628,6 +635,7 @@ FC_REFLECT_TYPENAME( graphene::chain::license_information_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::issued_asset_record_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::frequency_history_record_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::witness_delegate_data_colection_id_type )
+FC_REFLECT_TYPENAME( graphene::chain::wire_out_with_fee_holder_id_type )
 
 FC_REFLECT( graphene::chain::void_t, )
 

@@ -286,6 +286,28 @@ struct get_impacted_account_visitor
       _impacted.insert( op.account );
    }
 
+  void operator()( const wire_out_with_fee_operation& op )
+  {
+    _impacted.insert( op.account );
+  }
+
+  void operator()( const wire_out_with_fee_complete_operation& op )
+  {
+    _impacted.insert( op.wire_out_handler );
+//    _impacted.insert( op.wire_out_with_fee_handler );
+  }
+
+  void operator()( const wire_out_with_fee_reject_operation& op )
+  {
+    _impacted.insert( op.wire_out_handler );
+//    _impacted.insert( op.wire_out_with_fee_handler );
+  }
+
+  void operator()( const wire_out_with_fee_result_operation& op )
+  {
+    _impacted.insert( op.account );
+  }
+
    void operator()( const transfer_vault_to_wallet_operation& op )
    {
       _impacted.insert( op.from_vault );
@@ -556,6 +578,8 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
             case impl_issue_asset_request_object_type:
                break;
             case impl_wire_out_holder_object_type:
+               break;
+            case impl_wire_out_with_fee_holder_object_type:
                break;
             case impl_reward_queue_object_type:
                break;

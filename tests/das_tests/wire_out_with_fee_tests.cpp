@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE( wire_out_with_fee_web_asset_test )
   };
 
   // Reject, insufficient balance:
-  GRAPHENE_REQUIRE_THROW( wire_out_with_fee(wallet_id, web_asset(10000), "BTC"), fc::exception );
+  GRAPHENE_REQUIRE_THROW( wire_out_with_fee(wallet_id, web_asset(10000), "BTC", "SOME_BTC_ADDRESS"), fc::exception );
 
   issue_webasset("1", wallet_id, 15000, 15000);
   generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE( wire_out_with_fee_web_asset_test )
   // update_pi_limits(wallet_id, 99, {20000,20000,20000});
 
   // Wire out 10K:
-  wire_out_with_fee(wallet_id, web_asset(10000), "BTC", "debit");
+  wire_out_with_fee(wallet_id, web_asset(10000), "BTC", "SOME_BTC_ADDRESS", "debit");
 
   // Check if the balance has been reduced:
   check_balances(wallet, 5000, 15000);
@@ -48,10 +48,11 @@ BOOST_AUTO_TEST_CASE( wire_out_with_fee_web_asset_test )
   auto holders = get_wire_out_with_fee_holders(wallet_id, {get_web_asset_id()});
   BOOST_CHECK_EQUAL( holders.size(), 1 );
   BOOST_CHECK_EQUAL( holders[0].currency_of_choice, "BTC" );
+  BOOST_CHECK_EQUAL( holders[0].to_address, "SOME_BTC_ADDRESS" );
   BOOST_CHECK_EQUAL( holders[0].memo, "debit" );
 
   // Wire out 5K:
-  wire_out_with_fee(wallet_id, web_asset(5000), "BTC");
+  wire_out_with_fee(wallet_id, web_asset(5000), "BTC", "SOME_BTC_ADDRESS");
 
   // Check the balances are zero:
   check_balances(wallet, 0, 15000);
@@ -86,7 +87,7 @@ BOOST_AUTO_TEST_CASE( wire_out_with_fee_web_asset_history_test )
   generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
 
   // Wire out 10K:
-  wire_out_with_fee(wallet_id, web_asset(10000), "BTC", "debit");
+  wire_out_with_fee(wallet_id, web_asset(10000), "BTC", "SOME_BTC_ADDRESS", "debit");
   generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
   auto holders = get_wire_out_with_fee_holders(wallet_id, {get_web_asset_id()});
   wire_out_with_fee_reject(holders[0].id);
@@ -99,7 +100,7 @@ BOOST_AUTO_TEST_CASE( wire_out_with_fee_web_asset_history_test )
   BOOST_CHECK ( !op.completed );
 
   // Wire out 10K again:
-  wire_out_with_fee(wallet_id, web_asset(10000), "BTC", "debit");
+  wire_out_with_fee(wallet_id, web_asset(10000), "BTC", "SOME_BTC_ADDRESS", "debit");
   generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
   holders = get_wire_out_with_fee_holders(wallet_id, {get_web_asset_id()});
   wire_out_with_fee_complete(holders[0].id);

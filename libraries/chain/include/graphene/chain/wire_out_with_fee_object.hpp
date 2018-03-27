@@ -22,6 +22,7 @@ namespace graphene { namespace chain {
       share_type amount;
       asset_id_type asset_id;
       string currency_of_choice;
+      string to_address;
       string memo;
       time_point_sec timestamp;
       extensions_type extensions;
@@ -64,6 +65,7 @@ FC_REFLECT_DERIVED( graphene::chain::wire_out_with_fee_holder_object, (graphene:
                     (amount)
                     (asset_id)
                     (currency_of_choice)
+                    (to_address)
                     (memo)
                     (timestamp)
                     (extensions)

@@ -30,13 +30,15 @@ using namespace graphene::chain::test;
 namespace graphene { namespace chain {
 
 const wire_out_with_fee_holder_object& database_fixture::wire_out_with_fee(account_id_type account_id, asset asset_to_wire,
-                                                                           const string& currency_of_choice, const string& memo)
+                                                                           const string& currency_of_choice,
+                                                                           const string& to_address, const string& memo)
 { try {
 
   wire_out_with_fee_operation op;
   op.account = account_id;
   op.asset_to_wire = asset_to_wire;
   op.currency_of_choice = currency_of_choice;
+  op.to_address = to_address;
   op.memo = memo;
 
   signed_transaction tx;

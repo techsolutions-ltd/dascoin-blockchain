@@ -1537,9 +1537,12 @@ class wallet_api
       * @param account             Account ID.
       * @param amount              Amount to wire.
       * @param currency_of_choice  Currency of choice (string abbreviation) in which user wants wire out.
+      * @param to_address          Destination blockchain address to which the amount needs to be wired.
+      * @param memo                Optional note.
       * @param broadcast           True to broadcast the transaction on the network.
       */
-      signed_transaction wire_out_with_fee(const string& account, share_type amount, const string& currency_of_choice, bool broadcast) const;
+      signed_transaction wire_out_with_fee(const string& account, share_type amount, const string& currency_of_choice,
+                                           const string& to_address, const string& memo, bool broadcast) const;
 
       //////////////////////////
       // REQUESTS:            //

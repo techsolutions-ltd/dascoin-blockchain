@@ -2632,7 +2632,8 @@ public:
       return sign_transaction(tx, broadcast);
    }
 
-   signed_transaction wire_out_with_fee(const string& account_name, share_type amount, const string& currency_of_choice, bool broadcast)
+   signed_transaction wire_out_with_fee(const string& account_name, share_type amount, const string& currency_of_choice,
+                                        const string& to_address, const string& memo, bool broadcast)
    {
      auto account = get_account(account_name);
 
@@ -2640,6 +2641,8 @@ public:
      op.account = account.id;
      op.asset_to_wire = asset(amount, asset_id_type(DASCOIN_WEB_ASSET_INDEX));
      op.currency_of_choice = currency_of_choice;
+     op.to_address = to_address;
+     op.memo = memo;
 
      signed_transaction tx;
      tx.operations.push_back(op);
@@ -4598,9 +4601,10 @@ signed_transaction wallet_api::wire_out(const string& account, share_type amount
    return my->wire_out(account, amount, broadcast);
 }
 
-signed_transaction wallet_api::wire_out_with_fee(const string& account, share_type amount, const string& currency_of_choice, bool broadcast) const
+signed_transaction wallet_api::wire_out_with_fee(const string& account, share_type amount, const string& currency_of_choice,
+                                                 const string& to_address, const string& memo, bool broadcast) const
 {
-  return my->wire_out_with_fee(account, amount, currency_of_choice, broadcast);
+  return my->wire_out_with_fee(account, amount, currency_of_choice, to_address, memo, broadcast);
 }
 
 vector<issue_asset_request_object> wallet_api::get_all_webasset_issue_requests() const

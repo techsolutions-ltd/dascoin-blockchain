@@ -58,6 +58,7 @@ namespace graphene { namespace chain {
       woho.account = op.account;
       woho.set_balance(op.asset_to_wire);
       woho.currency_of_choice = op.currency_of_choice;
+      woho.to_address = op.to_address;
       woho.memo = op.memo;
       woho.timestamp = d.head_block_time();
     }).id;
@@ -79,7 +80,7 @@ namespace graphene { namespace chain {
   void_result wire_out_with_fee_complete_evaluator::do_apply(const wire_out_with_fee_complete_operation& op)
   { try {
     db().push_applied_operation(wire_out_with_fee_result_operation{holder_->account, true, holder_->amount, holder_->asset_id,
-                                holder_->currency_of_choice, holder_->memo, holder_->timestamp});
+                                holder_->currency_of_choice, holder_->to_address, holder_->memo, holder_->timestamp});
     // Free the holder object:
     db().remove(*holder_);
 
@@ -119,7 +120,7 @@ namespace graphene { namespace chain {
       data.current_supply += holder_->amount;
     });
     db().push_applied_operation(wire_out_with_fee_result_operation{holder_->account, false, holder_->amount, holder_->asset_id,
-                                                          holder_->currency_of_choice, holder_->memo, holder_->timestamp});
+                                                          holder_->currency_of_choice, holder_->to_address, holder_->memo, holder_->timestamp});
     // Free the holder object:
     d.remove(*holder_);
 

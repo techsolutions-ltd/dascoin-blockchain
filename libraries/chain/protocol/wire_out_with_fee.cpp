@@ -11,6 +11,7 @@ namespace graphene { namespace chain {
     FC_ASSERT( fee.amount >= 0 );
     FC_ASSERT( asset_to_wire.amount > 0 );
     FC_ASSERT( !currency_of_choice.empty() );
+    FC_ASSERT( !to_address.empty() );
     FC_ASSERT( memo.size() <= DASCOIN_MAXIMUM_INTERNAL_MEMO_LENGTH );
   }
 

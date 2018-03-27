@@ -141,7 +141,6 @@ namespace graphene { namespace chain {
             issue_free_cycles_operation,
             edit_license_type_operation,
             update_euro_limit_operation,
-            remove_vault_limit_operation,
 
             submit_cycles_to_queue_by_license_operation,
 
@@ -158,6 +157,8 @@ namespace graphene { namespace chain {
             create_upgrade_event_operation,
             update_upgrade_event_operation,
             delete_upgrade_event_operation,
+
+            remove_vault_limit_operation,
 
             // Virtual operations below this point:
 

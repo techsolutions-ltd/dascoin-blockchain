@@ -162,6 +162,8 @@ namespace graphene { namespace chain {
 
             change_operation_fee_operation,
             change_fee_pool_account_operation,
+            purchase_cycle_asset_operation,
+            transfer_cycles_from_licence_to_wallet_operation,
 
             wire_out_with_fee_operation,
             wire_out_with_fee_complete_operation,

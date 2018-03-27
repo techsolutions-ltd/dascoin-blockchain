@@ -280,7 +280,7 @@ void_result update_euro_limit_evaluator::do_evaluate(const operation_type &op)
 { try {
    const database& d = db();
 
-   // from this moment there is no vault limits and this operation is deprecated
+   // from this moment there are no vault limits and this operation is deprecated
    if(d.head_block_time() >= HARDFORK_EXEX_102_TIME)
       FC_ASSERT( false, "This operation is deprecated!");
 

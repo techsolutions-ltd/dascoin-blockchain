@@ -173,7 +173,11 @@ struct get_impacted_account_visitor
    void operator()( const custom_operation& op ) {}
    void operator()( const assert_operation& op ) {}
    void operator()( const balance_claim_operation& op ) {}
-   void operator()( const remove_vault_limit_operation& op ) {}
+
+   void operator()( const remove_vault_limit_operation& op )
+   {
+      _impacted.insert( op.authority );
+   }
 
    void operator()( const override_transfer_operation& op )
    {

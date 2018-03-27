@@ -78,6 +78,9 @@ BOOST_AUTO_TEST_CASE( remove_limit_from_all_vaults_test )
   // and after removing limit operation
   BOOST_CHECK(!vault2.disable_vault_to_wallet_limit);
 
+  GRAPHENE_REQUIRE_THROW(do_op(update_euro_limit_operation(get_global_properties().authorities.license_administrator,
+        vault2_id, true, optional<share_type>(),"comment")), fc::exception);
+
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_SUITE_END()  // account_unit_tests

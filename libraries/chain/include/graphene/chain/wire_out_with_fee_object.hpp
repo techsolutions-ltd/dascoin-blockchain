@@ -28,7 +28,7 @@ namespace graphene { namespace chain {
       extensions_type extensions;
 
       void set_balance(asset a) { amount = a.amount; asset_id = a.asset_id; }
-      void validate() const;
+      void validate() const { };
   };
 
 ///////////////////////////////

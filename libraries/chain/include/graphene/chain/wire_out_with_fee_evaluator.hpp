@@ -13,10 +13,10 @@ namespace graphene { namespace chain {
   {
   public:
     typedef wire_out_with_fee_operation operation_type;
-
     void_result do_evaluate(const wire_out_with_fee_operation& op);
     object_id_type do_apply(const wire_out_with_fee_operation& op);
 
+  private:
     const asset_dynamic_data_object* asset_dyn_data_ = nullptr;
     const account_balance_object*    from_balance_obj_ = nullptr;
   };
@@ -29,6 +29,7 @@ namespace graphene { namespace chain {
     void_result do_evaluate(const wire_out_with_fee_complete_operation& op);
     void_result do_apply(const wire_out_with_fee_complete_operation& op);
 
+  private:
     const wire_out_with_fee_holder_object* holder_ = nullptr;
   };
 
@@ -40,6 +41,7 @@ namespace graphene { namespace chain {
     void_result do_evaluate(const wire_out_with_fee_reject_operation& op);
     void_result do_apply(const wire_out_with_fee_reject_operation& op);
 
+  private:
     const asset_dynamic_data_object* asset_dyn_data_ = nullptr;
     const account_balance_object* balance_obj_ = nullptr;
     const wire_out_with_fee_holder_object* holder_ = nullptr;

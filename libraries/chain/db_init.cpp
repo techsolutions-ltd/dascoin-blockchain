@@ -257,6 +257,8 @@ void database::initialize_evaluators()
    register_evaluator<issue_cycles_to_license_evaluator>();
    register_evaluator<change_fee_evaluator>();
    register_evaluator<change_fee_pool_account_evaluator>();
+   register_evaluator<purchase_cycles_evaluator>();
+   register_evaluator<transfer_cycles_from_licence_to_wallet_evaluator>();
    register_evaluator<wire_out_with_fee_evaluator>();
    register_evaluator<wire_out_with_fee_complete_evaluator>();
    register_evaluator<wire_out_with_fee_reject_evaluator>();
@@ -832,7 +834,6 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    // TODO: implement in genesis state
    // initialize_chain_authority(chain_authority_kind::pi_validator, genesis_state.initial_pi_validator.owner_name);
    initialize_chain_authority("wire_out_handler", genesis_state.initial_wire_out_handler.owner_name);
-   //initialize_chain_authority("wire_out_with_fee_handler", genesis_state.initial_wire_out_with_fee_handler.owner_name);
 
    // Set up web asset issuer and authenticator:
    // TODO: refactor this to be handled all at once.

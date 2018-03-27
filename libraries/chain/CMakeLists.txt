@@ -107,7 +107,6 @@ add_library( graphene_chain
              license_objects.cpp
              issued_asset_record_object.cpp
              wire_object.cpp
-             wire_out_with_fee_object.cpp
              wire_evaluator.cpp
              wire_out_with_fee_evaluator.cpp
              cycle_evaluator.cpp

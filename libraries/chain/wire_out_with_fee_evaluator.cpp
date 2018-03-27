@@ -11,7 +11,7 @@ namespace graphene { namespace chain {
   { try {
 
     const auto& d = db();
-    // We can only wire out web assets for now. TODO: assets must be marked for wire out ability.
+
     FC_ASSERT( op.asset_to_wire.asset_id == d.get_web_asset_id() );
 
     const auto& acc_obj = op.account(d);
@@ -54,13 +54,13 @@ namespace graphene { namespace chain {
       data.current_supply -= op.asset_to_wire.amount;
     });
     // Create the holder object and return its ID:
-    return d.create<wire_out_with_fee_holder_object>([&](wire_out_with_fee_holder_object& woho){
-      woho.account = op.account;
-      woho.set_balance(op.asset_to_wire);
-      woho.currency_of_choice = op.currency_of_choice;
-      woho.to_address = op.to_address;
-      woho.memo = op.memo;
-      woho.timestamp = d.head_block_time();
+    return d.create<wire_out_with_fee_holder_object>([&](wire_out_with_fee_holder_object& wowfho){
+      wowfho.account = op.account;
+      wowfho.set_balance(op.asset_to_wire);
+      wowfho.currency_of_choice = op.currency_of_choice;
+      wowfho.to_address = op.to_address;
+      wowfho.memo = op.memo;
+      wowfho.timestamp = d.head_block_time();
     }).id;
 
   } FC_CAPTURE_AND_RETHROW( (op) ) }

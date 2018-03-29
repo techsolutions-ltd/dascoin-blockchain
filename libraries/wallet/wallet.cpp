@@ -2134,6 +2134,33 @@ public:
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (from)(to)(amount)(asset_symbol)(memo)(broadcast) ) }
 
+   signed_transaction transfer_vault_to_wallet(string vault, string wallet, string amount,
+                               string asset_symbol, share_type reserved, bool broadcast = false)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+      fc::optional<asset_object> asset_obj = get_asset(asset_symbol);
+      FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", asset_symbol));
+
+      account_object vault_account = get_account(vault);
+      account_object wallet_account = get_account(wallet);
+      account_id_type vault_id = vault_account.id;
+      account_id_type wallet_id = wallet_account.id;
+
+      transfer_vault_to_wallet_operation xfer_op;
+
+      xfer_op.from_vault = vault_id;
+      xfer_op.to_wallet = wallet_id;
+      xfer_op.asset_to_transfer = asset_obj->amount_from_string(amount);
+      xfer_op.reserved_to_transfer = reserved;
+
+      signed_transaction tx;
+      tx.operations.push_back(xfer_op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (vault)(wallet)(amount)(asset_symbol)(reserved)(broadcast) ) }
+
    signed_transaction issue_asset(string to_account, string amount, string symbol,
                                   string memo, bool broadcast = false)
    {
@@ -3424,6 +3451,13 @@ signed_transaction wallet_api::transfer(string from, string to, string amount,
 {
    return my->transfer(from, to, amount, asset_symbol, memo, broadcast);
 }
+
+signed_transaction wallet_api::transfer_vault_to_wallet(string vault, string wallet, string amount,
+                                                        string asset_symbol, share_type reserved, bool broadcast /* = false */)
+{
+   return my->transfer_vault_to_wallet(vault, wallet, amount, asset_symbol, reserved, broadcast);
+}
+
 signed_transaction wallet_api::create_asset(string issuer,
                                             string symbol,
                                             uint8_t precision,
@@ -3761,6 +3795,12 @@ string wallet_api::gethelp(const string& method)const
       ss << "usage: transfer FROM TO AMOUNT SYMBOL \"memo\" BROADCAST\n\n";
       ss << "example: transfer \"1.3.11\" \"1.3.4\" 1000.03 CORE \"memo\" true\n";
       ss << "example: transfer \"usera\" \"userb\" 1000.123 CORE \"memo\" true\n";
+   }
+   else if( method == "transfer_vault_to_wallet" )
+   {
+      ss << "usage: transfer_vault_to_wallet FROM_VAULT TO_WALLET AMOUNT SYMBOL RESERVED_AMOUNT BROADCAST\n\n";
+      ss << "example: transfer vault-cli wallet-cli 1000 1.3.1 0 true\n";
+      ss << "example: transfer 1.2.30 1.2.31 1000.123 1.3.2 0 true\n";
    }
    else if( method == "create_account_with_brain_key" )
    {

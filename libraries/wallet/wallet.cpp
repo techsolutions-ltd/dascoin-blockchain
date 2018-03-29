@@ -3782,8 +3782,8 @@ string wallet_api::gethelp(const string& method)const
    }
    else if( method == "create_account" )
    {
-      ss << "usage: create_account ACCOUNT_KIND ACCOUNT_NAME OWNER_PUBLIC_KEY ACTIVE_PUBLIC_KEY REGISTRAR REFERRER REFERRER_PERCENT BROADCAST\n\n";
-      ss << "example: create_account vault \"newaccount\" \"CORE6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV\" \"CORE6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV\" \"1.3.11\" \"1.3.11\" 50 true\n";
+      ss << "usage: create_account ACCOUNT_KIND ACCOUNT_NAME OWNER_PUBLIC_KEY ACTIVE_PUBLIC_KEY BROADCAST\n\n";
+      ss << "example: create_account vault \"newaccount\" \"CORE6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV\" \"CORE6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV\" true\n";
       ss << "\n";
       ss << "Use this method to register an account for which you do not know the private keys.";
    }

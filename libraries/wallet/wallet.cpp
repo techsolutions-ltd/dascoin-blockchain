@@ -1003,6 +1003,27 @@ public:
       return tx;
    } FC_CAPTURE_AND_RETHROW( (name)(owner)(active)(broadcast) ) }
 
+   signed_transaction tether_accounts(string wallet, string vault, bool broadcast = false)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      account_object wallet_account = get_account(wallet);
+      account_object vault_account = get_account(vault);
+      account_id_type wallet_id = wallet_account.id;
+      account_id_type vault_id = vault_account.id;
+
+      tether_accounts_operation tether_op;
+
+      tether_op.wallet_account = wallet_id;
+      tether_op.vault_account = vault_id;
+
+      signed_transaction tx;
+      tx.operations.push_back(tether_op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (wallet)(vault)(broadcast) ) }
 
    signed_transaction upgrade_account(string name, bool broadcast)
    { try {
@@ -3374,6 +3395,13 @@ signed_transaction wallet_api::register_vault_account(string name,
    return my->register_account( account_kind::vault, name, owner_pubkey, active_pubkey, broadcast );
 }
 
+signed_transaction wallet_api::tether_accounts(string wallet,
+                                               string vault,
+                                               bool broadcast)
+{
+   return my->tether_accounts( wallet, vault, broadcast );
+}
+
 signed_transaction wallet_api::create_account_with_brain_key(string brain_key,
                                                              string account_name,
                                                              bool broadcast /* = false */)
@@ -3758,6 +3786,13 @@ string wallet_api::gethelp(const string& method)const
       ss << "example: create_account vault \"newaccount\" \"CORE6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV\" \"CORE6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV\" \"1.3.11\" \"1.3.11\" 50 true\n";
       ss << "\n";
       ss << "Use this method to register an account for which you do not know the private keys.";
+   }
+   else if( method == "tether_accounts" )
+   {
+      ss << "usage: tether_accounts WALLET_ACCOUNT_NAME VAULT_ACCOUNT_NAME BROADCAST\n\n";
+      ss << "example: tether_accounts \"wallet_account\" \"vault_account\" true\n";
+      ss << "\n";
+      ss << "Use this method to tether a wallet account to a vault account.";
    }
    else if( method == "create_asset" )
    {

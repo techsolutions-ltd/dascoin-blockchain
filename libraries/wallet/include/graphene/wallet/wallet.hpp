@@ -682,11 +682,24 @@ class wallet_api
        * @param active the active key for the new account
        * @param broadcast true to broadcast the transaction on the network
        * @returns the signed transaction registering the account
-      */
+       */
       signed_transaction register_vault_account(string name,
-                                                 public_key_type owner,
-                                                 public_key_type active,
-                                                 bool broadcast = false);
+                                                public_key_type owner,
+                                                public_key_type active,
+                                                bool broadcast = false);
+
+      /** Tethers a wallet account to a vault account on the blockchain.
+       *
+       * This function is used to tether two accounts (a wallet and a vault).
+       *
+       * @param wallet the name or id of the wallet account to tether
+       * @param vault the name or id of the vault account to tether
+       * @param broadcast true to broadcast the transaction on the network
+       * @returns the signed transaction tethering two accounts
+       */
+      signed_transaction tether_accounts(string wallet,
+                                         string vault,
+                                         bool broadcast = false);
 
       /**
        *  Upgrades an account to prime status.
@@ -1729,6 +1742,7 @@ FC_API( graphene::wallet::wallet_api,
         (suggest_brain_key)
         (register_account)
         (create_account)
+        (tether_accounts)
         (register_vault_account)
         (upgrade_account)
         (create_account_with_brain_key)

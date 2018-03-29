@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE( successful_pool_account_change_and_fee_charge_test )
 
    auto balance = get_balance(pool_id, get_cycle_asset_id());
 
-   BOOST_CHECK_EQUAL( balance, 40 );
+   BOOST_CHECK_EQUAL( balance, 40 + DASCOIN_DEFAULT_STARTING_CYCLE_ASSET_AMOUNT );
 
 } FC_LOG_AND_RETHROW() }
 

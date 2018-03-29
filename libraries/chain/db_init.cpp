@@ -262,6 +262,7 @@ void database::initialize_evaluators()
    register_evaluator<wire_out_with_fee_evaluator>();
    register_evaluator<wire_out_with_fee_complete_evaluator>();
    register_evaluator<wire_out_with_fee_reject_evaluator>();
+   register_evaluator<set_starting_cycle_asset_amount_evaluator>();
 }
 
 void database::initialize_indexes()

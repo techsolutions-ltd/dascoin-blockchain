@@ -256,6 +256,16 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
       const auto dsc_id = db().get_dascoin_asset_id();
       db().adjust_balance_limit(new_acnt_object, dsc_id, starting_limit);
    }
+
+   // wallets and custodians should have cycle asset with starting balance
+   if (new_acnt_object.is_wallet() || new_acnt_object.is_custodian())
+   {
+     const auto& global_props = db().get_global_properties();
+     int starting_cycle_asset = global_props.parameters.starting_cycle_asset_amount;
+     const auto& balance_object = db().get_balance_object(new_acnt_object.id, db().get_cycle_asset_id());
+     db().issue_asset(balance_object, starting_cycle_asset, 0);
+   }
+
    return new_acnt_object.id;
 
 } FC_CAPTURE_AND_RETHROW((o)) }
@@ -500,5 +510,31 @@ object_id_type change_public_keys_evaluator::do_apply(const change_public_keys_o
    return {};
 
 } FC_CAPTURE_AND_RETHROW((op)) }
+
+void_result set_starting_cycle_asset_amount_evaluator::do_evaluate(const set_starting_cycle_asset_amount_operation& op)
+{
+  try
+  {
+    database& d = db();
+    d.perform_root_authority_check(op.issuer);
+    return {};
+  } FC_CAPTURE_AND_RETHROW((op))
+}
+
+object_id_type set_starting_cycle_asset_amount_evaluator::do_apply(const set_starting_cycle_asset_amount_operation& op)
+{
+  try
+  {
+    auto& d = db();
+    const auto& global_props = d.get_global_properties();
+
+    d.modify(global_props, [&](global_property_object& gpo)
+    {
+      gpo.parameters.starting_cycle_asset_amount = op.new_amount;
+    });
+
+    return global_props.id;
+  } FC_CAPTURE_AND_RETHROW((op))
+}
 
 } } // graphene::chain

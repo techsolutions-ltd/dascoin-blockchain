@@ -262,6 +262,11 @@ void tether_accounts_operation::validate()const
    FC_ASSERT( fee.amount >= 0 );
 }
 
+void set_starting_cycle_asset_amount_operation::validate()const
+{
+  FC_ASSERT(new_amount >= 0);
+}
+
 void change_public_keys_operation::validate() const
 {
    FC_ASSERT(account != GRAPHENE_TEMP_ACCOUNT, "Illegal account id");

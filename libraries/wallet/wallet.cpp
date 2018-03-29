@@ -950,7 +950,6 @@ public:
       _builder_transactions.erase(handle);
    }
 
-
    signed_transaction register_account(account_kind kind,
                                        string name,
                                        public_key_type owner,
@@ -3358,6 +3357,15 @@ signed_transaction wallet_api::register_account(string name,
    return my->register_account( account_kind::wallet, name, owner_pubkey, active_pubkey, broadcast );
 }
 
+signed_transaction wallet_api::create_account(account_kind kind,
+                                             string name,
+                                             public_key_type owner_pubkey,
+                                             public_key_type active_pubkey,
+                                             bool broadcast)
+{
+   return my->register_account( kind, name, owner_pubkey, active_pubkey, broadcast );
+}
+
 signed_transaction wallet_api::register_vault_account(string name,
                                                       public_key_type owner_pubkey,
                                                       public_key_type active_pubkey,
@@ -3741,6 +3749,13 @@ string wallet_api::gethelp(const string& method)const
    {
       ss << "usage: register_account ACCOUNT_NAME OWNER_PUBLIC_KEY ACTIVE_PUBLIC_KEY REGISTRAR REFERRER REFERRER_PERCENT BROADCAST\n\n";
       ss << "example: register_account \"newaccount\" \"CORE6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV\" \"CORE6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV\" \"1.3.11\" \"1.3.11\" 50 true\n";
+      ss << "\n";
+      ss << "Use this method to register an account for which you do not know the private keys.";
+   }
+   else if( method == "create_account" )
+   {
+      ss << "usage: create_account ACCOUNT_KIND ACCOUNT_NAME OWNER_PUBLIC_KEY ACTIVE_PUBLIC_KEY REGISTRAR REFERRER REFERRER_PERCENT BROADCAST\n\n";
+      ss << "example: create_account vault \"newaccount\" \"CORE6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV\" \"CORE6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV\" \"1.3.11\" \"1.3.11\" 50 true\n";
       ss << "\n";
       ss << "Use this method to register an account for which you do not know the private keys.";
    }

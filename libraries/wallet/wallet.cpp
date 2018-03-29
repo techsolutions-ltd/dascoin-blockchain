@@ -3379,10 +3379,10 @@ signed_transaction wallet_api::register_account(string name,
 }
 
 signed_transaction wallet_api::create_account(account_kind kind,
-                                             string name,
-                                             public_key_type owner_pubkey,
-                                             public_key_type active_pubkey,
-                                             bool broadcast)
+                                              string name,
+                                              public_key_type owner_pubkey,
+                                              public_key_type active_pubkey,
+                                              bool broadcast)
 {
    return my->register_account( kind, name, owner_pubkey, active_pubkey, broadcast );
 }

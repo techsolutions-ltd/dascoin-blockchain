@@ -22,5 +22,6 @@ BLOCKCHAIN_WS_SERVER="0.0.0.0:9880"
   --rpc-endpoint ${BLOCKCHAIN_WS_SERVER} \
   --enable-stale-production true \
   --witness-id '"1.6.1"' \
-  --private-key '["GPH6KXx5gnuZxumkBfHQhZQFPMaca2yAVtjMMhRTLMo4aaiyiKchp","5KZUf3v4PxBSR3NVdEcZpFGJm34bJm9nijm4rYT7S4NSRUeuMd8"]'
+  --private-key '["GPH6KXx5gnuZxumkBfHQhZQFPMaca2yAVtjMMhRTLMo4aaiyiKchp","5KZUf3v4PxBSR3NVdEcZpFGJm34bJm9nijm4rYT7S4NSRUeuMd8"]' \
+  --replay-blockchain
 

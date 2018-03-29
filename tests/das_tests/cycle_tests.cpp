@@ -232,5 +232,20 @@ BOOST_AUTO_TEST_CASE( transfer_cycles_from_licence_to_wallet_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( transfer_cycles_from_charter_licence_test )
+{ try {
+  VAULT_ACTOR(vault);
+  VAULT_ACTOR(foo);
+  ACTOR(wallet);
+
+  auto standard_charter = *(_dal.get_license_type("standard_charter"));
+  tether_accounts(wallet_id, vault_id);
+  do_op(issue_license_operation(get_license_issuer_id(), vault_id, standard_charter.id, 10, 2, db.head_block_time()));
+
+  // Cannot transfer cycles from a charter license:
+  GRAPHENE_REQUIRE_THROW( do_op(transfer_cycles_from_licence_to_wallet_operation(vault_id, standard_charter.id, 1000, wallet_id)), fc::exception );
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_SUITE_END()  // dascoin_tests::cycle_tests
 BOOST_AUTO_TEST_SUITE_END()  // dascoin_tests

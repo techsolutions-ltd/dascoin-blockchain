@@ -369,6 +369,9 @@ void_result transfer_cycles_from_licence_to_wallet_evaluator::do_evaluate(const 
   FC_ASSERT ( vault_obj.license_information.valid(), "Cannot transfer cycles from a vault which doesn't have any license issued" );
 
   const auto& license_information_obj = (*vault_obj.license_information)(d);
+
+  FC_ASSERT( license_information_obj.vault_license_kind != chartered, "Cannot transfer cycles from a chartered license" );
+
   const auto& license_iterator = std::find_if(license_information_obj.history.begin(), license_information_obj.history.end(),
                                               [&op](const license_information_object::license_history_record& history_record) {
                                                 return history_record.license == op.license_id;

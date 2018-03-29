@@ -762,6 +762,21 @@ class wallet_api
          return std::make_pair(trx.id(),trx);
       }
 
+      /** Transfer an amount from one vault to wallet.
+       * @param vault the name or id of the vault sending the funds
+       * @param wallet the name or id of the wallet receiving the funds
+       * @param amount the amount to send (in nominal units -- to send half of a BTS, specify 0.5)
+       * @param asset_symbol the symbol or id of the asset to send
+       * @param reserved_amount the amount to send from reserved balance
+       * @param broadcast true to broadcast the transaction on the network
+       * @returns the signed transaction transferring funds
+       */
+      signed_transaction transfer_vault_to_wallet(string vault,
+                                  string wallet,
+                                  string amount,
+                                  string asset_symbol,
+                                  share_type reserved_amount,
+                                  bool broadcast = false);
 
       /**
        *  This method is used to convert a JSON transaction to its transactin ID.
@@ -1753,6 +1768,7 @@ FC_API( graphene::wallet::wallet_api,
         (cancel_order)
         (transfer)
         (transfer2)
+        (transfer_vault_to_wallet)
         (get_transaction_id)
         (create_asset)
         (update_asset)

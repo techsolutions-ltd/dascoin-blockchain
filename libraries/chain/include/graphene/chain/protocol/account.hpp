@@ -341,12 +341,22 @@ namespace graphene { namespace chain {
      share_type calculate_fee(const fee_parameters_type&) const { return 0; }
    };
 
+   /**
+   * @brief sets global value for starting amount of cycles on new accounts
+   * @ingroup operations
+   *
+   * Changes the value of global property starting_cycle_asset_amount, that represents a number of cycles
+   * that is given to each new wallet or custodian account.
+   */
    struct set_starting_cycle_asset_amount_operation : public base_operation
    {
      struct fee_parameters_type {};
      asset fee;
 
+     /// Operation issuer, must be root authority
      account_id_type issuer;
+
+     /// A value to set the amount to
      uint32_t new_amount = DASCOIN_DEFAULT_STARTING_CYCLE_ASSET_AMOUNT;
 
      set_starting_cycle_asset_amount_operation() = default;

@@ -262,11 +262,6 @@ void tether_accounts_operation::validate()const
    FC_ASSERT( fee.amount >= 0 );
 }
 
-void set_starting_cycle_asset_amount_operation::validate()const
-{
-  FC_ASSERT(new_amount >= 0);
-}
-
 void change_public_keys_operation::validate() const
 {
    FC_ASSERT(account != GRAPHENE_TEMP_ACCOUNT, "Illegal account id");
@@ -289,6 +284,11 @@ void change_public_keys_operation::validate() const
       FC_ASSERT(active->address_auths.size() == 0);
       FC_ASSERT(!active->is_impossible(), "Cannot update an account with an imposible active authority threshold");
    }
+}
+
+void set_starting_cycle_asset_amount_operation::validate()const
+{
+  FC_ASSERT(new_amount >= 0);
 }
 
 } } // graphene::chain

@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.2.9] - 2018-03-30
+### Added
+ - New operation: remove vault limits
+ - Hardfork: update euro limit operation is deprecated. No limit on vault to
+   wallet transfer
+
 ## [0.2.8] - 2018-01-14
 ### Added
  - Upgrades are now done internally, on chain

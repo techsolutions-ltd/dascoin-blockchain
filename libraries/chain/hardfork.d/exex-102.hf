@@ -1,0 +1,4 @@
+// #EXEX-102 from this moment there is no vault limits
+#ifndef HARDFORK_EXEX_102_TIME
+#define HARDFORK_EXEX_102_TIME (fc::time_point_sec( 1522540800 ))
+#endif

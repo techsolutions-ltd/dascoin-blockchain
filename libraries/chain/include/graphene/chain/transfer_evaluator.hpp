@@ -84,4 +84,14 @@ namespace graphene { namespace chain {
          const account_object* _account_obj = nullptr;
    };
 
+   class remove_vault_limit_evaluator : public evaluator<remove_vault_limit_evaluator>
+   {
+      public:
+         typedef remove_vault_limit_operation operation_type;
+
+         void_result do_evaluate( const operation_type& op );
+         void_result do_apply( const operation_type& op );
+
+   };
+
 } } // graphene::chain

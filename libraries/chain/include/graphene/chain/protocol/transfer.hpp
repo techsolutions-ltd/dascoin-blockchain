@@ -211,7 +211,7 @@ namespace graphene { namespace chain {
            comment(comment) {}
 
       account_id_type fee_payer()const { return authority; }
-      void            validate()const {}
+      void            validate()const;
       share_type      calculate_fee(const fee_parameters_type& k)const { return 0; }
    };
 }} // graphene::chain

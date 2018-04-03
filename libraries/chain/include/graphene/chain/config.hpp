@@ -284,3 +284,10 @@
 ///@{
 #define DASCOIN_MAX_LICENSE_NAME_LEN (64)
 ///@}
+
+/**
+ * Default starting amount of cycle asset for each account
+ */
+///@{
+#define DASCOIN_DEFAULT_STARTING_CYCLE_ASSET_AMOUNT (100)
+///@}

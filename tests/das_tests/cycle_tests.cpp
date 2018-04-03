@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE( purchase_cycle_asset_test )
   BOOST_CHECK_EQUAL( get_balance(wallet_id, get_dascoin_asset_id()), 90 * DASCOIN_DEFAULT_ASSET_PRECISION );
 
   // And we should end up with 20 cycles:
-  BOOST_CHECK_EQUAL( get_balance(wallet_id, get_cycle_asset_id()), 20 );
+  BOOST_CHECK_EQUAL( get_balance(wallet_id, get_cycle_asset_id()), 20 + DASCOIN_DEFAULT_STARTING_CYCLE_ASSET_AMOUNT );
 
   // Set fee pool account:
   auto root_id = db.get_global_properties().authorities.root_administrator;
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE( transfer_cycles_from_licence_to_wallet_test )
   do_op(transfer_cycles_from_licence_to_wallet_operation(vault_id, standard_locked.id, 1000, wallet_id));
 
   // And there should be 1000 cycles on wallet's balance:
-  BOOST_CHECK_EQUAL( get_balance(wallet_id, get_cycle_asset_id()), 1000 );
+  BOOST_CHECK_EQUAL( get_balance(wallet_id, get_cycle_asset_id()), 1000 + DASCOIN_DEFAULT_STARTING_CYCLE_ASSET_AMOUNT );
 
   const auto& license_information_obj = (*vault.license_information)(db);
   const auto& license_history = license_information_obj.history;

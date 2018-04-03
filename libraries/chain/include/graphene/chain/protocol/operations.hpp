@@ -169,7 +169,9 @@ namespace graphene { namespace chain {
             wire_out_with_fee_complete_operation,
             wire_out_with_fee_reject_operation,
 
-           // Virtual operations below this point:
+	    set_starting_cycle_asset_amount_operation,
+
+            // Virtual operations below this point:
 
             record_submit_reserve_cycles_to_queue_operation,  // TODO: should we keep this op?
             record_submit_charter_license_cycles_operation,  // TODO: should we keep this op?

@@ -50,5 +50,39 @@ BOOST_AUTO_TEST_CASE( get_free_cycle_balance_non_existant_id_unit_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE(starting_amount_of_cycle_asset_test)
+{
+  try
+  {
+    // Create some accounts and check if they have default balance
+    ACTOR(wallet0)
+    ACTOR(wallet1)
+    VAULT_ACTOR(vault0);
+
+    // Wallet accounts should have default balance
+    auto balance = get_balance(wallet0_id, get_cycle_asset_id());
+    BOOST_CHECK_EQUAL(balance, DASCOIN_DEFAULT_STARTING_CYCLE_ASSET_AMOUNT);
+    balance = get_balance(wallet1_id, get_cycle_asset_id());
+    BOOST_CHECK_EQUAL(balance, DASCOIN_DEFAULT_STARTING_CYCLE_ASSET_AMOUNT);
+    // Vault account should have empty balance
+    balance = get_balance(vault0_id, get_cycle_asset_id());
+    BOOST_CHECK_EQUAL(balance, 0);
+
+    // Change starting balance
+    auto root_id = db.get_global_properties().authorities.root_administrator;
+    do_op(set_starting_cycle_asset_amount_operation(root_id, 145));
+
+    // Make sure it works for wallets ...
+    ACTOR(wallet2)
+    balance = get_balance(wallet2_id, get_cycle_asset_id());
+    BOOST_CHECK_EQUAL(balance, 145);
+    // ... and that nothing is change for vaults
+    VAULT_ACTOR(vault1);
+    balance = get_balance(vault1_id, get_cycle_asset_id());
+    BOOST_CHECK_EQUAL(balance, 0);
+  }
+  FC_LOG_AND_RETHROW()
+}
+
 BOOST_AUTO_TEST_SUITE_END()  // account_unit_tests
 BOOST_AUTO_TEST_SUITE_END()  // dascoin_tests

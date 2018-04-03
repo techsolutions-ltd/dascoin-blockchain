@@ -273,6 +273,7 @@
     "web_asset_request_expiration_time_seconds": 86400,
     "reward_interval_time_seconds": 600,
     "dascoin_reward_amount": 600000000,
+    "starting_cycle_asset_amount": 100,
     "enable_cycle_issuing": true,
     "enable_dascoin_queue": true,
     "extensions": []

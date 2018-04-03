@@ -190,6 +190,30 @@ namespace graphene { namespace chain {
       void            validate()const;
       share_type      calculate_fee(const fee_parameters_type& k)const { return 0; }
    };
+
+   /**
+    * @class remove_vault_limit_operation
+    * @brief Allows the authority to remove limits on all vaults in system
+    * @ingroup operations
+    */
+   struct remove_vault_limit_operation : public base_operation
+   {
+      struct fee_parameters_type {};
+
+      asset           fee;
+      account_id_type authority;
+      string          comment;
+      extensions_type extensions;
+
+      remove_vault_limit_operation() = default;
+      explicit remove_vault_limit_operation(account_id_type authority, string comment)
+         : authority(authority),
+           comment(comment) {}
+
+      account_id_type fee_payer()const { return authority; }
+      void            validate()const;
+      share_type      calculate_fee(const fee_parameters_type& k)const { return 0; }
+   };
 }} // graphene::chain
 
 ////////////////////////////////
@@ -241,3 +265,10 @@ FC_REFLECT( graphene::chain::update_euro_limit_operation,
             (comment)
             (extensions)
           )
+FC_REFLECT( graphene::chain::remove_vault_limit_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::remove_vault_limit_operation,
+          (fee)
+          (authority)
+          (comment)
+          (extensions)
+        )

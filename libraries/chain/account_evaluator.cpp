@@ -192,6 +192,10 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
             obj.allowed_assets = o.extensions.value.buyback_options->markets;
             obj.allowed_assets->emplace( o.extensions.value.buyback_options->asset_to_buy );
          }
+
+         // from this moment there are no vault limits
+         if(db().head_block_time() >= HARDFORK_EXEX_102_TIME)
+            obj.disable_vault_to_wallet_limit = true;
    });
 
    if( has_small_percent )

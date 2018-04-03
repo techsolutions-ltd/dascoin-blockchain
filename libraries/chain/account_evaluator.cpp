@@ -260,10 +260,11 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
    // wallets and custodians should have cycle asset with starting balance
    if (new_acnt_object.is_wallet() || new_acnt_object.is_custodian())
    {
+     const share_type ZERO_RESERVED_AMOUNT = 0;
      const auto& global_props = db().get_global_properties();
      int starting_cycle_asset = global_props.parameters.starting_cycle_asset_amount;
      const auto& balance_object = db().get_balance_object(new_acnt_object.id, db().get_cycle_asset_id());
-     db().issue_asset(balance_object, starting_cycle_asset, 0);
+     db().issue_asset(balance_object, starting_cycle_asset, ZERO_RESERVED_AMOUNT);
    }
 
    return new_acnt_object.id;

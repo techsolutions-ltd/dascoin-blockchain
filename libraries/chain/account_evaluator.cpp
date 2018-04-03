@@ -521,7 +521,7 @@ void_result set_starting_cycle_asset_amount_evaluator::do_evaluate(const set_sta
   } FC_CAPTURE_AND_RETHROW((op))
 }
 
-object_id_type set_starting_cycle_asset_amount_evaluator::do_apply(const set_starting_cycle_asset_amount_operation& op)
+void_result set_starting_cycle_asset_amount_evaluator::do_apply(const set_starting_cycle_asset_amount_operation& op)
 {
   try
   {
@@ -533,7 +533,7 @@ object_id_type set_starting_cycle_asset_amount_evaluator::do_apply(const set_sta
       gpo.parameters.starting_cycle_asset_amount = op.new_amount;
     });
 
-    return global_props.id;
+    return {};
   } FC_CAPTURE_AND_RETHROW((op))
 }
 

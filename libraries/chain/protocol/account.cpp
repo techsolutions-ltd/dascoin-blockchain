@@ -286,9 +286,4 @@ void change_public_keys_operation::validate() const
    }
 }
 
-void set_starting_cycle_asset_amount_operation::validate()const
-{
-  FC_ASSERT(new_amount >= 0);
-}
-
 } } // graphene::chain

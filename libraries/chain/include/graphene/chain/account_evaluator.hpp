@@ -99,7 +99,7 @@ public:
   typedef set_starting_cycle_asset_amount_operation operation_type;
 
   void_result do_evaluate( const operation_type& op );
-  object_id_type do_apply( const operation_type& op );
+  void_result do_apply( const operation_type& op );
 };
 
 } } // graphene::chain

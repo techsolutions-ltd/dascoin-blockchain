@@ -199,7 +199,7 @@ optional<signed_block> block_database::fetch_by_number( uint32_t block_num )cons
    }
    catch (const fc::exception& e)
    {
-       wlog("Error fatching block: " + e.to_string());
+       wlog("Error fetching block: " + e.to_string());
    }
    catch (const std::exception&)
    {

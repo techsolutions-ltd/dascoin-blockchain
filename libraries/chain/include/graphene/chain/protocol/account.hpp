@@ -359,13 +359,15 @@ namespace graphene { namespace chain {
      /// A value to set the amount to
      uint32_t new_amount = DASCOIN_DEFAULT_STARTING_CYCLE_ASSET_AMOUNT;
 
+     extensions_type extensions;
+
      set_starting_cycle_asset_amount_operation() = default;
      explicit set_starting_cycle_asset_amount_operation(account_id_type issuer, uint32_t new_amount)
 	 : issuer(issuer)
 	 , new_amount(new_amount) {}
 
      account_id_type fee_payer() const { return issuer; }
-     void validate() const;
+     void validate() const {};
      share_type calculate_fee(const fee_parameters_type&) const { return 0; }
    };
 
@@ -462,4 +464,5 @@ FC_REFLECT( graphene::chain::set_starting_cycle_asset_amount_operation,
 	    (fee)
 	    (issuer)
 	    (new_amount)
+	    (extensions)
 	  )

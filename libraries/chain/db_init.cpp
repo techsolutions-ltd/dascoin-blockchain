@@ -615,6 +615,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       cop.name = account.name;
       cop.registrar = GRAPHENE_TEMP_ACCOUNT;
       cop.owner = authority(1, account.owner_key, 1);
+      cop.kind = static_cast<uint8_t>(account_kind::special);
       if( account.active_key == public_key_type() )
       {
          cop.active = cop.owner;

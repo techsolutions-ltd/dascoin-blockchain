@@ -1,25 +1,5 @@
-/*
- * MIT License
- *
- * Copyright (c) 2018 TechSolutions Ltd.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+/**
+ * DASCOIN!
  */
 
 #include <boost/test/unit_test.hpp>
@@ -125,6 +105,145 @@ BOOST_AUTO_TEST_CASE( issue_cycles_to_license_test )
 
   // Now we should have 100 coins more:
   BOOST_CHECK_EQUAL( get_balance(charter_id, get_dascoin_asset_id()), 705 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( purchase_cycle_asset_test )
+{ try {
+  VAULT_ACTOR(vault);
+  ACTOR(wallet);
+  ACTOR(feepool);
+
+  tether_accounts(wallet_id, vault_id);
+
+  // Amount of dascoin submitted should be greater than zero:
+  GRAPHENE_REQUIRE_THROW( do_op(purchase_cycle_asset_operation(vault_id, 0, 10, 100)), fc::exception );
+
+  // Frequency should be greater than zero:
+  GRAPHENE_REQUIRE_THROW( do_op(purchase_cycle_asset_operation(vault_id, 10, 0, 100)), fc::exception );
+
+  // Expected amount should be greater than zero:
+  GRAPHENE_REQUIRE_THROW( do_op(purchase_cycle_asset_operation(vault_id, 10, 10, 0)), fc::exception );
+
+  // Expected amount should be greater than zero:
+  GRAPHENE_REQUIRE_THROW( do_op(purchase_cycle_asset_operation(vault_id, 10, 10, 0)), fc::exception );
+
+  // Calculated amount of cycles should be integer number:
+  GRAPHENE_REQUIRE_THROW( do_op(purchase_cycle_asset_operation(vault_id, 123456, 1 * DASCOIN_FREQUENCY_PRECISION, 12)), fc::exception );
+
+  // Expected amount should be equal to calculated cycle amount:
+  GRAPHENE_REQUIRE_THROW( do_op(purchase_cycle_asset_operation(vault_id, 10 * DASCOIN_DEFAULT_ASSET_PRECISION, 10 * DASCOIN_FREQUENCY_PRECISION, 1)), fc::exception );
+
+  // Cycles can be bought only from a wallet account:
+  GRAPHENE_REQUIRE_THROW( do_op(purchase_cycle_asset_operation(vault_id, 10 * DASCOIN_DEFAULT_ASSET_PRECISION, 10 * DASCOIN_FREQUENCY_PRECISION, 100)), fc::exception );
+
+  // Default frequency is 2, here 10 is given and that fails:
+  GRAPHENE_REQUIRE_THROW( do_op(purchase_cycle_asset_operation(wallet_id, 10 * DASCOIN_DEFAULT_ASSET_PRECISION, 10 * DASCOIN_FREQUENCY_PRECISION, 100)), fc::exception );
+
+  // No dascoin on the balance, so purchase fails:
+  GRAPHENE_REQUIRE_THROW( do_op(purchase_cycle_asset_operation(wallet_id, 10 * DASCOIN_DEFAULT_ASSET_PRECISION, 2 * DASCOIN_FREQUENCY_PRECISION, 20)), fc::exception );
+
+  auto president_charter = *(_dal.get_license_type("president_charter"));
+
+  adjust_dascoin_reward(500 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  adjust_frequency(200);
+
+  do_op(issue_license_operation(get_license_issuer_id(), vault_id, president_charter.id, 10, 2, db.head_block_time()));
+  toggle_reward_queue(true);
+  generate_blocks(db.head_block_time() + fc::hours(24));
+
+  BOOST_CHECK_EQUAL( get_balance(vault_id, get_dascoin_asset_id()), 4000 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+  db.adjust_balance_limit(vault, get_dascoin_asset_id(), 200 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  transfer_dascoin_vault_to_wallet(vault_id, wallet_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+  BOOST_CHECK_EQUAL( get_balance(wallet_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+  // Purchase succeeds:
+  do_op(purchase_cycle_asset_operation(wallet_id, 10 * DASCOIN_DEFAULT_ASSET_PRECISION, 2 * DASCOIN_FREQUENCY_PRECISION, 20));
+
+  // There's 10 dascoin left:
+  BOOST_CHECK_EQUAL( get_balance(wallet_id, get_dascoin_asset_id()), 90 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+  // And we should end up with 20 cycles:
+  BOOST_CHECK_EQUAL( get_balance(wallet_id, get_cycle_asset_id()), 20 + DASCOIN_DEFAULT_STARTING_CYCLE_ASSET_AMOUNT );
+
+  // Set fee pool account:
+  auto root_id = db.get_global_properties().authorities.root_administrator;
+  change_fee_pool_account_operation cfpao;
+  cfpao.issuer = root_id;
+  cfpao.fee_pool_account_id = feepool_id;
+  do_op(cfpao);
+
+  // Purchase succeeds:
+  do_op(purchase_cycle_asset_operation(wallet_id, 10 * DASCOIN_DEFAULT_ASSET_PRECISION, 2 * DASCOIN_FREQUENCY_PRECISION, 20));
+
+  // Fee pool account should have 10 dsc now:
+  BOOST_CHECK_EQUAL( get_balance(feepool_id, get_dascoin_asset_id()), 10 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( transfer_cycles_from_licence_to_wallet_test )
+{ try {
+  VAULT_ACTOR(vault);
+  VAULT_ACTOR(foo);
+  ACTOR(wallet);
+
+  auto standard_locked = *(_dal.get_license_type("standard_locked"));
+  auto executive_locked = *(_dal.get_license_type("executive_locked"));
+
+  // Cannot transfer 0 cycles:
+  GRAPHENE_REQUIRE_THROW( do_op(transfer_cycles_from_licence_to_wallet_operation(vault_id, standard_locked.id, 0, wallet_id)), fc::exception );
+
+  // Cannot transfer from wallet account:
+  GRAPHENE_REQUIRE_THROW( do_op(transfer_cycles_from_licence_to_wallet_operation(wallet_id, standard_locked.id, 10, vault_id)), fc::exception );
+
+  // Cannot transfer from wallet account:
+  GRAPHENE_REQUIRE_THROW( do_op(transfer_cycles_from_licence_to_wallet_operation(vault_id, standard_locked.id, 10, foo_id)), fc::exception );
+
+  // Cannot transfer between un-tethered accounts:
+  GRAPHENE_REQUIRE_THROW( do_op(transfer_cycles_from_licence_to_wallet_operation(vault_id, standard_locked.id, 10, wallet_id)), fc::exception );
+
+  tether_accounts(wallet_id, vault_id);
+
+  // Cannot transfer from a vault which doesn't have any license issued:
+  GRAPHENE_REQUIRE_THROW( do_op(transfer_cycles_from_licence_to_wallet_operation(vault_id, standard_locked.id, 10, wallet_id)), fc::exception );
+
+  do_op(issue_license_operation(get_license_issuer_id(), vault_id, standard_locked.id, 10, 2, db.head_block_time()));
+
+  // Cannot transfer from a vault and license which hasn't been issued:
+  GRAPHENE_REQUIRE_THROW( do_op(transfer_cycles_from_licence_to_wallet_operation(vault_id, executive_locked.id, 10, wallet_id)), fc::exception );
+
+  // Cannot transfer more cycles than there is on the vault's license:
+  GRAPHENE_REQUIRE_THROW( do_op(transfer_cycles_from_licence_to_wallet_operation(vault_id, standard_locked.id, 10000, wallet_id)), fc::exception );
+
+  // This will succeed:
+  do_op(transfer_cycles_from_licence_to_wallet_operation(vault_id, standard_locked.id, 1000, wallet_id));
+
+  // And there should be 1000 cycles on wallet's balance:
+  BOOST_CHECK_EQUAL( get_balance(wallet_id, get_cycle_asset_id()), 1000 + DASCOIN_DEFAULT_STARTING_CYCLE_ASSET_AMOUNT );
+
+  const auto& license_information_obj = (*vault.license_information)(db);
+  const auto& license_history = license_information_obj.history;
+  const auto& license_record = license_history[0];
+
+  // On license there should be 210 cycles remaining:
+  BOOST_CHECK_EQUAL( license_record.amount.value, 210 );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( transfer_cycles_from_charter_licence_test )
+{ try {
+  VAULT_ACTOR(vault);
+  VAULT_ACTOR(foo);
+  ACTOR(wallet);
+
+  auto standard_charter = *(_dal.get_license_type("standard_charter"));
+  tether_accounts(wallet_id, vault_id);
+  do_op(issue_license_operation(get_license_issuer_id(), vault_id, standard_charter.id, 10, 2, db.head_block_time()));
+
+  // Cannot transfer cycles from a charter license:
+  GRAPHENE_REQUIRE_THROW( do_op(transfer_cycles_from_licence_to_wallet_operation(vault_id, standard_charter.id, 1000, wallet_id)), fc::exception );
 
 } FC_LOG_AND_RETHROW() }
 

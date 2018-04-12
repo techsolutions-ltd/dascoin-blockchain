@@ -40,9 +40,11 @@
 #include <graphene/chain/protocol/vesting.hpp>
 #include <graphene/chain/protocol/upgrade.hpp>
 #include <graphene/chain/protocol/wire.hpp>
+#include <graphene/chain/protocol/wire_out_with_fee.hpp>
 #include <graphene/chain/protocol/withdraw_permission.hpp>
 #include <graphene/chain/protocol/witness.hpp>
 #include <graphene/chain/protocol/worker.hpp>
+#include <graphene/chain/protocol/fee_operations.hpp>
 
 namespace graphene { namespace chain {
 
@@ -160,6 +162,17 @@ namespace graphene { namespace chain {
 
             remove_vault_limit_operation,
 
+            change_operation_fee_operation,
+            change_fee_pool_account_operation,
+            purchase_cycle_asset_operation,
+            transfer_cycles_from_licence_to_wallet_operation,
+
+            wire_out_with_fee_operation,
+            wire_out_with_fee_complete_operation,
+            wire_out_with_fee_reject_operation,
+
+	    set_starting_cycle_asset_amount_operation,
+
             // Virtual operations below this point:
 
             record_submit_reserve_cycles_to_queue_operation,  // TODO: should we keep this op?
@@ -173,9 +186,9 @@ namespace graphene { namespace chain {
             fba_distribute_operation,
             asset_settle_cancel_operation,
             fill_order_operation,
-            wire_out_result_operation
-
-         > operation;
+            wire_out_result_operation,
+            wire_out_with_fee_result_operation
+   > operation;
 
    /// @} // operations group
 

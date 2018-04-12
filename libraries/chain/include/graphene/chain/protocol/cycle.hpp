@@ -1,25 +1,5 @@
-/*
- * MIT License
- *
- * Copyright (c) 2018 TechSolutions Ltd.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+/**
+ * DASCOIN!
  */
 
 #pragma once
@@ -305,6 +285,59 @@ namespace graphene { namespace chain {
     share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
 
+  struct purchase_cycle_asset_operation : public base_operation
+  {
+    struct fee_parameters_type{};
+
+    asset fee;
+
+    account_id_type wallet_id;
+
+    share_type amount;
+    frequency_type frequency;
+    share_type expected_amount;
+
+    extensions_type extensions;
+
+    purchase_cycle_asset_operation() = default;
+    explicit purchase_cycle_asset_operation(account_id_type wallet_id, share_type amount, frequency_type frequency,
+                                            share_type expected_amount)
+            : wallet_id(wallet_id)
+            , amount(amount)
+            , frequency(frequency)
+            , expected_amount(expected_amount) {}
+
+    account_id_type fee_payer() const { return wallet_id; }
+    void validate() const;
+    share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+  };
+
+  struct transfer_cycles_from_licence_to_wallet_operation : public base_operation
+  {
+    struct fee_parameters_type{};
+
+    asset fee;
+
+    account_id_type vault_id;
+    license_type_id_type license_id;
+    share_type amount;
+    account_id_type wallet_id;
+
+    extensions_type extensions;
+
+    transfer_cycles_from_licence_to_wallet_operation() = default;
+    explicit transfer_cycles_from_licence_to_wallet_operation(account_id_type vault_id, license_type_id_type license_id, share_type amount,
+                                                              account_id_type wallet_id)
+            : vault_id(vault_id)
+            , license_id(license_id)
+            , amount(amount)
+            , wallet_id(wallet_id) {}
+
+    account_id_type fee_payer() const { return vault_id; }
+    void validate() const;
+    share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+  };
+
 } }  // namespace graphene::chain
 
 ///////////////////////////////
@@ -400,5 +433,25 @@ FC_REFLECT( graphene::chain::issue_cycles_to_license_operation,
             (amount)
             (origin)
             (comment)
+            (extensions)
+)
+
+FC_REFLECT( graphene::chain::purchase_cycle_asset_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::purchase_cycle_asset_operation,
+            (fee)
+            (wallet_id)
+            (amount)
+            (frequency)
+            (expected_amount)
+            (extensions)
+)
+
+FC_REFLECT( graphene::chain::transfer_cycles_from_licence_to_wallet_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::transfer_cycles_from_licence_to_wallet_operation,
+            (fee)
+            (vault_id)
+            (license_id)
+            (amount)
+            (wallet_id)
             (extensions)
 )

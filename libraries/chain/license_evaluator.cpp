@@ -1,27 +1,6 @@
-/*
- * MIT License
- *
- * Copyright (c) 2018 TechSolutions Ltd.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+/**
+ * DASCOIN!
  */
-
 #include <graphene/chain/license_evaluator.hpp>
 
 #include <graphene/chain/queue_objects.hpp>
@@ -153,6 +132,24 @@ void_result issue_license_evaluator::do_evaluate(const issue_license_operation& 
              );
     
     _license_information_obj = &license_information_obj;
+  }
+
+  // Assure that (for chartered licenses) max reward in dascoin would not exceed DASCOIN_MAX_DASCOIN_SUPPLY limit.
+  if (new_license_obj.kind == license_kind::chartered)
+  {
+    share_type license_max_reward_in_dascoin = d.get_licence_max_reward_in_dascoin(new_license_obj, op.bonus_percentage, op.frequency_lock);
+
+    FC_ASSERT(license_max_reward_in_dascoin + d.get_total_dascoin_amount_in_system() <= DASCOIN_MAX_DASCOIN_SUPPLY * DASCOIN_DEFAULT_ASSET_PRECISION,
+              "Cannot issue license ${l_n} on account ${a}, "
+              "because license max reward ${dsc_reward} DSC , "
+              "plus amount ${dsc_system} DSC in system, "
+              "would exceed DASCOIN_MAX_DASCOIN_SUPPLY limit ${dsc_max_limit} DSC",
+              ("l_n", new_license_obj.name)
+              ("a", account_obj.name)
+              ("dsc_reward", license_max_reward_in_dascoin)
+              ("dsc_system", d.get_total_dascoin_amount_in_system())
+              ("dsc_max_limit", DASCOIN_MAX_DASCOIN_SUPPLY * DASCOIN_DEFAULT_ASSET_PRECISION)
+    );
   }
 
   _issuer_id = issuer_id;

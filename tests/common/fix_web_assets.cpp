@@ -1,27 +1,6 @@
-/*
- * MIT License
- *
- * Copyright (c) 2018 TechSolutions Ltd.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+/**
+ * DASCOIN!
  */
-
 #include <boost/test/unit_test.hpp>
 #include <boost/program_options.hpp>
 
@@ -34,6 +13,8 @@
 #include <graphene/chain/protocol/asset_ops.hpp>
 #include <graphene/chain/protocol/wire.hpp>
 #include <graphene/chain/wire_object.hpp>
+#include <graphene/chain/protocol/wire_out_with_fee.hpp>
+#include <graphene/chain/wire_out_with_fee_object.hpp>
 #include <graphene/chain/issued_asset_record_object.hpp>
 // #include <graphene/chain/account_object.hpp>
 // #include <graphene/chain/committee_member_object.hpp>
@@ -74,6 +55,29 @@ const issued_asset_record_object* database_fixture::issue_webasset(const string&
   op.asset_id =  get_web_asset_id();
   op.reserved_amount = reserved;
   op.comment = "TEST_ISSUE_WEB_ASSET";
+
+  signed_transaction tx;
+  set_expiration(db, tx);
+  tx.operations.push_back(op);
+  tx.validate();
+  processed_transaction ptx = db.push_transaction(tx, ~0);
+  tx.clear();
+
+  return db.find<issued_asset_record_object>(ptx.operation_results[0].get<object_id_type>());
+
+} FC_LOG_AND_RETHROW() }
+
+const issued_asset_record_object* database_fixture::issue_cycleasset(const string& unique_id, account_id_type receiver_id,
+                                                                   share_type cash, share_type reserved)
+{ try {
+  asset_create_issue_request_operation op;
+  op.unique_id = unique_id;
+  op.issuer = get_webasset_issuer_id();
+  op.receiver = receiver_id;
+  op.amount = cash;
+  op.asset_id =  get_cycle_asset_id();
+  op.reserved_amount = reserved;
+  op.comment = "TEST_ISSUE_CYCLE_ASSET";
 
   signed_transaction tx;
   set_expiration(db, tx);

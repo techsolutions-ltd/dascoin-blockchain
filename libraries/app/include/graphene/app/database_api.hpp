@@ -45,6 +45,7 @@
 #include <graphene/chain/upgrade_event_object.hpp>
 #include <graphene/chain/worker_object.hpp>
 #include <graphene/chain/wire_object.hpp>
+#include <graphene/chain/wire_out_with_fee_object.hpp>
 #include <graphene/chain/witness_object.hpp>
 
 #include <graphene/market_history/market_history_plugin.hpp>
@@ -724,6 +725,12 @@ class database_api
       vector<wire_out_holder_object> get_all_wire_out_holders() const;
 
       /**
+       * @brief Get all wire out with fee holder objects.
+       * @return Vector of wire out with fee holder objects.
+       */
+      vector<wire_out_with_fee_holder_object> get_all_wire_out_with_fee_holders() const;
+
+      /**
        * @brief Get vault information.
        * @param vault_id
        * @return vault_info_res (optional)
@@ -877,6 +884,7 @@ FC_API( graphene::app::database_api,
    // Requests
    (get_all_webasset_issue_requests)
    (get_all_wire_out_holders)
+   (get_all_wire_out_with_fee_holders)
 
    // Vaults
    (get_vault_info)

@@ -1,7 +1,7 @@
 {
   "initial_timestamp": "2017-03-30T13:41:42",
   "max_core_supply": "1000000000000000",
-  "max_dascoin_supply": "8800000000",
+  "max_dascoin_supply": "8589934592",
   "initial_parameters": {
     "current_fees": {
       "parameters": [[
@@ -260,6 +260,7 @@
     "web_asset_request_expiration_time_seconds": 86400,
     "reward_interval_time_seconds": 600,
     "dascoin_reward_amount": 50000000,
+    "starting_cycle_asset_amount": 100,
     "enable_cycle_issuing": true,
     "enable_dascoin_queue": true,
     "extensions": []

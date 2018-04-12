@@ -1,25 +1,5 @@
-/*
- * MIT License
- *
- * Copyright (c) 2018 TechSolutions Ltd.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+/**
+ * DASCOIN!
  */
 
 #include <boost/test/unit_test.hpp>
@@ -78,6 +58,51 @@ BOOST_AUTO_TEST_CASE( successful_orders_test )
 
     // sell order for dascoin from cash balance
     create_sell_order(bobw_id, asset{1 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, asset{100, get_web_asset_id()});
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( transfer_custodian )
+{ try {
+    ACTOR(alice);
+    VAULT_ACTOR(alicev);
+    CUSTODIAN_ACTOR(bob);
+    CUSTODIAN_ACTOR(charlie);
+
+    tether_accounts(alice_id, alicev_id);
+
+    // Issue a bunch of assets
+    issue_dascoin(alicev_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+    issue_dascoin(alice_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+    issue_webasset("1", alice_id, 100, 100);
+    BOOST_CHECK_EQUAL( get_balance(alicev_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
+    BOOST_CHECK_EQUAL( get_balance(alice_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
+    BOOST_CHECK_EQUAL( get_balance(alice_id, get_web_asset_id()), 100 );
+
+    // Expect Success: Transfer from wallet to custodian
+    transfer(alice_id, bob_id, asset{50 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()} );
+    BOOST_CHECK_EQUAL( get_dascoin_balance(alice_id), 50 * DASCOIN_DEFAULT_ASSET_PRECISION );
+    BOOST_CHECK_EQUAL( get_dascoin_balance(bob_id), 50 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+    // Expect Fail: Transfer from custodian to custodian
+    GRAPHENE_REQUIRE_THROW( transfer(bob_id, charlie_id, asset{50 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()} ), fc::exception );
+
+    // Expect Success: Transfer from custodian to wallet
+    transfer(bob_id, alice_id, asset{50 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()} );
+    BOOST_CHECK_EQUAL( get_dascoin_balance(alice_id), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
+    BOOST_CHECK_EQUAL( get_dascoin_balance(bob_id), 0 );
+
+    // Expect Fail: transfer when source or destination is not a wallet
+    GRAPHENE_REQUIRE_THROW( transfer(alicev_id, bob_id, asset{50 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}), fc::exception );
+    GRAPHENE_REQUIRE_THROW( transfer(bob_id, alicev_id, asset{50 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}), fc::exception );
+
+    // Expect Fail: transfer when source or destination is not a custodian
+    GRAPHENE_REQUIRE_THROW( transfer(alicev_id, alice_id, asset{50 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}), fc::exception );
+
+    // Expect Fail: transfer of asset other than dascoin
+    GRAPHENE_REQUIRE_THROW( transfer(alice_id, bob_id, asset{50, get_web_asset_id()}), fc::exception );
+
+    // Expect Fail: transfer from account with insufficient balance
+    GRAPHENE_REQUIRE_THROW( transfer(alice_id, bob_id, asset{105 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}), fc::exception );
 
 } FC_LOG_AND_RETHROW() }
 

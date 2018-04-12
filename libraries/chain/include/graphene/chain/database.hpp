@@ -265,6 +265,8 @@ namespace graphene { namespace chain {
          asset_id_type                          get_web_asset_id() const;
          const asset_object&                    get_dascoin_asset() const;
          asset_id_type                          get_dascoin_asset_id() const;
+         const asset_object&                    get_cycle_asset() const;
+         asset_id_type                          get_cycle_asset_id() const;
          const chain_property_object&           get_chain_properties()const;
          const global_property_object&          get_global_properties()const;
          const chain_authorities&               get_chain_authorities()const;
@@ -330,6 +332,15 @@ namespace graphene { namespace chain {
          asset get_balance(account_id_type owner, asset_id_type asset_id)const;
          /// This is an overloaded method.
          asset get_balance(const account_object& owner, const asset_object& asset_obj)const;
+
+         /**
+          * Checks if balance object for a given asset on an account exists
+          *
+          * @param  owner    ID of the account that owns the balance.
+          * @param  asset_id ID of the asset the balance tracks.
+          * @return          true if balance object exists.
+          */
+         bool check_if_balance_object_exists(account_id_type owner, asset_id_type asset_id) const;
 
          /**
           * Retrieve the balance object for a given asset on an account, This method will throw an exception if the
@@ -587,7 +598,6 @@ namespace graphene { namespace chain {
 
          bool check_unique_issued_id(const string& unique_id, asset_id_type asset_id) const;
 
-
    protected:
          //Mark pop_undo() as protected -- we do not want outside calling pop_undo(); it should call pop_block() instead
          void pop_undo() { object_database::pop_undo(); }
@@ -664,6 +674,10 @@ public:
          share_type cycles_to_dascoin(share_type cycles, share_type frequency) const;
          share_type dascoin_to_cycles(share_type dascoin, share_type frequency) const;
          void remove_limit_from_all_vaults();
+         share_type get_licence_max_reward_in_dascoin(const license_type_object& lto, share_type bonus_percentage, share_type frequency) const;
+         share_type get_total_dascoin_amount_in_system() const;
+
+         void perform_root_authority_check(const account_id_type& authority_account_id);
 
 private:
          vector< processed_transaction >        _pending_tx;

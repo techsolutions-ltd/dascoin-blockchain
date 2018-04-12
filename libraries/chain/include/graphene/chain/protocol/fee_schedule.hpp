@@ -57,6 +57,8 @@ namespace graphene { namespace chain {
        */
       void validate()const;
 
+      void change_fee(operation& op, uint64_t new_fee);
+
       template<typename Operation>
       const typename Operation::fee_parameters_type& get()const
       {

@@ -37,9 +37,8 @@ namespace fc {
              {
                  FC_ASSERT( cfg.rotation_interval >= seconds( 1 ) );
                  FC_ASSERT( cfg.rotation_limit >= cfg.rotation_interval );
+                 fc::create_directories(cfg.filename.parent_path());
                  rotate_files( true );
-
-//                 _rotation_task = async( [this]() { rotate_files( true ); }, "rotate_files(1)" );
              }
          }
 
@@ -141,8 +140,6 @@ namespace fc {
    {
       try
       {
-         fc::create_directories(my->cfg.filename.parent_path());
-
          if(!my->cfg.rotate)
             my->out.open( my->cfg.filename, std::ios_base::out | std::ios_base::app);
 

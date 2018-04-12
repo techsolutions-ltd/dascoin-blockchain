@@ -197,8 +197,9 @@ optional<signed_block> block_database::fetch_by_number( uint32_t block_num )cons
       FC_ASSERT( result.id() == e.block_id );
       return result;
    }
-   catch (const fc::exception&)
+   catch (const fc::exception& e)
    {
+       wlog("Error fetching block: " + e.to_string());
    }
    catch (const std::exception&)
    {

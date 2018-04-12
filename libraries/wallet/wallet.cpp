@@ -950,7 +950,6 @@ public:
       _builder_transactions.erase(handle);
    }
 
-
    signed_transaction register_account(account_kind kind,
                                        string name,
                                        public_key_type owner,
@@ -1004,6 +1003,27 @@ public:
       return tx;
    } FC_CAPTURE_AND_RETHROW( (name)(owner)(active)(broadcast) ) }
 
+   signed_transaction tether_accounts(string wallet, string vault, bool broadcast = false)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      account_object wallet_account = get_account(wallet);
+      account_object vault_account = get_account(vault);
+      account_id_type wallet_id = wallet_account.id;
+      account_id_type vault_id = vault_account.id;
+
+      tether_accounts_operation tether_op;
+
+      tether_op.wallet_account = wallet_id;
+      tether_op.vault_account = vault_id;
+
+      signed_transaction tx;
+      tx.operations.push_back(tether_op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (wallet)(vault)(broadcast) ) }
 
    signed_transaction upgrade_account(string name, bool broadcast)
    { try {
@@ -2114,6 +2134,33 @@ public:
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (from)(to)(amount)(asset_symbol)(memo)(broadcast) ) }
 
+   signed_transaction transfer_vault_to_wallet(string vault, string wallet, string amount,
+                               string asset_symbol, share_type reserved, bool broadcast = false)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+      fc::optional<asset_object> asset_obj = get_asset(asset_symbol);
+      FC_ASSERT(asset_obj, "Could not find asset matching ${asset}", ("asset", asset_symbol));
+
+      account_object vault_account = get_account(vault);
+      account_object wallet_account = get_account(wallet);
+      account_id_type vault_id = vault_account.id;
+      account_id_type wallet_id = wallet_account.id;
+
+      transfer_vault_to_wallet_operation xfer_op;
+
+      xfer_op.from_vault = vault_id;
+      xfer_op.to_wallet = wallet_id;
+      xfer_op.asset_to_transfer = asset_obj->amount_from_string(amount);
+      xfer_op.reserved_to_transfer = reserved;
+
+      signed_transaction tx;
+      tx.operations.push_back(xfer_op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (vault)(wallet)(amount)(asset_symbol)(reserved)(broadcast) ) }
+
    signed_transaction issue_asset(string to_account, string amount, string symbol,
                                   string memo, bool broadcast = false)
    {
@@ -2200,9 +2247,9 @@ public:
 
       m["list_account_balances"] = [this](variant result, const fc::variants& a)
       {
-         auto r = result.as<vector<asset>>();
+         auto r = result.as<vector<asset_reserved>>();
          vector<asset_object> asset_recs;
-         std::transform(r.begin(), r.end(), std::back_inserter(asset_recs), [this](const asset& a) {
+         std::transform(r.begin(), r.end(), std::back_inserter(asset_recs), [this](const asset_reserved& a) {
             return get_asset(a.asset_id);
          });
 
@@ -2630,6 +2677,25 @@ public:
       set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
 
       return sign_transaction(tx, broadcast);
+   }
+
+   signed_transaction wire_out_with_fee(const string& account_name, share_type amount, const string& currency_of_choice,
+                                        const string& to_address, const string& memo, bool broadcast)
+   {
+     auto account = get_account(account_name);
+
+     wire_out_with_fee_operation op;
+     op.account = account.id;
+     op.asset_to_wire = asset(amount, asset_id_type(DASCOIN_WEB_ASSET_INDEX));
+     op.currency_of_choice = currency_of_choice;
+     op.to_address = to_address;
+     op.memo = memo;
+
+     signed_transaction tx;
+     tx.operations.push_back(op);
+     set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
+
+     return sign_transaction(tx, broadcast);
    }
 
    void dbg_make_uia(string creator, string symbol)
@@ -3339,12 +3405,28 @@ signed_transaction wallet_api::register_account(string name,
    return my->register_account( account_kind::wallet, name, owner_pubkey, active_pubkey, broadcast );
 }
 
+signed_transaction wallet_api::create_account(account_kind kind,
+                                              string name,
+                                              public_key_type owner_pubkey,
+                                              public_key_type active_pubkey,
+                                              bool broadcast)
+{
+   return my->register_account( kind, name, owner_pubkey, active_pubkey, broadcast );
+}
+
 signed_transaction wallet_api::register_vault_account(string name,
                                                       public_key_type owner_pubkey,
                                                       public_key_type active_pubkey,
                                                       bool broadcast)
 {
    return my->register_account( account_kind::vault, name, owner_pubkey, active_pubkey, broadcast );
+}
+
+signed_transaction wallet_api::tether_accounts(string wallet,
+                                               string vault,
+                                               bool broadcast)
+{
+   return my->tether_accounts( wallet, vault, broadcast );
 }
 
 signed_transaction wallet_api::create_account_with_brain_key(string brain_key,
@@ -3369,6 +3451,13 @@ signed_transaction wallet_api::transfer(string from, string to, string amount,
 {
    return my->transfer(from, to, amount, asset_symbol, memo, broadcast);
 }
+
+signed_transaction wallet_api::transfer_vault_to_wallet(string vault, string wallet, string amount,
+                                                        string asset_symbol, share_type reserved, bool broadcast /* = false */)
+{
+   return my->transfer_vault_to_wallet(vault, wallet, amount, asset_symbol, reserved, broadcast);
+}
+
 signed_transaction wallet_api::create_asset(string issuer,
                                             string symbol,
                                             uint8_t precision,
@@ -3707,6 +3796,12 @@ string wallet_api::gethelp(const string& method)const
       ss << "example: transfer \"1.3.11\" \"1.3.4\" 1000.03 CORE \"memo\" true\n";
       ss << "example: transfer \"usera\" \"userb\" 1000.123 CORE \"memo\" true\n";
    }
+   else if( method == "transfer_vault_to_wallet" )
+   {
+      ss << "usage: transfer_vault_to_wallet FROM_VAULT TO_WALLET AMOUNT SYMBOL RESERVED_AMOUNT BROADCAST\n\n";
+      ss << "example: transfer vault-cli wallet-cli 1000 1.3.1 0 true\n";
+      ss << "example: transfer 1.2.30 1.2.31 1000.123 1.3.2 0 true\n";
+   }
    else if( method == "create_account_with_brain_key" )
    {
       ss << "usage: create_account_with_brain_key BRAIN_KEY ACCOUNT_NAME REGISTRAR REFERRER BROADCAST\n\n";
@@ -3721,9 +3816,23 @@ string wallet_api::gethelp(const string& method)const
    else if( method == "register_account" )
    {
       ss << "usage: register_account ACCOUNT_NAME OWNER_PUBLIC_KEY ACTIVE_PUBLIC_KEY REGISTRAR REFERRER REFERRER_PERCENT BROADCAST\n\n";
-      ss << "example: register_account \"newaccount\" \"CORE6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV\" \"CORE6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV\" \"1.3.11\" \"1.3.11\" 50 true\n";
+      ss << "example: register_account \"newaccount\" \"GPH5nm5Kxgb9LAdknBYTogn4w8i2KFJxhfFHzohb2ruXSZcbgCb8z\" \"GPH5nm5Kxgb9LAdknBYTogn4w8i2KFJxhfFHzohb2ruXSZcbgCb8z\" \"1.3.11\" \"1.3.11\" 50 true\n";
       ss << "\n";
       ss << "Use this method to register an account for which you do not know the private keys.";
+   }
+   else if( method == "create_account" )
+   {
+      ss << "usage: create_account ACCOUNT_KIND ACCOUNT_NAME OWNER_PUBLIC_KEY ACTIVE_PUBLIC_KEY BROADCAST\n\n";
+      ss << "example: create_account vault \"newaccount\" \"GPH5nm5Kxgb9LAdknBYTogn4w8i2KFJxhfFHzohb2ruXSZcbgCb8z\" \"GPH5nm5Kxgb9LAdknBYTogn4w8i2KFJxhfFHzohb2ruXSZcbgCb8z\" true\n";
+      ss << "\n";
+      ss << "Use this method to register an account for which you do not know the private keys.";
+   }
+   else if( method == "tether_accounts" )
+   {
+      ss << "usage: tether_accounts WALLET_ACCOUNT_NAME VAULT_ACCOUNT_NAME BROADCAST\n\n";
+      ss << "example: tether_accounts \"wallet_account\" \"vault_account\" true\n";
+      ss << "\n";
+      ss << "Use this method to tether a wallet account to a vault account.";
    }
    else if( method == "create_asset" )
    {
@@ -4582,6 +4691,12 @@ signed_transaction wallet_api::wire_out(const string& account, share_type amount
    return my->wire_out(account, amount, broadcast);
 }
 
+signed_transaction wallet_api::wire_out_with_fee(const string& account, share_type amount, const string& currency_of_choice,
+                                                 const string& to_address, const string& memo, bool broadcast) const
+{
+  return my->wire_out_with_fee(account, amount, currency_of_choice, to_address, memo, broadcast);
+}
+
 vector<issue_asset_request_object> wallet_api::get_all_webasset_issue_requests() const
 {
    return my->_remote_db->get_all_webasset_issue_requests();
@@ -4590,6 +4705,11 @@ vector<issue_asset_request_object> wallet_api::get_all_webasset_issue_requests()
 vector<wire_out_holder_object> wallet_api::get_all_wire_out_holders() const
 {
    return my->_remote_db->get_all_wire_out_holders();
+}
+
+vector<wire_out_with_fee_holder_object> wallet_api::get_all_wire_out_with_fee_holders() const
+{
+  return my->_remote_db->get_all_wire_out_with_fee_holders();
 }
 
 vector<reward_queue_object> wallet_api::get_reward_queue() const

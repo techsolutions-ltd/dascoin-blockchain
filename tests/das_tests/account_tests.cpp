@@ -1,25 +1,5 @@
-/*
- * MIT License
- *
- * Copyright (c) 2018 TechSolutions Ltd.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+/**
+ * DASCOIN!
  */
 
 #include <boost/test/unit_test.hpp>
@@ -105,6 +85,40 @@ BOOST_AUTO_TEST_CASE( remove_limit_from_all_vaults_test )
         vault2_id, true, optional<share_type>(),"comment")), fc::exception);
 
 } FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE(starting_amount_of_cycle_asset_test)
+{
+  try
+  {
+    // Create some accounts and check if they have default balance
+    ACTOR(wallet0)
+    ACTOR(wallet1)
+    VAULT_ACTOR(vault0);
+
+    // Wallet accounts should have default balance
+    auto balance = get_balance(wallet0_id, get_cycle_asset_id());
+    BOOST_CHECK_EQUAL(balance, DASCOIN_DEFAULT_STARTING_CYCLE_ASSET_AMOUNT);
+    balance = get_balance(wallet1_id, get_cycle_asset_id());
+    BOOST_CHECK_EQUAL(balance, DASCOIN_DEFAULT_STARTING_CYCLE_ASSET_AMOUNT);
+    // Vault account should have empty balance
+    balance = get_balance(vault0_id, get_cycle_asset_id());
+    BOOST_CHECK_EQUAL(balance, 0);
+
+    // Change starting balance
+    auto root_id = db.get_global_properties().authorities.root_administrator;
+    do_op(set_starting_cycle_asset_amount_operation(root_id, 145));
+
+    // Make sure it works for wallets ...
+    ACTOR(wallet2)
+    balance = get_balance(wallet2_id, get_cycle_asset_id());
+    BOOST_CHECK_EQUAL(balance, 145);
+    // ... and that nothing is change for vaults
+    VAULT_ACTOR(vault1);
+    balance = get_balance(vault1_id, get_cycle_asset_id());
+    BOOST_CHECK_EQUAL(balance, 0);
+  }
+  FC_LOG_AND_RETHROW()
+}
 
 BOOST_AUTO_TEST_SUITE_END()  // account_unit_tests
 BOOST_AUTO_TEST_SUITE_END()  // dascoin_tests

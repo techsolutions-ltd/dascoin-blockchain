@@ -825,6 +825,7 @@ void database_fixture::transfer(
    try
    {
       set_expiration( db, trx );
+      trx.operations.clear();
       transfer_operation trans;
       trans.from = from.id;
       trans.to   = to.id;

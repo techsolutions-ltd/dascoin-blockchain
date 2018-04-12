@@ -24,6 +24,7 @@
 
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/global_property_object.hpp>
+#include <graphene/chain/witness_evaluator.hpp>
 #include <graphene/chain/witness_object.hpp>
 #include <graphene/chain/witness_schedule_object.hpp>
 

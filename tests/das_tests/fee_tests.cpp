@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE( successful_fee_change_and_fee_charge_with_fee_burn_test )
 
    auto loco = limit_order_create_operation(alice_id, asset{0, get_web_asset_id()}, asset{100 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, 100,
                                              alicev_id, db.head_block_time() + fc::seconds(60));
-   loco.fee = asset{30 * GRAPHENE_100_PERCENT, get_cycle_asset_id()};
+   loco.fee = asset{30, get_cycle_asset_id()};
 
    do_op(loco);
 
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE( successful_pool_account_change_and_fee_charge_test )
 
    auto loco = limit_order_create_operation(alice_id, asset{0, get_web_asset_id()}, asset{100 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, 100,
                                              alicev_id, db.head_block_time() + fc::seconds(60));
-   loco.fee = asset{30 * GRAPHENE_100_PERCENT, get_cycle_asset_id()};
+   loco.fee = asset{30 , get_cycle_asset_id()};
 
    do_op(loco);
 
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE( successful_pool_account_change_and_fee_charge_test )
 
    auto balance = get_balance(pool_id, get_cycle_asset_id());
 
-   BOOST_CHECK_EQUAL( balance, 40 + DASCOIN_DEFAULT_STARTING_CYCLE_ASSET_AMOUNT );
+   BOOST_CHECK_EQUAL( balance, 70 + DASCOIN_DEFAULT_STARTING_CYCLE_ASSET_AMOUNT );
 
 } FC_LOG_AND_RETHROW() }
 

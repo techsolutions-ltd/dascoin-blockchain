@@ -59,6 +59,16 @@ database& generic_evaluator::db()const { return trx_state->db(); }
       fee_asset = &fee.asset_id(d);
       fee_asset_dyn_data = &fee_asset->dynamic_asset_data_id(d);
 
+      fee_paid = calculate_fee_for_operation(op);
+
+      if(fee_paid > 0)
+      {
+          FC_ASSERT( fee.amount == fee_paid, "Attempted to pay wrong amount of fee. Expected ${expected} payed ${payed}.",
+                     ("expected", fee_paid)("payed", fee.amount) );
+          FC_ASSERT( fee.asset_id == d.get_cycle_asset_id(), "Attempted to pay fee by using asset ${a} '${sym}', which is unauthorized. Fee must be payed in Cycles.",
+                     ("a", fee.asset_id)("sym", fee_asset->symbol) );
+      }
+
       // if asset is core just leave this part
       if(fee.asset_id == asset_id_type())
       {
@@ -66,15 +76,10 @@ database& generic_evaluator::db()const { return trx_state->db(); }
          return;
       }
 
-      FC_ASSERT( fee.asset_id == d.get_cycle_asset_id(), "Attempted to pay fee by using asset ${a} '${sym}', which is unauthorized",
-        ("a", fee.asset_id)("sym", fee_asset->symbol) );
-
-      fee_paid = calculate_fee_for_operation(op);
-
       account_fee_balance_object = &(d.get_balance_object(account_id, d.get_cycle_asset_id()));
 
       auto balance = account_fee_balance_object->get_balance();
-      FC_ASSERT( fee_paid < balance.amount, "Low balance. Not enough to pay fee.");
+      FC_ASSERT( fee_paid <= balance.amount, "Low balance. Not enough to pay fee.");
 
    }
 

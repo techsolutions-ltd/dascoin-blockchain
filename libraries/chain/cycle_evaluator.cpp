@@ -287,16 +287,29 @@ void_result purchase_cycles_evaluator::do_evaluate(const operation_type& op)
 
   FC_ASSERT( wallet_obj.is_wallet(), "Cycles can be purchased only from a wallet account, '${w}' is ${k}", ("w", wallet_obj.name)("k", account_kind_string) );
 
-  const auto& current_frequency = d.get_dynamic_global_properties().frequency;
-  FC_ASSERT( current_frequency == op.frequency, "Current frequency is ${cf}, ${opf} given", ("cf", current_frequency)("opf", op.frequency) );
+  const dynamic_global_property_object dgpo = d.get_dynamic_global_properties();
+
+  FC_ASSERT( dgpo.frequency == op.frequency, "Current frequency is ${cf}, ${opf} given", ("cf", dgpo.frequency)("opf", op.frequency) );
+
+  FC_ASSERT( op.amount.asset_id == d.get_dascoin_asset_id(), "Cycles can only be purchased for DasCoin, ${a} sent", ("a", op.amount.asset_id));
+
+  const auto& asset_obj = op.amount.asset_id(d);
+  const auto& cycle_obj = (d.get_cycle_asset_id())(d);
+
+  double price = op.expected_amount.value / (dgpo.frequency.value / std::pow(10, cycle_obj.precision));
+  price = std::ceil(price * std::pow(10, asset_obj.precision)) / std::pow(10, asset_obj.precision);
+  asset calculated_asset = asset(price * std::pow(10, asset_obj.precision), op.amount.asset_id);
+
+  FC_ASSERT( calculated_asset == op.amount, "Calculated price is ${p}, but ${s} sent", ("p", d.to_pretty_string(calculated_asset))("s", d.to_pretty_string((op.amount))));
 
   const auto& dascoin_balance_obj = d.get_balance_object(op.wallet_id, d.get_dascoin_asset_id());
+
   // Check if we have enough dascoin balance:
-  FC_ASSERT( dascoin_balance_obj.balance >= op.amount,
+  FC_ASSERT( dascoin_balance_obj.balance >= calculated_asset.amount,
              "Insufficient balance on wallet ${w}: ${balance}, unable to spent ${amount} on cycle purchase",
              ("w", wallet_obj.name)
              ("balance", d.to_pretty_string(dascoin_balance_obj.get_balance()))
-             ("amount", d.to_pretty_string(asset(op.amount, d.get_dascoin_asset_id())))
+             ("amount", d.to_pretty_string(calculated_asset))
            );
 
   const auto& cycle_balance_obj = d.get_balance_object(op.wallet_id, d.get_cycle_asset_id());
@@ -315,8 +328,8 @@ void_result purchase_cycles_evaluator::do_apply(const operation_type& op)
 
   // Deduce dascoin from balance:
   d.modify(*_dascoin_balance_obj, [&](account_balance_object& acc_b){
-    acc_b.balance -= op.amount;
-    acc_b.spent += op.amount;
+    acc_b.balance -= op.amount.amount;
+    acc_b.spent += op.amount.amount;
   });
 
   // Add cycles to cycle balance:
@@ -336,7 +349,7 @@ void_result purchase_cycles_evaluator::do_apply(const operation_type& op)
   {
     const auto& dascoin_balance_obj = d.get_balance_object(dgp.fee_pool_account_id, d.get_dascoin_asset_id());
     d.modify(dascoin_balance_obj, [&](account_balance_object& acc_b){
-      acc_b.balance += op.amount;
+      acc_b.balance += op.amount.amount;
     });
   }
   else
@@ -344,7 +357,7 @@ void_result purchase_cycles_evaluator::do_apply(const operation_type& op)
     // Burn dascoin
     const auto& asset_obj = (*_dascoin_balance_obj).asset_type(d);
     d.modify(asset_obj.dynamic_asset_data_id(d), [&](asset_dynamic_data_object& data){
-      data.current_supply -= op.amount;
+      data.current_supply -= op.amount.amount;
     });
   }
 

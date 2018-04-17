@@ -40,6 +40,7 @@
 #include <boost/multiprecision/cpp_int.hpp>
 
 #include <cctype>
+#include <cmath>
 
 #include <cfenv>
 #include <iostream>
@@ -181,6 +182,8 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       // Vault info:
       optional<vault_info_res> get_vault_info(account_id_type vault_id) const;
       vector<acc_id_vault_info_res> get_vaults_info(vector<account_id_type> vault_ids) const;
+
+      optional<cycle_price> calculate_cycle_price(share_type cycle_amount, asset_id_type asset_id) const;
 
       template<typename T>
       void subscribe_to_item( const T& i )const
@@ -2491,6 +2494,26 @@ vector<acc_id_vault_info_res> database_api::get_vaults_info(vector<account_id_ty
 vector<acc_id_vault_info_res> database_api_impl::get_vaults_info(vector<account_id_type> vault_ids) const
 {
     return _dal.get_vaults_info(vault_ids);
+}
+
+optional<cycle_price> database_api::calculate_cycle_price(share_type cycle_amount, asset_id_type asset_id) const
+{
+    return my->calculate_cycle_price(cycle_amount, asset_id);
+}
+
+optional<cycle_price> database_api_impl::calculate_cycle_price(share_type cycle_amount, asset_id_type asset_id) const
+{
+    // For now we can only buy cycles with dascoin
+    if (asset_id != _db.get_dascoin_asset_id())
+        return {};
+
+    dynamic_global_property_object dgpo = get_dynamic_global_properties();
+    const auto& asset_obj = asset_id(_db);
+    const auto& cycle_obj = (_db.get_cycle_asset_id())(_db);
+
+    double price = cycle_amount.value / (dgpo.frequency.value / std::pow(10, cycle_obj.precision));
+    price = std::ceil(price * std::pow(10, asset_obj.precision)) / std::pow(10, asset_obj.precision);
+    return cycle_price{cycle_amount, asset(price * std::pow(10, asset_obj.precision), asset_obj.id), dgpo.frequency};
 }
 
 //////////////////////////////////////////////////////////////////////

@@ -135,6 +135,13 @@ struct limit_orders_grouped_by_price
    std::vector<agregated_limit_orders_with_same_price> sell;
 };
 
+struct cycle_price
+{
+   share_type                 cycle_amount;
+   asset                      asset_amount;
+   frequency_type             frequency;
+};
+
 /**
  * @brief The database_api class implements the RPC API for the chain database.
  *
@@ -744,6 +751,14 @@ class database_api
        */
       vector<acc_id_vault_info_res> get_vaults_info(vector<account_id_type> vault_ids) const;
 
+      /**
+       * @brief Calculates and returns the amount of asset one needs to pay to get the given amount of cycles
+       * @param cycle_amount Desired amount of cycles to get
+       * @param asset_id Asset to pay
+       * @return cycle_price structure (optional)
+       */
+      optional<cycle_price> calculate_cycle_price(share_type cycle_amount, asset_id_type asset_id) const;
+
    private:
       std::shared_ptr< database_api_impl > my;
 };
@@ -757,6 +772,7 @@ FC_REFLECT( graphene::app::market_hi_low_volume, (base)(quote)(high)(low)(base_v
 FC_REFLECT( graphene::app::market_trade, (sequence)(date)(price)(amount)(value) );
 FC_REFLECT( graphene::app::agregated_limit_orders_with_same_price, (price)(base_volume)(quote_volume)(count) );
 FC_REFLECT( graphene::app::limit_orders_grouped_by_price, (buy)(sell) );
+FC_REFLECT( graphene::app::cycle_price, (cycle_amount)(asset_amount)(frequency) );
 
 FC_API( graphene::app::database_api,
    // Objects
@@ -889,4 +905,7 @@ FC_API( graphene::app::database_api,
    // Vaults
    (get_vault_info)
    (get_vaults_info)
+
+   // Calculate cycle price
+   (calculate_cycle_price)
 )

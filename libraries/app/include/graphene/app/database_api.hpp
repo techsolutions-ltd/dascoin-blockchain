@@ -710,10 +710,22 @@ class database_api
       // Access  //
       /////////////
 
+      /**
+       * @brief (Deprecated) Get a free cycle amount for account
+       * @param account_ids ID of the account to retrieve
+       * @return Number of issued free cycles on account
+       *
+       */
       acc_id_share_t_res get_free_cycle_balance(account_id_type account_id) const;
+
+      /**
+       * @brief (Deprecated) Get cycle amounts per cycle agreement for account
+       * @param account_ids ID of the account to retrieve
+       * @return Vector of cycle amounts and frequency locks on account
+       *
+       */
       acc_id_vec_cycle_agreement_res get_all_cycle_balances(account_id_type account_id) const;
       acc_id_share_t_res get_dascoin_balance(account_id_type id) const;
-
       vector<acc_id_share_t_res> get_free_cycle_balances_for_accounts(vector<account_id_type> ids) const;
       vector<acc_id_vec_cycle_agreement_res> get_all_cycle_balances_for_accounts(vector<account_id_type> ids) const;
       vector<acc_id_share_t_res> get_dascoin_balances_for_accounts(vector<account_id_type> ids) const;

@@ -8,7 +8,10 @@ namespace graphene { namespace chain {
 
   struct wire_out_with_fee_operation : public base_operation
   {
-    struct fee_parameters_type {};
+    struct fee_parameters_type
+    {
+      uint64_t fee = 1 * GRAPHENE_BLOCKCHAIN_PRECISION;
+    };
     asset fee;
     account_id_type account;
     asset asset_to_wire;
@@ -19,7 +22,6 @@ namespace graphene { namespace chain {
 
     account_id_type fee_payer() const { return account; }
     void validate() const;
-    share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
 
   struct wire_out_with_fee_complete_operation : public base_operation

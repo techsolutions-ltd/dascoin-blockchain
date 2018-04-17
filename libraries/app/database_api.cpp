@@ -2507,7 +2507,7 @@ optional<cycle_price> database_api_impl::calculate_cycle_price(share_type cycle_
     if (asset_id != _db.get_dascoin_asset_id())
         return {};
 
-    dynamic_global_property_object dgpo = get_dynamic_global_properties();
+    const dynamic_global_property_object dgpo = get_dynamic_global_properties();
     const auto& asset_obj = asset_id(_db);
     const auto& cycle_obj = (_db.get_cycle_asset_id())(_db);
 

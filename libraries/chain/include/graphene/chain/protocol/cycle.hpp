@@ -293,14 +293,14 @@ namespace graphene { namespace chain {
 
     account_id_type wallet_id;
 
-    share_type amount;
+    asset amount;
     frequency_type frequency;
     share_type expected_amount;
 
     extensions_type extensions;
 
     purchase_cycle_asset_operation() = default;
-    explicit purchase_cycle_asset_operation(account_id_type wallet_id, share_type amount, frequency_type frequency,
+    explicit purchase_cycle_asset_operation(account_id_type wallet_id, asset amount, frequency_type frequency,
                                             share_type expected_amount)
             : wallet_id(wallet_id)
             , amount(amount)

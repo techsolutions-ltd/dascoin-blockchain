@@ -633,10 +633,35 @@ class database_api
       // Licenses //
       //////////////
 
+      /**
+       * @brief Get license type-ids found on the blockchain.
+       * @param license_type_id_type-id used on the blockchain.
+       * @return The license type-id if found
+       */
       optional<license_type_object> get_license_type(license_type_id_type) const;
+
+      /**
+       * @brief Get all license type-ids found on the blockchain.
+       * @return Vector of license type-ids found
+       */
       vector<license_type_object> get_license_types() const;
+
+      /**
+       * @brief Get all name/license type-ids found on the blockchain.
+       * @return Vector of license name/type-ids pairs found
+       */
       vector<pair<string, license_type_id_type>> get_license_type_names_ids() const;
+
+      /**
+       * @brief Get all license type-ids grouped by kind found on the blockchain.
+       * @return Vector of license type-ids found grouped by kind
+       */
       vector<license_types_grouped_by_kind_res> get_license_type_names_ids_grouped_by_kind() const;
+
+      /**
+       * @brief Get all license objects grouped by kind found on the blockchain.
+       * @return Vector of license objects found grouped by kind
+       */
       vector<license_objects_grouped_by_kind_res> get_license_objects_grouped_by_kind() const;
 
       /**
@@ -665,6 +690,13 @@ class database_api
        */
       vector<optional<license_type_object>> lookup_license_type_names(const vector<string>& names_or_ids)const;
 
+      /**
+       * @brief Get a list of account issued license types
+       * @param asset_symbols IDs of the accounts to retrieve
+       * @return Vector of issued license information objects
+       *
+       * This function has semantics identical to @ref get_objects
+       */
       vector<optional<license_information_object>> get_license_information(const vector<account_id_type>& account_ids) const;
 
       /**

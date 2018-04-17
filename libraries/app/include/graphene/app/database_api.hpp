@@ -725,9 +725,32 @@ class database_api
        *
        */
       acc_id_vec_cycle_agreement_res get_all_cycle_balances(account_id_type account_id) const;
+
+      /**
+       * @brief Get amount of DASCoin for on an account
+       * @return An object containing id and balance of an account
+       */
       acc_id_share_t_res get_dascoin_balance(account_id_type id) const;
+
+      /**
+       * @brief (Deprecated) Get remaining amount of cycles
+       * @param ids Vector of account ids
+       * @return Vector of objects containing account id and cycle balance
+       */
       vector<acc_id_share_t_res> get_free_cycle_balances_for_accounts(vector<account_id_type> ids) const;
+
+      /**
+       * @brief (Deprecated) Get cycle balances for list of accounts
+       * @param ids Vector of account ids
+       * @return Vector of objects containing account id, cycle amount and frequency lock
+       */
       vector<acc_id_vec_cycle_agreement_res> get_all_cycle_balances_for_accounts(vector<account_id_type> ids) const;
+
+      /**
+       * @brief Get DASCoin balances for a list of accounts
+       * @param ids Vector of account ids
+       * @return Vector of object containing id and balance of an account
+       */
       vector<acc_id_share_t_res> get_dascoin_balances_for_accounts(vector<account_id_type> ids) const;
 
       /**
@@ -738,6 +761,8 @@ class database_api
 
       /**
        * @brief Return a portion of the reward queue.
+       * @param from Starting page
+       * @param amount Number of pages to get
        * @return Vector which represent a portion of that queue
        */
       vector<reward_queue_object> get_reward_queue_by_page(uint32_t from, uint32_t amount) const;
@@ -748,9 +773,19 @@ class database_api
        */
       uint32_t get_reward_queue_size() const;
 
+      /**
+       * @brief Get all current submissions to reward queue by single account
+       * @param account_id id of account whose submissions shoud be returned
+       * @return All elements on DASCoin reward queue submitted by given account
+       */
       acc_id_queue_subs_w_pos_res get_queue_submissions_with_pos(account_id_type account_id) const;
-      vector<acc_id_queue_subs_w_pos_res> 
-          get_queue_submissions_with_pos_for_accounts(vector<account_id_type> ids) const;
+
+      /**
+       * @brief Get all current submissions to reward queue by multiple account
+       * @param ids vector of account ids
+       * @return All elements on DASCoin reward queue submitted by given accounts
+       */
+      vector<acc_id_queue_subs_w_pos_res> get_queue_submissions_with_pos_for_accounts(vector<account_id_type> ids) const;
 
       //////////////////////////
       // REQUESTS:            //

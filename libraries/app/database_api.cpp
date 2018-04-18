@@ -2509,9 +2509,8 @@ optional<cycle_price> database_api_impl::calculate_cycle_price(share_type cycle_
 
     const dynamic_global_property_object dgpo = get_dynamic_global_properties();
     const auto& asset_obj = asset_id(_db);
-    const auto& cycle_obj = (_db.get_cycle_asset_id())(_db);
 
-    double price = cycle_amount.value / (dgpo.frequency.value / std::pow(10, cycle_obj.precision));
+    double price = static_cast<double>(cycle_amount.value) / (static_cast<double>(dgpo.frequency.value) / DASCOIN_FREQUENCY_PRECISION);
     price = std::ceil(price * std::pow(10, asset_obj.precision)) / std::pow(10, asset_obj.precision);
     return cycle_price{cycle_amount, asset(price * std::pow(10, asset_obj.precision), asset_obj.id), dgpo.frequency};
 }

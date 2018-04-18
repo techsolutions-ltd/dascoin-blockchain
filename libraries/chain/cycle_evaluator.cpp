@@ -294,7 +294,7 @@ void_result purchase_cycles_evaluator::do_evaluate(const operation_type& op)
   FC_ASSERT( op.amount.asset_id == d.get_dascoin_asset_id(), "Cycles can only be purchased for DasCoin, ${a} sent", ("a", op.amount.asset_id));
 
   const auto& asset_obj = op.amount.asset_id(d);
-  double price = op.expected_amount.value / (dgpo.frequency.value / DASCOIN_FREQUENCY_PRECISION);
+  double price = static_cast<double>(op.expected_amount.value) / (static_cast<double>(dgpo.frequency.value) / DASCOIN_FREQUENCY_PRECISION);
   price = std::ceil(price * std::pow(10, asset_obj.precision)) / std::pow(10, asset_obj.precision);
   asset calculated_asset = asset(price * std::pow(10, asset_obj.precision), op.amount.asset_id);
 

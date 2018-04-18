@@ -3855,6 +3855,13 @@ string wallet_api::gethelp(const string& method)const
       ss << "\n";
       ss << "Use this method to tether a wallet account to a vault account.";
    }
+   else if( method == "purchase_cycle_asset" )
+   {
+      ss << "usage: purchase_cycle_asset ACCOUNT_NAME AMOUNT SYMBOL FREQUENCY CYCLES_TO_RECEIVE\n\n";
+      ss << "example: purchase_cycle_asset \"account\" 10 \"1.3.2\" 200 20 true\n";
+      ss << "\n";
+      ss << "Use this method to purchase a certain amount of cycles.";
+   }
    else if( method == "create_asset" )
    {
       ss << "usage: ISSUER SYMBOL PRECISION_DIGITS OPTIONS BITASSET_OPTIONS BROADCAST\n\n";

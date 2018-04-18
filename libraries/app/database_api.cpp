@@ -535,7 +535,7 @@ vector<signed_block_with_num> database_api_impl::get_blocks(uint32_t start_block
 
 vector<signed_block_with_virtual_operations_and_num> database_api::get_blocks_with_virtual_operations(uint32_t start_block_num,
                                                                                uint32_t count,
-                                                                               std::vector<uint16_t>& virtual_operation_ids) const
+                                                                               std::vector<uint16_t> virtual_operation_ids) const
 {
     return my->get_blocks_with_virtual_operations(start_block_num, count, virtual_operation_ids);
 }

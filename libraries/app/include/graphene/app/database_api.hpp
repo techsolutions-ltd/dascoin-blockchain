@@ -210,7 +210,7 @@ class database_api
        */
       vector<signed_block_with_virtual_operations_and_num> get_blocks_with_virtual_operations(uint32_t start_block_num,
                                                                                               uint32_t count,
-                                                                                              std::vector<uint16_t>& virtual_operation_ids) const;
+                                                                                              std::vector<uint16_t> virtual_operation_ids) const;
       /**
        * @brief used to fetch an individual transaction.
        */

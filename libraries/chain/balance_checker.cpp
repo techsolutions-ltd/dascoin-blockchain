@@ -16,7 +16,9 @@ namespace graphene
         {
           if (asset.id == db.get_dascoin_asset_id() && !account.is_custodian())
           {
-            FC_ASSERT( db.get_balance(account, asset).amount - amount_to_spend.amount >= MINIMUM_DSC_BALANCE, "insufficient balance, there must be 1 dsc remaining");
+            int minimum_dsc_no_precision = MINIMUM_DSC_BALANCE / DASCOIN_DEFAULT_ASSET_PRECISION;
+            FC_ASSERT( db.get_balance(account, asset).amount - amount_to_spend.amount >= MINIMUM_DSC_BALANCE,
+		       "insufficient balance, there must be ${a} dsc remaining", ("a", minimum_dsc_no_precision));
           }
         }
 

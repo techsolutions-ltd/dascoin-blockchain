@@ -45,7 +45,7 @@ vector<signed_block_with_num> database_access_layer::get_blocks(uint32_t start_b
 
 vector<signed_block_with_virtual_operations_and_num> database_access_layer::get_blocks_with_virtual_operations(uint32_t start_block_num,
                                                                                           uint32_t count,
-                                                                                          std::vector<uint16_t> virtual_operation_ids) const
+                                                                                          std::vector<uint16_t>& virtual_operation_ids) const
 {
     FC_ASSERT(count > 0, "Must fetch at least one block");
     FC_ASSERT(count <= 100, "Too many blocks to fetch, limit is 100");

@@ -73,6 +73,9 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       optional<block_header> get_block_header(uint32_t block_num)const;
       optional<signed_block> get_block(uint32_t block_num)const;
       vector<signed_block_with_num> get_blocks(uint32_t block_num, uint32_t count) const;
+      vector<signed_block_with_virtual_operations_and_num> get_blocks_with_virtual_operations(uint32_t start_block_num,
+                                                                                              uint32_t count,
+                                                                                              std::vector<uint16_t>& virtual_operation_ids) const;
       processed_transaction get_transaction( uint32_t block_num, uint32_t trx_in_block )const;
 
       // Globals
@@ -531,6 +534,20 @@ vector<signed_block_with_num> database_api::get_blocks(uint32_t start_block_num,
 vector<signed_block_with_num> database_api_impl::get_blocks(uint32_t start_block_num, uint32_t count) const
 {
     return _dal.get_blocks(start_block_num, count);
+}
+
+vector<signed_block_with_virtual_operations_and_num> database_api::get_blocks_with_virtual_operations(uint32_t start_block_num,
+                                                                               uint32_t count,
+                                                                               std::vector<uint16_t> virtual_operation_ids) const
+{
+    return my->get_blocks_with_virtual_operations(start_block_num, count, virtual_operation_ids);
+}
+
+vector<signed_block_with_virtual_operations_and_num> database_api_impl::get_blocks_with_virtual_operations(uint32_t start_block_num,
+                                                                                    uint32_t count,
+                                                                                    std::vector<uint16_t>& virtual_operation_ids) const
+{
+    return _dal.get_blocks_with_virtual_operations(start_block_num, count, virtual_operation_ids);
 }
 
 processed_transaction database_api::get_transaction( uint32_t block_num, uint32_t trx_in_block )const

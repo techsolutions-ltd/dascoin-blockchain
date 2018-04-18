@@ -322,6 +322,72 @@ BOOST_AUTO_TEST_CASE( account_to_credit_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( minimum_balance_test )
+{ try {
+    // Do this test in time after HARDFORK-EXEX-127-TIME
+    generate_blocks(HARDFORK_EXEX_127_TIME);
+
+    ACTOR(alice);
+    ACTOR(bobw);
+    VAULT_ACTOR(bob);
+    CUSTODIAN_ACTOR(charlie);
+
+    tether_accounts(bobw_id, bob_id);
+    issue_webasset("1", alice_id, 100, 0);
+    generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
+    share_type cash, reserved;
+    std::tie(cash, reserved) = get_web_asset_amounts(alice_id);
+
+    BOOST_CHECK_EQUAL( cash.value, 100 );
+    BOOST_CHECK_EQUAL( reserved.value, 0 );
+
+    adjust_dascoin_reward(500 * DASCOIN_DEFAULT_ASSET_PRECISION);
+    adjust_frequency(200);
+
+    set_expiration( db, trx );
+
+    do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), bob_id, 200, 200, ""));
+    toggle_reward_queue(true);
+
+    // Wait for the cycles to be distributed:
+    generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
+
+    BOOST_CHECK_EQUAL( get_balance(bob_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+    // Set limit to 100 dascoin
+    db.adjust_balance_limit(bob, get_dascoin_asset_id(), 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+    transfer_dascoin_vault_to_wallet(bob_id, bobw_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+    // sell order from cash balance
+    create_sell_order(alice_id, asset{100, get_web_asset_id()}, asset{100, get_dascoin_asset_id()});
+
+    // Expect fail: can not sell all DSC
+    GRAPHENE_REQUIRE_THROW(create_sell_order(bobw_id, asset{100 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, asset{100, get_web_asset_id()}), fc::exception);
+
+    // Expect success: sell smaller amount of DSC:
+    create_sell_order(bobw_id, asset{50 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, asset{50, get_web_asset_id()});
+
+    // Expect fail: can not transfer all DSC to custodian
+    GRAPHENE_REQUIRE_THROW(transfer(bobw_id, charlie_id, asset{50 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}), fc::exception);
+
+    // Expect fail: can not transfer all DSC to vault:
+    GRAPHENE_REQUIRE_THROW(transfer_dascoin_wallet_to_vault(bobw_id, bob_id, 50 * DASCOIN_DEFAULT_ASSET_PRECISION), fc::exception);
+
+    // Expect success: transfer some DSC to custodian
+    transfer(bobw_id, charlie_id, asset{20 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()});
+
+    // Expect success: sell remaining allowed amount of DSC:
+    create_sell_order(bobw_id, asset{29 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, asset{49, get_web_asset_id()});
+
+    // Expect success: can use last DSC to buy cycle asset
+    do_op(purchase_cycle_asset_operation(bobw_id, 1 * DASCOIN_DEFAULT_ASSET_PRECISION, 200, 2));
+
+    // Expect success: custodian can transfer all of its DSC
+    transfer(charlie_id, bobw_id, asset{20 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()});
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

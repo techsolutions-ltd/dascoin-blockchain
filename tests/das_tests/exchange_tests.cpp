@@ -381,7 +381,7 @@ BOOST_AUTO_TEST_CASE( minimum_balance_test )
     create_sell_order(bobw_id, asset{29 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, asset{49, get_web_asset_id()});
 
     // Expect success: can use last DSC to buy cycle asset
-    do_op(purchase_cycle_asset_operation(bobw_id, 1 * DASCOIN_DEFAULT_ASSET_PRECISION, 200, 2));
+    do_op(purchase_cycle_asset_operation(bobw_id, asset{1 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, 200, 2));
 
     // Expect success: custodian can transfer all of its DSC
     transfer(charlie_id, bobw_id, asset{20 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()});

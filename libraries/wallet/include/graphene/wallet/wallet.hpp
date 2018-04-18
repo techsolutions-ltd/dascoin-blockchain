@@ -1550,8 +1550,6 @@ class wallet_api
 
       vector<optional<license_information_object>> get_license_information(const vector<account_id_type>& account_ids) const;
 
-
-
       ///////////////////////////////
       /// CYCLES:                 ///
       ///////////////////////////////
@@ -1564,6 +1562,28 @@ class wallet_api
       acc_id_share_t_res get_account_cycle_balance(const string& account) const;
 
       acc_id_vec_cycle_agreement_res get_full_cycle_balances(const string& account) const;
+
+      /**
+       * Purchase cycles.
+       * @param account Account name or id
+       * @param amount_to_sell Amount of asset to sell
+       * @param symbol_to_sell Symbol of asset to sell
+       * @param frequency Frequency at which we buy
+       * @param amount_of_cycles_to_receive Amount of cycles to receive by this buy
+       */
+      signed_transaction purchase_cycle_asset(string account,
+                                              string amount_to_sell,
+                                              string symbol_to_sell,
+                                              double frequency,
+                                              double amount_of_cycles_to_receive,
+                                              bool broadcast = false);
+
+      /**
+       * Retrieve calculation of cycle price per asset
+       * @param cycle_amount Amount of cycles we are buying
+       * @param asset_symbol_or_id Symbol or symbol asset of paying asset
+       */
+      optional<cycle_price> calculate_cycle_price(share_type cycle_amount, string asset_symbol_or_id) const;
 
       acc_id_share_t_res get_dascoin_balance(const string& account) const;
 
@@ -1857,6 +1877,8 @@ FC_API( graphene::wallet::wallet_api,
         (get_order_book)
         (update_queue_parameters)
         (wire_out)
+        (purchase_cycle_asset)
+        (calculate_cycle_price)
         // Requests:
         (get_all_webasset_issue_requests)
         (get_all_wire_out_holders)

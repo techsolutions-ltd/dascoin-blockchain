@@ -1578,6 +1578,11 @@ class wallet_api
                                               double amount_of_cycles_to_receive,
                                               bool broadcast = false);
 
+      /**
+       * Retrieve calculation of cycle price per asset
+       * @param cycle_amount Amount of cycles we are buying
+       * @param asset_symbol_or_id Symbol or symbol asset of paying asset
+       */
       optional<cycle_price> calculate_cycle_price(share_type cycle_amount, string asset_symbol_or_id) const;
 
       acc_id_share_t_res get_dascoin_balance(const string& account) const;

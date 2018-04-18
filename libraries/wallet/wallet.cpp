@@ -3862,6 +3862,13 @@ string wallet_api::gethelp(const string& method)const
       ss << "\n";
       ss << "Use this method to purchase a certain amount of cycles.";
    }
+   else if( method == "calculate_cycle_price" )
+   {
+      ss << "usage: calculate_cycle_price AMOUNT SYMBOL\n\n";
+      ss << "example: calculate_cycle_price 10 \"1.3.2\"\n";
+      ss << "\n";
+      ss << "Use this method to calculate the price of cycles using the current frequency.";
+   }
    else if( method == "create_asset" )
    {
       ss << "usage: ISSUER SYMBOL PRECISION_DIGITS OPTIONS BITASSET_OPTIONS BROADCAST\n\n";
@@ -4705,6 +4712,12 @@ acc_id_vec_cycle_agreement_res wallet_api::get_full_cycle_balances(const string&
 signed_transaction wallet_api::purchase_cycle_asset(string account, string amount_to_sell, string symbol_to_sell, double frequency, double amount_of_cycles_to_receive, bool broadcast)
 {
     return my->purchase_cycle_asset(account, amount_to_sell, symbol_to_sell, frequency, amount_of_cycles_to_receive, broadcast);
+}
+
+optional<cycle_price> wallet_api::calculate_cycle_price(share_type cycle_amount, string asset_symbol_or_id) const
+{
+    const auto& asset_id = get_asset_id(asset_symbol_or_id);
+    return my->_remote_db->calculate_cycle_price(cycle_amount, asset_id);
 }
 
 acc_id_share_t_res wallet_api::get_dascoin_balance(const string& name_or_id) const

@@ -1578,6 +1578,8 @@ class wallet_api
                                               double amount_of_cycles_to_receive,
                                               bool broadcast = false);
 
+      optional<cycle_price> calculate_cycle_price(share_type cycle_amount, string asset_symbol_or_id) const;
+
       acc_id_share_t_res get_dascoin_balance(const string& account) const;
 
       signed_transaction update_queue_parameters(optional<bool> enable_dascoin_queue,
@@ -1871,6 +1873,7 @@ FC_API( graphene::wallet::wallet_api,
         (update_queue_parameters)
         (wire_out)
         (purchase_cycle_asset)
+        (calculate_cycle_price)
         // Requests:
         (get_all_webasset_issue_requests)
         (get_all_wire_out_holders)

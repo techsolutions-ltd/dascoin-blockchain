@@ -380,6 +380,7 @@ struct database_fixture {
    void transfer_webasset_wallet_to_vault(account_id_type walelt_id, account_id_type vault_id,
                                           std::pair<share_type, share_type> amounts);
    void transfer_dascoin_vault_to_wallet(account_id_type vault_id, account_id_type wallet_id, share_type amount);
+   void transfer_dascoin_wallet_to_vault(account_id_type wallet_id, account_id_type vault_id, share_type amount);
    vector<issue_asset_request_object> get_asset_request_objects(account_id_type account_id);
    share_type get_asset_current_supply(asset_id_type asset_id);
    share_type get_web_asset_current_supply() { return get_asset_current_supply(get_web_asset_id()); }

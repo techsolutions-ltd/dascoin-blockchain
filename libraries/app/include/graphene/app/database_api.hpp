@@ -202,6 +202,16 @@ class database_api
       vector<signed_block_with_num> get_blocks(uint32_t start_block_num, uint32_t count) const;
 
       /**
+       * @brief Return an array of full, signed blocks that contains virtual operations starting from a specified height.
+       * @param start_block_num Height of the starting block.
+       * @param count Number of blocks to return.
+       * @param virtual_operation_ids array of virtual operation ids that should be included in result returned
+       * @return Array of enumerated blocks
+       */
+      vector<signed_block_with_virtual_operations_and_num> get_blocks_with_virtual_operations(uint32_t start_block_num,
+                                                                                              uint32_t count,
+                                                                                              std::vector<uint16_t>& virtual_operation_ids) const;
+      /**
        * @brief used to fetch an individual transaction.
        */
       processed_transaction get_transaction( uint32_t start_block_num, uint32_t trx_in_block )const;
@@ -772,6 +782,7 @@ FC_API( graphene::app::database_api,
    (get_block_header)
    (get_block)
    (get_blocks)
+   (get_blocks_with_virtual_operations)
    (get_transaction)
    (get_recent_transaction_by_id)
 

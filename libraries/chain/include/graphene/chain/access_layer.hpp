@@ -224,7 +224,7 @@ class database_access_layer {
     vector<signed_block_with_num> get_blocks(uint32_t start_block_num, uint32_t count) const;
     vector<signed_block_with_virtual_operations_and_num> get_blocks_with_virtual_operations(uint32_t start_block_num,
                                                                                             uint32_t count,
-                                                                                            std::vector<uint16_t> virtual_operation_ids) const;
+                                                                                            std::vector<uint16_t>& virtual_operation_ids) const;
     // Global objects:
     global_property_object get_global_properties() const;
 
@@ -342,6 +342,7 @@ FC_REFLECT(graphene::chain::sub_w_pos, (position)(submission))
 FC_REFLECT_DERIVED(graphene::chain::acc_id_queue_subs_w_pos_res, (graphene::chain::acc_id_res), (result))
 
 FC_REFLECT( graphene::chain::signed_block_with_num, (num)(block_id)(block) )
+FC_REFLECT( graphene::chain::signed_block_with_virtual_operations_and_num, (num)(block_id)(block) )
 
 FC_REFLECT(graphene::chain::vault_info_res,
            (cash_balance)

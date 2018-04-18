@@ -1025,6 +1025,27 @@ public:
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (wallet)(vault)(broadcast) ) }
 
+   signed_transaction purchase_cycle_asset(string account, string amount_to_sell, string symbol_to_sell, double frequency, double amount_of_cycles_to_receive, bool broadcast = false)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      account_object buyer_account = get_account(account);
+
+      purchase_cycle_asset_operation purchase_op;
+
+      purchase_op.wallet_id = buyer_account.id;
+      purchase_op.amount = get_asset(symbol_to_sell).amount_from_string(amount_to_sell);
+      purchase_op.frequency = static_cast<frequency_type>(frequency);
+      purchase_op.expected_amount = amount_of_cycles_to_receive;
+
+      signed_transaction tx;
+      tx.operations.push_back(purchase_op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (amount_to_sell)(symbol_to_sell)(broadcast)(amount_of_cycles_to_receive) ) }
+
    signed_transaction upgrade_account(string name, bool broadcast)
    { try {
       FC_ASSERT( !self.is_locked() );
@@ -4672,6 +4693,11 @@ acc_id_vec_cycle_agreement_res wallet_api::get_full_cycle_balances(const string&
    if( auto real_id = detail::maybe_id<account_id_type>(name_or_id) )
       return my->_remote_db->get_all_cycle_balances(*real_id);
    return my->_remote_db->get_all_cycle_balances(get_account(name_or_id).id);
+}
+
+signed_transaction wallet_api::purchase_cycle_asset(string account, string amount_to_sell, string symbol_to_sell, double frequency, double amount_of_cycles_to_receive, bool broadcast)
+{
+    return my->purchase_cycle_asset(account, amount_to_sell, symbol_to_sell, frequency, amount_of_cycles_to_receive, broadcast);
 }
 
 acc_id_share_t_res wallet_api::get_dascoin_balance(const string& name_or_id) const

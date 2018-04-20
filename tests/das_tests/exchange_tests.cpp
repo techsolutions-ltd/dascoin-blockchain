@@ -67,6 +67,7 @@ BOOST_AUTO_TEST_CASE( transfer_custodian )
     VAULT_ACTOR(alicev);
     CUSTODIAN_ACTOR(bob);
     CUSTODIAN_ACTOR(charlie);
+    ACTOR(dave);
 
     tether_accounts(alice_id, alicev_id);
 
@@ -78,25 +79,31 @@ BOOST_AUTO_TEST_CASE( transfer_custodian )
     BOOST_CHECK_EQUAL( get_balance(alice_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
     BOOST_CHECK_EQUAL( get_balance(alice_id, get_web_asset_id()), 100 );
 
-    // Expect Success: Transfer from wallet to custodian
-    transfer(alice_id, bob_id, asset{50 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()} );
-    BOOST_CHECK_EQUAL( get_dascoin_balance(alice_id), 50 * DASCOIN_DEFAULT_ASSET_PRECISION );
-    BOOST_CHECK_EQUAL( get_dascoin_balance(bob_id), 50 * DASCOIN_DEFAULT_ASSET_PRECISION );
+    // Expect Success: Transfer from wallet to wallet
+    transfer(alice_id, dave_id, asset{100 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()} );
+    BOOST_CHECK_EQUAL( get_dascoin_balance(alice_id), 0 );
+    BOOST_CHECK_EQUAL( get_dascoin_balance(dave_id), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
 
-    // Expect Fail: Transfer from custodian to custodian
-    GRAPHENE_REQUIRE_THROW( transfer(bob_id, charlie_id, asset{50 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()} ), fc::exception );
+    // Expect Success: Transfer from wallet to custodian
+    transfer(dave_id, bob_id, asset{100 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()} );
+    BOOST_CHECK_EQUAL( get_dascoin_balance(dave_id), 0 );
+    BOOST_CHECK_EQUAL( get_dascoin_balance(bob_id), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+    // Expect Success: Transfer from custodian to custodian
+    transfer(bob_id, charlie_id, asset{50 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()} );
+    BOOST_CHECK_EQUAL( get_dascoin_balance(bob_id), 50 * DASCOIN_DEFAULT_ASSET_PRECISION );
+    BOOST_CHECK_EQUAL( get_dascoin_balance(charlie_id), 50 * DASCOIN_DEFAULT_ASSET_PRECISION );
 
     // Expect Success: Transfer from custodian to wallet
     transfer(bob_id, alice_id, asset{50 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()} );
-    BOOST_CHECK_EQUAL( get_dascoin_balance(alice_id), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
+    BOOST_CHECK_EQUAL( get_dascoin_balance(alice_id), 50 * DASCOIN_DEFAULT_ASSET_PRECISION );
     BOOST_CHECK_EQUAL( get_dascoin_balance(bob_id), 0 );
 
-    // Expect Fail: transfer when source or destination is not a wallet
+    // Expect Fail: transfer when source or destination is not a wallet or custodian
     GRAPHENE_REQUIRE_THROW( transfer(alicev_id, bob_id, asset{50 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}), fc::exception );
-    GRAPHENE_REQUIRE_THROW( transfer(bob_id, alicev_id, asset{50 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}), fc::exception );
-
-    // Expect Fail: transfer when source or destination is not a custodian
     GRAPHENE_REQUIRE_THROW( transfer(alicev_id, alice_id, asset{50 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}), fc::exception );
+    GRAPHENE_REQUIRE_THROW( transfer(alice_id, alicev_id, asset{50 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}), fc::exception );
+    GRAPHENE_REQUIRE_THROW( transfer(charlie_id, alicev_id, asset{50 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}), fc::exception );
 
     // Expect Fail: transfer of asset other than dascoin
     GRAPHENE_REQUIRE_THROW( transfer(alice_id, bob_id, asset{50, get_web_asset_id()}), fc::exception );

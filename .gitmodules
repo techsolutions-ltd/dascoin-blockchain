@@ -2,7 +2,9 @@
 	path = docs
 	url = https://github.com/cryptonomex/graphene.wiki.git
     ignore = dirty
-[submodule "libraries/fc"]
-    path = libraries/fc
-    url = git@repo:dascoin/fc.git
-    ignore = dirty
+[submodule "vendor/secp256k1-zkp"]
+        path = libraries/fc/vendor/secp256k1-zkp
+        url = https://github.com/cryptonomex/secp256k1-zkp.git
+[submodule "vendor/websocketpp"]
+    path = libraries/fc/vendor/websocketpp
+    url = https://github.com/zaphoyd/websocketpp.git

@@ -93,6 +93,23 @@ private:
    const account_object* _account_obj = nullptr;
 };
 
+class toggle_roll_back_enabled_evaluator : public evaluator<toggle_roll_back_enabled_evaluator>
+{
+public:
+  typedef toggle_roll_back_enabled_operation operation_type;
+  void_result do_evaluate(const operation_type& op);
+  object_id_type do_apply(const operation_type& op);
+};
+
+class roll_back_public_keys_evaluator : public evaluator<roll_back_public_keys_evaluator>
+{
+public:
+  typedef roll_back_public_keys_operation operation_type;
+
+  void_result do_evaluate(const operation_type& op);
+  object_id_type do_apply(const operation_type& op);
+};
+
 class set_starting_cycle_asset_amount_evaluator : public evaluator<set_starting_cycle_asset_amount_evaluator>
 {
 public:

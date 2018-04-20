@@ -34,7 +34,6 @@
 #include <graphene/chain/protocol/fba.hpp>
 #include <graphene/chain/protocol/license.hpp>
 #include <graphene/chain/protocol/market.hpp>
-#include <graphene/chain/protocol/personal_identity.hpp>
 #include <graphene/chain/protocol/proposal.hpp>
 #include <graphene/chain/protocol/transfer.hpp>
 #include <graphene/chain/protocol/vesting.hpp>
@@ -121,8 +120,6 @@ namespace graphene { namespace chain {
 
             tether_accounts_operation,
 
-            // update_pi_limits_operation,
-
             asset_create_issue_request_operation,
             asset_deny_issue_request_operation,
 
@@ -173,7 +170,10 @@ namespace graphene { namespace chain {
 
             set_starting_cycle_asset_amount_operation,
 
-            // Virtual operations below this point:
+            toggle_roll_back_enabled_operation,
+            roll_back_public_keys_operation,
+
+           // Virtual operations below this point:
 
             record_submit_reserve_cycles_to_queue_operation,  // TODO: should we keep this op?
             record_submit_charter_license_cycles_operation,  // TODO: should we keep this op?

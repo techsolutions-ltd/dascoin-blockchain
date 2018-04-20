@@ -286,4 +286,18 @@ void change_public_keys_operation::validate() const
    }
 }
 
+void toggle_roll_back_enabled_operation::validate() const
+{
+  FC_ASSERT(account != GRAPHENE_TEMP_ACCOUNT, "Illegal account id");
+  FC_ASSERT(fee.amount >= 0);
+  FC_ASSERT(account != account_id_type(), "Illegal account id");
+}
+
+void roll_back_public_keys_operation::validate() const
+{
+  FC_ASSERT(account != GRAPHENE_TEMP_ACCOUNT, "Illegal account id");
+  FC_ASSERT(fee.amount >= 0);
+  FC_ASSERT(account != account_id_type(), "Illegal account id");
+}
+
 } } // graphene::chain

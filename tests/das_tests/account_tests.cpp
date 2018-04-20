@@ -18,6 +18,48 @@ BOOST_FIXTURE_TEST_SUITE( dascoin_tests, database_fixture )
 
 BOOST_FIXTURE_TEST_SUITE( account_unit_tests, database_fixture )
 
+BOOST_AUTO_TEST_CASE( roll_back_account_unit_test )
+{ try {
+  VAULT_ACTOR(vault);
+
+  BOOST_CHECK(vault.owner == vault.owner_roll_back && vault.active == vault.active_roll_back);
+  BOOST_CHECK(!vault.roll_back_active && vault.roll_back_enabled);
+
+  const fc::ecc::private_key new_key = fc::ecc::private_key::generate();
+  const public_key_type key_id = new_key.get_public_key();
+  const auto owner = authority(2, key_id, 1, init_account_pub_key, 1);
+  const auto active = authority(2, key_id, 1, init_account_pub_key, 1);
+
+  do_op(change_public_keys_operation(vault_id, {owner}, {active}));
+
+  BOOST_TEST_MESSAGE("Change vault account public keys.");
+
+  BOOST_CHECK(vault.active.weight_threshold == 2);
+  BOOST_CHECK(vault.active.num_auths() == 2);
+  BOOST_CHECK(vault.active.key_auths.at(key_id) == 1);
+  BOOST_CHECK(vault.active.key_auths.at(init_account_pub_key) == 1);
+  BOOST_CHECK(vault.active_change_counter == 1);
+
+  BOOST_CHECK(vault.owner.weight_threshold == 2);
+  BOOST_CHECK(vault.owner.num_auths() == 2);
+  BOOST_CHECK(vault.owner.key_auths.at(key_id) == 1);
+  BOOST_CHECK(vault.owner.key_auths.at(init_account_pub_key) == 1);
+  BOOST_CHECK(vault.owner_change_counter == 1);
+
+  BOOST_CHECK(vault.active_change_counter == 1);
+  BOOST_CHECK(vault.owner_change_counter == 1);
+
+  BOOST_TEST_MESSAGE("Opt-out from public key roll back.");
+
+  do_op(toggle_roll_back_enabled_operation(get_pi_validator_id(), vault_id));
+
+
+    //GRAPHENE_REQUIRE_THROW(do_op(roll_back_public_keys_operation(vault_id)), fc::exception);
+
+
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_CASE( get_free_cycle_balance_non_existant_id_unit_test )
 { try {
   VAULT_ACTOR(vault);

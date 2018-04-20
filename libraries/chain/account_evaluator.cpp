@@ -34,7 +34,6 @@
 #include <graphene/chain/special_authority.hpp>
 #include <graphene/chain/special_authority_object.hpp>
 #include <graphene/chain/worker_object.hpp>
-
 #include <algorithm>
 
 namespace graphene { namespace chain {
@@ -192,6 +191,12 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
             obj.allowed_assets = o.extensions.value.buyback_options->markets;
             obj.allowed_assets->emplace( o.extensions.value.buyback_options->asset_to_buy );
          }
+
+         // set account rollback data
+        obj.owner_roll_back = obj.owner;
+        obj.active_roll_back = obj.active;
+        obj.roll_back_active = false;
+        obj.roll_back_enabled = true;
 
          // from this moment there are no vault limits
          if(db().head_block_time() >= HARDFORK_EXEX_102_TIME)
@@ -510,11 +515,50 @@ object_id_type change_public_keys_evaluator::do_apply(const change_public_keys_o
          ao.active_change_counter++;
          ao.top_n_control_flags = 0;  // Legacy bitshares flag.
       }
+
+      // Re-enable other operations in case roll_back_active flag is set to true
+      ao.roll_back_active = false;
    });
 
    return {};
 
 } FC_CAPTURE_AND_RETHROW((op)) }
+
+void_result toggle_roll_back_enabled_evaluator::do_evaluate(const toggle_roll_back_enabled_operation& op)
+{
+  try {
+    const auto op_authority_obj = op.authority(db());
+    db().perform_chain_authority_check("personal identity validation",
+                                    db().get_global_properties().authorities.pi_validator,
+                                    op_authority_obj);
+    return {};
+  } FC_CAPTURE_AND_RETHROW((op))
+}
+
+object_id_type toggle_roll_back_enabled_evaluator::do_apply(const toggle_roll_back_enabled_operation& op)
+{
+  try {
+    db().modify(op.account(db()), [&](account_object& ao) {ao.roll_back_enabled = !ao.roll_back_enabled;});
+    return {};
+  } FC_CAPTURE_AND_RETHROW((op))
+}
+
+void_result roll_back_public_keys_evaluator::do_evaluate(const roll_back_public_keys_operation& op)
+{
+  try {
+    FC_ASSERT(op.account(db()).roll_back_enabled, "Cannot initiate rollback procedure because account has roll_back_enabled set to false.");
+    db().modify(op.account(db()), [&](account_object& ao) {ao.roll_back_active = true;});
+    return {};
+  } FC_CAPTURE_AND_RETHROW((op))
+}
+
+object_id_type roll_back_public_keys_evaluator::do_apply(const roll_back_public_keys_operation& op)
+{
+  try {
+    db().modify(op.account(db()), [&](account_object& ao) {ao.roll_back_active = true;});
+    return {};
+  } FC_CAPTURE_AND_RETHROW((op))
+}
 
 void_result set_starting_cycle_asset_amount_evaluator::do_evaluate(const set_starting_cycle_asset_amount_operation& op)
 {

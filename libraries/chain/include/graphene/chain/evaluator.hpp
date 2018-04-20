@@ -135,6 +135,15 @@ namespace graphene { namespace chain {
          auto* eval = static_cast<DerivedEvaluator*>(this);
          const auto& op = o.get<typename DerivedEvaluator::operation_type>();
 
+         if (get_type() != graphene::chain::operation::tag<change_public_keys_operation>::value)
+         {
+           const auto& account = op.fee_payer()(db());
+           FC_ASSERT( !account.roll_back_active,
+                      "Account '${a}' has activated public key roll back. Only change_public_keys operation is possible.",
+                      ("a", account.name)
+           );
+         }
+
          prepare_fee(op.fee_payer(), op.fee, op);
 
          return eval->do_evaluate(op);

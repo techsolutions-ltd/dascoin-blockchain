@@ -257,10 +257,15 @@ struct get_impacted_account_visitor
       _impacted.insert( op.account );
    }
 
-   void operator()( const update_pi_limits_operation& op )
+   void operator()( const toggle_roll_back_enabled_operation& op )
    {
-      _impacted.insert( op.pi_validator );
+      _impacted.insert( op.authority );
       _impacted.insert( op.account );
+   }
+
+   void operator()( const roll_back_public_keys_operation& op )
+   {
+     _impacted.insert( op.account );
    }
 
    void operator()( const asset_create_issue_request_operation& op )

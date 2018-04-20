@@ -2719,6 +2719,28 @@ public:
      return sign_transaction(tx, broadcast);
    }
 
+
+   signed_transaction toggle_roll_back_enabled(const string& authority, const string& account_name, bool broadcast)
+   {
+     toggle_roll_back_enabled_operation op;
+     op.authority = get_account(authority).id;
+     op.account = get_account(account_name).id;
+     signed_transaction tx;
+     tx.operations.push_back(op);
+     set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
+     return sign_transaction(tx, broadcast);
+   }
+
+   signed_transaction roll_back_public_keys(const string& account_name, bool broadcast)
+   {
+     roll_back_public_keys op;
+     op.account = get_account(account_name).id;
+     signed_transaction tx;
+     tx.operations.push_back(op);
+     set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
+     return sign_transaction(tx, broadcast);
+   }
+
    void dbg_make_uia(string creator, string symbol)
    {
       asset_options opts;

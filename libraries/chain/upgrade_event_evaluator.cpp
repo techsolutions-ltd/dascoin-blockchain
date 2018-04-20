@@ -16,6 +16,7 @@ namespace graphene { namespace chain {
     const auto& op_creator_obj = op.upgrade_creator(d);
     const auto& gpo = d.get_global_properties();
 
+
     d.perform_chain_authority_check("license administration", license_admin_id, op_creator_obj);
 
     FC_ASSERT( op.execution_time.sec_since_epoch() % gpo.parameters.maintenance_interval == 0,

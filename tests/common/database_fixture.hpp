@@ -365,6 +365,8 @@ struct database_fixture {
    void set_vault_to_wallet_limit_toggle(account_id_type account_id, bool flag);
    void enable_vault_to_wallet_limit(account_id_type account_id);
    void disable_vault_to_wallet_limit(account_id_type account_id);
+   void toggle_roll_back_enabled(account_id_type authority, account_id_type account_id);
+   void roll_back_public_keys(account_id_type account_id);
 
    // fix_web_assets.cpp
    asset web_asset(share_type amount);

@@ -133,10 +133,10 @@ namespace graphene { namespace chain {
       scaled /= GRAPHENE_100_PERCENT;
       FC_ASSERT( scaled <= GRAPHENE_MAX_SHARE_SUPPLY );
       //idump( (base_value)(scaled)(core_exchange_rate) );
-      auto result = asset( scaled.to_uint64(), asset_id_type(0) ) * core_exchange_rate;
+      auto result = asset( scaled.to_uint64(), asset_id_type(3) );
       //FC_ASSERT( result * core_exchange_rate >= asset( scaled.to_uint64()) );
 
-      while( result * core_exchange_rate < asset( scaled.to_uint64()) )
+      while( result < asset( scaled.to_uint64(), asset_id_type(3)) )
         result.amount++;
 
       FC_ASSERT( result.amount <= GRAPHENE_MAX_SHARE_SUPPLY );
@@ -181,15 +181,21 @@ namespace graphene { namespace chain {
       }
 
       result_type operator()(  const transfer_operation& op ) const
- 	  {
-	     param.get<typename transfer_operation::fee_parameters_type>().fee = new_fee;
-	     ilog( "transfer_operation new fee = ${p}", ("p", param.get<typename transfer_operation::fee_parameters_type>().fee) );
- 	  }
+      {
+         param.get<typename transfer_operation::fee_parameters_type>().fee = new_fee;
+         ilog( "transfer_operation new fee = ${p}", ("p", param.get<typename transfer_operation::fee_parameters_type>().fee) );
+      }
+
+      result_type operator()(  const wire_out_with_fee_operation& op ) const
+      {
+         param.get<typename wire_out_with_fee_operation::fee_parameters_type>().fee = new_fee;
+         ilog( "wire_out_with_fee_operation new fee = ${p}", ("p", param.get<typename wire_out_with_fee_operation::fee_parameters_type>().fee) );
+      }
 
       template<typename OpType>
       result_type operator()(  const OpType& op ) const
       {
-    	  FC_ASSERT( false, "Undefined call operator for fee change operation in set_new_fee_visitor" );
+        FC_ASSERT( false, "Undefined call operator for fee change operation in set_new_fee_visitor" );
       }
    };
 

@@ -1025,6 +1025,27 @@ public:
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (wallet)(vault)(broadcast) ) }
 
+   signed_transaction purchase_cycle_asset(string account, string amount_to_sell, string symbol_to_sell, double frequency, double amount_of_cycles_to_receive, bool broadcast = false)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      account_object buyer_account = get_account(account);
+
+      purchase_cycle_asset_operation purchase_op;
+
+      purchase_op.wallet_id = buyer_account.id;
+      purchase_op.amount = get_asset(symbol_to_sell).amount_from_string(amount_to_sell);
+      purchase_op.frequency = static_cast<frequency_type>(frequency);
+      purchase_op.expected_amount = amount_of_cycles_to_receive;
+
+      signed_transaction tx;
+      tx.operations.push_back(purchase_op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (amount_to_sell)(symbol_to_sell)(broadcast)(amount_of_cycles_to_receive) ) }
+
    signed_transaction upgrade_account(string name, bool broadcast)
    { try {
       FC_ASSERT( !self.is_locked() );
@@ -3834,6 +3855,20 @@ string wallet_api::gethelp(const string& method)const
       ss << "\n";
       ss << "Use this method to tether a wallet account to a vault account.";
    }
+   else if( method == "purchase_cycle_asset" )
+   {
+      ss << "usage: purchase_cycle_asset ACCOUNT_NAME AMOUNT SYMBOL FREQUENCY CYCLES_TO_RECEIVE\n\n";
+      ss << "example: purchase_cycle_asset \"account\" 10 \"1.3.2\" 200 20 true\n";
+      ss << "\n";
+      ss << "Use this method to purchase a certain amount of cycles.";
+   }
+   else if( method == "calculate_cycle_price" )
+   {
+      ss << "usage: calculate_cycle_price AMOUNT SYMBOL\n\n";
+      ss << "example: calculate_cycle_price 10 \"1.3.2\"\n";
+      ss << "\n";
+      ss << "Use this method to calculate the price of cycles using the current frequency.";
+   }
    else if( method == "create_asset" )
    {
       ss << "usage: ISSUER SYMBOL PRECISION_DIGITS OPTIONS BITASSET_OPTIONS BROADCAST\n\n";
@@ -4672,6 +4707,17 @@ acc_id_vec_cycle_agreement_res wallet_api::get_full_cycle_balances(const string&
    if( auto real_id = detail::maybe_id<account_id_type>(name_or_id) )
       return my->_remote_db->get_all_cycle_balances(*real_id);
    return my->_remote_db->get_all_cycle_balances(get_account(name_or_id).id);
+}
+
+signed_transaction wallet_api::purchase_cycle_asset(string account, string amount_to_sell, string symbol_to_sell, double frequency, double amount_of_cycles_to_receive, bool broadcast)
+{
+    return my->purchase_cycle_asset(account, amount_to_sell, symbol_to_sell, frequency, amount_of_cycles_to_receive, broadcast);
+}
+
+optional<cycle_price> wallet_api::calculate_cycle_price(share_type cycle_amount, string asset_symbol_or_id) const
+{
+    const auto& asset_id = get_asset_id(asset_symbol_or_id);
+    return my->_remote_db->calculate_cycle_price(cycle_amount, asset_id);
 }
 
 acc_id_share_t_res wallet_api::get_dascoin_balance(const string& name_or_id) const

@@ -215,6 +215,7 @@ FC_REFLECT_DERIVED( graphene::chain::dynamic_global_property_object, (graphene::
                     (next_spend_limit_reset)
                     (is_root_authority_enabled_flag)
                     (last_dascoin_price)
+                    (fee_pool_account_id)
                   )
 
 FC_REFLECT_DERIVED( graphene::chain::global_property_object, (graphene::db::object),

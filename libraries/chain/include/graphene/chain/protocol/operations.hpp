@@ -171,7 +171,7 @@ namespace graphene { namespace chain {
             wire_out_with_fee_complete_operation,
             wire_out_with_fee_reject_operation,
 
-	    set_starting_cycle_asset_amount_operation,
+            set_starting_cycle_asset_amount_operation,
 
             // Virtual operations below this point:
 

@@ -538,16 +538,16 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    create<asset_object>( [&]( asset_object& a ) {
       a.symbol = DASCOIN_CYCLE_ASSET_SYMBOL;
       a.options.max_supply = genesis_state.max_core_supply;  // TODO: this should remain 10 trillion?
-      a.precision = DASCOIN_FIAT_ASSET_PRECISION_DIGITS;
+      a.precision = DASCOIN_CYCLE_ASSET_PRECISION_DIGITS;
       a.options.flags = WEB_ASSET_INITIAL_FLAGS;
       a.options.issuer_permissions = WEB_ASSET_ISSUER_PERMISSION_MASK;  // TODO: set the appropriate issuer permissions.
       a.issuer = GRAPHENE_NULL_ACCOUNT;
       a.authenticator = GRAPHENE_NULL_ACCOUNT;
       // TODO: figure out the base conversion rates.
       a.options.core_exchange_rate.base.amount = 1;
-      a.options.core_exchange_rate.base.asset_id = asset_id_type(0);
+      a.options.core_exchange_rate.base.asset_id = asset_id_type(3);
       a.options.core_exchange_rate.quote.amount = 1;
-      a.options.core_exchange_rate.quote.asset_id = asset_id_type(0);
+      a.options.core_exchange_rate.quote.asset_id = asset_id_type(3);
       a.dynamic_asset_data_id = cycle_dyn_asset.id;
    });
 

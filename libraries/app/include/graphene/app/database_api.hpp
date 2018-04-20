@@ -135,6 +135,13 @@ struct limit_orders_grouped_by_price
    std::vector<agregated_limit_orders_with_same_price> sell;
 };
 
+struct cycle_price
+{
+   share_type                 cycle_amount;
+   asset                      asset_amount;
+   frequency_type             frequency;
+};
+
 /**
  * @brief The database_api class implements the RPC API for the chain database.
  *
@@ -201,6 +208,16 @@ class database_api
        */
       vector<signed_block_with_num> get_blocks(uint32_t start_block_num, uint32_t count) const;
 
+      /**
+       * @brief Return an array of full, signed blocks that contains virtual operations starting from a specified height.
+       * @param start_block_num Height of the starting block.
+       * @param count Number of blocks to return.
+       * @param virtual_operation_ids array of virtual operation ids that should be included in result returned
+       * @return Array of enumerated blocks
+       */
+      vector<signed_block_with_virtual_operations_and_num> get_blocks_with_virtual_operations(uint32_t start_block_num,
+                                                                                              uint32_t count,
+                                                                                              std::vector<uint16_t> virtual_operation_ids) const;
       /**
        * @brief used to fetch an individual transaction.
        */
@@ -823,6 +840,14 @@ class database_api
        */
       vector<acc_id_vault_info_res> get_vaults_info(vector<account_id_type> vault_ids) const;
 
+      /**
+       * @brief Calculates and returns the amount of asset one needs to pay to get the given amount of cycles
+       * @param cycle_amount Desired amount of cycles to get
+       * @param asset_id Asset to pay
+       * @return cycle_price structure (optional)
+       */
+      optional<cycle_price> calculate_cycle_price(share_type cycle_amount, asset_id_type asset_id) const;
+
    private:
       std::shared_ptr< database_api_impl > my;
 };
@@ -836,6 +861,7 @@ FC_REFLECT( graphene::app::market_hi_low_volume, (base)(quote)(high)(low)(base_v
 FC_REFLECT( graphene::app::market_trade, (sequence)(date)(price)(amount)(value) );
 FC_REFLECT( graphene::app::agregated_limit_orders_with_same_price, (price)(base_volume)(quote_volume)(count) );
 FC_REFLECT( graphene::app::limit_orders_grouped_by_price, (buy)(sell) );
+FC_REFLECT( graphene::app::cycle_price, (cycle_amount)(asset_amount)(frequency) );
 
 FC_API( graphene::app::database_api,
    // Objects
@@ -851,6 +877,7 @@ FC_API( graphene::app::database_api,
    (get_block_header)
    (get_block)
    (get_blocks)
+   (get_blocks_with_virtual_operations)
    (get_transaction)
    (get_recent_transaction_by_id)
 
@@ -968,4 +995,7 @@ FC_API( graphene::app::database_api,
    // Vaults
    (get_vault_info)
    (get_vaults_info)
+
+   // Calculate cycle price
+   (calculate_cycle_price)
 )

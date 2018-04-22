@@ -48,7 +48,7 @@ namespace graphene { namespace chain {
    {
       struct fee_parameters_type
       {
-         uint64_t fee = 5 * GRAPHENE_BLOCKCHAIN_PRECISION;
+         uint64_t fee = 1 * DASCOIN_CYCLE_ASSET_PRECISION;
       };
 
       asset           fee;

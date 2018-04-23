@@ -2733,7 +2733,7 @@ public:
 
    signed_transaction roll_back_public_keys(const string& account_name, bool broadcast)
    {
-     roll_back_public_keys op;
+     roll_back_public_keys_operation op;
      op.account = get_account(account_name).id;
      signed_transaction tx;
      tx.operations.push_back(op);
@@ -4765,7 +4765,17 @@ signed_transaction wallet_api::wire_out_with_fee(const string& account, share_ty
   return my->wire_out_with_fee(account, amount, currency_of_choice, to_address, memo, broadcast);
 }
 
-vector<issue_asset_request_object> wallet_api::get_all_webasset_issue_requests() const
+signed_transaction wallet_api::toggle_roll_back_enabled(const string& authority, const string& account, bool broadcast) const
+{
+  return my->toggle_roll_back_enabled(authority, account, broadcast);
+}
+
+signed_transaction wallet_api::roll_back_public_keys(const string& account,bool broadcast) const
+{
+  return my->roll_back_public_keys(account, broadcast);
+}
+
+    vector<issue_asset_request_object> wallet_api::get_all_webasset_issue_requests() const
 {
    return my->_remote_db->get_all_webasset_issue_requests();
 }

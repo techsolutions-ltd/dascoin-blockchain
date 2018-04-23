@@ -1616,6 +1616,21 @@ class wallet_api
       signed_transaction wire_out_with_fee(const string& account, share_type amount, const string& currency_of_choice,
                                            const string& to_address, const string& memo, bool broadcast) const;
 
+      /**
+      * Toggle roll-back enabled.
+      * @param authority           This MUST be personal information validation authority.
+      * @param account             Account ID.
+      * @param broadcast           True to broadcast the transaction on the network.
+      */
+      signed_transaction toggle_roll_back_enabled(const string& authority, const string& account, bool broadcast) const;
+
+      /**
+      * Roll-back public keys.
+      * @param account             Account ID.
+      * @param broadcast           True to broadcast the transaction on the network.
+      */
+      signed_transaction roll_back_public_keys(const string& account, bool broadcast) const;
+
       //////////////////////////
       // REQUESTS:            //
       //////////////////////////

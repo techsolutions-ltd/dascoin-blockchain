@@ -219,7 +219,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       template<typename IndexType, typename IndexBy>
       vector<typename IndexType::object_type> list_objects( size_t limit ) const
       {
-         const auto& idx = _db.get_index_type<IndexType>().indices().get<IndexBy>();
+         const auto& idx = _db.get_index_type<IndexType>().indices().template get<IndexBy>();
 
          vector<typename IndexType::object_type> result;
          result.reserve(limit);
@@ -239,7 +239,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
          vector<typename IndexType::object_type> result;
          result.reserve(limit);
 
-         const auto& idx = _db.get_index_type<IndexType>().indices().get<IndexBy>();
+         const auto& idx = _db.get_index_type<IndexType>().indices().template get<IndexBy>();
 
          auto itr = idx.lower_bound(lower_bound);
 
@@ -260,7 +260,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
          vector<typename IndexType::object_type> result;
          result.reserve(limit);
 
-         const auto& idx = _db.get_index_type<IndexType>().indices().get<IndexBy>();
+         const auto& idx = _db.get_index_type<IndexType>().indices().template get<IndexBy>();
 
          auto itr = idx.lower_bound(amount);
 
@@ -276,7 +276,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       template<typename IdType, typename IndexType, typename IndexBy>
       vector<optional<typename IndexType::object_type> > lookup_string_or_id(const vector<string>& str_or_id) const
       {
-         const auto& idx = _db.get_index_type<IndexType>().indices().get<IndexBy>();
+         const auto& idx = _db.get_index_type<IndexType>().indices().template get<IndexBy>();
          vector<optional<typename IndexType::object_type> > result;
          result.reserve(str_or_id.size());
          std::transform(str_or_id.begin(), str_or_id.end(), std::back_inserter(result),
@@ -295,7 +295,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       template<typename IndexType, typename IndexBy>
       vector<typename IndexType::object_type> list_all_objects() const
       {
-         const auto& idx = _db.get_index_type<IndexType>().indices().get<IndexBy>();
+         const auto& idx = _db.get_index_type<IndexType>().indices().template get<IndexBy>();
          auto itr = idx.begin();
          vector<typename IndexType::object_type> result;
 
@@ -308,7 +308,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       template<typename IdType, typename IndexType, typename IndexBy>
       vector<optional<typename IndexType::object_type>> fetch_optionals_from_ids(const vector<IdType>& ids) const
       {
-         const auto& idx = _db.get_index_type<IndexType>().indices().get<IndexBy>();
+         const auto& idx = _db.get_index_type<IndexType>().indices().template get<IndexBy>();
          vector<optional<typename IndexType::object_type> > result;
          result.reserve(ids.size());
          std::transform(ids.begin(), ids.end(), std::back_inserter(result),

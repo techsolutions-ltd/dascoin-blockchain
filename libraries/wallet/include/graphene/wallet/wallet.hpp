@@ -334,6 +334,18 @@ class wallet_api
        * @returns a list of \c operation_history_objects
        */
       vector<operation_detail>  get_account_history(string name, int limit)const;
+      /** Returns the most recent operations on the named account filtered by operations.
+       *
+       * This returns a list of required operation history objects, which describe activity on the account.
+       *
+       * @note this API doesn't give a way to retrieve more than the most recent 100 transactions,
+       *       you can interface directly with the blockchain to get more history
+       * @param name the name or id of the account
+       * @param operations the list of operations to filter on
+       * @param limit the number of entries to return (starting from the most recent) (max 100)
+       * @returns a list of \c operation_history_objects
+       */
+      vector<operation_detail>  get_account_history_by_operation(string name, flat_set<uint32_t> operations, int limit)const;
 
 
       vector<bucket_object>             get_market_history(string symbol, string symbol2, uint32_t bucket)const;
@@ -1838,6 +1850,7 @@ FC_API( graphene::wallet::wallet_api,
         (get_block)
         (get_account_count)
         (get_account_history)
+        (get_account_history_by_operation)
         (get_market_history)
         (get_global_properties)
         (get_dynamic_global_properties)

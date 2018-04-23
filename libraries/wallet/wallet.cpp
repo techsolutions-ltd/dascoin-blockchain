@@ -2316,6 +2316,8 @@ public:
          return ss.str();
       };
 
+      m["get_account_history_by_operation"] = m["get_account_history"];
+
       m["list_account_balances"] = [this](variant result, const fc::variants& a)
       {
          auto r = result.as<vector<asset_reserved>>();
@@ -3147,14 +3149,13 @@ vector<operation_detail> wallet_api::get_account_history(string name, int limit)
          start = start + 1;
       }
 
-
       vector<operation_history_object> current = my->_remote_hist->get_account_history(account_id, operation_history_id_type(), std::min(100,limit), start);
       for( auto& o : current ) {
          std::stringstream ss;
          auto memo = o.op.visit(detail::operation_printer(ss, *my, o.result));
          result.push_back( operation_detail{ memo, ss.str(), o } );
       }
-      if( current.size() < std::min(100,limit) )
+      if( current.size() < static_cast<vector<operation_history_object>::size_type>(std::min(100,limit)) )
          break;
       limit -= current.size();
    }
@@ -3162,6 +3163,34 @@ vector<operation_detail> wallet_api::get_account_history(string name, int limit)
    return result;
 }
 
+// fixme: refactor this
+vector<operation_detail> wallet_api::get_account_history_by_operation(string name, flat_set<uint32_t> operations, int limit)const
+{
+   vector<operation_detail> result;
+   auto account_id = get_account(name).get_id();
+
+   while( limit > 0 )
+   {
+      operation_history_id_type start;
+      if( result.size() )
+      {
+         start = result.back().op.id;
+         start = start + 1;
+      }
+
+      vector<operation_history_object> current = my->_remote_hist->get_account_history_by_operation(account_id, operations, operation_history_id_type(), std::min(100,limit), start);
+      for( auto& o : current ) {
+         std::stringstream ss;
+         auto memo = o.op.visit(detail::operation_printer(ss, *my, o.result));
+         result.push_back( operation_detail{ memo, ss.str(), o } );
+      }
+      if( current.size() < static_cast<vector<operation_history_object>::size_type>(std::min(100,limit)) )
+         break;
+      limit -= current.size();
+   }
+
+   return result;
+}
 
 vector<bucket_object> wallet_api::get_market_history( string symbol1, string symbol2, uint32_t bucket )const
 {

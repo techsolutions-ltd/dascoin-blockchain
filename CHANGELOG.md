@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.3.0] - 2018-04-24
+### Added
+ - New fee implementation
+ - Hardfork: users cannot spend the last dascoin but only on cycle purchase
+ - New operation: purchase cycles
+ - New operation: wire out with fee
+ - New operation: transfer cycles from license to wallet
+ - New query: calculate cycle price
+ - Add 100 cycles to all wallets to be used as fees
+ - New account type: custodian
+ - Cli Wallet: new method get account history by operation
+ - Cli Wallet: new method to read and sign memo key
+ - Cli Wallet: new method transfer vault to wallet
+ - Cli Wallet: new method tether accounts
+ - Cli Wallet: net method create account
+
+### Updated
+ - Allow transfers between wallets
+
 ## [0.2.9] - 2018-03-30
 ### Added
  - New operation: remove vault limits

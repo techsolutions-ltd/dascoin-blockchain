@@ -89,4 +89,30 @@ namespace graphene { namespace chain {
     frequency_type _frequency_lock;
   };
 
+  class purchase_cycles_evaluator : public evaluator<purchase_cycles_evaluator>
+  {
+  public:
+    typedef purchase_cycle_asset_operation operation_type;
+
+    void_result do_evaluate(const operation_type& op);
+    void_result do_apply(const operation_type& op);
+
+  private:
+    const account_balance_object* _dascoin_balance_obj = nullptr;
+    const account_balance_object* _cycle_balance_obj = nullptr;
+  };
+
+  class transfer_cycles_from_licence_to_wallet_evaluator : public evaluator<transfer_cycles_from_licence_to_wallet_evaluator>
+  {
+  public:
+    typedef transfer_cycles_from_licence_to_wallet_operation operation_type;
+
+    void_result do_evaluate(const operation_type& op);
+    void_result do_apply(const operation_type& op);
+
+  private:
+    const account_balance_object* _cycle_balance_obj = nullptr;
+    const license_information_object* _license_information_obj = nullptr;
+  };
+
 } }  // namespace graphene::chain

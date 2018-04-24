@@ -334,6 +334,18 @@ class wallet_api
        * @returns a list of \c operation_history_objects
        */
       vector<operation_detail>  get_account_history(string name, int limit)const;
+      /** Returns the most recent operations on the named account filtered by operations.
+       *
+       * This returns a list of required operation history objects, which describe activity on the account.
+       *
+       * @note this API doesn't give a way to retrieve more than the most recent 100 transactions,
+       *       you can interface directly with the blockchain to get more history
+       * @param name the name or id of the account
+       * @param operations the list of operations to filter on
+       * @param limit the number of entries to return (starting from the most recent) (max 100)
+       * @returns a list of \c operation_history_objects
+       */
+      vector<operation_detail>  get_account_history_by_operation(string name, flat_set<uint32_t> operations, int limit)const;
 
 
       vector<bucket_object>             get_market_history(string symbol, string symbol2, uint32_t bucket)const;
@@ -620,7 +632,7 @@ class wallet_api
        */
       string normalize_brain_key(string s) const;
 
-      /** Registers a third party's account on the blockckain.
+      /** Registers a third party's account on the blockchain.
        *
        * This function is used to register an account for which you do not own the private keys.
        * When acting as a registrar, an end user will generate their own private keys and send
@@ -642,7 +654,31 @@ class wallet_api
                                           public_key_type active,
                                           bool broadcast = false);
 
-      /** Registers a third party's vault account on the blockckain.
+      /** Registers a third party's account on the blockchain.
+       *
+       * This function is used to register an account for which you do not own the private keys.
+       * When acting as a registrar, an end user will generate their own private keys and send
+       * you the public keys.  The registrar will use this function to register the account
+       * on behalf of the end user.
+       *
+       * @see create_account_with_brain_key()
+       *
+       * @param kind the kind of the account, i.e. vault
+       * @param name the name of the account, must be unique on the blockchain.  Shorter names
+       *             are more expensive to register; the rules are still in flux, but in general
+       *             names of more than 8 characters with at least one digit will be cheap.
+       * @param owner the owner key for the new account
+       * @param active the active key for the new account
+       * @param broadcast true to broadcast the transaction on the network
+       * @returns the signed transaction registering the account
+       */
+      signed_transaction create_account(account_kind kind,
+                                        string name,
+                                        public_key_type owner,
+                                        public_key_type active,
+                                        bool broadcast = false);
+
+      /** Registers a third party's vault account on the blockchain.
        *
        * This function is used to register a vault account for which you do not own the private keys.
        * When acting as a registrar, an end user will generate their own private keys and send
@@ -658,11 +694,24 @@ class wallet_api
        * @param active the active key for the new account
        * @param broadcast true to broadcast the transaction on the network
        * @returns the signed transaction registering the account
-      */
+       */
       signed_transaction register_vault_account(string name,
-                                                 public_key_type owner,
-                                                 public_key_type active,
-                                                 bool broadcast = false);
+                                                public_key_type owner,
+                                                public_key_type active,
+                                                bool broadcast = false);
+
+      /** Tethers a wallet account to a vault account on the blockchain.
+       *
+       * This function is used to tether two accounts (a wallet and a vault).
+       *
+       * @param wallet the name or id of the wallet account to tether
+       * @param vault the name or id of the vault account to tether
+       * @param broadcast true to broadcast the transaction on the network
+       * @returns the signed transaction tethering two accounts
+       */
+      signed_transaction tether_accounts(string wallet,
+                                         string vault,
+                                         bool broadcast = false);
 
       /**
        *  Upgrades an account to prime status.
@@ -725,12 +774,42 @@ class wallet_api
          return std::make_pair(trx.id(),trx);
       }
 
+      /** Transfer an amount from one vault to wallet.
+       * @param vault the name or id of the vault sending the funds
+       * @param wallet the name or id of the wallet receiving the funds
+       * @param amount the amount to send (in nominal units -- to send half of a BTS, specify 0.5)
+       * @param asset_symbol the symbol or id of the asset to send
+       * @param reserved_amount the amount to send from reserved balance
+       * @param broadcast true to broadcast the transaction on the network
+       * @returns the signed transaction transferring funds
+       */
+      signed_transaction transfer_vault_to_wallet(string vault,
+                                  string wallet,
+                                  string amount,
+                                  string asset_symbol,
+                                  share_type reserved_amount,
+                                  bool broadcast = false);
 
       /**
        *  This method is used to convert a JSON transaction to its transactin ID.
        */
       transaction_id_type get_transaction_id( const signed_transaction& trx )const { return trx.id(); }
 
+
+      /** Sign a memo message.
+       *
+       * @param from the name or id of signing account; or a public key.
+       * @param to the name or id of receiving account; or a public key.
+       * @param memo text to sign.
+       */
+      memo_data sign_memo(string from, string to, string memo);
+
+      /** Read a memo.
+       *
+       * @param memo JSON-enconded memo.
+       * @returns string with decrypted message..
+       */
+      string read_memo(const memo_data& memo);
 
       /** These methods are used for stealth transfers */
       ///@{
@@ -1498,8 +1577,6 @@ class wallet_api
 
       vector<optional<license_information_object>> get_license_information(const vector<account_id_type>& account_ids) const;
 
-
-
       ///////////////////////////////
       /// CYCLES:                 ///
       ///////////////////////////////
@@ -1512,6 +1589,28 @@ class wallet_api
       acc_id_share_t_res get_account_cycle_balance(const string& account) const;
 
       acc_id_vec_cycle_agreement_res get_full_cycle_balances(const string& account) const;
+
+      /**
+       * Purchase cycles.
+       * @param account Account name or id
+       * @param amount_to_sell Amount of asset to sell
+       * @param symbol_to_sell Symbol of asset to sell
+       * @param frequency Frequency at which we buy
+       * @param amount_of_cycles_to_receive Amount of cycles to receive by this buy
+       */
+      signed_transaction purchase_cycle_asset(string account,
+                                              string amount_to_sell,
+                                              string symbol_to_sell,
+                                              double frequency,
+                                              double amount_of_cycles_to_receive,
+                                              bool broadcast = false);
+
+      /**
+       * Retrieve calculation of cycle price per asset
+       * @param cycle_amount Amount of cycles we are buying
+       * @param asset_symbol_or_id Symbol or symbol asset of paying asset
+       */
+      optional<cycle_price> calculate_cycle_price(share_type cycle_amount, string asset_symbol_or_id) const;
 
       acc_id_share_t_res get_dascoin_balance(const string& account) const;
 
@@ -1531,6 +1630,18 @@ class wallet_api
        * @param amount  Amount to wire.
        */
       signed_transaction wire_out(const string& account, share_type amount, bool broadcast) const;
+
+      /**
+      * Wire out with fee some WebAsset.
+      * @param account             Account ID.
+      * @param amount              Amount to wire.
+      * @param currency_of_choice  Currency of choice (string abbreviation) in which user wants wire out.
+      * @param to_address          Destination blockchain address to which the amount needs to be wired.
+      * @param memo                Optional note.
+      * @param broadcast           True to broadcast the transaction on the network.
+      */
+      signed_transaction wire_out_with_fee(const string& account, share_type amount, const string& currency_of_choice,
+                                           const string& to_address, const string& memo, bool broadcast) const;
 
       //////////////////////////
       // REQUESTS:            //
@@ -1553,6 +1664,12 @@ class wallet_api
        * @return Vector of wire out holder objects.
        */
       vector<wire_out_holder_object> get_all_wire_out_holders() const;
+
+      /**
+      * @brief Get all wire out holder objects.
+      * @return Vector of wire out holder objects.
+      */
+      vector<wire_out_with_fee_holder_object> get_all_wire_out_with_fee_holders() const;
 
       /**
        * @brief Return the entire reward queue.
@@ -1686,6 +1803,8 @@ FC_API( graphene::wallet::wallet_api,
         (import_balance)
         (suggest_brain_key)
         (register_account)
+        (create_account)
+        (tether_accounts)
         (register_vault_account)
         (upgrade_account)
         (create_account_with_brain_key)
@@ -1696,6 +1815,7 @@ FC_API( graphene::wallet::wallet_api,
         (cancel_order)
         (transfer)
         (transfer2)
+        (transfer_vault_to_wallet)
         (get_transaction_id)
         (create_asset)
         (update_asset)
@@ -1730,6 +1850,7 @@ FC_API( graphene::wallet::wallet_api,
         (get_block)
         (get_account_count)
         (get_account_history)
+        (get_account_history_by_operation)
         (get_market_history)
         (get_global_properties)
         (get_dynamic_global_properties)
@@ -1757,6 +1878,8 @@ FC_API( graphene::wallet::wallet_api,
         (flood_network)
         (network_add_nodes)
         (network_get_connected_peers)
+        (sign_memo)
+        (read_memo)
         (set_key_label)
         (get_key_label)
         (get_public_key)
@@ -1784,6 +1907,8 @@ FC_API( graphene::wallet::wallet_api,
         (get_order_book)
         (update_queue_parameters)
         (wire_out)
+        (purchase_cycle_asset)
+        (calculate_cycle_price)
         // Requests:
         (get_all_webasset_issue_requests)
         (get_all_wire_out_holders)

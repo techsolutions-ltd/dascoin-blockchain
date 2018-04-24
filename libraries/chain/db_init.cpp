@@ -48,6 +48,7 @@
 #include <graphene/chain/vesting_balance_object.hpp>
 #include <graphene/chain/upgrade_event_object.hpp>
 #include <graphene/chain/wire_object.hpp>
+#include <graphene/chain/wire_out_with_fee_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
 #include <graphene/chain/witness_object.hpp>
 #include <graphene/chain/witness_schedule_object.hpp>
@@ -69,9 +70,11 @@
 #include <graphene/chain/vesting_balance_evaluator.hpp>
 #include <graphene/chain/upgrade_event_evaluator.hpp>
 #include <graphene/chain/wire_evaluator.hpp>
+#include <graphene/chain/wire_out_with_fee_evaluator.hpp>
 #include <graphene/chain/withdraw_permission_evaluator.hpp>
 #include <graphene/chain/witness_evaluator.hpp>
 #include <graphene/chain/worker_evaluator.hpp>
+#include <graphene/chain/change_fee_evaluator.hpp>
 
 #include <graphene/chain/protocol/fee_schedule.hpp>
 
@@ -150,6 +153,9 @@ const uint8_t issue_asset_request_object::type_id;
 
 const uint8_t wire_out_holder_object::space_id;
 const uint8_t wire_out_holder_object::type_id;
+
+const uint8_t wire_out_with_fee_holder_object::space_id;
+const uint8_t wire_out_with_fee_holder_object::type_id;
 
 const uint8_t reward_queue_object::space_id;
 const uint8_t reward_queue_object::type_id;
@@ -250,6 +256,14 @@ void database::initialize_evaluators()
    register_evaluator<delete_upgrade_event_evaluator>();
    register_evaluator<update_license_evaluator>();
    register_evaluator<issue_cycles_to_license_evaluator>();
+   register_evaluator<change_fee_evaluator>();
+   register_evaluator<change_fee_pool_account_evaluator>();
+   register_evaluator<purchase_cycles_evaluator>();
+   register_evaluator<transfer_cycles_from_licence_to_wallet_evaluator>();
+   register_evaluator<wire_out_with_fee_evaluator>();
+   register_evaluator<wire_out_with_fee_complete_evaluator>();
+   register_evaluator<wire_out_with_fee_reject_evaluator>();
+   register_evaluator<set_starting_cycle_asset_amount_evaluator>();
 }
 
 void database::initialize_indexes()
@@ -305,7 +319,8 @@ void database::initialize_indexes()
    add_index<primary_index<license_information_index>>();
    add_index<primary_index<issued_asset_record_index>>();
    add_index<primary_index<frequency_history_record_index>>();
-   add_index<primary_index< witness_delegate_data_index > >();
+   add_index<primary_index<witness_delegate_data_index > >();
+   add_index<primary_index<wire_out_with_fee_holder_index>>();
 }
 
 account_id_type database::initialize_chain_authority(const string& kind_name, const string& acc_name)
@@ -516,6 +531,26 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       ao.dynamic_asset_data_id = dascoin_dyn_asset.id;
    });
 
+   // Create cycle assets:
+   const auto& cycle_dyn_asset = create<asset_dynamic_data_object>([&](asset_dynamic_data_object& a){
+         a.current_supply = 0;  // Cycle starts with 0 initial supply.
+      });
+   create<asset_object>( [&]( asset_object& a ) {
+      a.symbol = DASCOIN_CYCLE_ASSET_SYMBOL;
+      a.options.max_supply = genesis_state.max_core_supply;  // TODO: this should remain 10 trillion?
+      a.precision = DASCOIN_CYCLE_ASSET_PRECISION_DIGITS;
+      a.options.flags = WEB_ASSET_INITIAL_FLAGS;
+      a.options.issuer_permissions = WEB_ASSET_ISSUER_PERMISSION_MASK;  // TODO: set the appropriate issuer permissions.
+      a.issuer = GRAPHENE_NULL_ACCOUNT;
+      a.authenticator = GRAPHENE_NULL_ACCOUNT;
+      // TODO: figure out the base conversion rates.
+      a.options.core_exchange_rate.base.amount = 1;
+      a.options.core_exchange_rate.base.asset_id = asset_id_type(3);
+      a.options.core_exchange_rate.quote.amount = 1;
+      a.options.core_exchange_rate.quote.asset_id = asset_id_type(3);
+      a.dynamic_asset_data_id = cycle_dyn_asset.id;
+   });
+
    // Create more special assets
    while( true )
    {
@@ -580,6 +615,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       cop.name = account.name;
       cop.registrar = GRAPHENE_TEMP_ACCOUNT;
       cop.owner = authority(1, account.owner_key, 1);
+      cop.kind = static_cast<uint8_t>(account_kind::special);
       if( account.active_key == public_key_type() )
       {
          cop.active = cop.owner;

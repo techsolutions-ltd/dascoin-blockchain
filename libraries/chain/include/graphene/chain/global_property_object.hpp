@@ -168,6 +168,12 @@ namespace graphene { namespace chain {
           */
          bool is_root_authority_enabled_flag = true;
 
+         /**
+          * This is id of account that owns fee pool balance object
+          * It can be set or empy if empty cycles will be burned when fee is payed
+          */
+         account_id_type fee_pool_account_id;
+
          enum dynamic_flag_bits
          {
             /**
@@ -209,6 +215,7 @@ FC_REFLECT_DERIVED( graphene::chain::dynamic_global_property_object, (graphene::
                     (next_spend_limit_reset)
                     (is_root_authority_enabled_flag)
                     (last_dascoin_price)
+                    (fee_pool_account_id)
                   )
 
 FC_REFLECT_DERIVED( graphene::chain::global_property_object, (graphene::db::object),

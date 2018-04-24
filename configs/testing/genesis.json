@@ -1,17 +1,30 @@
 {
-  "initial_timestamp": "2017-03-26T14:07:55",
+  "initial_timestamp": "2017-03-31T19:18:24",
   "max_core_supply": "1000000000000000",
-  "max_dascoin_supply": "8800000000",
+  "max_dascoin_supply": "8589934592",
+  "historic_upgrade_events": [
+	{
+		"execution_time": "2017-07-17T00:00:00",
+		"cutoff_time": "2017-07-17T00:00:00",
+		"subsequent_executions": ["2017-07-26T00:00:00"],
+		"comment": "upgrade_1"
+	},
+	{
+		"execution_time": "2017-11-03T00:00:00",
+		"cutoff_time": "2017-11-03T00:00:00",
+		"subsequent_executions": ["2017-11-11T00:00:00"],
+		"comment": "upgrade_2"
+	}],
   "initial_parameters": {
     "current_fees": {
       "parameters": [[
           0,{
-            "fee": 2000000,
-            "price_per_kbyte": 1000000
+            "fee": 0,
+            "price_per_kbyte": 0
           }
         ],[
           1,{
-            "fee": 500000
+            "fee": 0
           }
         ],[
           2,{
@@ -222,16 +235,54 @@
           62,{}
         ],[
           63,{}
+        ],[
+          64,{}
+        ],[
+          65,{}
+        ],[
+          66,{}
+        ],[
+          67,{}
+        ],[
+          68,{}
+        ],[
+          69,{}
+        ],[
+          70,{}
+        ],[
+          71,{}
+        ],[
+          72,{}
+        ],[
+          73,{}
+        ],[
+          74,{}
+        ],[
+          75,{}
+        ],[
+          76,{}
+        ],[
+          77,{}
+        ],[
+          78,{
+            "fee": 1
+          }
+        ],[
+          79,{}
+        ],[
+          80,{}
+        ],[
+          81,{}
         ]
       ],
       "scale": 10000
     },
     "block_interval": 6,
-    "maintenance_interval": 600,
+    "maintenance_interval": 86400,
     "maintenance_skip_slots": 1,
     "committee_proposal_review_period": 1209600,
     "maximum_transaction_size": 2048,
-    "maximum_block_size": 2048000000,
+    "maximum_block_size": 2457600000,
     "maximum_time_until_expiration": 300,
     "maximum_proposal_lifetime": 2419200,
     "maximum_asset_whitelist_authorities": 10,
@@ -253,13 +304,14 @@
     "accounts_per_fee_scale": 1000,
     "account_fee_scale_bitshifts": 4,
     "max_authority_depth": 2,
-    "upgrade_event_interval_days": 120,
+    "upgrade_event_interval_days": 108,
     "minimum_transfer_limit": 0,
     "maximum_transfer_limit": 100000,
     "limit_interval_elapse_time_seconds": 86400,
     "web_asset_request_expiration_time_seconds": 86400,
-    "reward_interval_time_seconds": 12,
-    "dascoin_reward_amount": 20000000,
+    "reward_interval_time_seconds": 600,
+    "dascoin_reward_amount": 600000000,
+    "starting_cycle_asset_amount": 100,
     "enable_cycle_issuing": true,
     "enable_dascoin_queue": true,
     "extensions": []
@@ -276,8 +328,8 @@
       "is_lifetime_member": true
     },{
       "name": "sys.license-administrator",
-      "owner_key": "GPH73Xui8UFc2NWCtEnRDketQCpxMH6oacPnAdU4ojk1Eam6UwaGb",
-      "active_key": "GPH73Xui8UFc2NWCtEnRDketQCpxMH6oacPnAdU4ojk1Eam6UwaGb",
+      "owner_key": "GPH6uWW7KDtvpXY5uWLQ7Dv5qD7MuKDWp1tzPp3gV9pPw3h8gBkdk",
+      "active_key": "GPH6uWW7KDtvpXY5uWLQ7Dv5qD7MuKDWp1tzPp3gV9pPw3h8gBkdk",
       "is_lifetime_member": true
     },{
       "name": "sys.license-issuer",
@@ -324,6 +376,51 @@
       "owner_key": "GPH6qLZ5Mo1i1pXQCFwZvWZVj6mk7qBtSD8zgs6SdWAFriJgpwVmS",
       "active_key": "GPH6qLZ5Mo1i1pXQCFwZvWZVj6mk7qBtSD8zgs6SdWAFriJgpwVmS",
       "is_lifetime_member": true
+    },{
+      "name": "sys.board0",
+      "owner_key": "GPH8RwUJwXEwv6eN2RAJgZHfZWWHxhXVk31DhkYmQqpHZQ8q9eJj6",
+      "active_key": "GPH8RwUJwXEwv6eN2RAJgZHfZWWHxhXVk31DhkYmQqpHZQ8q9eJj6",
+      "is_lifetime_member": true
+    },{
+      "name": "sys.board1",
+      "owner_key": "GPH8RwUJwXEwv6eN2RAJgZHfZWWHxhXVk31DhkYmQqpHZQ8q9eJj6",
+      "active_key": "GPH8RwUJwXEwv6eN2RAJgZHfZWWHxhXVk31DhkYmQqpHZQ8q9eJj6",
+      "is_lifetime_member": true
+    },{
+      "name": "sys.board2",
+      "owner_key": "GPH8RwUJwXEwv6eN2RAJgZHfZWWHxhXVk31DhkYmQqpHZQ8q9eJj6",
+      "active_key": "GPH8RwUJwXEwv6eN2RAJgZHfZWWHxhXVk31DhkYmQqpHZQ8q9eJj6",
+      "is_lifetime_member": true
+    },{
+      "name": "sys.board3",
+      "owner_key": "GPH8RwUJwXEwv6eN2RAJgZHfZWWHxhXVk31DhkYmQqpHZQ8q9eJj6",
+      "active_key": "GPH8RwUJwXEwv6eN2RAJgZHfZWWHxhXVk31DhkYmQqpHZQ8q9eJj6",
+      "is_lifetime_member": true
+    },{
+      "name": "sys.board4",
+      "owner_key": "GPH8RwUJwXEwv6eN2RAJgZHfZWWHxhXVk31DhkYmQqpHZQ8q9eJj6",
+      "active_key": "GPH8RwUJwXEwv6eN2RAJgZHfZWWHxhXVk31DhkYmQqpHZQ8q9eJj6",
+      "is_lifetime_member": true
+    },{
+      "name": "sys.board5",
+      "owner_key": "GPH8RwUJwXEwv6eN2RAJgZHfZWWHxhXVk31DhkYmQqpHZQ8q9eJj6",
+      "active_key": "GPH8RwUJwXEwv6eN2RAJgZHfZWWHxhXVk31DhkYmQqpHZQ8q9eJj6",
+      "is_lifetime_member": true
+    },{
+      "name": "sys.board6",
+      "owner_key": "GPH8RwUJwXEwv6eN2RAJgZHfZWWHxhXVk31DhkYmQqpHZQ8q9eJj6",
+      "active_key": "GPH8RwUJwXEwv6eN2RAJgZHfZWWHxhXVk31DhkYmQqpHZQ8q9eJj6",
+      "is_lifetime_member": true
+    },{
+      "name": "sys.board7",
+      "owner_key": "GPH8RwUJwXEwv6eN2RAJgZHfZWWHxhXVk31DhkYmQqpHZQ8q9eJj6",
+      "active_key": "GPH8RwUJwXEwv6eN2RAJgZHfZWWHxhXVk31DhkYmQqpHZQ8q9eJj6",
+      "is_lifetime_member": true
+    },{
+      "name": "sys.board8",
+      "owner_key": "GPH8RwUJwXEwv6eN2RAJgZHfZWWHxhXVk31DhkYmQqpHZQ8q9eJj6",
+      "active_key": "GPH8RwUJwXEwv6eN2RAJgZHfZWWHxhXVk31DhkYmQqpHZQ8q9eJj6",
+      "is_lifetime_member": true
     }
   ],
   "initial_assets": [],
@@ -344,9 +441,30 @@
   ],
   "initial_committee_candidates": [{
       "owner_name": "sys.master"
+    },{
+      "owner_name": "sys.board0"
+    },{
+      "owner_name": "sys.board1"
+    },{
+      "owner_name": "sys.board2"
+    },{
+      "owner_name": "sys.board3"
+    },{
+      "owner_name": "sys.board4"
+    },{
+      "owner_name": "sys.board5"
+    },{
+      "owner_name": "sys.board6"
+    },{
+      "owner_name": "sys.board7"
+    },{
+      "owner_name": "sys.board8"
     }
   ],
   "initial_worker_candidates": [],
+  "initial_root_authority": {
+    "owner_name": "sys.master"
+  },
   "initial_license_administration_authority": {
     "owner_name": "sys.license-administrator"
   },
@@ -376,6 +494,10 @@
   },
   "initial_wire_out_handler": {
     "owner_name": "sys.wire-out-handler"
+  },
+  "initial_dascoin_price": {
+    "base_amount": 100000,
+    "quote_amount": 35
   },
   "initial_chain_id": "aa34045518f1469a28fa4578240d5f039afa9959c0b95ce3b39674efa691fb21",
   "immutable_parameters": {

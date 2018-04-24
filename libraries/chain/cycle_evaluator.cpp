@@ -6,6 +6,7 @@
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/frequency_history_record_object.hpp>
 #include <graphene/chain/hardfork.hpp>
+#include <graphene/chain/license_objects.hpp>
 #include <graphene/chain/queue_objects.hpp>
 #include <graphene/chain/submit_cycles_evaluator_helper.hpp>
 #include <graphene/db/object_id.hpp>
@@ -32,6 +33,17 @@ void_result submit_reserve_cycles_to_queue_evaluator::do_evaluate(const submit_r
              "Account '${name}' must be a vault account",
              ("name", account_obj.name)
            );
+
+  // Assure that amount of cycles submitted would not exceed DASCOIN_MAX_DASCOIN_SUPPLY limit.
+  FC_ASSERT(d.cycles_to_dascoin(op.amount, op.frequency_lock) + d.get_total_dascoin_amount_in_system() <= DASCOIN_MAX_DASCOIN_SUPPLY * DASCOIN_DEFAULT_ASSET_PRECISION,
+            "Cannot submit ${am} cycles with frequency (${f}), "
+            "because with amount (${dsc_system} DSC in system, "
+            "it would exceed DASCOIN_MAX_DASCOIN_SUPPLY limit ${dsc_max_limit} DSC",
+            ("am", op.amount)
+            ("f", op.frequency_lock)
+            ("dsc_system", d.get_total_dascoin_amount_in_system())
+            ("dsc_max_limit", DASCOIN_MAX_DASCOIN_SUPPLY * DASCOIN_DEFAULT_ASSET_PRECISION)
+          );
 
   return {};
 
@@ -221,6 +233,20 @@ void_result issue_cycles_to_license_evaluator::do_evaluate(const operation_type&
              ("a", account_obj.name)
            );
 
+  // Assure that amount of cycles submitted would not exceed DASCOIN_MAX_DASCOIN_SUPPLY limit.
+  if (license.kind == license_kind::chartered)
+  {
+    FC_ASSERT(d.cycles_to_dascoin(op.amount, _frequency_lock) + d.get_total_dascoin_amount_in_system() <= DASCOIN_MAX_DASCOIN_SUPPLY * DASCOIN_DEFAULT_ASSET_PRECISION,
+              "Cannot submit ${am} cycles with frequency (${f}), "
+              "because with amount (${dsc_system} DSC in system, "
+              "it would exceed DASCOIN_MAX_DASCOIN_SUPPLY limit ${dsc_max_limit} DSC",
+              ("am", op.amount)
+              ("f", _frequency_lock)
+              ("dsc_system", d.get_total_dascoin_amount_in_system())
+              ("dsc_max_limit", DASCOIN_MAX_DASCOIN_SUPPLY * DASCOIN_DEFAULT_ASSET_PRECISION)
+            );
+  }
+
   _license_information_obj = &license_information_obj;
   _kind = license.kind;
   return {};
@@ -246,6 +272,157 @@ void_result issue_cycles_to_license_evaluator::do_apply(const operation_type& op
 
   d.modify(*_license_information_obj, [&](license_information_object& lio) {
     lio.add_non_upgradeable_cycles(op.license, op.amount);
+  });
+
+  return {};
+
+} FC_CAPTURE_AND_RETHROW((op)) }
+
+void_result purchase_cycles_evaluator::do_evaluate(const operation_type& op)
+{ try {
+
+  const auto& d = db();
+  const auto& wallet_obj = op.wallet_id(d);
+  auto account_kind_string = fc::reflector<account_kind>::to_string(wallet_obj.kind);
+
+  FC_ASSERT( wallet_obj.is_wallet(), "Cycles can be purchased only from a wallet account, '${w}' is ${k}", ("w", wallet_obj.name)("k", account_kind_string) );
+
+  const dynamic_global_property_object dgpo = d.get_dynamic_global_properties();
+
+  FC_ASSERT( dgpo.frequency == op.frequency, "Current frequency is ${cf}, ${opf} given", ("cf", dgpo.frequency)("opf", op.frequency) );
+
+  FC_ASSERT( op.amount.asset_id == d.get_dascoin_asset_id(), "Cycles can only be purchased for DasCoin, ${a} sent", ("a", op.amount.asset_id));
+
+  const auto& asset_obj = op.amount.asset_id(d);
+  double price = static_cast<double>(op.expected_amount.value) / (static_cast<double>(dgpo.frequency.value) / DASCOIN_FREQUENCY_PRECISION);
+  price = std::ceil(price * std::pow(10, asset_obj.precision)) / std::pow(10, asset_obj.precision);
+  asset calculated_asset = asset(price * std::pow(10, asset_obj.precision), op.amount.asset_id);
+
+  FC_ASSERT( calculated_asset == op.amount, "Calculated price is ${p}, but ${s} sent", ("p", d.to_pretty_string(calculated_asset))("s", d.to_pretty_string((op.amount))));
+
+  const auto& dascoin_balance_obj = d.get_balance_object(op.wallet_id, d.get_dascoin_asset_id());
+
+  // Check if we have enough dascoin balance:
+  FC_ASSERT( dascoin_balance_obj.balance >= calculated_asset.amount,
+             "Insufficient balance on wallet ${w}: ${balance}, unable to spent ${amount} on cycle purchase",
+             ("w", wallet_obj.name)
+             ("balance", d.to_pretty_string(dascoin_balance_obj.get_balance()))
+             ("amount", d.to_pretty_string(calculated_asset))
+           );
+
+  const auto& cycle_balance_obj = d.get_balance_object(op.wallet_id, d.get_cycle_asset_id());
+
+  _dascoin_balance_obj = &dascoin_balance_obj;
+  _cycle_balance_obj = &cycle_balance_obj;
+
+  return {};
+
+} FC_CAPTURE_AND_RETHROW((op)) }
+
+void_result purchase_cycles_evaluator::do_apply(const operation_type& op)
+{ try {
+
+  auto& d = db();
+
+  // Deduce dascoin from balance:
+  d.modify(*_dascoin_balance_obj, [&](account_balance_object& acc_b){
+    acc_b.balance -= op.amount.amount;
+    acc_b.spent += op.amount.amount;
+  });
+
+  // Add cycles to cycle balance:
+  d.modify(*_cycle_balance_obj, [&](account_balance_object& acc_b){
+    acc_b.balance += op.expected_amount;
+  });
+
+  // Increase current supply:
+  const auto& cycle_asset_obj = (*_cycle_balance_obj).asset_type(d);
+  d.modify(cycle_asset_obj.dynamic_asset_data_id(d), [&](asset_dynamic_data_object& data){
+    data.current_supply += op.expected_amount;
+  });
+
+  const auto& dgp = d.get_dynamic_global_properties();
+  // If fee pool account is set, move dascoin to it:
+  if (dgp.fee_pool_account_id != account_id_type())
+  {
+    const auto& dascoin_balance_obj = d.get_balance_object(dgp.fee_pool_account_id, d.get_dascoin_asset_id());
+    d.modify(dascoin_balance_obj, [&](account_balance_object& acc_b){
+      acc_b.balance += op.amount.amount;
+    });
+  }
+  else
+  {
+    // Burn dascoin
+    const auto& asset_obj = (*_dascoin_balance_obj).asset_type(d);
+    d.modify(asset_obj.dynamic_asset_data_id(d), [&](asset_dynamic_data_object& data){
+      data.current_supply -= op.amount.amount;
+    });
+  }
+
+  return {};
+
+} FC_CAPTURE_AND_RETHROW((op)) }
+
+void_result transfer_cycles_from_licence_to_wallet_evaluator::do_evaluate(const operation_type& op)
+{ try {
+
+  const auto& d = db();
+  const auto& vault_obj = op.vault_id(d);
+  const auto& wallet_obj = op.wallet_id(d);
+  auto vault_kind_string = fc::reflector<account_kind>::to_string(vault_obj.kind);
+  auto wallet_kind_string = fc::reflector<account_kind>::to_string(wallet_obj.kind);
+
+  FC_ASSERT( vault_obj.is_vault(), "Cycles can be transferred only from a vault account, '${w}' is ${v}", ("w", vault_obj.name)("v", vault_kind_string) );
+  FC_ASSERT( wallet_obj.is_wallet(), "Cycles can be transferred only to a wallet account, '${w}' is ${v}", ("w", wallet_obj.name)("v", wallet_kind_string) );
+
+  FC_ASSERT( wallet_obj.is_tethered_to(op.vault_id), "Cycles can be transferred only between tethered accounts");
+
+  FC_ASSERT ( vault_obj.license_information.valid(), "Cannot transfer cycles from a vault which doesn't have any license issued" );
+
+  const auto& license_information_obj = (*vault_obj.license_information)(d);
+
+  FC_ASSERT( license_information_obj.vault_license_kind != chartered, "Cannot transfer cycles from a chartered license" );
+
+  const auto& license_iterator = std::find_if(license_information_obj.history.begin(), license_information_obj.history.end(),
+                                              [&op](const license_information_object::license_history_record& history_record) {
+                                                return history_record.license == op.license_id;
+                                              });
+
+  FC_ASSERT ( license_iterator != license_information_obj.history.end(), "License ${l} is not issued to account ${a}",
+              ("l", op.license_id)("a", op.vault_id)
+            );
+
+  FC_ASSERT ( (*license_iterator).amount >= op.amount, "Trying to transfer ${t} cycles from license ${l} of vault ${v}, while ${r} remaining",
+              ("t", op.amount)("l", op.license_id)("v", op.vault_id)("r", (*license_iterator).amount)
+            );
+
+  const auto& cycle_balance_obj = d.get_balance_object(op.wallet_id, d.get_cycle_asset_id());
+
+  _cycle_balance_obj = &cycle_balance_obj;
+  _license_information_obj = &license_information_obj;
+
+  return {};
+
+} FC_CAPTURE_AND_RETHROW((op)) }
+
+void_result transfer_cycles_from_licence_to_wallet_evaluator::do_apply(const operation_type& op)
+{ try {
+  auto& d = db();
+
+  d.modify(*_license_information_obj, [&](license_information_object& lio) {
+    lio.subtract_cycles(op.license_id, op.amount);
+  });
+
+  // Add cycles to wallet's cycle balance:
+  d.modify(*_cycle_balance_obj, [&](account_balance_object& acc_b){
+    acc_b.balance += op.amount;
+  });
+
+  // Increase current supply because at this moment cycles are becoming an asset:
+  const auto cycle_id = d.get_cycle_asset_id();
+  const auto& cycle_asset_obj = cycle_id(d);
+  d.modify(cycle_asset_obj.dynamic_asset_data_id(d), [&](asset_dynamic_data_object& data){
+    data.current_supply += op.amount;
   });
 
   return {};

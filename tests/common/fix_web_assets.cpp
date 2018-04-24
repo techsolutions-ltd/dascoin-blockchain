@@ -13,6 +13,8 @@
 #include <graphene/chain/protocol/asset_ops.hpp>
 #include <graphene/chain/protocol/wire.hpp>
 #include <graphene/chain/wire_object.hpp>
+#include <graphene/chain/protocol/wire_out_with_fee.hpp>
+#include <graphene/chain/wire_out_with_fee_object.hpp>
 #include <graphene/chain/issued_asset_record_object.hpp>
 // #include <graphene/chain/account_object.hpp>
 // #include <graphene/chain/committee_member_object.hpp>
@@ -53,6 +55,29 @@ const issued_asset_record_object* database_fixture::issue_webasset(const string&
   op.asset_id =  get_web_asset_id();
   op.reserved_amount = reserved;
   op.comment = "TEST_ISSUE_WEB_ASSET";
+
+  signed_transaction tx;
+  set_expiration(db, tx);
+  tx.operations.push_back(op);
+  tx.validate();
+  processed_transaction ptx = db.push_transaction(tx, ~0);
+  tx.clear();
+
+  return db.find<issued_asset_record_object>(ptx.operation_results[0].get<object_id_type>());
+
+} FC_LOG_AND_RETHROW() }
+
+const issued_asset_record_object* database_fixture::issue_cycleasset(const string& unique_id, account_id_type receiver_id,
+                                                                   share_type cash, share_type reserved)
+{ try {
+  asset_create_issue_request_operation op;
+  op.unique_id = unique_id;
+  op.issuer = get_webasset_issuer_id();
+  op.receiver = receiver_id;
+  op.amount = cash;
+  op.asset_id =  get_cycle_asset_id();
+  op.reserved_amount = reserved;
+  op.comment = "TEST_ISSUE_CYCLE_ASSET";
 
   signed_transaction tx;
   set_expiration(db, tx);
@@ -124,6 +149,23 @@ void database_fixture::transfer_dascoin_vault_to_wallet(account_id_type vault_id
     transfer_vault_to_wallet_operation op;
     op.from_vault = vault_id;
     op.to_wallet = wallet_id;
+    op.asset_to_transfer = asset(amount, db.get_dascoin_asset_id());
+    op.reserved_to_transfer = 0;
+
+    set_expiration(db, trx);
+    trx.operations.clear();
+    trx.operations.push_back(op);
+    trx.validate();
+    db.push_transaction(trx, ~0);
+
+} FC_LOG_AND_RETHROW() }
+
+void database_fixture::transfer_dascoin_wallet_to_vault(account_id_type wallet_id, account_id_type vault_id,
+                                                        share_type amount)
+{ try {
+    transfer_wallet_to_vault_operation op;
+    op.from_wallet = wallet_id;
+    op.to_vault = vault_id;
     op.asset_to_transfer = asset(amount, db.get_dascoin_asset_id());
     op.reserved_to_transfer = 0;
 

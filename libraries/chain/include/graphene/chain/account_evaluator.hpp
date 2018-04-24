@@ -93,4 +93,13 @@ private:
    const account_object* _account_obj = nullptr;
 };
 
+class set_starting_cycle_asset_amount_evaluator : public evaluator<set_starting_cycle_asset_amount_evaluator>
+{
+public:
+  typedef set_starting_cycle_asset_amount_operation operation_type;
+
+  void_result do_evaluate( const operation_type& op );
+  void_result do_apply( const operation_type& op );
+};
+
 } } // graphene::chain

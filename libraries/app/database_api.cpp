@@ -40,6 +40,7 @@
 #include <boost/multiprecision/cpp_int.hpp>
 
 #include <cctype>
+#include <cmath>
 
 #include <cfenv>
 #include <iostream>
@@ -72,6 +73,9 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       optional<block_header> get_block_header(uint32_t block_num)const;
       optional<signed_block> get_block(uint32_t block_num)const;
       vector<signed_block_with_num> get_blocks(uint32_t block_num, uint32_t count) const;
+      vector<signed_block_with_virtual_operations_and_num> get_blocks_with_virtual_operations(uint32_t start_block_num,
+                                                                                              uint32_t count,
+                                                                                              std::vector<uint16_t>& virtual_operation_ids) const;
       processed_transaction get_transaction( uint32_t block_num, uint32_t trx_in_block )const;
 
       // Globals
@@ -181,6 +185,8 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       // Vault info:
       optional<vault_info_res> get_vault_info(account_id_type vault_id) const;
       vector<acc_id_vault_info_res> get_vaults_info(vector<account_id_type> vault_ids) const;
+
+      optional<cycle_price> calculate_cycle_price(share_type cycle_amount, asset_id_type asset_id) const;
 
       template<typename T>
       void subscribe_to_item( const T& i )const
@@ -528,6 +534,20 @@ vector<signed_block_with_num> database_api::get_blocks(uint32_t start_block_num,
 vector<signed_block_with_num> database_api_impl::get_blocks(uint32_t start_block_num, uint32_t count) const
 {
     return _dal.get_blocks(start_block_num, count);
+}
+
+vector<signed_block_with_virtual_operations_and_num> database_api::get_blocks_with_virtual_operations(uint32_t start_block_num,
+                                                                               uint32_t count,
+                                                                               std::vector<uint16_t> virtual_operation_ids) const
+{
+    return my->get_blocks_with_virtual_operations(start_block_num, count, virtual_operation_ids);
+}
+
+vector<signed_block_with_virtual_operations_and_num> database_api_impl::get_blocks_with_virtual_operations(uint32_t start_block_num,
+                                                                                    uint32_t count,
+                                                                                    std::vector<uint16_t>& virtual_operation_ids) const
+{
+    return _dal.get_blocks_with_virtual_operations(start_block_num, count, virtual_operation_ids);
 }
 
 processed_transaction database_api::get_transaction( uint32_t block_num, uint32_t trx_in_block )const
@@ -2462,6 +2482,11 @@ vector<wire_out_holder_object> database_api::get_all_wire_out_holders() const
    return my->list_all_objects<wire_out_holder_index, by_id>();
 }
 
+vector<wire_out_with_fee_holder_object> database_api::get_all_wire_out_with_fee_holders() const
+{
+  return my->list_all_objects<wire_out_with_fee_holder_index, by_id>();
+}
+
 //////////////////////////////////////////////////////////////////////
 //                                                                  //
 // VAULTS:                                                          //
@@ -2486,6 +2511,25 @@ vector<acc_id_vault_info_res> database_api::get_vaults_info(vector<account_id_ty
 vector<acc_id_vault_info_res> database_api_impl::get_vaults_info(vector<account_id_type> vault_ids) const
 {
     return _dal.get_vaults_info(vault_ids);
+}
+
+optional<cycle_price> database_api::calculate_cycle_price(share_type cycle_amount, asset_id_type asset_id) const
+{
+    return my->calculate_cycle_price(cycle_amount, asset_id);
+}
+
+optional<cycle_price> database_api_impl::calculate_cycle_price(share_type cycle_amount, asset_id_type asset_id) const
+{
+    // For now we can only buy cycles with dascoin
+    if (asset_id != _db.get_dascoin_asset_id())
+        return {};
+
+    const dynamic_global_property_object dgpo = get_dynamic_global_properties();
+    const auto& asset_obj = asset_id(_db);
+
+    double price = static_cast<double>(cycle_amount.value) / (static_cast<double>(dgpo.frequency.value) / DASCOIN_FREQUENCY_PRECISION);
+    price = std::ceil(price * std::pow(10, asset_obj.precision)) / std::pow(10, asset_obj.precision);
+    return cycle_price{cycle_amount, asset(price * std::pow(10, asset_obj.precision), asset_obj.id), dgpo.frequency};
 }
 
 //////////////////////////////////////////////////////////////////////

@@ -151,6 +151,14 @@ extern uint32_t GRAPHENE_TESTING_GENESIS_TIMESTAMP;
 #define VAULT_ACTORS_IMPL(r, data, elem) VAULT_ACTOR(elem)
 #define VAULT_ACTORS(names) BOOST_PP_SEQ_FOR_EACH(VAULT_ACTORS_IMPL, ~, names)
 
+#define CUSTODIAN_ACTOR(name) \
+   PREP_ACTOR(name) \
+   const auto& name = create_new_custodian_account(get_registrar_id(), BOOST_PP_STRINGIZE(name), name ## _public_key); \
+   account_id_type name ## _id = name.id; (void)name ## _id;
+
+#define CUSTODIAN_ACTORS_IMPL(r, data, elem) CUSTODIAN_ACTOR(elem)
+#define CUSTODIAN_ACTORS(names) BOOST_PP_SEQ_FOR_EACH(CUSTODIAN_ACTORS_IMPL, ~, names)
+
 namespace graphene { namespace chain {
 
 struct database_fixture {
@@ -318,6 +326,9 @@ struct database_fixture {
    // Use this method to create vault accounts for DAS tests.
    const account_object& create_new_vault_account(const account_id_type registrar, const string& name,
                                                   const public_key_type& key = public_key_type());
+  // Use this method to create custodianaccounts for DAS tests.
+  const account_object& create_new_custodian_account(const account_id_type registrar, const string& name,
+                                                     const public_key_type& key = public_key_type());
 
    // fix_licenses.cpp
    const license_type_object& create_license_type(const string& kind, const string& name, share_type amount, 
@@ -344,6 +355,7 @@ struct database_fixture {
    account_id_type get_pi_validator_id() const;
    account_id_type get_wire_out_handler_id() const;
    asset_id_type get_web_asset_id() const;
+   asset_id_type get_cycle_asset_id() const;
    asset_id_type get_dascoin_asset_id() const;
    frequency_type get_global_frequency() const;
 
@@ -358,6 +370,8 @@ struct database_fixture {
    asset web_asset(share_type amount);
    const issued_asset_record_object* issue_webasset(const string& unique_id, account_id_type receiver_id, 
                                                     share_type cash, share_type reserved);
+   const issued_asset_record_object* issue_cycleasset(const string& unique_id, account_id_type receiver_id,
+                                                                      share_type cash, share_type reserved);
    void deny_issue_request(issue_asset_request_id_type request_id);
    std::pair<share_type, share_type> get_web_asset_amounts(account_id_type owner_id);
    std::pair<asset, asset> get_web_asset_balances(account_id_type owner_id);
@@ -366,6 +380,7 @@ struct database_fixture {
    void transfer_webasset_wallet_to_vault(account_id_type walelt_id, account_id_type vault_id,
                                           std::pair<share_type, share_type> amounts);
    void transfer_dascoin_vault_to_wallet(account_id_type vault_id, account_id_type wallet_id, share_type amount);
+   void transfer_dascoin_wallet_to_vault(account_id_type wallet_id, account_id_type vault_id, share_type amount);
    vector<issue_asset_request_object> get_asset_request_objects(account_id_type account_id);
    share_type get_asset_current_supply(asset_id_type asset_id);
    share_type get_web_asset_current_supply() { return get_asset_current_supply(get_web_asset_id()); }
@@ -383,6 +398,15 @@ struct database_fixture {
    const wire_out_holder_object& wire_out(account_id_type account_id_type, asset amount, const string& memo = "");
    void wire_out_complete(wire_out_holder_id_type holder_id);
    void wire_out_reject(wire_out_holder_id_type holder_id);
+
+  // fix_wire_out_with_fee.cpp
+  vector<wire_out_with_fee_holder_object> get_wire_out_with_fee_holders(account_id_type account_id,
+                                                      const flat_set<asset_id_type>& asset_ids) const;
+  const wire_out_with_fee_holder_object& wire_out_with_fee(account_id_type account_id_type, asset amount,
+                                                           const string& currency_of_choice, const string& to_address,
+                                                           const string& memo = "");
+  void wire_out_with_fee_complete(wire_out_with_fee_holder_id_type holder_id);
+  void wire_out_with_fee_reject(wire_out_with_fee_holder_id_type holder_id);
 
    // fix_queue.cpp
    void adjust_frequency(frequency_type f);

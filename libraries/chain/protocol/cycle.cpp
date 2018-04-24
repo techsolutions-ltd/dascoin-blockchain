@@ -59,4 +59,16 @@ void issue_cycles_to_license_operation::validate() const
   FC_ASSERT( comment.length() <= DASCOIN_MAX_COMMENT_LENGTH );
 }
 
+void purchase_cycle_asset_operation::validate() const
+{
+  FC_ASSERT( amount.amount > 0 );
+  FC_ASSERT( frequency > 0 );
+  FC_ASSERT( expected_amount > 0 );
+}
+
+void transfer_cycles_from_licence_to_wallet_operation::validate() const
+{
+  FC_ASSERT ( amount > 0 );
+}
+
 } } // namespace graphene::chain

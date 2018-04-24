@@ -64,6 +64,7 @@ add_library( graphene_chain
              protocol/upgrade_event.cpp
              # protocol/personal_identity.cpp
              protocol/wire.cpp
+             protocol/wire_out_with_fee.cpp
              protocol/cycle.cpp
 
              genesis_state.cpp
@@ -107,7 +108,10 @@ add_library( graphene_chain
              issued_asset_record_object.cpp
              wire_object.cpp
              wire_evaluator.cpp
+             wire_out_with_fee_evaluator.cpp
              cycle_evaluator.cpp
+             change_fee_evaluator.cpp
+             balance_checker.cpp
 
              access_layer.cpp
 

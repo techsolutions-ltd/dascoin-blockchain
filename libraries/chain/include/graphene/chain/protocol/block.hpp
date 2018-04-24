@@ -58,6 +58,7 @@ namespace graphene { namespace chain {
    struct signed_block_with_virtual_operations : public signed_block
    {
       vector<operation> virtual_operations;
+      signed_block_with_virtual_operations(){}
       signed_block_with_virtual_operations(signed_block & sb) : signed_block(sb){}
    };
 

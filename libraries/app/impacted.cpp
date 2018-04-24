@@ -191,6 +191,16 @@ struct get_impacted_account_visitor
    void operator()( const custom_operation& op ) {}
    void operator()( const assert_operation& op ) {}
    void operator()( const balance_claim_operation& op ) {}
+   void operator()( const change_operation_fee_operation& op )
+   {
+      _impacted.insert( op.issuer );
+   }
+
+   void operator()( const change_fee_pool_account_operation& op )
+   {
+      _impacted.insert( op.issuer );
+      _impacted.insert( op.fee_pool_account_id );
+   }
 
    void operator()( const override_transfer_operation& op )
    {
@@ -287,6 +297,26 @@ struct get_impacted_account_visitor
       _impacted.insert( op.account );
    }
 
+   void operator()( const wire_out_with_fee_operation& op )
+   {
+     _impacted.insert( op.account );
+   }
+
+   void operator()( const wire_out_with_fee_complete_operation& op )
+   {
+     _impacted.insert( op.wire_out_handler );
+   }
+
+   void operator()( const wire_out_with_fee_reject_operation& op )
+   {
+     _impacted.insert( op.wire_out_handler );
+   }
+
+   void operator()( const wire_out_with_fee_result_operation& op )
+   {
+     _impacted.insert( op.account );
+   }
+
    void operator()( const transfer_vault_to_wallet_operation& op )
    {
       _impacted.insert( op.from_vault );
@@ -375,6 +405,22 @@ struct get_impacted_account_visitor
    {
       _impacted.insert( op.authority );
       _impacted.insert( op.account );
+   }
+
+   void operator() ( const purchase_cycle_asset_operation& op )
+   {
+      _impacted.insert( op.wallet_id );
+   }
+
+   void operator() ( const transfer_cycles_from_licence_to_wallet_operation& op )
+   {
+      _impacted.insert( op.vault_id );
+      _impacted.insert( op.wallet_id );
+   }
+
+   void operator() (const set_starting_cycle_asset_amount_operation& op)
+   {
+     _impacted.insert(op.issuer);
    }
 };
 

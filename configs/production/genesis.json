@@ -3,18 +3,18 @@
   "max_core_supply": "1000000000000000",
   "max_dascoin_supply": "8589934592",
   "historic_upgrade_events": [
-	{
-		"execution_time": "2017-07-17T00:00:00",
-		"cutoff_time": "2017-07-17T00:00:00",
-		"subsequent_executions": ["2017-07-26T00:00:00"],
-		"comment": "upgrade_1"
-	},
-	{
-		"execution_time": "2017-11-03T00:00:00",
-		"cutoff_time": "2017-11-03T00:00:00",
-		"subsequent_executions": ["2017-11-11T00:00:00"],
-		"comment": "upgrade_2"
-	}],
+  {
+    "execution_time": "2017-07-17T00:00:00",
+    "cutoff_time": "2017-07-17T00:00:00",
+    "subsequent_executions": ["2017-07-26T00:00:00"],
+    "comment": "upgrade_1"
+  },
+  {
+    "execution_time": "2017-11-03T00:00:00",
+    "cutoff_time": "2017-11-03T00:00:00",
+    "subsequent_executions": ["2017-11-11T00:00:00"],
+    "comment": "upgrade_2"
+  }],
   "initial_parameters": {
     "current_fees": {
       "parameters": [[

@@ -1,4 +1,4 @@
 // #EXEX-127 from this moment users will not be allowed to spend their last DSC except on buying cycles
 #ifndef HARDFORK_EXEX_127_TIME
-#define HARDFORK_EXEX_127_TIME (fc::time_point_sec( 1524045600 ))
+#define HARDFORK_EXEX_127_TIME (fc::time_point_sec( 1524700800 ))
 #endif

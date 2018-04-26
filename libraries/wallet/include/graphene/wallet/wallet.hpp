@@ -334,6 +334,18 @@ class wallet_api
        * @returns a list of \c operation_history_objects
        */
       vector<operation_detail>  get_account_history(string name, int limit)const;
+      /** Returns the most recent operations on the named account filtered by operations.
+       *
+       * This returns a list of required operation history objects, which describe activity on the account.
+       *
+       * @note this API doesn't give a way to retrieve more than the most recent 100 transactions,
+       *       you can interface directly with the blockchain to get more history
+       * @param name the name or id of the account
+       * @param operations the list of operations to filter on
+       * @param limit the number of entries to return (starting from the most recent) (max 100)
+       * @returns a list of \c operation_history_objects
+       */
+      vector<operation_detail>  get_account_history_by_operation(string name, flat_set<uint32_t> operations, int limit)const;
 
 
       vector<bucket_object>             get_market_history(string symbol, string symbol2, uint32_t bucket)const;
@@ -783,6 +795,21 @@ class wallet_api
        */
       transaction_id_type get_transaction_id( const signed_transaction& trx )const { return trx.id(); }
 
+
+      /** Sign a memo message.
+       *
+       * @param from the name or id of signing account; or a public key.
+       * @param to the name or id of receiving account; or a public key.
+       * @param memo text to sign.
+       */
+      memo_data sign_memo(string from, string to, string memo);
+
+      /** Read a memo.
+       *
+       * @param memo JSON-enconded memo.
+       * @returns string with decrypted message..
+       */
+      string read_memo(const memo_data& memo);
 
       /** These methods are used for stealth transfers */
       ///@{
@@ -1872,6 +1899,7 @@ FC_API( graphene::wallet::wallet_api,
         (get_block)
         (get_account_count)
         (get_account_history)
+        (get_account_history_by_operation)
         (get_market_history)
         (get_global_properties)
         (get_dynamic_global_properties)
@@ -1899,6 +1927,8 @@ FC_API( graphene::wallet::wallet_api,
         (flood_network)
         (network_add_nodes)
         (network_get_connected_peers)
+        (sign_memo)
+        (read_memo)
         (set_key_label)
         (get_key_label)
         (get_public_key)

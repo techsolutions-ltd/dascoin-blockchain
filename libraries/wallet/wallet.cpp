@@ -2055,6 +2055,56 @@ public:
        return tx;
    }
 
+   memo_data sign_memo(string from, string to, string memo)
+   {
+      FC_ASSERT( !self.is_locked() );
+
+      memo_data md = memo_data();
+
+      // get account memo key, if that fails, try a pubkey
+      try {
+         account_object from_account = get_account(from);
+         md.from = from_account.options.memo_key;
+      } catch (const fc::exception& e) {
+         md.from =  self.get_public_key( from );
+      }
+      // same as above, for destination key
+      try {
+         account_object to_account = get_account(to);
+         md.to = to_account.options.memo_key;
+      } catch (const fc::exception& e) {
+         md.to = self.get_public_key( to );
+      }
+
+      md.set_message(get_private_key(md.from), md.to, memo);
+      return md;
+   }
+
+   string read_memo(const memo_data& md)
+   {
+      FC_ASSERT(!is_locked());
+      std::string clear_text;
+
+      const memo_data *memo = &md;
+
+      try {
+         FC_ASSERT(_keys.count(memo->to) || _keys.count(memo->from), "Memo is encrypted to a key ${to} or ${from} not in this wallet.", ("to", memo->to)("from",memo->from));
+         if( _keys.count(memo->to) ) {
+            auto my_key = wif_to_key(_keys.at(memo->to));
+            FC_ASSERT(my_key, "Unable to recover private key to decrypt memo. Wallet may be corrupted.");
+            clear_text = memo->get_message(*my_key, memo->from);
+         } else {
+            auto my_key = wif_to_key(_keys.at(memo->from));
+            FC_ASSERT(my_key, "Unable to recover private key to decrypt memo. Wallet may be corrupted.");
+            clear_text = memo->get_message(*my_key, memo->to);
+         }
+      } catch (const fc::exception& e) {
+         elog("Error when decrypting memo: ${e}", ("e", e.to_detail_string()));
+      }
+
+      return clear_text;
+   }
+
    signed_transaction sell_asset(string seller_account,
                                  string amount_to_sell,
                                  string symbol_to_sell,
@@ -2265,6 +2315,8 @@ public:
 
          return ss.str();
       };
+
+      m["get_account_history_by_operation"] = m["get_account_history"];
 
       m["list_account_balances"] = [this](variant result, const fc::variants& a)
       {
@@ -3097,14 +3149,13 @@ vector<operation_detail> wallet_api::get_account_history(string name, int limit)
          start = start + 1;
       }
 
-
       vector<operation_history_object> current = my->_remote_hist->get_account_history(account_id, operation_history_id_type(), std::min(100,limit), start);
       for( auto& o : current ) {
          std::stringstream ss;
          auto memo = o.op.visit(detail::operation_printer(ss, *my, o.result));
          result.push_back( operation_detail{ memo, ss.str(), o } );
       }
-      if( current.size() < std::min(100,limit) )
+      if( current.size() < static_cast<vector<operation_history_object>::size_type>(std::min(100,limit)) )
          break;
       limit -= current.size();
    }
@@ -3112,6 +3163,34 @@ vector<operation_detail> wallet_api::get_account_history(string name, int limit)
    return result;
 }
 
+// fixme: refactor this
+vector<operation_detail> wallet_api::get_account_history_by_operation(string name, flat_set<uint32_t> operations, int limit)const
+{
+   vector<operation_detail> result;
+   auto account_id = get_account(name).get_id();
+
+   while( limit > 0 )
+   {
+      operation_history_id_type start;
+      if( result.size() )
+      {
+         start = result.back().op.id;
+         start = start + 1;
+      }
+
+      vector<operation_history_object> current = my->_remote_hist->get_account_history_by_operation(account_id, operations, operation_history_id_type(), std::min(100,limit), start);
+      for( auto& o : current ) {
+         std::stringstream ss;
+         auto memo = o.op.visit(detail::operation_printer(ss, *my, o.result));
+         result.push_back( operation_detail{ memo, ss.str(), o } );
+      }
+      if( current.size() < static_cast<vector<operation_history_object>::size_type>(std::min(100,limit)) )
+         break;
+      limit -= current.size();
+   }
+
+   return result;
+}
 
 vector<bucket_object> wallet_api::get_market_history( string symbol1, string symbol2, uint32_t bucket )const
 {
@@ -4130,6 +4209,18 @@ signed_transaction wallet_api::cancel_order(object_id_type order_id, bool broadc
 {
    FC_ASSERT(!is_locked());
    return my->cancel_order(order_id, broadcast);
+}
+
+memo_data wallet_api::sign_memo(string from, string to, string memo)
+{
+   FC_ASSERT(!is_locked());
+   return my->sign_memo(from, to, memo);
+}
+
+string wallet_api::read_memo(const memo_data& memo)
+{
+   FC_ASSERT(!is_locked());
+   return my->read_memo(memo);
 }
 
 string wallet_api::get_key_label( public_key_type key )const

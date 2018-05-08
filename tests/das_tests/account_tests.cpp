@@ -20,43 +20,48 @@ BOOST_FIXTURE_TEST_SUITE( account_unit_tests, database_fixture )
 
 BOOST_AUTO_TEST_CASE( roll_back_account_unit_test )
 { try {
-  VAULT_ACTOR(vault);
+  ACTOR(wallet);
 
-  BOOST_CHECK(vault.owner == vault.owner_roll_back && vault.active == vault.active_roll_back);
-  BOOST_CHECK(!vault.roll_back_active && vault.roll_back_enabled);
+  BOOST_CHECK(wallet.owner == wallet.owner_roll_back && wallet.active == wallet.active_roll_back);
+  BOOST_CHECK(!wallet.roll_back_active && wallet.roll_back_enabled);
 
-  const fc::ecc::private_key new_key = fc::ecc::private_key::generate();
-  const public_key_type key_id = new_key.get_public_key();
-  const auto owner = authority(2, key_id, 1, init_account_pub_key, 1);
-  const auto active = authority(2, key_id, 1, init_account_pub_key, 1);
+  const fc::ecc::private_key priv_key1 = fc::ecc::private_key::generate();
+  const public_key_type pub_key1 = priv_key1.get_public_key();
+  const auto owner1 = authority(2, pub_key1, 1, init_account_pub_key, 1);
+  const auto active1 = authority(2, pub_key1, 1, init_account_pub_key, 1);
 
-  do_op(change_public_keys_operation(vault_id, {owner}, {active}));
-
-  BOOST_TEST_MESSAGE("Change vault account public keys.");
-
-  BOOST_CHECK(vault.active.weight_threshold == 2);
-  BOOST_CHECK(vault.active.num_auths() == 2);
-  BOOST_CHECK(vault.active.key_auths.at(key_id) == 1);
-  BOOST_CHECK(vault.active.key_auths.at(init_account_pub_key) == 1);
-  BOOST_CHECK(vault.active_change_counter == 1);
-
-  BOOST_CHECK(vault.owner.weight_threshold == 2);
-  BOOST_CHECK(vault.owner.num_auths() == 2);
-  BOOST_CHECK(vault.owner.key_auths.at(key_id) == 1);
-  BOOST_CHECK(vault.owner.key_auths.at(init_account_pub_key) == 1);
-  BOOST_CHECK(vault.owner_change_counter == 1);
-
-  BOOST_CHECK(vault.active_change_counter == 1);
-  BOOST_CHECK(vault.owner_change_counter == 1);
+  BOOST_TEST_MESSAGE("Change wallet account public keys.");
+  do_op(change_public_keys_operation(wallet_id, {owner1}, {active1}));
+  BOOST_CHECK(wallet.active_change_counter == 1);
+  BOOST_CHECK(wallet.owner_change_counter == 1);
 
   BOOST_TEST_MESSAGE("Opt-out from public key roll back.");
+  do_op(toggle_roll_back_enabled_operation(wallet_id));
+  GRAPHENE_REQUIRE_THROW(do_op(roll_back_public_keys_operation(get_pi_validator_id(), wallet_id)), fc::exception);
 
-  do_op(toggle_roll_back_enabled_operation(get_pi_validator_id(), vault_id));
+  BOOST_TEST_MESSAGE("Opt-in to public key roll back.");
+  do_op(toggle_roll_back_enabled_operation(wallet_id));
 
+  BOOST_TEST_MESSAGE("Roll back public keys for account.");
+  do_op(roll_back_public_keys_operation(get_pi_validator_id(), wallet_id));
 
-    //GRAPHENE_REQUIRE_THROW(do_op(roll_back_public_keys_operation(vault_id)), fc::exception);
+  BOOST_TEST_MESSAGE("Roll back to puppet keys.");
+  BOOST_CHECK(wallet.owner == wallet.owner_roll_back && wallet.active == wallet.active_roll_back);
 
+  issue_webasset("1", wallet_id, 15000, 15000);
+  GRAPHENE_REQUIRE_THROW(wire_out_with_fee(wallet_id, web_asset(10000), "BTC", "SOME_BTC_ADDRESS", "debit"), fc::exception);
 
+  const fc::ecc::private_key priv_key2 = fc::ecc::private_key::generate();
+  const public_key_type pub_key2 = priv_key2.get_public_key();
+  const auto owner2 = authority(2, pub_key2, 1, init_account_pub_key, 1);
+  const auto active2 = authority(2, pub_key2, 1, init_account_pub_key, 1);
+
+  BOOST_TEST_MESSAGE("Change wallet account public keys to new ones.");
+  do_op(change_public_keys_operation(wallet_id, {owner2}, {active2}));
+  BOOST_CHECK(wallet.active_change_counter == 2);
+  BOOST_CHECK(wallet.owner_change_counter == 2);
+
+  wire_out_with_fee(wallet_id, web_asset(10000), "BTC", "SOME_BTC_ADDRESS", "debit");
 
 } FC_LOG_AND_RETHROW() }
 

@@ -493,7 +493,6 @@ void_result tether_accounts_evaluator::do_apply(const tether_accounts_operation&
 void_result change_public_keys_evaluator::do_evaluate(const change_public_keys_operation& op)
 { try {
    const auto& d = db();
-
    _account_obj = &op.account(d);
    return {};
 
@@ -527,10 +526,6 @@ object_id_type change_public_keys_evaluator::do_apply(const change_public_keys_o
 void_result toggle_roll_back_enabled_evaluator::do_evaluate(const toggle_roll_back_enabled_operation& op)
 {
   try {
-    const auto op_authority_obj = op.authority(db());
-    db().perform_chain_authority_check("personal identity validation",
-                                    db().get_global_properties().authorities.pi_validator,
-                                    op_authority_obj);
     return {};
   } FC_CAPTURE_AND_RETHROW((op))
 }
@@ -546,8 +541,11 @@ object_id_type toggle_roll_back_enabled_evaluator::do_apply(const toggle_roll_ba
 void_result roll_back_public_keys_evaluator::do_evaluate(const roll_back_public_keys_operation& op)
 {
   try {
+    const auto op_authority_obj = op.authority(db());
+    db().perform_chain_authority_check("personal identity validation",
+                                       db().get_global_properties().authorities.pi_validator,
+                                       op_authority_obj);
     FC_ASSERT(op.account(db()).roll_back_enabled, "Cannot initiate rollback procedure because account has roll_back_enabled set to false.");
-    db().modify(op.account(db()), [&](account_object& ao) {ao.roll_back_active = true;});
     return {};
   } FC_CAPTURE_AND_RETHROW((op))
 }
@@ -555,7 +553,12 @@ void_result roll_back_public_keys_evaluator::do_evaluate(const roll_back_public_
 object_id_type roll_back_public_keys_evaluator::do_apply(const roll_back_public_keys_operation& op)
 {
   try {
-    db().modify(op.account(db()), [&](account_object& ao) {ao.roll_back_active = true;});
+    db().modify(op.account(db()), [&](account_object& ao)
+    {
+      ao.roll_back_active = true;
+      ao.owner = ao.owner_roll_back;
+      ao.active = ao.active_roll_back;
+    });
     return {};
   } FC_CAPTURE_AND_RETHROW((op))
 }

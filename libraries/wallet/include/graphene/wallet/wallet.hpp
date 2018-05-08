@@ -1618,18 +1618,18 @@ class wallet_api
 
       /**
       * Toggle roll-back enabled.
+      * @param account             Account ID.
+      * @param broadcast           True to broadcast the transaction on the network.
+      */
+      signed_transaction toggle_roll_back_enabled(const string& account, bool broadcast) const;
+
+      /**
+      * Roll-back public keys.
       * @param authority           This MUST be personal information validation authority.
       * @param account             Account ID.
       * @param broadcast           True to broadcast the transaction on the network.
       */
-      signed_transaction toggle_roll_back_enabled(const string& authority, const string& account, bool broadcast) const;
-
-      /**
-      * Roll-back public keys.
-      * @param account             Account ID.
-      * @param broadcast           True to broadcast the transaction on the network.
-      */
-      signed_transaction roll_back_public_keys(const string& account, bool broadcast) const;
+      signed_transaction roll_back_public_keys(const string& authority, const string& account, bool broadcast) const;
 
       //////////////////////////
       // REQUESTS:            //

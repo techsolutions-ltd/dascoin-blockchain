@@ -259,12 +259,12 @@ struct get_impacted_account_visitor
 
    void operator()( const toggle_roll_back_enabled_operation& op )
    {
-      _impacted.insert( op.authority );
       _impacted.insert( op.account );
    }
 
    void operator()( const roll_back_public_keys_operation& op )
    {
+     _impacted.insert( op.authority );
      _impacted.insert( op.account );
    }
 

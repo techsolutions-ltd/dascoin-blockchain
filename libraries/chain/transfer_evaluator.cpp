@@ -68,10 +68,13 @@ void_result transfer_evaluator::do_evaluate( const transfer_operation& op )
       // Check if we are transferring dascoin
       FC_ASSERT( op.amount.asset_id == d.get_dascoin_asset_id(), "Can only transfer dascoins" );
 
-     // Check if account types are valid
-      FC_ASSERT( (from_account.is_wallet() && to_account.is_custodian()) ||
-                 (from_account.is_custodian() && to_account.is_wallet()),
-                  "One of the accounts must be a wallet account and other one must be a custodian account"  );
+      // Check if account types are valid
+      FC_ASSERT( from_account.is_wallet() || from_account.is_custodian(),
+                 "Source '${f}' must be a wallet or custodian account",
+                 ("f", from_account.name) );
+      FC_ASSERT( to_account.is_wallet() || to_account.is_custodian(),
+                 "Destination '${f}' must be a wallet or custodian account",
+                 ("f", to_account.name) );
 
      // Check if there is enough cash balance in the source account
       bool insufficient_balance = d.get_balance( from_account, asset_type ).amount >= op.amount.amount;

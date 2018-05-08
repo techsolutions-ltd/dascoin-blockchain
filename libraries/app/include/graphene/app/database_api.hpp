@@ -650,10 +650,35 @@ class database_api
       // Licenses //
       //////////////
 
+      /**
+       * @brief Get license type-ids found on the blockchain.
+       * @param license_type_id_type-id used on the blockchain.
+       * @return The license type-id if found
+       */
       optional<license_type_object> get_license_type(license_type_id_type) const;
+
+      /**
+       * @brief Get all license type-ids found on the blockchain.
+       * @return Vector of license type-ids found
+       */
       vector<license_type_object> get_license_types() const;
+
+      /**
+       * @brief Get all name/license type-ids found on the blockchain.
+       * @return Vector of license name/type-ids pairs found
+       */
       vector<pair<string, license_type_id_type>> get_license_type_names_ids() const;
+
+      /**
+       * @brief Get all license type-ids grouped by kind found on the blockchain.
+       * @return Vector of license type-ids found grouped by kind
+       */
       vector<license_types_grouped_by_kind_res> get_license_type_names_ids_grouped_by_kind() const;
+
+      /**
+       * @brief Get all license objects grouped by kind found on the blockchain.
+       * @return Vector of license objects found grouped by kind
+       */
       vector<license_objects_grouped_by_kind_res> get_license_objects_grouped_by_kind() const;
 
       /**
@@ -682,6 +707,13 @@ class database_api
        */
       vector<optional<license_type_object>> lookup_license_type_names(const vector<string>& names_or_ids)const;
 
+      /**
+       * @brief Get a list of account issued license types
+       * @param asset_symbols IDs of the accounts to retrieve
+       * @return Vector of issued license information objects
+       *
+       * This function has semantics identical to @ref get_objects
+       */
       vector<optional<license_information_object>> get_license_information(const vector<account_id_type>& account_ids) const;
 
       /**
@@ -695,12 +727,47 @@ class database_api
       // Access  //
       /////////////
 
+      /**
+       * @brief (Deprecated) Get a free cycle amount for account
+       * @param account_ids ID of the account to retrieve
+       * @return Number of issued free cycles on account
+       *
+       */
       acc_id_share_t_res get_free_cycle_balance(account_id_type account_id) const;
+
+      /**
+       * @brief (Deprecated) Get cycle amounts per cycle agreement for account
+       * @param account_ids ID of the account to retrieve
+       * @return Vector of cycle amounts and frequency locks on account
+       *
+       */
       acc_id_vec_cycle_agreement_res get_all_cycle_balances(account_id_type account_id) const;
+
+      /**
+       * @brief Get amount of DASCoin for on an account
+       * @return An object containing id and balance of an account
+       */
       acc_id_share_t_res get_dascoin_balance(account_id_type id) const;
 
+      /**
+       * @brief (Deprecated) Get remaining amount of cycles
+       * @param ids Vector of account ids
+       * @return Vector of objects containing account id and cycle balance
+       */
       vector<acc_id_share_t_res> get_free_cycle_balances_for_accounts(vector<account_id_type> ids) const;
+
+      /**
+       * @brief (Deprecated) Get cycle balances for list of accounts
+       * @param ids Vector of account ids
+       * @return Vector of objects containing account id, cycle amount and frequency lock
+       */
       vector<acc_id_vec_cycle_agreement_res> get_all_cycle_balances_for_accounts(vector<account_id_type> ids) const;
+
+      /**
+       * @brief Get DASCoin balances for a list of accounts
+       * @param ids Vector of account ids
+       * @return Vector of object containing id and balance of an account
+       */
       vector<acc_id_share_t_res> get_dascoin_balances_for_accounts(vector<account_id_type> ids) const;
 
       /**
@@ -711,6 +778,8 @@ class database_api
 
       /**
        * @brief Return a portion of the reward queue.
+       * @param from Starting page
+       * @param amount Number of pages to get
        * @return Vector which represent a portion of that queue
        */
       vector<reward_queue_object> get_reward_queue_by_page(uint32_t from, uint32_t amount) const;
@@ -721,9 +790,19 @@ class database_api
        */
       uint32_t get_reward_queue_size() const;
 
+      /**
+       * @brief Get all current submissions to reward queue by single account
+       * @param account_id id of account whose submissions shoud be returned
+       * @return All elements on DASCoin reward queue submitted by given account
+       */
       acc_id_queue_subs_w_pos_res get_queue_submissions_with_pos(account_id_type account_id) const;
-      vector<acc_id_queue_subs_w_pos_res> 
-          get_queue_submissions_with_pos_for_accounts(vector<account_id_type> ids) const;
+
+      /**
+       * @brief Get all current submissions to reward queue by multiple account
+       * @param ids vector of account ids
+       * @return All elements on DASCoin reward queue submitted by given accounts
+       */
+      vector<acc_id_queue_subs_w_pos_res> get_queue_submissions_with_pos_for_accounts(vector<account_id_type> ids) const;
 
       //////////////////////////
       // REQUESTS:            //

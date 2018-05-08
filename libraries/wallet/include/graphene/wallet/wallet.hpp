@@ -334,6 +334,18 @@ class wallet_api
        * @returns a list of \c operation_history_objects
        */
       vector<operation_detail>  get_account_history(string name, int limit)const;
+      /** Returns the most recent operations on the named account filtered by operations.
+       *
+       * This returns a list of required operation history objects, which describe activity on the account.
+       *
+       * @note this API doesn't give a way to retrieve more than the most recent 100 transactions,
+       *       you can interface directly with the blockchain to get more history
+       * @param name the name or id of the account
+       * @param operations the list of operations to filter on
+       * @param limit the number of entries to return (starting from the most recent) (max 100)
+       * @returns a list of \c operation_history_objects
+       */
+      vector<operation_detail>  get_account_history_by_operation(string name, flat_set<uint32_t> operations, int limit)const;
 
 
       vector<bucket_object>             get_market_history(string symbol, string symbol2, uint32_t bucket)const;
@@ -783,6 +795,21 @@ class wallet_api
        */
       transaction_id_type get_transaction_id( const signed_transaction& trx )const { return trx.id(); }
 
+
+      /** Sign a memo message.
+       *
+       * @param from the name or id of signing account; or a public key.
+       * @param to the name or id of receiving account; or a public key.
+       * @param memo text to sign.
+       */
+      memo_data sign_memo(string from, string to, string memo);
+
+      /** Read a memo.
+       *
+       * @param memo JSON-enconded memo.
+       * @returns string with decrypted message..
+       */
+      string read_memo(const memo_data& memo);
 
       /** These methods are used for stealth transfers */
       ///@{
@@ -1544,10 +1571,26 @@ class wallet_api
         bool broadcast /* false */
         );
 
+      /** 
+       * Get all license type ids found on the blockchain
+       *
+       * @return Vector of license type ids
+       */
       vector<license_type_object> get_license_types() const;
+
+      /**
+       * Get names and license type ids found on the blockchain
+       *
+       * @return Vector of license name/type-ids pairs
+       */
       vector<pair<string, license_type_id_type>> get_license_type_names_ids() const;
 
-
+      /**
+       * Get a list of account issued license types. This function has semantics identical to get_objects
+       *
+       * @param account_ids IDs of the accounts to retrieve
+       * @return            Vector of issued license information objects
+       */
       vector<optional<license_information_object>> get_license_information(const vector<account_id_type>& account_ids) const;
 
       ///////////////////////////////
@@ -1561,7 +1604,18 @@ class wallet_api
        */
       acc_id_share_t_res get_account_cycle_balance(const string& account) const;
 
+      /**
+       * Deprecated
+       */
       acc_id_vec_cycle_agreement_res get_full_cycle_balances(const string& account) const;
+
+      /**
+       * Get amount of DasCoin for on an account.
+       *
+       * @param  account Account name or stringified id.
+       * @return         An object containing dascoin balance of an account
+       */
+      acc_id_share_t_res get_dascoin_balance(const string& account) const;
 
       /**
        * Purchase cycles.
@@ -1585,8 +1639,15 @@ class wallet_api
        */
       optional<cycle_price> calculate_cycle_price(share_type cycle_amount, string asset_symbol_or_id) const;
 
-      acc_id_share_t_res get_dascoin_balance(const string& account) const;
-
+      /**
+       * Update various reward queue parameters
+       * 
+       * @param enable_dascoin_queue         true if minting is enabled
+       * @param reward_interval_time_seconds the time interval between DasCoin reward events
+       * @param dascoin_reward_amount        the amount of DasCoins produced on the DasCoin reward event
+       * @param broadcast                    true to broadcast the transaction on the network.
+       * @return                             signed transaction updating the queue
+       */
       signed_transaction update_queue_parameters(optional<bool> enable_dascoin_queue,
                                                  optional<uint32_t> reward_interval_time_seconds,
                                                  optional<share_type> dascoin_reward_amount,
@@ -1671,6 +1732,12 @@ class wallet_api
      */
     vector<reward_queue_object> get_reward_queue_by_page(uint32_t from, uint32_t amount) const;
 
+    /**
+     * Get all current submissions to reward queue by account id.
+     *
+     * @param account_id Id of account whose submissions should be returned.
+     * @return           All elements on DasCoin reward queue submitted by given account.
+     */
     acc_id_queue_subs_w_pos_res get_queue_submissions_with_pos(account_id_type account_id) const;
 
       void dbg_make_uia(string creator, string symbol);
@@ -1682,7 +1749,16 @@ class wallet_api
 
       void flood_network(string prefix, uint32_t number_of_transactions);
 
+      /**
+       * Connect to a new peer
+       *
+       * @param nodes List of the IP addresses and ports of new nodes
+       */
       void network_add_nodes( const vector<string>& nodes );
+      
+      /**
+       * Get status of all current connections to peers
+       */
       vector< variant > network_get_connected_peers();
 
       /**
@@ -1838,6 +1914,7 @@ FC_API( graphene::wallet::wallet_api,
         (get_block)
         (get_account_count)
         (get_account_history)
+        (get_account_history_by_operation)
         (get_market_history)
         (get_global_properties)
         (get_dynamic_global_properties)
@@ -1865,6 +1942,8 @@ FC_API( graphene::wallet::wallet_api,
         (flood_network)
         (network_add_nodes)
         (network_get_connected_peers)
+        (sign_memo)
+        (read_memo)
         (set_key_label)
         (get_key_label)
         (get_public_key)

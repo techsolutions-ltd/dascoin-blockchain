@@ -489,6 +489,7 @@ FC_REFLECT( graphene::chain::toggle_roll_back_enabled_operation::fee_parameters_
 FC_REFLECT( graphene::chain::toggle_roll_back_enabled_operation,
             (fee)
             (account)
+            (extensions)
 )
 
 FC_REFLECT( graphene::chain::roll_back_public_keys_operation::fee_parameters_type, )
@@ -496,6 +497,7 @@ FC_REFLECT( graphene::chain::roll_back_public_keys_operation,
             (fee)
             (authority)
             (account)
+            (extensions)
 )
 
 FC_REFLECT( graphene::chain::set_starting_cycle_asset_amount_operation::fee_parameters_type, )

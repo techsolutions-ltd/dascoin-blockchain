@@ -257,7 +257,7 @@ struct get_impacted_account_visitor
       _impacted.insert( op.account );
    }
 
-   void operator()( const toggle_roll_back_enabled_operation& op )
+   void operator()( const set_roll_back_enabled_operation& op )
    {
       _impacted.insert( op.account );
    }

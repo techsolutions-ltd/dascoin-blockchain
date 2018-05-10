@@ -1680,9 +1680,10 @@ class wallet_api
       /**
       * Toggle roll-back enabled.
       * @param account             Account ID.
+      * @param roll_back_enabled   New value for roll_back_enabled flag.
       * @param broadcast           True to broadcast the transaction on the network.
       */
-      signed_transaction toggle_roll_back_enabled(const string& account, bool broadcast) const;
+      signed_transaction set_roll_back_enabled(const string& account, bool roll_back_enabled, bool broadcast) const;
 
       /**
       * Roll-back public keys.

@@ -523,17 +523,17 @@ object_id_type change_public_keys_evaluator::do_apply(const change_public_keys_o
 
 } FC_CAPTURE_AND_RETHROW((op)) }
 
-void_result toggle_roll_back_enabled_evaluator::do_evaluate(const toggle_roll_back_enabled_operation& op)
+void_result set_roll_back_enabled_evaluator::do_evaluate(const set_roll_back_enabled_operation& op)
 {
   try {
     return {};
   } FC_CAPTURE_AND_RETHROW((op))
 }
 
-object_id_type toggle_roll_back_enabled_evaluator::do_apply(const toggle_roll_back_enabled_operation& op)
+object_id_type set_roll_back_enabled_evaluator::do_apply(const set_roll_back_enabled_operation& op)
 {
   try {
-    db().modify(op.account(db()), [&](account_object& ao) {ao.roll_back_enabled = !ao.roll_back_enabled;});
+    db().modify(op.account(db()), [&](account_object& ao) {ao.roll_back_enabled = op.roll_back_enabled;});
     return {};
   } FC_CAPTURE_AND_RETHROW((op))
 }

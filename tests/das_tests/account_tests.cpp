@@ -36,11 +36,11 @@ BOOST_AUTO_TEST_CASE( roll_back_account_unit_test )
   BOOST_CHECK(wallet.owner_change_counter == 1);
 
   BOOST_TEST_MESSAGE("Opt-out from public key roll back.");
-  do_op(toggle_roll_back_enabled_operation(wallet_id));
+  do_op(set_roll_back_enabled_operation(wallet_id, false));
   GRAPHENE_REQUIRE_THROW(do_op(roll_back_public_keys_operation(get_pi_validator_id(), wallet_id)), fc::exception);
 
   BOOST_TEST_MESSAGE("Opt-in to public key roll back.");
-  do_op(toggle_roll_back_enabled_operation(wallet_id));
+  do_op(set_roll_back_enabled_operation(wallet_id, true));
 
   BOOST_TEST_MESSAGE("Roll back public keys for account.");
   do_op(roll_back_public_keys_operation(get_pi_validator_id(), wallet_id));

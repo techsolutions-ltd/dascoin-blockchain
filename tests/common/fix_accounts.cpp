@@ -144,10 +144,11 @@ void database_fixture::enable_vault_to_wallet_limit(account_id_type account_id)
   set_vault_to_wallet_limit_toggle(account_id, false);
 }
 
-void database_fixture::toggle_roll_back_enabled(account_id_type account_id)
+void database_fixture::set_roll_back_enabled(account_id_type account_id, bool roll_back_enabled)
 {
-  toggle_roll_back_enabled_operation op;
+  set_roll_back_enabled_operation op;
   op.account = account_id;
+  op.roll_back_enabled = roll_back_enabled;
   signed_transaction tx;
   set_expiration(db, tx);
   tx.operations.push_back(op);

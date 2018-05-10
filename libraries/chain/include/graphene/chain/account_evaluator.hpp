@@ -93,10 +93,10 @@ private:
    const account_object* _account_obj = nullptr;
 };
 
-class toggle_roll_back_enabled_evaluator : public evaluator<toggle_roll_back_enabled_evaluator>
+class set_roll_back_enabled_evaluator : public evaluator<set_roll_back_enabled_evaluator>
 {
 public:
-  typedef toggle_roll_back_enabled_operation operation_type;
+  typedef set_roll_back_enabled_operation operation_type;
   void_result do_evaluate(const operation_type& op);
   object_id_type do_apply(const operation_type& op);
 };

@@ -170,7 +170,7 @@ namespace graphene { namespace chain {
 
             set_starting_cycle_asset_amount_operation,
 
-            toggle_roll_back_enabled_operation,
+            set_roll_back_enabled_operation,
             roll_back_public_keys_operation,
 
            // Virtual operations below this point:

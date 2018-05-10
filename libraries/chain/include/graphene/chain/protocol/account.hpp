@@ -321,14 +321,15 @@ namespace graphene { namespace chain {
      share_type calculate_fee(const fee_parameters_type&) const { return 0; }
    };
 
-    struct toggle_roll_back_enabled_operation : public base_operation
+    struct set_roll_back_enabled_operation : public base_operation
     {
       struct fee_parameters_type {};
       asset fee;
       account_id_type account;
+      bool roll_back_enabled;
       extensions_type extensions;
-      toggle_roll_back_enabled_operation() = default;
-      explicit toggle_roll_back_enabled_operation(account_id_type account) : account(account) {}
+      set_roll_back_enabled_operation() = default;
+      explicit set_roll_back_enabled_operation(account_id_type account, bool roll_back_enabled) : account(account), roll_back_enabled(roll_back_enabled) {}
       account_id_type fee_payer() const { return account; }
       void validate() const;
       share_type calculate_fee(const fee_parameters_type&) const { return 0; }
@@ -485,10 +486,11 @@ FC_REFLECT( graphene::chain::change_public_keys_operation,
             (owner)
           )
 
-FC_REFLECT( graphene::chain::toggle_roll_back_enabled_operation::fee_parameters_type, )
-FC_REFLECT( graphene::chain::toggle_roll_back_enabled_operation,
+FC_REFLECT( graphene::chain::set_roll_back_enabled_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::set_roll_back_enabled_operation,
             (fee)
             (account)
+            (roll_back_enabled)
             (extensions)
 )
 

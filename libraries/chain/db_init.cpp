@@ -263,7 +263,7 @@ void database::initialize_evaluators()
    register_evaluator<wire_out_with_fee_complete_evaluator>();
    register_evaluator<wire_out_with_fee_reject_evaluator>();
    register_evaluator<set_starting_cycle_asset_amount_evaluator>();
-   register_evaluator<toggle_roll_back_enabled_evaluator>();
+   register_evaluator<set_roll_back_enabled_evaluator>();
    register_evaluator<roll_back_public_keys_evaluator>();
 }
 

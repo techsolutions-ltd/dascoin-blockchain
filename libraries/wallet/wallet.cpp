@@ -2772,10 +2772,11 @@ public:
    }
 
 
-   signed_transaction toggle_roll_back_enabled(const string& account_name, bool broadcast)
+   signed_transaction set_roll_back_enabled(const string& account_name, bool roll_back_enabled, bool broadcast)
    {
-     toggle_roll_back_enabled_operation op;
+     set_roll_back_enabled_operation op;
      op.account = get_account(account_name).id;
+     op.roll_back_enabled = roll_back_enabled;
      signed_transaction tx;
      tx.operations.push_back(op);
      set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
@@ -4856,9 +4857,9 @@ signed_transaction wallet_api::wire_out_with_fee(const string& account, share_ty
   return my->wire_out_with_fee(account, amount, currency_of_choice, to_address, memo, broadcast);
 }
 
-signed_transaction wallet_api::toggle_roll_back_enabled(const string& account, bool broadcast) const
+signed_transaction wallet_api::set_roll_back_enabled(const string& account, bool roll_back_enabled, bool broadcast) const
 {
-  return my->toggle_roll_back_enabled(account, broadcast);
+  return my->set_roll_back_enabled(account, roll_back_enabled, broadcast);
 }
 
 signed_transaction wallet_api::roll_back_public_keys(const string& authority, const string& account,bool broadcast) const

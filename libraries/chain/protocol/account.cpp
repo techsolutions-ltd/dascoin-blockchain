@@ -286,7 +286,7 @@ void change_public_keys_operation::validate() const
    }
 }
 
-void toggle_roll_back_enabled_operation::validate() const
+void set_roll_back_enabled_operation::validate() const
 {
   FC_ASSERT(account != GRAPHENE_TEMP_ACCOUNT, "Illegal account id");
   FC_ASSERT(fee.amount >= 0);

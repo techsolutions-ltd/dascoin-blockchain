@@ -144,4 +144,31 @@ void database_fixture::enable_vault_to_wallet_limit(account_id_type account_id)
   set_vault_to_wallet_limit_toggle(account_id, false);
 }
 
+void database_fixture::set_roll_back_enabled(account_id_type account_id, bool roll_back_enabled)
+{
+  set_roll_back_enabled_operation op;
+  op.account = account_id;
+  op.roll_back_enabled = roll_back_enabled;
+  signed_transaction tx;
+  set_expiration(db, tx);
+  tx.operations.push_back(op);
+  tx.validate();
+  processed_transaction ptx = db.push_transaction(tx, ~0);
+  tx.clear();
+}
+
+void database_fixture::roll_back_public_keys(account_id_type authority, account_id_type account_id)
+{
+  roll_back_public_keys_operation op;
+  op.authority = authority;
+  op.account = account_id;
+  signed_transaction tx;
+  set_expiration(db, tx);
+  tx.operations.push_back(op);
+  tx.validate();
+  processed_transaction ptx = db.push_transaction(tx, ~0);
+  tx.clear();
+}
+
+
 } }  // namespace graphene::chain

@@ -321,6 +321,41 @@ namespace graphene { namespace chain {
      share_type calculate_fee(const fee_parameters_type&) const { return 0; }
    };
 
+    struct set_roll_back_enabled_operation : public base_operation
+    {
+      struct fee_parameters_type {};
+      asset fee;
+
+      account_id_type account;
+      bool roll_back_enabled;
+
+      extensions_type extensions;
+
+      set_roll_back_enabled_operation() = default;
+      explicit set_roll_back_enabled_operation(account_id_type account, bool roll_back_enabled) : account(account), roll_back_enabled(roll_back_enabled) {}
+
+      account_id_type fee_payer() const { return account; }
+      void validate() const;
+      share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+    };
+
+    struct roll_back_public_keys_operation : public base_operation
+    {
+      struct fee_parameters_type {};
+      asset fee;
+
+      account_id_type authority;
+      account_id_type account;
+
+      extensions_type extensions;
+
+      roll_back_public_keys_operation() = default;
+      explicit roll_back_public_keys_operation(account_id_type authority, account_id_type account) : authority(authority), account(account) {}
+
+      account_id_type fee_payer() const { return authority; }
+      void validate() const;
+      share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+    };
 
    struct upgrade_account_cycles_operation : public base_operation
    {
@@ -458,6 +493,22 @@ FC_REFLECT( graphene::chain::change_public_keys_operation,
             (active)
             (owner)
           )
+
+FC_REFLECT( graphene::chain::set_roll_back_enabled_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::set_roll_back_enabled_operation,
+            (fee)
+            (account)
+            (roll_back_enabled)
+            (extensions)
+)
+
+FC_REFLECT( graphene::chain::roll_back_public_keys_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::roll_back_public_keys_operation,
+            (fee)
+            (authority)
+            (account)
+            (extensions)
+)
 
 FC_REFLECT( graphene::chain::set_starting_cycle_asset_amount_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::set_starting_cycle_asset_amount_operation,

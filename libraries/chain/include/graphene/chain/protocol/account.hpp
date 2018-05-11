@@ -325,11 +325,15 @@ namespace graphene { namespace chain {
     {
       struct fee_parameters_type {};
       asset fee;
+
       account_id_type account;
       bool roll_back_enabled;
+
       extensions_type extensions;
+
       set_roll_back_enabled_operation() = default;
       explicit set_roll_back_enabled_operation(account_id_type account, bool roll_back_enabled) : account(account), roll_back_enabled(roll_back_enabled) {}
+
       account_id_type fee_payer() const { return account; }
       void validate() const;
       share_type calculate_fee(const fee_parameters_type&) const { return 0; }
@@ -339,11 +343,15 @@ namespace graphene { namespace chain {
     {
       struct fee_parameters_type {};
       asset fee;
+
       account_id_type authority;
       account_id_type account;
+
       extensions_type extensions;
+
       roll_back_public_keys_operation() = default;
       explicit roll_back_public_keys_operation(account_id_type authority, account_id_type account) : authority(authority), account(account) {}
+
       account_id_type fee_payer() const { return authority; }
       void validate() const;
       share_type calculate_fee(const fee_parameters_type&) const { return 0; }

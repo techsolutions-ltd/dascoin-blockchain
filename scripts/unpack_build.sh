@@ -71,7 +71,6 @@ if [ unpack_cli_wallet ]; then
   cli_wallet_dir="${unpack_dir}/${cli_wallet_dir_name}"
   mkdir -p "${cli_wallet_dir}"
   cp "bin/cli_wallet" "${cli_wallet_dir}"
-  cp "config/wallet.json" "${cli_wallet_dir}"
   cp "scripts/daemon_run_cli.sh" "${cli_wallet_dir}"
 else
   echo "Skipping cli_wallet"

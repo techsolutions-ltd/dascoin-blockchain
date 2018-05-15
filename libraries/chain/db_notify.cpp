@@ -421,7 +421,17 @@ struct get_impacted_account_visitor
 
    void operator() (const set_starting_cycle_asset_amount_operation& op)
    {
-     _impacted.insert(op.issuer);
+      _impacted.insert(op.issuer);
+   }
+
+   void operator() (const add_daspay_authority_operation& op)
+   {
+      _impacted.insert(op.issuer);
+   }
+
+   void operator() (const daspay_debit_operation& op)
+   {
+      _impacted.insert(op.issuer);
    }
 };
 

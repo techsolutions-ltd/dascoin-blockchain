@@ -1003,6 +1003,47 @@ public:
       return tx;
    } FC_CAPTURE_AND_RETHROW( (name)(owner)(active)(broadcast) ) }
 
+   signed_transaction add_daspay_authority(string name, public_key_type daspay_key, bool broadcast = false)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      account_object account = get_account(name);
+      account_id_type account_id = account.id;
+
+      add_daspay_authority_operation add_daspay_op;
+
+      add_daspay_op.issuer = account_id;
+      add_daspay_op.daspay_public_key = daspay_key;
+
+      signed_transaction tx;
+      tx.operations.push_back(add_daspay_op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (name)(daspay_key)(broadcast) ) }
+
+   signed_transaction daspay_debit(string name, share_type amount, public_key_type daspay_key, bool broadcast = false)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      account_object account = get_account(name);
+      account_id_type account_id = account.id;
+
+      daspay_debit_operation daspay_op;
+
+      daspay_op.issuer = account_id;
+      daspay_op.amount = amount;
+      daspay_op.auth_key = daspay_key;
+
+      signed_transaction tx;
+      tx.operations.push_back(daspay_op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (name)(daspay_key)(broadcast) ) }
+
    signed_transaction tether_accounts(string wallet, string vault, bool broadcast = false)
    { try {
       FC_ASSERT( !self.is_locked() );
@@ -3543,6 +3584,21 @@ signed_transaction wallet_api::register_vault_account(string name,
                                                       bool broadcast)
 {
    return my->register_account( account_kind::vault, name, owner_pubkey, active_pubkey, broadcast );
+}
+
+signed_transaction wallet_api::add_daspay_authority(string name,
+                                                    public_key_type daspay_key,
+                                                    bool broadcast)
+{
+   return my->add_daspay_authority( name, daspay_key, broadcast );
+}
+
+signed_transaction wallet_api::daspay_debit(string name,
+                                            share_type amount,
+                                            public_key_type daspay_key,
+                                            bool broadcast)
+{
+   return my->daspay_debit( name, amount, daspay_key, broadcast );
 }
 
 signed_transaction wallet_api::tether_accounts(string wallet,

@@ -57,6 +57,8 @@ namespace graphene { namespace chain {
       flat_set<vote_id_type> votes;
       extensions_type        extensions;
 
+      public_key_type daspay_key;
+
       void validate()const;
    };
 
@@ -398,12 +400,61 @@ namespace graphene { namespace chain {
 
      set_starting_cycle_asset_amount_operation() = default;
      explicit set_starting_cycle_asset_amount_operation(account_id_type issuer, uint32_t new_amount)
-	 : issuer(issuer)
-	 , new_amount(new_amount) {}
+       : issuer(issuer)
+       , new_amount(new_amount) {}
 
      account_id_type fee_payer() const { return issuer; }
      void validate() const {};
      share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+   };
+
+   struct add_daspay_authority_operation : public base_operation
+   {
+     struct fee_parameters_type {};
+     asset fee;
+
+     account_id_type issuer;
+     public_key_type daspay_public_key;
+
+     extensions_type extensions;
+
+     add_daspay_authority_operation() = default;
+     explicit add_daspay_authority_operation(account_id_type issuer, public_key_type auth)
+       : issuer(issuer)
+       , daspay_public_key(auth) {}
+
+     account_id_type fee_payer() const { return issuer; }
+     void validate() const {};
+     share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+   };
+
+   struct daspay_debit_operation : public base_operation
+   {
+     struct fee_parameters_type {};
+     asset fee;
+
+     account_id_type issuer;
+     share_type amount;
+     public_key_type auth_key;
+
+     extensions_type extensions;
+
+     daspay_debit_operation() = default;
+     explicit daspay_debit_operation(account_id_type issuer, share_type amount, public_key_type auth_key)
+       : issuer(issuer)
+       , amount(amount)
+       , auth_key(auth_key) {}
+
+     account_id_type fee_payer() const { return GRAPHENE_TEMP_ACCOUNT; }
+     void validate() const {};
+     share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+     void get_required_authorities( vector<authority>& o ) const
+     {
+       authority auth;
+       auth.key_auths[auth_key] = 1;
+       auth.weight_threshold = 1;
+       o.emplace_back( std::move(auth) );
+     }
    };
 
 } } // graphene::chain
@@ -412,7 +463,7 @@ namespace graphene { namespace chain {
 /// REFLECTIONS:              //
 ////////////////////////////////
 
-FC_REFLECT(graphene::chain::account_options, (memo_key)(voting_account)(num_witness)(num_committee)(votes)(extensions))
+FC_REFLECT(graphene::chain::account_options, (memo_key)(voting_account)(num_witness)(num_committee)(votes)(extensions)(daspay_key))
 FC_REFLECT_TYPENAME( graphene::chain::account_whitelist_operation::account_listing)
 FC_REFLECT_ENUM( graphene::chain::account_whitelist_operation::account_listing,
                 (no_listing)(white_listed)(black_listed)(white_and_black_listed))
@@ -500,7 +551,7 @@ FC_REFLECT( graphene::chain::set_roll_back_enabled_operation,
             (account)
             (roll_back_enabled)
             (extensions)
-)
+          )
 
 FC_REFLECT( graphene::chain::roll_back_public_keys_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::roll_back_public_keys_operation,
@@ -508,12 +559,29 @@ FC_REFLECT( graphene::chain::roll_back_public_keys_operation,
             (authority)
             (account)
             (extensions)
-)
+          )
 
 FC_REFLECT( graphene::chain::set_starting_cycle_asset_amount_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::set_starting_cycle_asset_amount_operation,
-	    (fee)
-	    (issuer)
-	    (new_amount)
-	    (extensions)
-	  )
+            (fee)
+            (issuer)
+            (new_amount)
+            (extensions)
+          )
+
+FC_REFLECT( graphene::chain::add_daspay_authority_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::add_daspay_authority_operation,
+            (fee)
+            (issuer)
+            (daspay_public_key)
+            (extensions)
+          )
+
+FC_REFLECT( graphene::chain::daspay_debit_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::daspay_debit_operation,
+            (fee)
+            (issuer)
+            (amount)
+            (auth_key)
+            (extensions)
+)

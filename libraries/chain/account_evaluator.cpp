@@ -589,4 +589,41 @@ void_result set_starting_cycle_asset_amount_evaluator::do_apply(const set_starti
   } FC_CAPTURE_AND_RETHROW((op))
 }
 
+void_result add_daspay_authority_evaluator::do_evaluate(const operation_type& op)
+{
+  try {
+    const auto& d = db();
+    _account_obj = &op.issuer(d);
+     return {};
+} FC_CAPTURE_AND_RETHROW((op)) }
+
+void_result add_daspay_authority_evaluator::do_apply(const operation_type& op)
+{
+  try {
+    auto& d = db();
+    d.modify(*_account_obj, [&](account_object& ao) {
+       ao.options.daspay_key = op.daspay_public_key;
+     });
+    return {};
+} FC_CAPTURE_AND_RETHROW((op)) }
+
+void_result daspay_debit_evaluator::do_evaluate(const operation_type& op)
+{
+  try {
+    const auto& d = db();
+    _account_obj = &op.issuer(d);
+    FC_ASSERT( op.auth_key == _account_obj->options.daspay_key, "Invalid key used to sign daspay_debit");
+    return {};
+} FC_CAPTURE_AND_RETHROW((op)) }
+
+void_result daspay_debit_evaluator::do_apply(const operation_type& op)
+{
+  try {
+    auto& d = db();
+//    d.modify(*_account_obj, [&](account_object& ao) {
+//      ao.options.daspay_key = op.daspay_public_key;
+//    });
+    return {};
+} FC_CAPTURE_AND_RETHROW((op)) }
+
 } } // graphene::chain

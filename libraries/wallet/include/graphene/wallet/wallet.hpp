@@ -742,6 +742,15 @@ class wallet_api
                                                        string account_name,
                                                        bool broadcast = false);
 
+      signed_transaction add_daspay_authority(string name,
+                                              public_key_type daspay_key,
+                                              bool broadcast = false);
+
+      signed_transaction daspay_debit(string name,
+                                      share_type amount,
+                                      public_key_type daspay_key,
+                                      bool broadcast = false);
+
       /** Transfer an amount from one account to another.
        * @param from the name or id of the account sending the funds
        * @param to the name or id of the account receiving the funds
@@ -1878,6 +1887,8 @@ FC_API( graphene::wallet::wallet_api,
         (buy)
         (borrow_asset)
         (cancel_order)
+        (add_daspay_authority)
+        (daspay_debit)
         (transfer)
         (transfer2)
         (transfer_vault_to_wallet)

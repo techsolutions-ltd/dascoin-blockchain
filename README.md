@@ -11,8 +11,8 @@ For Ubuntu 14.04 LTS users, see this link first:
 
 and then proceed with:
 
-    git clone https://github.com/cryptonomex/graphene.git
-    cd graphene
+    git clone https://github.com/techsolutions-ltd/dascoin-blockchain.git
+    cd dascoin-blockchain
     git submodule update --init --recursive
     cmake -DCMAKE_BUILD_TYPE=Debug .
     make

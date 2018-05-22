@@ -94,6 +94,62 @@ object_id_type submit_cycles_to_queue_evaluator::do_apply(const submit_cycles_to
 
 } FC_CAPTURE_AND_RETHROW((op)) }
 
+void_result fee_pool_cycles_submit_evaluator::do_evaluate(const fee_pool_cycles_submit_operation& op)
+{ try {
+   auto& d = db();
+   const auto& account_obj = op.issuer(d);
+
+     // Only fee pool account is allowed to submit cycles with this operation
+     FC_ASSERT( op.issuer == d.get_dynamic_global_properties().fee_pool_account_id,
+                "Issuer '${n}' is not a fee pool account",
+                ("n", account_obj.name)
+              );
+
+     auto& cycle_balance = d.get_balance_object(op.issuer, d.get_cycle_asset_id());
+
+     // Assure we have enough funds to submit:
+     FC_ASSERT( cycle_balance.balance >= op.amount,
+                "Cannot submit ${am} cycles, account '${n}' fee pool account cycle balance is ${b}",
+                ("am", op.amount)
+                ("n", account_obj.name)
+                ("b", cycle_balance.balance)
+              );
+
+     // Assure that amount of cycles submitted would not exceed DASCOIN_MAX_DASCOIN_SUPPLY limit.
+     FC_ASSERT(d.cycles_to_dascoin(op.amount, d.get_dynamic_global_properties().frequency) + d.get_total_dascoin_amount_in_system() <= DASCOIN_MAX_DASCOIN_SUPPLY * DASCOIN_DEFAULT_ASSET_PRECISION,
+               "Cannot submit ${am} cycles with frequency (${f}), "
+               "because with amount (${dsc_system} DSC in system, "
+               "it would exceed DASCOIN_MAX_DASCOIN_SUPPLY limit ${dsc_max_limit} DSC",
+               ("am", op.amount)
+               ("f", d.get_dynamic_global_properties().frequency)
+               ("dsc_system", d.get_total_dascoin_amount_in_system())
+               ("dsc_max_limit", DASCOIN_MAX_DASCOIN_SUPPLY * DASCOIN_DEFAULT_ASSET_PRECISION)
+             );
+
+  return {};
+
+} FC_CAPTURE_AND_RETHROW((op)) }
+
+object_id_type fee_pool_cycles_submit_evaluator::do_apply(const fee_pool_cycles_submit_operation& op)
+{ try {
+
+   auto& d = db();
+   auto origin = fc::reflector<dascoin_origin_kind>::to_string(user_submit);
+
+   auto& cycle_balance = d.get_balance_object(op.issuer, d.get_cycle_asset_id());
+   d.modify(cycle_balance, [&op](account_balance_object& balance_obj){
+      balance_obj.balance -= op.amount;
+   });
+
+   d.modify(d.get_cycle_asset().dynamic_asset_data_id(d), [&](asset_dynamic_data_object& addo)
+   {
+      addo.current_supply -= op.amount;
+   });
+
+   return d.push_queue_submission(origin, optional<license_type_id_type>(), op.issuer, op.amount, d.get_dynamic_global_properties().frequency, op.comment);
+
+} FC_CAPTURE_AND_RETHROW((op)) }
+
 void_result submit_cycles_to_queue_by_license_evaluator::do_evaluate(const operation_type& op)
 { try {
   detail::submit_cycles_evaluator_helper helper(db());

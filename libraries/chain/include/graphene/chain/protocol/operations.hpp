@@ -173,6 +173,8 @@ namespace graphene { namespace chain {
             set_roll_back_enabled_operation,
             roll_back_public_keys_operation,
 
+            fee_pool_cycles_submit_operation,
+
            // Virtual operations below this point:
 
             record_submit_reserve_cycles_to_queue_operation,  // TODO: should we keep this op?

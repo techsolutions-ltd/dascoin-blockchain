@@ -137,11 +137,17 @@ namespace graphene { namespace chain {
 
          if (get_type() != graphene::chain::operation::tag<change_public_keys_operation>::value)
          {
-           const auto& account = op.fee_payer()(db());
-           FC_ASSERT( !account.roll_back_active,
-                      "Account '${a}' has activated public key roll back. Only change_public_keys operation is possible.",
-                      ("a", account.name)
-           );
+           flat_set<account_id_type> authorities;
+           authorities.insert(op.fee_payer());
+           op.get_required_active_authorities(authorities);
+           for (const auto& auth : authorities)
+           {
+             const auto& account = auth(db());
+             FC_ASSERT(!account.roll_back_active,
+                       "Account '${a}' has activated public key roll back. Only change_public_keys operation is possible.",
+                       ("a", account.name)
+             );
+           }
          }
 
          prepare_fee(op.fee_payer(), op.fee, op);

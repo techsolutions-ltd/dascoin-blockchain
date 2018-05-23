@@ -1,4 +1,3 @@
-
 #pragma once
 #include <graphene/chain/protocol/base.hpp>
 #include <graphene/chain/protocol/types.hpp>
@@ -33,9 +32,8 @@ namespace graphene { namespace chain {
     share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
 
-
   /**
-  * @brief Request to change fee for particular operation.
+  * @brief Request to change fee pool account.
   *
   */
  struct change_fee_pool_account_operation : public base_operation
@@ -61,6 +59,33 @@ namespace graphene { namespace chain {
    share_type calculate_fee(const fee_parameters_type&) const { return 0; }
  };
 
+ /**
+   * @brief Submit cycles to queue from fee pool account.
+   *
+   */
+  struct fee_pool_cycles_submit_operation : public base_operation
+  {
+    struct fee_parameters_type {};  // No fees are paid for this operation.
+
+    asset fee;
+    account_id_type issuer;
+    share_type amount;
+    string comment;
+
+    extensions_type extensions;
+
+    fee_pool_cycles_submit_operation() = default;
+    explicit fee_pool_cycles_submit_operation(account_id_type issuer, share_type amount, const string& comment)
+        : issuer(issuer)
+        , amount(amount)
+        , comment(comment)
+    {}
+
+    account_id_type fee_payer() const { return issuer; }
+    void validate() const{}
+    share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+  };
+
 } }
 
 FC_REFLECT( graphene::chain::change_operation_fee_operation::fee_parameters_type, )
@@ -68,3 +93,6 @@ FC_REFLECT( graphene::chain::change_operation_fee_operation, (fee)(issuer)(new_f
 
 FC_REFLECT( graphene::chain::change_fee_pool_account_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::change_fee_pool_account_operation, (fee)(issuer)(fee_pool_account_id)(comment)(extensions) )
+
+FC_REFLECT( graphene::chain::fee_pool_cycles_submit_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::fee_pool_cycles_submit_operation, (fee)(issuer)(amount)(comment)(extensions) )

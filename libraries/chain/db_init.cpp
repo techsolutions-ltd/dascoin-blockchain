@@ -265,6 +265,7 @@ void database::initialize_evaluators()
    register_evaluator<set_starting_cycle_asset_amount_evaluator>();
    register_evaluator<set_roll_back_enabled_evaluator>();
    register_evaluator<roll_back_public_keys_evaluator>();
+   register_evaluator<fee_pool_cycles_submit_evaluator>();
 }
 
 void database::initialize_indexes()

@@ -1066,6 +1066,28 @@ public:
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (wallet)(vault)(broadcast) ) }
 
+   signed_transaction transfer_cycles_from_licence_to_wallet(string vault, license_type_id_type license, share_type amount_of_cycles_to_transfer, string wallet, bool broadcast = false)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      account_object vault_account = get_account(vault);
+      account_object wallet_account = get_account(wallet);
+
+      transfer_cycles_from_licence_to_wallet_operation transfer_op;
+
+      transfer_op.vault_id = vault_account.id;
+      transfer_op.wallet_id = wallet_account.id;
+      transfer_op.license_id = license;
+      transfer_op.amount = amount_of_cycles_to_transfer;
+
+      signed_transaction tx;
+      tx.operations.push_back(transfer_op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (vault)(license)(amount_of_cycles_to_transfer)(wallet) ) }
+
    signed_transaction purchase_cycle_asset(string account, string amount_to_sell, string symbol_to_sell, double frequency, double amount_of_cycles_to_receive, bool broadcast = false)
    { try {
       FC_ASSERT( !self.is_locked() );
@@ -4013,6 +4035,13 @@ string wallet_api::gethelp(const string& method)const
       ss << "\n";
       ss << "Use this method to tether a wallet account to a vault account.";
    }
+   else if( method == "transfer_cycles_from_licence_to_wallet" )
+   {
+      ss << "usage: transfer_cycles_from_licence_to_wallet VAULT_ACCOUNT_NAME LICENSE CYCLES_TO_TRANSFER WALLET_ACCOUNT_NAME\n\n";
+      ss << "example: transfer_cycles_from_licence_to_wallet \"vault\" 1.16.15 200 \"wallet\" true\n";
+      ss << "\n";
+      ss << "Use this method to transfer a certain amount of cycles from a license to a wallet";
+   }
    else if( method == "purchase_cycle_asset" )
    {
       ss << "usage: purchase_cycle_asset ACCOUNT_NAME AMOUNT SYMBOL FREQUENCY CYCLES_TO_RECEIVE\n\n";
@@ -4877,6 +4906,11 @@ acc_id_vec_cycle_agreement_res wallet_api::get_full_cycle_balances(const string&
    if( auto real_id = detail::maybe_id<account_id_type>(name_or_id) )
       return my->_remote_db->get_all_cycle_balances(*real_id);
    return my->_remote_db->get_all_cycle_balances(get_account(name_or_id).id);
+}
+
+signed_transaction wallet_api::transfer_cycles_from_licence_to_wallet(string vault, license_type_id_type license, share_type amount_of_cycles_to_transfer, string wallet, bool broadcast)
+{
+    return my->transfer_cycles_from_licence_to_wallet(vault, license, amount_of_cycles_to_transfer, wallet, broadcast);
 }
 
 signed_transaction wallet_api::purchase_cycle_asset(string account, string amount_to_sell, string symbol_to_sell, double frequency, double amount_of_cycles_to_receive, bool broadcast)

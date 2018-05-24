@@ -1627,6 +1627,18 @@ class wallet_api
       acc_id_share_t_res get_dascoin_balance(const string& account) const;
 
       /**
+       * Transfer cycles from license to wallet.
+       * @param vault Vault - account name or id
+       * @param license License to transfer cycles from
+       * @param amount_of_cycles_to_transfer Symbol of asset to sell
+       * @param wallet Wallet - account name or id
+       */
+      signed_transaction transfer_cycles_from_licence_to_wallet(string vault,
+                                              license_type_id_type license,
+                                              share_type amount_of_cycles_to_transfer,
+                                              string wallet,
+                                              bool broadcast = false);
+      /**
        * Purchase cycles.
        * @param account Account name or id
        * @param amount_to_sell Amount of asset to sell
@@ -1983,6 +1995,7 @@ FC_API( graphene::wallet::wallet_api,
         (get_order_book)
         (update_queue_parameters)
         (wire_out)
+        (transfer_cycles_from_licence_to_wallet)
         (purchase_cycle_asset)
         (calculate_cycle_price)
         // Requests:

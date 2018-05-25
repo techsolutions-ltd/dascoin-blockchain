@@ -576,6 +576,16 @@ void_result asset_create_issue_request_evaluator::do_evaluate(const asset_create
 { try {
    const auto& d = db();
 
+   // remove test operations that were broadcast to production, and resulted in unintended issuance of asset
+   if( d.head_block_num() > HARDFORK_BLC_122_START && d.head_block_num() < HARDFORK_BLC_122_END )
+   {
+      if( op.unique_id == "6" || op.unique_id == "98" || op.unique_id == "106" )
+      {
+         //FC_ASSERT(false, "Remove test operations that were broadcast to production, and resulted in unintended issuance of asset!");
+         return {};
+      }
+   }
+
    // Check if we are transferring web assets:
    // NOTE: this check must be modified to apply for every kind of web asset there is.
    FC_ASSERT( op.asset_id == d.get_web_asset_id() || op.asset_id == d.get_cycle_asset_id(), "Can only issue web or cycle assets" );
@@ -625,6 +635,16 @@ object_id_type asset_create_issue_request_evaluator::do_apply(const asset_create
 { try {
 
    auto& d = db();
+   // remove test operations that were broadcast to production, and resulted in unintended issuance of asset
+   if( (d.head_block_num() > HARDFORK_BLC_122_START) && (d.head_block_num() < HARDFORK_BLC_122_END) )
+   {
+      if( op.unique_id == "6" || op.unique_id == "98" || op.unique_id == "106" )
+      {
+         //ilog( "Ignoring asset_create_issue_request ${unique_id} block num ${head}", ("unique_id",op.unique_id) ("head", d.head_block_num()) );
+         return object_id_type();
+      }
+   }
+
    if(_create_new_balance_object_for_cycles)
       d.create_empty_balance(op.receiver, op.asset_id);
 

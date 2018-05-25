@@ -368,6 +368,9 @@ struct database_fixture {
    void set_roll_back_enabled(account_id_type account_id, bool roll_back_enabled);
    void roll_back_public_keys(account_id_type authority, account_id_type account_id);
 
+   // fix_daspay.cpp
+   void set_daspay_transaction_ratio_operation(account_id_type authority, share_type debit_ratio, share_type credit_ratio);
+
    // fix_web_assets.cpp
    asset web_asset(share_type amount);
    const issued_asset_record_object* issue_webasset(const string& unique_id, account_id_type receiver_id, 

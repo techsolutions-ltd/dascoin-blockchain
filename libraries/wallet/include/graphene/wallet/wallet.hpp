@@ -1714,6 +1714,14 @@ class wallet_api
       */
       signed_transaction roll_back_public_keys(const string& authority, const string& account, bool broadcast) const;
 
+      /**
+      * Set Daspay Transaction Ratio.
+      * @param authority           This MUST be master authority.
+      * @param debit_ratio         New ratio for DEBIT transactions.
+      * @param credit_ratio        New ratio for CREDIT transactions.
+      * @param broadcast           True to broadcast the transaction on the network.
+      */
+      signed_transaction set_daspay_transaction_ratio(const string& authority, share_type debit_ratio, share_type credit_ratio) const;
       //////////////////////////
       // REQUESTS:            //
       //////////////////////////

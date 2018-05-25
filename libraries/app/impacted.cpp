@@ -374,6 +374,11 @@ struct get_impacted_account_visitor
       _impacted.insert( op.authority );
    }
 
+   void operator()( const set_daspay_transaction_ratio_operation& op )
+   {
+      _impacted.insert( op.authority );
+   }
+
    void operator() ( const issue_free_cycles_operation& op )
    {
       _impacted.insert( op.authority );

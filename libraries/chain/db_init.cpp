@@ -74,6 +74,7 @@
 #include <graphene/chain/witness_evaluator.hpp>
 #include <graphene/chain/worker_evaluator.hpp>
 #include <graphene/chain/change_fee_evaluator.hpp>
+#include <graphene/chain/daspay_evaluator.hpp>
 
 #include <graphene/chain/protocol/fee_schedule.hpp>
 
@@ -267,6 +268,7 @@ void database::initialize_evaluators()
    register_evaluator<roll_back_public_keys_evaluator>();
    register_evaluator<add_daspay_authority_evaluator>();
    register_evaluator<daspay_debit_evaluator>();
+   register_evaluator<set_daspay_transaction_ratio_evaluator>();
 }
 
 void database::initialize_indexes()

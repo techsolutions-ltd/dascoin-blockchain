@@ -191,5 +191,4 @@ void database_fixture::roll_back_public_keys(account_id_type authority, account_
   tx.clear();
 }
 
-
 } }  // namespace graphene::chain

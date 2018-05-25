@@ -44,6 +44,7 @@
 #include <graphene/chain/protocol/witness.hpp>
 #include <graphene/chain/protocol/worker.hpp>
 #include <graphene/chain/protocol/fee_operations.hpp>
+#include <graphene/chain/protocol/daspay_operations.hpp>
 
 namespace graphene { namespace chain {
 
@@ -175,6 +176,7 @@ namespace graphene { namespace chain {
 
             add_daspay_authority_operation,
             daspay_debit_operation,
+            set_daspay_transaction_ratio_operation,
 
             // Virtual operations below this point:
 

@@ -134,6 +134,13 @@ namespace graphene { namespace chain {
          frequency_type frequency;
 
          /**
+          * Daspay transaction ratio percentage
+          */
+         share_type daspay_debit_transaction_ratio = 0;
+         share_type daspay_credit_transaction_ratio = 0;
+
+
+         /**
           * dynamic_flags specifies chain state properties that can be
           * expressed in one bit.
           */
@@ -209,6 +216,8 @@ FC_REFLECT_DERIVED( graphene::chain::dynamic_global_property_object, (graphene::
                     (last_minted_submission_num)
                     (max_queue_submission_num)
                     (frequency)
+                    (daspay_debit_transaction_ratio)
+                    (daspay_credit_transaction_ratio)
                     (dynamic_flags)
                     (last_irreversible_block_num)
                     (next_dascoin_reward_time)

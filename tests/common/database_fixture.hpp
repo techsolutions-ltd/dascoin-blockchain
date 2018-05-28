@@ -369,7 +369,7 @@ struct database_fixture {
    void roll_back_public_keys(account_id_type authority, account_id_type account_id);
 
    // fix_daspay.cpp
-   void set_daspay_transaction_ratio_operation(account_id_type authority, share_type debit_ratio, share_type credit_ratio);
+   void set_daspay_transaction_ratio(account_id_type authority, share_type debit_ratio, share_type credit_ratio);
 
    // fix_web_assets.cpp
    asset web_asset(share_type amount);

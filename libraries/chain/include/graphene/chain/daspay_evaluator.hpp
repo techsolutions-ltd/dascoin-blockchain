@@ -45,10 +45,7 @@ namespace graphene { namespace chain {
       typedef register_daspay_authority_operation operation_type;
 
       void_result do_evaluate( const operation_type& op );
-      void_result do_apply( const operation_type& op );
-
-    private:
-      const account_object* _account_obj = nullptr;
+      object_id_type do_apply( const operation_type& op );
     };
 
     class daspay_debit_evaluator : public evaluator<daspay_debit_evaluator>

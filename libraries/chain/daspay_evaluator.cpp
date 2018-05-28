@@ -37,7 +37,7 @@ namespace graphene { namespace chain {
 
         return {};
 
-      } FC_CAPTURE_AND_RETHROW((op)) }
+    } FC_CAPTURE_AND_RETHROW((op)) }
 
     void_result set_daspay_transaction_ratio_evaluator::do_apply(const set_daspay_transaction_ratio_operation& op)
     { try {
@@ -50,24 +50,39 @@ namespace graphene { namespace chain {
 
         return {};
 
-      } FC_CAPTURE_AND_RETHROW((op)) }
+    } FC_CAPTURE_AND_RETHROW((op)) }
 
     void_result register_daspay_authority_evaluator::do_evaluate(const operation_type& op)
     {
       try {
         const auto& d = db();
-        _account_obj = &op.issuer(d);
+        const auto& issuer = op.issuer(d);
+        FC_ASSERT( issuer.is_wallet(), "Cannot register DasPay authority on vault ${i}", ("i", op.issuer) );
+
+        const auto& payment_provider = op.payment_provider(d);
+        FC_ASSERT( payment_provider.is_wallet(), "Cannot register DasPay authority because payment provider ${p} is not wallet", ("p", op.payment_provider) );
+
+        const auto& idx = d.get_index_type<daspay_authority_index>().indices().get<by_daspay_user>();
+        auto itr = idx.lower_bound(op.issuer);
+
+        while( itr != idx.end() )
+        {
+          FC_ASSERT ( itr->payment_provider != op.payment_provider, "DasPay payment provider ${p} already set", ("p", op.payment_provider) );
+          ++itr;
+        }
         return {};
     } FC_CAPTURE_AND_RETHROW((op)) }
 
-    void_result register_daspay_authority_evaluator::do_apply(const operation_type& op)
+    object_id_type register_daspay_authority_evaluator::do_apply(const operation_type& op)
     {
       try {
         auto& d = db();
-        d.modify(*_account_obj, [&](account_object& ao) {
-          ao.options.daspay_key = op.daspay_public_key;
-        });
-        return {};
+        return d.create<daspay_authority_object>([&](daspay_authority_object& o){
+          o.daspay_user = op.issuer;
+          o.payment_provider = op.payment_provider;
+          o.daspay_public_key = op.daspay_public_key;
+          o.memo = op.memo;
+        }).id;
     } FC_CAPTURE_AND_RETHROW((op)) }
 
     void_result daspay_debit_evaluator::do_evaluate(const operation_type& op)
@@ -75,7 +90,7 @@ namespace graphene { namespace chain {
       try {
         const auto& d = db();
         _account_obj = &op.issuer(d);
-        FC_ASSERT( op.auth_key == _account_obj->options.daspay_key, "Invalid key used to sign daspay_debit");
+//        FC_ASSERT( op.auth_key == _account_obj->options.daspay_key, "Invalid key used to sign daspay_debit");
         return {};
       } FC_CAPTURE_AND_RETHROW((op)) }
 

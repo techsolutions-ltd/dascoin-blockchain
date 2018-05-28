@@ -259,6 +259,7 @@ namespace graphene { namespace chain {
       impl_witness_delegate_data_colection_object_type,
       impl_wire_out_with_fee_holder_object_type,
       impl_payment_provider_object_type
+      impl_daspay_authority_object_type
    };
 
    //typedef fc::unsigned_int            object_id_type;

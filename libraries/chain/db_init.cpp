@@ -158,8 +158,8 @@ const uint8_t wire_out_holder_object::type_id;
 const uint8_t wire_out_with_fee_holder_object::space_id;
 const uint8_t wire_out_with_fee_holder_object::type_id;
 
-const uint8_t payment_provider_object::space_id;
-const uint8_t payment_provider_object::type_id;
+const uint8_t payment_service_provider_object::space_id;
+const uint8_t payment_service_provider_object::type_id;
 
 const uint8_t reward_queue_object::space_id;
 const uint8_t reward_queue_object::type_id;
@@ -273,6 +273,7 @@ void database::initialize_evaluators()
    register_evaluator<register_daspay_authority_evaluator>();
    register_evaluator<daspay_debit_evaluator>();
    register_evaluator<set_daspay_transaction_ratio_evaluator>();
+   register_evaluator<create_payment_service_provider_evaluator>();
 }
 
 void database::initialize_indexes()
@@ -330,8 +331,8 @@ void database::initialize_indexes()
    add_index<primary_index<frequency_history_record_index>>();
    add_index<primary_index<witness_delegate_data_index > >();
    add_index<primary_index<wire_out_with_fee_holder_index>>();
-   add_index<primary_index<payment_provider_index>>();
    add_index<primary_index<daspay_authority_index>>();
+   add_index<primary_index<payment_service_provider_index>>();
 }
 
 account_id_type database::initialize_chain_authority(const string& kind_name, const string& acc_name)

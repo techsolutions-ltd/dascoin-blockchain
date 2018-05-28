@@ -379,6 +379,14 @@ struct get_impacted_account_visitor
       _impacted.insert( op.authority );
    }
 
+   void operator()( const create_payment_service_provider_operation& op )
+   {
+      _impacted.insert( op.authority );
+      _impacted.insert( op.payment_service_provider_account );
+      for (const auto& acc : op.payment_service_provider_clearing_accounts)
+        _impacted.insert( acc );
+   }
+
    void operator() ( const issue_free_cycles_operation& op )
    {
       _impacted.insert( op.authority );

@@ -375,6 +375,15 @@ struct get_impacted_account_visitor
       _impacted.insert( op.authority );
    }
 
+   void operator()( const create_payment_service_provider_operation& op )
+   {
+     _impacted.insert( op.authority );
+     _impacted.insert( op.payment_service_provider_account );
+     for (const auto& acc : op.payment_service_provider_clearing_accounts)
+       _impacted.insert( acc );
+   }
+
+
    void operator() ( const issue_free_cycles_operation& op )
    {
       _impacted.insert( op.authority );
@@ -617,7 +626,7 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
                break;
             case impl_witness_delegate_data_colection_object_type:
                break;
-           case impl_payment_provider_object_type:
+           case impl_payment_service_provider_object_type:
              break;
            case impl_daspay_authority_object_type:
              break;

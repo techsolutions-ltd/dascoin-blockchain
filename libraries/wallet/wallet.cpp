@@ -1046,6 +1046,22 @@ public:
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (name)(daspay_key)(broadcast) ) }
 
+   signed_transaction create_payment_service_provider(const string& authority, const string& payment_service_provider_account, const vector<string>& payment_service_provider_clearing_accounts, bool broadcast = false)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+      create_payment_service_provider_operation op;
+      op.authority = get_account(authority).id;
+      op.payment_service_provider_account = get_account(payment_service_provider_account).id;
+      for (const auto& acc : payment_service_provider_clearing_accounts)
+        op.payment_service_provider_clearing_accounts.emplace_back(get_account(acc).id);
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (authority)(payment_service_provider_account)(payment_service_provider_clearing_accounts)(broadcast) ) }
+
    signed_transaction tether_accounts(string wallet, string vault, bool broadcast = false)
    { try {
       FC_ASSERT( !self.is_locked() );
@@ -3625,6 +3641,14 @@ signed_transaction wallet_api::daspay_debit(string name,
                                             bool broadcast)
 {
    return my->daspay_debit( name, amount, daspay_key, broadcast );
+}
+
+signed_transaction wallet_api::create_payment_service_provider(const string& authority,
+                                               const string& payment_service_provider_account,
+                                               const vector<string>& payment_service_provider_clearing_accounts,
+                                               bool broadcast) const
+{
+   return my->create_payment_service_provider( authority, payment_service_provider_account, payment_service_provider_clearing_accounts, broadcast );
 }
 
 signed_transaction wallet_api::tether_accounts(string wallet,

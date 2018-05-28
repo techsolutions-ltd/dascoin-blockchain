@@ -390,7 +390,7 @@ namespace graphene { namespace app {
                   break;
                  case impl_wire_out_with_fee_holder_object_type:
                   break;
-                 case impl_payment_provider_object_type:
+                 case impl_payment_service_provider_object_type:
                   break;
                  case impl_daspay_authority_object_type:
                   break;

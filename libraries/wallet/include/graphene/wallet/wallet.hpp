@@ -1725,7 +1725,38 @@ class wallet_api
       */
       signed_transaction set_daspay_transaction_ratio(const string& authority, share_type debit_ratio, share_type credit_ratio) const;
       //////////////////////////
-      // REQUESTS:            //
+
+      /**
+      * Create payment service provider.
+      * @param authority                                               This MUST be master authority.
+      * @param payment_service_provider_account                        Account used to indentify payment_service_provider.
+      * @param payment_service_provider_clearing_accounts              List of clearing accounts for payment_service_provider_account.
+      * @param broadcast                                               True to broadcast the transaction on the network.
+      */
+      signed_transaction create_payment_service_provider(const string& authority, const string& payment_service_provider_account, const vector<string>& payment_service_provider_clearing_accounts, bool broadcast = false) const;
+      //////////////////////////
+
+      /**
+      * Update payment service provider.
+      * @param authority                                               This MUST be master authority.
+      * @param payment_service_provider_account                        Account used to indentify payment_service_provider.
+      * @param payment_service_provider_clearing_accounts              List of clearing accounts for payment_service_provider_account.
+      * @param broadcast                                               True to broadcast the transaction on the network.
+      */
+      signed_transaction update_payment_service_provider(const string& authority, account_id_type payment_service_provider_account, vector<account_id_type> payment_service_provider_clearing_accounts) const;
+      //////////////////////////
+
+      /**
+      * Delete payment service provider.
+      * @param authority                                               This MUST be master authority.
+      * @param payment_service_provider_account                        Account used to indentify payment_service_provider.
+      * @param broadcast                                               True to broadcast the transaction on the network.
+      */
+      signed_transaction delete_payment_service_provider(const string& authority, account_id_type payment_service_provider_account) const;
+      //////////////////////////
+
+
+	// REQUESTS:            //
       //////////////////////////
 
       /**

@@ -108,6 +108,29 @@ namespace graphene { namespace chain {
       }
     };
 
+    struct create_payment_service_provider_operation : public base_operation
+    {
+      struct fee_parameters_type {};
+      asset fee;
+      account_id_type authority;
+      account_id_type payment_service_provider_account;
+      vector<account_id_type> payment_service_provider_clearing_accounts;
+      extensions_type extensions;
+
+      create_payment_service_provider_operation() = default;
+      explicit create_payment_service_provider_operation(
+              const account_id_type& authority,
+              const account_id_type& payment_service_provider_account,
+              const vector<account_id_type>& payment_service_provider_clearing_accounts)
+              : authority(authority),
+                payment_service_provider_account(payment_service_provider_account),
+                payment_service_provider_clearing_accounts(payment_service_provider_clearing_accounts) {}
+
+      account_id_type fee_payer() const { return authority; }
+      void validate() const;
+      share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+    };
+
   } }  // namespace graphene::chain
 
 ////////////////////////////////
@@ -139,5 +162,14 @@ FC_REFLECT( graphene::chain::daspay_debit_operation,
             (issuer)
             (amount)
             (auth_key)
+            (extensions)
+          )
+
+FC_REFLECT( graphene::chain::create_payment_service_provider_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::create_payment_service_provider_operation,
+            (fee)
+            (authority)
+            (payment_service_provider_account)
+            (payment_service_provider_clearing_accounts)
             (extensions)
           )

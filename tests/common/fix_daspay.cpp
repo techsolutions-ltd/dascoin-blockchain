@@ -44,4 +44,20 @@ namespace graphene { namespace chain {
     tx.clear();
   }
 
+    void database_fixture::create_payment_service_provider(account_id_type& authority,
+                                                           account_id_type& payment_service_provider_account,
+                                                           vector<account_id_type>& payment_service_provider_clearing_accounts)
+    {
+      create_payment_service_provider_operation op;
+      op.authority = authority;
+      op.payment_service_provider_account = payment_service_provider_account;
+      op.payment_service_provider_clearing_accounts = payment_service_provider_clearing_accounts;
+      signed_transaction tx;
+      set_expiration(db, tx);
+      tx.operations.push_back(op);
+      tx.validate();
+      processed_transaction ptx = db.push_transaction(tx, ~0);
+      tx.clear();
+    }
+
 } }  // namespace graphene::chain

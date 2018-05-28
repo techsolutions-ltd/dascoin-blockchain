@@ -60,4 +60,13 @@ namespace graphene { namespace chain {
       const account_object* _account_obj = nullptr;
     };
 
+    class create_payment_service_provider_evaluator : public evaluator<create_payment_service_provider_evaluator>
+    {
+    public:
+      typedef create_payment_service_provider_operation operation_type;
+
+      void_result do_evaluate(const create_payment_service_provider_operation& op);
+      object_id_type do_apply(const create_payment_service_provider_operation& op);
+    };
+
   } }  // namespace graphene::chain

@@ -370,6 +370,9 @@ struct database_fixture {
 
    // fix_daspay.cpp
    void set_daspay_transaction_ratio(account_id_type authority, share_type debit_ratio, share_type credit_ratio);
+   void create_payment_service_provider(account_id_type& authority,
+                                        account_id_type& payment_service_provider_account,
+                                        vector<account_id_type>& payment_service_provider_clearing_accounts);
 
    // fix_web_assets.cpp
    asset web_asset(share_type amount);

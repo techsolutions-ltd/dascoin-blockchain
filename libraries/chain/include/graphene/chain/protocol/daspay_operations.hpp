@@ -57,14 +57,22 @@ namespace graphene { namespace chain {
       asset fee;
 
       account_id_type issuer;
+      account_id_type payment_provider;
       public_key_type daspay_public_key;
+      optional<string> memo;
 
       extensions_type extensions;
 
       register_daspay_authority_operation() = default;
-      explicit register_daspay_authority_operation(account_id_type issuer, public_key_type auth)
+      explicit register_daspay_authority_operation(
+              const account_id_type& issuer,
+              const account_id_type& payment_provider,
+              const public_key_type& auth,
+              optional<string> memo)
               : issuer(issuer)
-              , daspay_public_key(auth) {}
+              , payment_provider(payment_provider)
+              , daspay_public_key(auth)
+              , memo(memo) {}
 
       account_id_type fee_payer() const { return issuer; }
       void validate() const {};
@@ -119,7 +127,9 @@ FC_REFLECT( graphene::chain::register_daspay_authority_operation::fee_parameters
 FC_REFLECT( graphene::chain::register_daspay_authority_operation,
             (fee)
             (issuer)
+            (payment_provider)
             (daspay_public_key)
+            (memo)
             (extensions)
           )
 

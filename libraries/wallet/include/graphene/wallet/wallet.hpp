@@ -742,9 +742,11 @@ class wallet_api
                                                        string account_name,
                                                        bool broadcast = false);
 
-      signed_transaction add_daspay_authority(string name,
-                                              public_key_type daspay_key,
-                                              bool broadcast = false);
+      signed_transaction register_daspay_authority(string name,
+                                                   string payment_provider,
+                                                   public_key_type daspay_key,
+                                                   optional<string> memo,
+                                                   bool broadcast = false);
 
       signed_transaction daspay_debit(string name,
                                       share_type amount,
@@ -1907,7 +1909,7 @@ FC_API( graphene::wallet::wallet_api,
         (buy)
         (borrow_asset)
         (cancel_order)
-        (add_daspay_authority)
+        (register_daspay_authority)
         (daspay_debit)
         (transfer)
         (transfer2)

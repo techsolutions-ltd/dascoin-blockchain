@@ -1003,17 +1003,19 @@ public:
       return tx;
    } FC_CAPTURE_AND_RETHROW( (name)(owner)(active)(broadcast) ) }
 
-   signed_transaction add_daspay_authority(string name, public_key_type daspay_key, bool broadcast = false)
+   signed_transaction register_daspay_authority(string name, string payment_provider, public_key_type daspay_key, optional<string> memo, bool broadcast = false)
    { try {
       FC_ASSERT( !self.is_locked() );
 
       account_object account = get_account(name);
-      account_id_type account_id = account.id;
+      account_object payment_provide_account = get_account(payment_provider);
 
       register_daspay_authority_operation add_daspay_op;
 
-      add_daspay_op.issuer = account_id;
+      add_daspay_op.issuer = account.id;
+      add_daspay_op.payment_provider = payment_provide_account.id;
       add_daspay_op.daspay_public_key = daspay_key;
+      add_daspay_op.memo = memo;
 
       signed_transaction tx;
       tx.operations.push_back(add_daspay_op);
@@ -1021,7 +1023,7 @@ public:
       tx.validate();
 
       return sign_transaction(tx, broadcast);
-   } FC_CAPTURE_AND_RETHROW( (name)(daspay_key)(broadcast) ) }
+   } FC_CAPTURE_AND_RETHROW( (name)(payment_provider)(daspay_key)(memo) ) }
 
    signed_transaction daspay_debit(string name, share_type amount, public_key_type daspay_key, bool broadcast = false)
    { try {
@@ -3608,11 +3610,13 @@ signed_transaction wallet_api::register_vault_account(string name,
    return my->register_account( account_kind::vault, name, owner_pubkey, active_pubkey, broadcast );
 }
 
-signed_transaction wallet_api::add_daspay_authority(string name,
+signed_transaction wallet_api::register_daspay_authority(string name,
+                                                    string payment_provider,
                                                     public_key_type daspay_key,
-                                                    bool broadcast)
+                                                    optional<string> memo,
+                                                    bool broadcast /* = false */)
 {
-   return my->add_daspay_authority( name, daspay_key, broadcast );
+   return my->register_daspay_authority( name, payment_provider, daspay_key, memo, broadcast );
 }
 
 signed_transaction wallet_api::daspay_debit(string name,

@@ -26,6 +26,7 @@
 
 #include <graphene/chain/evaluator.hpp>
 #include <graphene/chain/protocol/daspay_operations.hpp>
+#include <graphene/chain/daspay_object.hpp>
 
 namespace graphene { namespace chain {
 

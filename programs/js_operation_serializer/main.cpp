@@ -40,6 +40,7 @@
 #include <graphene/chain/wire_out_with_fee_object.hpp>
 #include <graphene/chain/witness_object.hpp>
 #include <graphene/chain/worker_object.hpp>
+#include <graphene/chain/daspay_object.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 #include <iostream>

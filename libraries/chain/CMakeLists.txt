@@ -115,7 +115,6 @@ add_library( graphene_chain
              access_layer.cpp
 
              daspay_evaluator.cpp
-             daspay_object.cpp
              ${HEADERS}
              "${CMAKE_CURRENT_BINARY_DIR}/include/graphene/chain/hardfork.hpp"
            )

@@ -390,6 +390,8 @@ namespace graphene { namespace app {
                   break;
                  case impl_wire_out_with_fee_holder_object_type:
                   break;
+                 case impl_payment_provider_object_type:
+                  break;
                  case impl_reward_queue_object_type:
                   break;
                  case impl_frequency_history_record_object_type:

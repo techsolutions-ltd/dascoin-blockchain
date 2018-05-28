@@ -617,6 +617,8 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
                break;
             case impl_witness_delegate_data_colection_object_type:
                break;
+           case impl_payment_provider_object_type:
+             break;
       }
    }
 }

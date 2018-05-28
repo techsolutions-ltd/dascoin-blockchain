@@ -23,6 +23,8 @@
  */
 
 #include "database_fixture.hpp"
+#include <graphene/chain/daspay_object.hpp>
+
 
 using namespace graphene::chain::test;
 

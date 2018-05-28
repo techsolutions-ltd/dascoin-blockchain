@@ -53,6 +53,7 @@
 #include <graphene/chain/witness_object.hpp>
 #include <graphene/chain/witness_schedule_object.hpp>
 #include <graphene/chain/worker_object.hpp>
+#include <graphene/chain/daspay_object.hpp>
 
 #include <graphene/chain/account_evaluator.hpp>
 #include <graphene/chain/asset_evaluator.hpp>
@@ -156,6 +157,9 @@ const uint8_t wire_out_holder_object::type_id;
 
 const uint8_t wire_out_with_fee_holder_object::space_id;
 const uint8_t wire_out_with_fee_holder_object::type_id;
+
+const uint8_t payment_provider_object::space_id;
+const uint8_t payment_provider_object::type_id;
 
 const uint8_t reward_queue_object::space_id;
 const uint8_t reward_queue_object::type_id;
@@ -326,6 +330,7 @@ void database::initialize_indexes()
    add_index<primary_index<frequency_history_record_index>>();
    add_index<primary_index<witness_delegate_data_index > >();
    add_index<primary_index<wire_out_with_fee_holder_index>>();
+   add_index<primary_index<payment_provider_index>>();
 }
 
 account_id_type database::initialize_chain_authority(const string& kind_name, const string& acc_name)

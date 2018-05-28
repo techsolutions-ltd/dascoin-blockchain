@@ -22,14 +22,13 @@
  * SOFTWARE.
  */
 
-#include <database_fixture.hpp>
 #include "database_fixture.hpp"
 
 using namespace graphene::chain::test;
 
 namespace graphene { namespace chain {
 
-  void database_fixture::set_daspay_transaction_ratio_operation(account_id_type authority, share_type debit_ratio, share_type credit_ratio)
+  void database_fixture::set_daspay_transaction_ratio(account_id_type authority, share_type debit_ratio, share_type credit_ratio)
   {
     set_daspay_transaction_ratio_operation op;
     op.authority = authority;

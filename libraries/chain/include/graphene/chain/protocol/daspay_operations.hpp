@@ -51,7 +51,7 @@ namespace graphene { namespace chain {
       void validate() const;
     };
 
-    struct add_daspay_authority_operation : public base_operation
+    struct register_daspay_authority_operation : public base_operation
     {
       struct fee_parameters_type {};
       asset fee;
@@ -61,8 +61,8 @@ namespace graphene { namespace chain {
 
       extensions_type extensions;
 
-      add_daspay_authority_operation() = default;
-      explicit add_daspay_authority_operation(account_id_type issuer, public_key_type auth)
+      register_daspay_authority_operation() = default;
+      explicit register_daspay_authority_operation(account_id_type issuer, public_key_type auth)
               : issuer(issuer)
               , daspay_public_key(auth) {}
 
@@ -115,8 +115,8 @@ FC_REFLECT( graphene::chain::set_daspay_transaction_ratio_operation,
             (extensions)
           )
 
-FC_REFLECT( graphene::chain::add_daspay_authority_operation::fee_parameters_type, )
-FC_REFLECT( graphene::chain::add_daspay_authority_operation,
+FC_REFLECT( graphene::chain::register_daspay_authority_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::register_daspay_authority_operation,
             (fee)
             (issuer)
             (daspay_public_key)

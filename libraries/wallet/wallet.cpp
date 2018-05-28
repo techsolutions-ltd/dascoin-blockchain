@@ -1010,7 +1010,7 @@ public:
       account_object account = get_account(name);
       account_id_type account_id = account.id;
 
-      add_daspay_authority_operation add_daspay_op;
+      register_daspay_authority_operation add_daspay_op;
 
       add_daspay_op.issuer = account_id;
       add_daspay_op.daspay_public_key = daspay_key;

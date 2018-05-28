@@ -174,7 +174,7 @@ namespace graphene { namespace chain {
             set_roll_back_enabled_operation,
             roll_back_public_keys_operation,
 
-            add_daspay_authority_operation,
+            register_daspay_authority_operation,
             daspay_debit_operation,
             set_daspay_transaction_ratio_operation,
 

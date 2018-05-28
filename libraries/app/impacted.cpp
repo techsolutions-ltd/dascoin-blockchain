@@ -433,7 +433,7 @@ struct get_impacted_account_visitor
       _impacted.insert(op.issuer);
    }
 
-   void operator() (const add_daspay_authority_operation& op)
+   void operator() (const register_daspay_authority_operation& op)
    {
       _impacted.insert(op.issuer);
    }

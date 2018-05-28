@@ -52,15 +52,15 @@ namespace graphene { namespace chain {
 
       } FC_CAPTURE_AND_RETHROW((op)) }
 
-    void_result add_daspay_authority_evaluator::do_evaluate(const operation_type& op)
+    void_result register_daspay_authority_evaluator::do_evaluate(const operation_type& op)
     {
       try {
         const auto& d = db();
         _account_obj = &op.issuer(d);
         return {};
-      } FC_CAPTURE_AND_RETHROW((op)) }
+    } FC_CAPTURE_AND_RETHROW((op)) }
 
-    void_result add_daspay_authority_evaluator::do_apply(const operation_type& op)
+    void_result register_daspay_authority_evaluator::do_apply(const operation_type& op)
     {
       try {
         auto& d = db();
@@ -68,7 +68,7 @@ namespace graphene { namespace chain {
           ao.options.daspay_key = op.daspay_public_key;
         });
         return {};
-      } FC_CAPTURE_AND_RETHROW((op)) }
+    } FC_CAPTURE_AND_RETHROW((op)) }
 
     void_result daspay_debit_evaluator::do_evaluate(const operation_type& op)
     {

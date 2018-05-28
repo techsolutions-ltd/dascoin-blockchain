@@ -39,10 +39,10 @@ namespace graphene { namespace chain {
       void_result do_apply(const operation_type& op);
     };
 
-    class add_daspay_authority_evaluator : public evaluator<add_daspay_authority_evaluator>
+    class register_daspay_authority_evaluator : public evaluator<register_daspay_authority_evaluator>
     {
     public:
-      typedef add_daspay_authority_operation operation_type;
+      typedef register_daspay_authority_operation operation_type;
 
       void_result do_evaluate( const operation_type& op );
       void_result do_apply( const operation_type& op );

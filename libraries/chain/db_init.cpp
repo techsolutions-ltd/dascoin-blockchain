@@ -331,6 +331,7 @@ void database::initialize_indexes()
    add_index<primary_index<witness_delegate_data_index > >();
    add_index<primary_index<wire_out_with_fee_holder_index>>();
    add_index<primary_index<payment_provider_index>>();
+   add_index<primary_index<daspay_authority_index>>();
 }
 
 account_id_type database::initialize_chain_authority(const string& kind_name, const string& acc_name)

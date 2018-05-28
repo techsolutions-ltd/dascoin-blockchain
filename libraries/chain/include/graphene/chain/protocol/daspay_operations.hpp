@@ -75,7 +75,7 @@ namespace graphene { namespace chain {
               , memo(memo) {}
 
       account_id_type fee_payer() const { return issuer; }
-      void validate() const {};
+      void validate() const;
       share_type calculate_fee(const fee_parameters_type&) const { return 0; }
     };
 

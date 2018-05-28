@@ -35,10 +35,18 @@
 
 namespace graphene { namespace chain {
 
-    void set_daspay_transaction_ratio_operation::validate() const
-    {
-      FC_ASSERT( debit_ratio >= 0 && debit_ratio < 10000 );
-      FC_ASSERT( credit_ratio >= 0 && credit_ratio < 10000 );
-    }
+  void set_daspay_transaction_ratio_operation::validate() const
+  {
+    FC_ASSERT( debit_ratio >= 0 && debit_ratio < 10000 );
+    FC_ASSERT( credit_ratio >= 0 && credit_ratio < 10000 );
+  }
 
-  } } // namespace graphene::chain
+  void register_daspay_authority_operation::validate() const
+  {
+    if (memo.valid())
+    {
+      FC_ASSERT( memo->length() <= DASCOIN_MAX_COMMENT_LENGTH );
+    }
+  }
+
+} } // namespace graphene::chain

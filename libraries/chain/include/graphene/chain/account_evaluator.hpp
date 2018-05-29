@@ -119,4 +119,13 @@ public:
   void_result do_apply( const operation_type& op );
 };
 
+class set_chain_authority_evaluator : public evaluator<set_chain_authority_evaluator>
+{
+public:
+  typedef set_chain_authority_operation operation_type;
+
+  void_result do_evaluate( const operation_type& op );
+  void_result do_apply( const operation_type& op );
+};
+
 } } // graphene::chain

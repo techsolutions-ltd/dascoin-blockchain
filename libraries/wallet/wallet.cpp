@@ -2936,6 +2936,18 @@ public:
      return sign_transaction(tx, broadcast);
    }
 
+   signed_transaction set_chain_authority(const string& issuer, const string& account, const string& kind, bool broadcast)
+   {
+     set_chain_authority_operation op;
+     op.issuer = get_account(issuer).id;
+     op.account = get_account(account).id;
+     op.kind = kind;
+     signed_transaction tx;
+     tx.operations.push_back(op);
+     set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
+     return sign_transaction(tx, broadcast);
+   }
+
    void dbg_make_uia(string creator, string symbol)
    {
       asset_options opts;
@@ -5019,6 +5031,11 @@ signed_transaction wallet_api::set_roll_back_enabled(const string& account, bool
 signed_transaction wallet_api::roll_back_public_keys(const string& authority, const string& account,bool broadcast) const
 {
   return my->roll_back_public_keys(authority, account, broadcast);
+}
+
+signed_transaction wallet_api::set_chain_authority(const string& issuer, const string& account, const string& kind, bool broadcast) const
+{
+  return my->set_chain_authority(issuer, account, kind, broadcast);
 }
 
 vector<issue_asset_request_object> wallet_api::get_all_webasset_issue_requests() const

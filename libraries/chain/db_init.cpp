@@ -271,6 +271,7 @@ void database::initialize_evaluators()
    register_evaluator<set_roll_back_enabled_evaluator>();
    register_evaluator<roll_back_public_keys_evaluator>();
    register_evaluator<fee_pool_cycles_submit_evaluator>();
+   register_evaluator<set_chain_authority_evaluator>();
    register_evaluator<register_daspay_authority_evaluator>();
    register_evaluator<unregister_daspay_authority_evaluator>();
    register_evaluator<daspay_debit_evaluator>();

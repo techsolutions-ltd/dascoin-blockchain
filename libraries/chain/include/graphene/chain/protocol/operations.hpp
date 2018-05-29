@@ -176,6 +176,7 @@ namespace graphene { namespace chain {
 
             fee_pool_cycles_submit_operation,
 
+            set_chain_authority_operation,
             register_daspay_authority_operation,
             unregister_daspay_authority_operation,
             daspay_debit_operation,

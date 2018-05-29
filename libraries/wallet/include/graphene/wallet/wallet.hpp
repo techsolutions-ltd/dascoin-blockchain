@@ -1705,6 +1705,11 @@ class wallet_api
       */
       signed_transaction roll_back_public_keys(const string& authority, const string& account, bool broadcast) const;
 
+      /**
+      * set chain authority
+      */
+      signed_transaction set_chain_authority(const string& issuer, const string& account, const string& kind, bool broadcast) const;
+
       ///////////////////////////////
       /// DASPAY:                 ///
       ///////////////////////////////
@@ -2091,4 +2096,6 @@ FC_API( graphene::wallet::wallet_api,
         (get_reward_queue_by_page)
         (get_reward_queue_size)
         (get_queue_submissions_with_pos)
+
+	(set_chain_authority)
       )

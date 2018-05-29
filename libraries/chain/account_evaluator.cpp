@@ -589,4 +589,30 @@ void_result set_starting_cycle_asset_amount_evaluator::do_apply(const set_starti
   } FC_CAPTURE_AND_RETHROW((op))
 }
 
+void_result set_chain_authority_evaluator::do_evaluate(const set_chain_authority_operation& op)
+{
+  try
+  {
+    database& d = db();
+    d.perform_root_authority_check(op.issuer);
+    return {};
+  } FC_CAPTURE_AND_RETHROW((op))
+}
+
+void_result set_chain_authority_evaluator::do_apply(const set_chain_authority_operation& op)
+{
+  try
+  {
+    using namespace graphene::chain::util;
+    auto& d = db();
+
+    auto kind = convert_enum<chain_authority_kind>::from_fc_string(op.kind);
+    d.modify(d.get_global_properties(), [&](global_property_object& gpo){
+       gpo.authorities.set(kind, op.account);
+    });
+
+    return {};
+  } FC_CAPTURE_AND_RETHROW((op))
+}
+
 } } // graphene::chain

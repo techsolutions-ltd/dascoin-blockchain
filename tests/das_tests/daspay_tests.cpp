@@ -27,6 +27,7 @@
 #include <graphene/chain/access_layer.hpp>
 #include <graphene/chain/exceptions.hpp>
 #include "../common/database_fixture.hpp"
+#include <graphene/chain/daspay_object.hpp>
 
 using namespace graphene::chain;
 using namespace graphene::chain::test;
@@ -36,6 +37,38 @@ BOOST_FIXTURE_TEST_SUITE( daspay_tests, database_fixture )
 
 BOOST_AUTO_TEST_CASE( set_daspay_transaction_ratio_test )
 { try {
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( daspay_authority_index_test )
+{ try {
+  VAULT_ACTORS((foo)(bar));
+  ACTORS((wa1)(wa2));
+
+  db.create<daspay_authority_object>([&](daspay_authority_object& dao){
+    dao.daspay_user = foo_id;
+    dao.payment_provider = wa1_id;
+  });
+
+  // This will fail - the same user cannot register the same payment provider twice
+  GRAPHENE_REQUIRE_THROW(
+    db.create<daspay_authority_object>([&](daspay_authority_object& dao){
+      dao.daspay_user = foo_id;
+      dao.payment_provider = wa1_id;
+    }),
+  fc::exception );
+
+  // Success - different payment provider
+  db.create<daspay_authority_object>([&](daspay_authority_object& dao){
+    dao.daspay_user = foo_id;
+    dao.payment_provider = wa2_id;
+  });
+
+  // Success - different user
+  db.create<daspay_authority_object>([&](daspay_authority_object& dao){
+    dao.daspay_user = bar_id;
+    dao.payment_provider = wa1_id;
+  });
 
 } FC_LOG_AND_RETHROW() }
 

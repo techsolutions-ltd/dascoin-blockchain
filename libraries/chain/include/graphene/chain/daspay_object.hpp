@@ -100,6 +100,7 @@ namespace graphene { namespace chain {
   typedef generic_index<payment_service_provider_object, payment_service_provider_multi_index_type> payment_service_provider_index;
 
   struct by_daspay_user;
+  struct by_payment_provider;
   using daspay_authority_multi_index_type = multi_index_container<
     daspay_authority_object,
     indexed_by<
@@ -111,7 +112,14 @@ namespace graphene { namespace chain {
         tag<by_daspay_user>,
           composite_key< daspay_authority_object,
             member< daspay_authority_object, account_id_type, &daspay_authority_object::daspay_user >,
-            member< daspay_authority_object, account_id_type, &daspay_authority_object::payment_provider >
+            member< object, object_id_type, &object::id >
+          >
+      >,
+      ordered_unique<
+        tag<by_payment_provider>,
+          composite_key< daspay_authority_object,
+            member< daspay_authority_object, account_id_type, &daspay_authority_object::payment_provider >,
+            member< daspay_authority_object, account_id_type, &daspay_authority_object::daspay_user >
           >
       >
     >

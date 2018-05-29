@@ -62,6 +62,9 @@ namespace graphene { namespace chain {
       const auto& payment_provider = op.payment_provider(d);
       FC_ASSERT( payment_provider.is_wallet(), "Cannot register DasPay authority because payment provider ${p} is not wallet", ("p", op.payment_provider) );
 
+      const auto& psp_idx = d.get_index_type<payment_service_provider_index>().indices().get<by_payment_service_provider>();
+      FC_ASSERT( psp_idx.find(op.payment_provider) != psp_idx.end(), "Cannot add DasPay authority because payment provider is not registered" );
+
       const auto& idx = d.get_index_type<daspay_authority_index>().indices().get<by_daspay_user>();
       auto itr = idx.lower_bound(op.issuer);
 
@@ -92,6 +95,8 @@ namespace graphene { namespace chain {
       const auto& idx = d.get_index_type<daspay_authority_index>().indices().get<by_daspay_user>();
 
       auto itr = idx.lower_bound(op.issuer);
+      FC_ASSERT( itr != idx.end(), "Cannot unregister DasPay authority because none has been set" );
+
       while( itr != idx.end() )
       {
         if ( itr->payment_provider == op.payment_provider )
@@ -100,6 +105,7 @@ namespace graphene { namespace chain {
           _daspay_authority_obj = &obj;
           break;
         }
+        ++itr;
       }
 
       FC_ASSERT( _daspay_authority_obj != nullptr, "Cannot unregister DasPay authority ${a} since ${u} is not the owner", ("a", op.payment_provider)("u", op.issuer) );

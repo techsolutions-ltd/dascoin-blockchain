@@ -79,6 +79,28 @@ namespace graphene { namespace chain {
       share_type calculate_fee(const fee_parameters_type&) const { return 0; }
     };
 
+    struct unregister_daspay_authority_operation : public base_operation
+    {
+      struct fee_parameters_type {};
+      asset fee;
+
+      account_id_type issuer;
+      account_id_type payment_provider;
+
+      extensions_type extensions;
+
+      unregister_daspay_authority_operation() = default;
+      explicit unregister_daspay_authority_operation(
+              const account_id_type& issuer,
+              account_id_type payment_provider)
+              : issuer(issuer)
+              , payment_provider(payment_provider) {}
+
+      account_id_type fee_payer() const { return issuer; }
+      void validate() const {}
+      share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+    };
+
     struct daspay_debit_operation : public base_operation
     {
       struct fee_parameters_type {};
@@ -153,6 +175,14 @@ FC_REFLECT( graphene::chain::register_daspay_authority_operation,
             (payment_provider)
             (daspay_public_key)
             (memo)
+            (extensions)
+          )
+
+FC_REFLECT( graphene::chain::unregister_daspay_authority_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::unregister_daspay_authority_operation,
+            (fee)
+            (issuer)
+            (payment_provider)
             (extensions)
           )
 

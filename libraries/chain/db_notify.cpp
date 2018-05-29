@@ -443,6 +443,11 @@ struct get_impacted_account_visitor
       _impacted.insert(op.issuer);
    }
 
+   void operator() (const unregister_daspay_authority_operation& op)
+   {
+      _impacted.insert(op.issuer);
+   }
+
    void operator() (const daspay_debit_operation& op)
    {
       _impacted.insert(op.issuer);

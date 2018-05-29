@@ -85,6 +85,36 @@ namespace graphene { namespace chain {
       }).id;
   } FC_CAPTURE_AND_RETHROW((op)) }
 
+  void_result unregister_daspay_authority_evaluator::do_evaluate(const operation_type& op)
+  {
+    try {
+      const auto& d = db();
+      const auto& idx = d.get_index_type<daspay_authority_index>().indices().get<by_daspay_user>();
+
+      auto itr = idx.lower_bound(op.issuer);
+      while( itr != idx.end() )
+      {
+        if ( itr->payment_provider == op.payment_provider )
+        {
+          const auto& obj = *itr;
+          _daspay_authority_obj = &obj;
+          break;
+        }
+      }
+
+      FC_ASSERT( _daspay_authority_obj != nullptr, "Cannot unregister DasPay authority ${a} since ${u} is not the owner", ("a", op.payment_provider)("u", op.issuer) );
+
+      return {};
+  } FC_CAPTURE_AND_RETHROW((op)) }
+
+  void_result unregister_daspay_authority_evaluator::do_apply(const operation_type& op)
+  {
+    try {
+      auto& d = db();
+      d.remove(*_daspay_authority_obj);
+      return {};
+  } FC_CAPTURE_AND_RETHROW((op)) }
+
   void_result daspay_debit_evaluator::do_evaluate(const operation_type& op)
   {
     try {

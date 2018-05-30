@@ -136,8 +136,8 @@ namespace graphene { namespace chain {
     return {};
   } FC_CAPTURE_AND_RETHROW((op)) }
 
- void_result create_payment_service_provider_evaluator::do_evaluate(const create_payment_service_provider_operation& op)
- { try {
+  void_result create_payment_service_provider_evaluator::do_evaluate(const create_payment_service_provider_operation& op)
+  { try {
     const auto& d = db();
     const auto& gpo = d.get_global_properties();
 
@@ -145,6 +145,11 @@ namespace graphene { namespace chain {
     d.perform_chain_authority_check("root authority", gpo.authorities.root_administrator, issuer_obj);
 
     op.payment_service_provider_account(d);
+    FC_ASSERT( op.payment_service_provider_account(d).is_wallet(),
+               "Account '${name}' must be a wallet account",
+               ("name", op.payment_service_provider_account(d).name)
+    );
+
     for (const auto& clearing_acc : op.payment_service_provider_clearing_accounts)
       clearing_acc(d);
 
@@ -155,8 +160,8 @@ namespace graphene { namespace chain {
 
   } FC_CAPTURE_AND_RETHROW((op)) }
 
- object_id_type create_payment_service_provider_evaluator::do_apply(const create_payment_service_provider_operation& op)
- { try {
+  object_id_type create_payment_service_provider_evaluator::do_apply(const create_payment_service_provider_operation& op)
+  { try {
      auto& d = db();
 
      return d.create<payment_service_provider_object>([&](payment_service_provider_object& pspo){
@@ -164,6 +169,62 @@ namespace graphene { namespace chain {
        pspo.payment_service_provider_clearing_accounts = op.payment_service_provider_clearing_accounts;
      }).id;
 
+  } FC_CAPTURE_AND_RETHROW((op)) }
+
+  void_result update_payment_service_provider_evaluator::do_evaluate(const update_payment_service_provider_operation& op)
+  { try {
+    const auto& d = db();
+    const auto& gpo = d.get_global_properties();
+
+    const auto& issuer_obj = op.authority(d);
+    d.perform_chain_authority_check("root authority", gpo.authorities.root_administrator, issuer_obj);
+
+    op.payment_service_provider_account(d);
+    for (const auto& clearing_acc : op.payment_service_provider_clearing_accounts)
+      clearing_acc(d);
+
+    const auto& idx = d.get_index_type<payment_service_provider_index>().indices().get<by_payment_service_provider>();
+    FC_ASSERT(idx.find(op.payment_service_provider_account) != idx.end(), "Payment service provider with account ${1} doesn't exists.", ("1", op.payment_service_provider_account));
+
+    return {};
+
+  } FC_CAPTURE_AND_RETHROW((op)) }
+
+  object_id_type update_payment_service_provider_evaluator::do_apply(const update_payment_service_provider_operation& op)
+  { try {
+    auto& d = db();
+
+    return d.create<payment_service_provider_object>([&](payment_service_provider_object& pspo){
+      pspo.payment_service_provider_account = op.payment_service_provider_account;
+      pspo.payment_service_provider_clearing_accounts = op.payment_service_provider_clearing_accounts;
+    }).id;
+
+  } FC_CAPTURE_AND_RETHROW((op)) }
+
+  void_result delete_payment_service_provider_evaluator::do_evaluate(const delete_payment_service_provider_operation& op)
+  { try {
+    const auto& d = db();
+    const auto& gpo = d.get_global_properties();
+
+    const auto& issuer_obj = op.authority(d);
+    d.perform_chain_authority_check("root authority", gpo.authorities.root_administrator, issuer_obj);
+
+    op.payment_service_provider_account(d);
+
+    const auto& idx = d.get_index_type<payment_service_provider_index>().indices().get<by_payment_service_provider>();
+    FC_ASSERT(idx.find(op.payment_service_provider_account) != idx.end(), "Payment service provider with account ${1} doesn't exists.", ("1", op.payment_service_provider_account));
+
+    return {};
+
+  } FC_CAPTURE_AND_RETHROW((op)) }
+
+  void_result delete_payment_service_provider_evaluator::do_apply(const delete_payment_service_provider_operation& op)
+  { try {
+    auto& d = db();
+
+    d.remove(op.payment_service_provider_account(d));
+
+    return {};
   } FC_CAPTURE_AND_RETHROW((op)) }
 
 } }  // namespace graphene::chain

@@ -849,6 +849,16 @@ class database_api
        */
       optional<cycle_price> calculate_cycle_price(share_type cycle_amount, asset_id_type asset_id) const;
 
+      //////////////////////////
+      // DASPAY:              //
+      //////////////////////////
+
+      /**
+      * @brief Get all clearing accounts for all payment service providers.
+      * @return List of payment service provider accounts with their respective clearing accounts.
+      */
+      vector<payment_service_provider_object> get_payment_service_providers() const;
+
    private:
       std::shared_ptr< database_api_impl > my;
 };
@@ -999,4 +1009,8 @@ FC_API( graphene::app::database_api,
 
    // Calculate cycle price
    (calculate_cycle_price)
+
+   // DasPay
+   (get_payment_service_providers)
+
 )

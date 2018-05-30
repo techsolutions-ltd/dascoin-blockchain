@@ -30,55 +30,73 @@
 
 namespace graphene { namespace chain {
 
-    class set_daspay_transaction_ratio_evaluator : public evaluator<set_daspay_transaction_ratio_evaluator>
-    {
-    public:
-      typedef set_daspay_transaction_ratio_operation operation_type;
+  class set_daspay_transaction_ratio_evaluator : public evaluator<set_daspay_transaction_ratio_evaluator>
+  {
+  public:
+    typedef set_daspay_transaction_ratio_operation operation_type;
 
-      void_result do_evaluate(const operation_type& op);
-      void_result do_apply(const operation_type& op);
-    };
+    void_result do_evaluate(const operation_type& op);
+    void_result do_apply(const operation_type& op);
+  };
 
-    class register_daspay_authority_evaluator : public evaluator<register_daspay_authority_evaluator>
-    {
-    public:
-      typedef register_daspay_authority_operation operation_type;
+  class register_daspay_authority_evaluator : public evaluator<register_daspay_authority_evaluator>
+  {
+  public:
+    typedef register_daspay_authority_operation operation_type;
 
-      void_result do_evaluate( const operation_type& op );
-      object_id_type do_apply( const operation_type& op );
-    };
+    void_result do_evaluate( const operation_type& op );
+    object_id_type do_apply( const operation_type& op );
+  };
 
-    class unregister_daspay_authority_evaluator : public evaluator<unregister_daspay_authority_evaluator>
-    {
-    public:
-      typedef unregister_daspay_authority_operation operation_type;
+  class unregister_daspay_authority_evaluator : public evaluator<unregister_daspay_authority_evaluator>
+  {
+  public:
+    typedef unregister_daspay_authority_operation operation_type;
 
-      void_result do_evaluate( const operation_type& op );
-      void_result do_apply( const operation_type& op );
+    void_result do_evaluate( const operation_type& op );
+    void_result do_apply( const operation_type& op );
 
-    private:
-      const daspay_authority_object* _daspay_authority_obj = nullptr;
-    };
+  private:
+    const daspay_authority_object* _daspay_authority_obj = nullptr;
+  };
 
-    class daspay_debit_evaluator : public evaluator<daspay_debit_evaluator>
-    {
-    public:
-      typedef daspay_debit_operation operation_type;
+  class daspay_debit_evaluator : public evaluator<daspay_debit_evaluator>
+  {
+  public:
+    typedef daspay_debit_operation operation_type;
 
-      void_result do_evaluate( const operation_type& op );
-      void_result do_apply( const operation_type& op );
+    void_result do_evaluate( const operation_type& op );
+    void_result do_apply( const operation_type& op );
 
-    private:
-      const account_object* _account_obj = nullptr;
-    };
+  private:
+    const account_object* _account_obj = nullptr;
+  };
 
-    class create_payment_service_provider_evaluator : public evaluator<create_payment_service_provider_evaluator>
-    {
-    public:
-      typedef create_payment_service_provider_operation operation_type;
+  class create_payment_service_provider_evaluator : public evaluator<create_payment_service_provider_evaluator>
+  {
+  public:
+    typedef create_payment_service_provider_operation operation_type;
 
-      void_result do_evaluate(const create_payment_service_provider_operation& op);
-      object_id_type do_apply(const create_payment_service_provider_operation& op);
-    };
+    void_result do_evaluate(const create_payment_service_provider_operation& op);
+    object_id_type do_apply(const create_payment_service_provider_operation& op);
+  };
 
-  } }  // namespace graphene::chain
+  class update_payment_service_provider_evaluator : public evaluator<update_payment_service_provider_evaluator>
+  {
+  public:
+    typedef update_payment_service_provider_operation operation_type;
+
+    void_result do_evaluate(const update_payment_service_provider_operation& op);
+    object_id_type do_apply(const update_payment_service_provider_operation& op);
+  };
+
+  class delete_payment_service_provider_evaluator : public evaluator<delete_payment_service_provider_evaluator>
+  {
+  public:
+    typedef delete_payment_service_provider_operation operation_type;
+
+    void_result do_evaluate(const delete_payment_service_provider_operation& op);
+    void_result do_apply(const delete_payment_service_provider_operation& op);
+  };
+
+} }  // namespace graphene::chain

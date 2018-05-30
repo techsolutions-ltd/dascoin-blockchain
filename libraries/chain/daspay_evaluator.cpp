@@ -88,31 +88,6 @@ namespace graphene { namespace chain {
       }).id;
   } FC_CAPTURE_AND_RETHROW((op)) }
 
-  void_result unregister_daspay_authority_evaluator::do_evaluate(const operation_type& op)
-  {
-    try {
-      const auto& d = db();
-      const auto& idx = d.get_index_type<daspay_authority_index>().indices().get<by_daspay_user>();
-
-      auto itr = idx.lower_bound(op.issuer);
-      FC_ASSERT( itr != idx.end(), "Cannot unregister DasPay authority because none has been set" );
-
-      while( itr != idx.end() )
-      {
-        if ( itr->payment_provider == op.payment_provider )
-        {
-          const auto& obj = *itr;
-          _daspay_authority_obj = &obj;
-          break;
-        }
-        ++itr;
-      }
-
-      FC_ASSERT( _daspay_authority_obj != nullptr, "Cannot unregister DasPay authority ${a} since ${u} is not the owner", ("a", op.payment_provider)("u", op.issuer) );
-
-      return {};
-  } FC_CAPTURE_AND_RETHROW((op)) }
-
   void_result reserve_asset_on_account_evaluator::do_evaluate(const operation_type& op)
   {
     try {
@@ -156,6 +131,31 @@ namespace graphene { namespace chain {
     try {
       database& d = db();
       d.adjust_balance( op.account, asset{0, d.get_dascoin_asset_id()}, -op.asset_to_unreserve.amount );
+
+      return {};
+  } FC_CAPTURE_AND_RETHROW((op)) }
+
+  void_result unregister_daspay_authority_evaluator::do_evaluate(const operation_type& op)
+  {
+    try {
+      const auto& d = db();
+      const auto& idx = d.get_index_type<daspay_authority_index>().indices().get<by_daspay_user>();
+
+      auto itr = idx.lower_bound(op.issuer);
+      FC_ASSERT( itr != idx.end(), "Cannot unregister DasPay authority because none has been set" );
+
+      while( itr != idx.end() )
+      {
+        if ( itr->payment_provider == op.payment_provider )
+        {
+          const auto& obj = *itr;
+          _daspay_authority_obj = &obj;
+          break;
+        }
+        ++itr;
+      }
+
+      FC_ASSERT( _daspay_authority_obj != nullptr, "Cannot unregister DasPay authority ${a} since ${u} is not the owner", ("a", op.payment_provider)("u", op.issuer) );
 
       return {};
   } FC_CAPTURE_AND_RETHROW((op)) }

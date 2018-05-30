@@ -49,6 +49,16 @@ namespace graphene { namespace chain {
     }
   }
 
+  void reserve_asset_on_account_operation::validate() const
+  {
+    FC_ASSERT( asset_to_reserve.amount > 0, "Cannot reserve 0 amount" );
+  }
+
+  void unreserve_asset_on_account_operation::validate() const
+  {
+    FC_ASSERT( asset_to_unreserve.amount > 0, "Cannot unreserve 0 amount" );
+  }
+
   void create_payment_service_provider_operation::validate() const
   {
     FC_ASSERT( fee.amount >= 0 );
@@ -65,7 +75,7 @@ namespace graphene { namespace chain {
     FC_ASSERT( !payment_service_provider_clearing_accounts.empty() );
   }
 
-  void delete_payment_service_provider_operation ::validate() const
+  void delete_payment_service_provider_operation::validate() const
   {
     FC_ASSERT( payment_service_provider_account != GRAPHENE_TEMP_ACCOUNT );
     FC_ASSERT( fee.amount >= 0 );

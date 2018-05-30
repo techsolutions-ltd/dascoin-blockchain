@@ -60,6 +60,24 @@ namespace graphene { namespace chain {
     const daspay_authority_object* _daspay_authority_obj = nullptr;
   };
 
+  class reserve_asset_on_account_evaluator : public evaluator<reserve_asset_on_account_evaluator>
+  {
+  public:
+    typedef reserve_asset_on_account_operation operation_type;
+
+    void_result do_evaluate( const operation_type& op );
+    void_result do_apply( const operation_type& op );
+  };
+
+  class unreserve_asset_on_account_evaluator : public evaluator<unreserve_asset_on_account_evaluator>
+  {
+  public:
+    typedef unreserve_asset_on_account_operation operation_type;
+
+    void_result do_evaluate( const operation_type& op );
+    void_result do_apply( const operation_type& op );
+  };
+
   class daspay_debit_evaluator : public evaluator<daspay_debit_evaluator>
   {
   public:

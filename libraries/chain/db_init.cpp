@@ -278,6 +278,8 @@ void database::initialize_evaluators()
    register_evaluator<create_payment_service_provider_evaluator>();
    register_evaluator<update_payment_service_provider_evaluator>();
    register_evaluator<delete_payment_service_provider_evaluator>();
+   register_evaluator<reserve_asset_on_account_evaluator>();
+   register_evaluator<unreserve_asset_on_account_evaluator>();
 }
 
 void database::initialize_indexes()

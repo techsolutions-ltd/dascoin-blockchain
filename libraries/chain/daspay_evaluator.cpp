@@ -113,6 +113,53 @@ namespace graphene { namespace chain {
       return {};
   } FC_CAPTURE_AND_RETHROW((op)) }
 
+  void_result reserve_asset_on_account_evaluator::do_evaluate(const operation_type& op)
+  {
+    try {
+      const database& d = db();
+
+      FC_ASSERT( op.asset_to_reserve.asset_id == d.get_dascoin_asset_id(), "Only dascoin can be reserved for daspay" );
+
+      const auto& balance = d.get_balance( op.account, d.get_dascoin_asset_id() );
+
+      FC_ASSERT( op.asset_to_reserve.amount <= balance.amount, "Cannot reserve ${a} dascoin because there is only ${b} left", ("a", d.to_pretty_string(op.asset_to_reserve))("b", d.to_pretty_string(balance)) );
+
+      return {};
+  } FC_CAPTURE_AND_RETHROW((op)) }
+
+  void_result reserve_asset_on_account_evaluator::do_apply(const operation_type& op)
+  {
+    try {
+      database& d = db();
+      d.adjust_balance( op.account, asset{0, d.get_dascoin_asset_id()}, op.asset_to_reserve.amount );
+
+      return {};
+  } FC_CAPTURE_AND_RETHROW((op)) }
+
+  void_result unreserve_asset_on_account_evaluator::do_evaluate(const operation_type& op)
+  {
+    try {
+      const database& d = db();
+
+      FC_ASSERT( op.asset_to_unreserve.asset_id == d.get_dascoin_asset_id(), "Only dascoin can be unreserved for daspay" );
+
+      const auto& balance = d.get_balance_object( op.account, d.get_dascoin_asset_id() );
+      const auto& reserved_asset = asset{ balance.reserved, d.get_dascoin_asset_id() };
+
+      FC_ASSERT( op.asset_to_unreserve.amount <= balance.reserved, "Cannot unreserve ${a} dascoin because there is only ${b} left", ("a", d.to_pretty_string(op.asset_to_unreserve))("b", d.to_pretty_string(reserved_asset)) );
+
+      return {};
+  } FC_CAPTURE_AND_RETHROW((op)) }
+
+  void_result unreserve_asset_on_account_evaluator::do_apply(const operation_type& op)
+  {
+    try {
+      database& d = db();
+      d.adjust_balance( op.account, asset{0, d.get_dascoin_asset_id()}, -op.asset_to_unreserve.amount );
+
+      return {};
+  } FC_CAPTURE_AND_RETHROW((op)) }
+
   void_result unregister_daspay_authority_evaluator::do_apply(const operation_type& op)
   {
     try {

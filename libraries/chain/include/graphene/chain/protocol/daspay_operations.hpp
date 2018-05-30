@@ -119,7 +119,7 @@ namespace graphene { namespace chain {
               , asset_to_reserve(asset_to_reserve) {}
 
       account_id_type fee_payer() const { return account; }
-      void validate() const {}
+      void validate() const;
       share_type calculate_fee(const fee_parameters_type&) const { return 0; }
     };
 
@@ -141,7 +141,7 @@ namespace graphene { namespace chain {
               , asset_to_unreserve(asset_to_unreserve) {}
 
       account_id_type fee_payer() const { return account; }
-      void validate() const {}
+      void validate() const;
       share_type calculate_fee(const fee_parameters_type&) const { return 0; }
     };
 

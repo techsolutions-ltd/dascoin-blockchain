@@ -1716,6 +1716,10 @@ class wallet_api
       */
       signed_transaction roll_back_public_keys(const string& authority, const string& account, bool broadcast) const;
 
+      ///////////////////////////////
+      /// DASPAY:                 ///
+      ///////////////////////////////
+
       /**
       * Set Daspay Transaction Ratio.
       * @param authority           This MUST be master authority.
@@ -1753,10 +1757,26 @@ class wallet_api
       * @param broadcast                                               True to broadcast the transaction on the network.
       */
       signed_transaction delete_payment_service_provider(const string& authority, account_id_type payment_service_provider_account) const;
+
+      /**
+       * Register daspay authority.
+       * @param account                                                 Account ID.
+       * @param payment_provider                                        Account of payment provider.
+       * @param public_key_type                                         Public key registered to this Account.
+       * @param broadcast                                               True to broadcast the transaction on the network.
+       */
+      signed_transaction register_daspay_authority(const string& account, const string& payment_provider, public_key_type daspay_public_key, bool broadcast = false) const;
+
+      /**
+       * Unregister daspay authority.
+       * @param account                                                 Account ID.
+       * @param payment_provider                                        Account of payment provider.
+       * @param broadcast                                               True to broadcast the transaction on the network.
+       */
+      signed_transaction unregister_daspay_authority(const string& account, const string& payment_provider, bool broadcast = false) const;
+
       //////////////////////////
-
-
-	// REQUESTS:            //
+      // REQUESTS:            //
       //////////////////////////
 
       /**

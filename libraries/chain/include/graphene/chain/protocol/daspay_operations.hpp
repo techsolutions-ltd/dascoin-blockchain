@@ -101,6 +101,50 @@ namespace graphene { namespace chain {
       share_type calculate_fee(const fee_parameters_type&) const { return 0; }
     };
 
+    struct reserve_asset_on_account_operation : public base_operation
+    {
+      struct fee_parameters_type {};
+      asset fee;
+
+      account_id_type account;
+      asset asset_to_reserve;
+
+      extensions_type extensions;
+
+      reserve_asset_on_account_operation() = default;
+      explicit reserve_asset_on_account_operation(
+              const account_id_type& account,
+              asset asset_to_reserve)
+              : account(account)
+              , asset_to_reserve(asset_to_reserve) {}
+
+      account_id_type fee_payer() const { return account; }
+      void validate() const {}
+      share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+    };
+
+    struct unreserve_asset_on_account_operation : public base_operation
+    {
+      struct fee_parameters_type {};
+      asset fee;
+
+      account_id_type account;
+      asset asset_to_unreserve;
+
+      extensions_type extensions;
+
+      unreserve_asset_on_account_operation() = default;
+      explicit unreserve_asset_on_account_operation(
+              const account_id_type& account,
+              asset asset_to_unreserve)
+              : account(account)
+              , asset_to_unreserve(asset_to_unreserve) {}
+
+      account_id_type fee_payer() const { return account; }
+      void validate() const {}
+      share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+    };
+
     struct daspay_debit_operation : public base_operation
     {
       struct fee_parameters_type {};
@@ -227,6 +271,20 @@ FC_REFLECT( graphene::chain::unregister_daspay_authority_operation,
             (issuer)
             (payment_provider)
             (extensions)
+          )
+
+FC_REFLECT( graphene::chain::reserve_asset_on_account_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::reserve_asset_on_account_operation,
+            (fee)
+            (account)
+            (asset_to_reserve)
+          )
+
+FC_REFLECT( graphene::chain::unreserve_asset_on_account_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::unreserve_asset_on_account_operation,
+            (fee)
+            (account)
+            (asset_to_unreserve)
           )
 
 FC_REFLECT( graphene::chain::daspay_debit_operation::fee_parameters_type, )

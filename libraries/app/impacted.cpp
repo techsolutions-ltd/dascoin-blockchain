@@ -470,6 +470,16 @@ struct get_impacted_account_visitor
       _impacted.insert(op.issuer);
    }
 
+   void operator() (const reserve_asset_on_account_operation& op)
+   {
+      _impacted.insert(op.account);
+   }
+
+   void operator() (const unreserve_asset_on_account_operation& op)
+   {
+      _impacted.insert(op.account);
+   }
+
    void operator() (const daspay_debit_operation& op)
    {
       _impacted.insert(op.issuer);

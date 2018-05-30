@@ -188,6 +188,10 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
 
       optional<cycle_price> calculate_cycle_price(share_type cycle_amount, asset_id_type asset_id) const;
 
+      // DasPay:
+      vector<payment_service_provider_object> get_payment_service_providers() const;
+
+
       template<typename T>
       void subscribe_to_item( const T& i )const
       {
@@ -2530,6 +2534,17 @@ optional<cycle_price> database_api_impl::calculate_cycle_price(share_type cycle_
     double price = static_cast<double>(cycle_amount.value) / (static_cast<double>(dgpo.frequency.value) / DASCOIN_FREQUENCY_PRECISION);
     price = std::ceil(price * std::pow(10, asset_obj.precision)) / std::pow(10, asset_obj.precision);
     return cycle_price{cycle_amount, asset(price * std::pow(10, asset_obj.precision), asset_obj.id), dgpo.frequency};
+}
+
+//////////////////////////////////////////////////////////////////////
+//                                                                  //
+// DASPAY:                                                          //
+//                                                                  //
+//////////////////////////////////////////////////////////////////////
+
+vector<payment_service_provider_object> database_api::get_payment_service_providers() const
+{
+    return my->list_all_objects<payment_service_provider_index, by_payment_service_provider>();
 }
 
 //////////////////////////////////////////////////////////////////////

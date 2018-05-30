@@ -1733,7 +1733,7 @@ class wallet_api
       /**
       * Create payment service provider.
       * @param authority                                               This MUST be master authority.
-      * @param payment_service_provider_account                        Account used to indentify payment_service_provider.
+      * @param payment_service_provider_account                        Account used to identify payment_service_provider.
       * @param payment_service_provider_clearing_accounts              List of clearing accounts for payment_service_provider_account.
       * @param broadcast                                               True to broadcast the transaction on the network.
       */
@@ -1743,20 +1743,20 @@ class wallet_api
       /**
       * Update payment service provider.
       * @param authority                                               This MUST be master authority.
-      * @param payment_service_provider_account                        Account used to indentify payment_service_provider.
+      * @param payment_service_provider_account                        Account used to identify payment_service_provider.
       * @param payment_service_provider_clearing_accounts              List of clearing accounts for payment_service_provider_account.
       * @param broadcast                                               True to broadcast the transaction on the network.
       */
-      signed_transaction update_payment_service_provider(const string& authority, account_id_type payment_service_provider_account, vector<account_id_type> payment_service_provider_clearing_accounts) const;
+       signed_transaction update_payment_service_provider(const string& authority, const string& payment_service_provider_account, const vector<string>& payment_service_provider_clearing_accounts, bool broadcast = false) const;
       //////////////////////////
 
       /**
       * Delete payment service provider.
       * @param authority                                               This MUST be master authority.
-      * @param payment_service_provider_account                        Account used to indentify payment_service_provider.
+      * @param payment_service_provider_account                        Account used to identify payment_service_provider.
       * @param broadcast                                               True to broadcast the transaction on the network.
       */
-      signed_transaction delete_payment_service_provider(const string& authority, account_id_type payment_service_provider_account) const;
+      signed_transaction delete_payment_service_provider(const string& authority, const string& payment_service_provider_account, bool broadcast = false) const;
 
       /**
        * Register daspay authority.
@@ -1800,7 +1800,7 @@ class wallet_api
       /**
       * @brief Get all wire out holder objects.
       * @return Vector of wire out holder objects.
-      */
+       */
       vector<wire_out_with_fee_holder_object> get_all_wire_out_with_fee_holders() const;
 
       /**
@@ -1809,19 +1809,31 @@ class wallet_api
        */
       vector<reward_queue_object> get_reward_queue() const;
 
-    /**
-     * @brief Return a part of the reward queue.
-     * @return Vector of reward queue objects.
-     */
-    vector<reward_queue_object> get_reward_queue_by_page(uint32_t from, uint32_t amount) const;
+      /**
+       * @brief Return a part of the reward queue.
+       * @return Vector of reward queue objects.
+       */
+      vector<reward_queue_object> get_reward_queue_by_page(uint32_t from, uint32_t amount) const;
 
-    /**
-     * Get all current submissions to reward queue by account id.
-     *
-     * @param account_id Id of account whose submissions should be returned.
-     * @return           All elements on DasCoin reward queue submitted by given account.
-     */
-    acc_id_queue_subs_w_pos_res get_queue_submissions_with_pos(account_id_type account_id) const;
+      /**
+       * Get all current submissions to reward queue by account id.
+       *
+       * @param account_id Id of account whose submissions should be returned.
+       * @return           All elements on DasCoin reward queue submitted by given account.
+       */
+      acc_id_queue_subs_w_pos_res get_queue_submissions_with_pos(account_id_type account_id) const;
+
+
+      //////////////////////////
+      // DASPAY:              //
+      //////////////////////////
+
+      /**
+      * @brief Get all clearing accounts for all payment service providers.
+      * @return List of payment service provider accounts with their respective clearing accounts.
+      */
+      vector<payment_service_provider_object> get_payment_service_providers() const;
+
 
       void dbg_make_uia(string creator, string symbol);
       void dbg_make_mia(string creator, string symbol);
@@ -1832,7 +1844,9 @@ class wallet_api
 
       void flood_network(string prefix, uint32_t number_of_transactions);
 
-      /**
+
+
+  /**
        * Connect to a new peer
        *
        * @param nodes List of the IP addresses and ports of new nodes

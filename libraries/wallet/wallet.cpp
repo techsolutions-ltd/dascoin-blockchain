@@ -1062,6 +1062,36 @@ public:
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (authority)(payment_service_provider_account)(payment_service_provider_clearing_accounts)(broadcast) ) }
 
+   signed_transaction update_payment_service_provider(const string& authority, const string& payment_service_provider_account, const vector<string>& payment_service_provider_clearing_accounts, bool broadcast = false)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+      update_payment_service_provider_operation op;
+      op.authority = get_account(authority).id;
+      op.payment_service_provider_account = get_account(payment_service_provider_account).id;
+      for (const auto& acc : payment_service_provider_clearing_accounts)
+        op.payment_service_provider_clearing_accounts.emplace_back(get_account(acc).id);
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (authority)(payment_service_provider_account)(payment_service_provider_clearing_accounts)(broadcast) ) }
+
+   signed_transaction delete_payment_service_provider(const string& authority, const string& payment_service_provider_account, bool broadcast = false)
+   { try {
+     FC_ASSERT( !self.is_locked() );
+     delete_payment_service_provider_operation op;
+     op.authority = get_account(authority).id;
+     op.payment_service_provider_account = get_account(payment_service_provider_account).id;
+     signed_transaction tx;
+     tx.operations.push_back(op);
+     set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+     tx.validate();
+
+     return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (authority)(payment_service_provider_account)(broadcast) ) }
+
    signed_transaction tether_accounts(string wallet, string vault, bool broadcast = false)
    { try {
       FC_ASSERT( !self.is_locked() );
@@ -3651,6 +3681,21 @@ signed_transaction wallet_api::create_payment_service_provider(const string& aut
    return my->create_payment_service_provider( authority, payment_service_provider_account, payment_service_provider_clearing_accounts, broadcast );
 }
 
+signed_transaction wallet_api::update_payment_service_provider(const string& authority,
+                                               const string& payment_service_provider_account,
+                                               const vector<string>& payment_service_provider_clearing_accounts,
+                                               bool broadcast) const
+{
+   return my->update_payment_service_provider( authority, payment_service_provider_account, payment_service_provider_clearing_accounts, broadcast );
+}
+
+signed_transaction wallet_api::delete_payment_service_provider(const string& authority,
+                                               const string& payment_service_provider_account,
+                                               bool broadcast) const
+{
+   return my->delete_payment_service_provider( authority, payment_service_provider_account, broadcast );
+}
+
 signed_transaction wallet_api::tether_accounts(string wallet,
                                                string vault,
                                                bool broadcast)
@@ -5018,6 +5063,11 @@ acc_id_queue_subs_w_pos_res wallet_api::get_queue_submissions_with_pos(account_i
 order_book wallet_api::get_order_book( const string& base, const string& quote, unsigned limit )
 {
    return( my->_remote_db->get_order_book( base, quote, limit ) );
+}
+
+vector<payment_service_provider_object> wallet_api::get_payment_service_providers() const
+{
+   return my->_remote_db->get_payment_service_providers();
 }
 
 signed_block_with_info::signed_block_with_info( const signed_block& block )

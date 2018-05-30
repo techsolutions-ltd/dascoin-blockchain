@@ -57,20 +57,19 @@ namespace graphene { namespace chain {
     FC_ASSERT( !payment_service_provider_clearing_accounts.empty() );
   }
 
-//  void update_payment_provider_operation::validate() const
-//  {
-//    FC_ASSERT( payment_provider_account != GRAPHENE_TEMP_ACCOUNT );
-//    FC_ASSERT( fee.amount >= 0 );
-//    FC_ASSERT( payment_provider_account != account_id_type() );
-//    FC_ASSERT( !payment_provider_clearing_accounts.empty() );
-//  }
-//
-//  void delete_payment_provider_operation ::validate() const
-//  {
-//    FC_ASSERT( payment_provider_account != GRAPHENE_TEMP_ACCOUNT );
-//    FC_ASSERT( fee.amount >= 0 );
-//    FC_ASSERT( payment_provider_account != account_id_type() );
-//  }
+  void update_payment_service_provider_operation::validate() const
+  {
+    FC_ASSERT( payment_service_provider_account != GRAPHENE_TEMP_ACCOUNT );
+    FC_ASSERT( fee.amount >= 0 );
+    FC_ASSERT( payment_service_provider_account != account_id_type() );
+    FC_ASSERT( !payment_service_provider_clearing_accounts.empty() );
+  }
 
+  void delete_payment_service_provider_operation ::validate() const
+  {
+    FC_ASSERT( payment_service_provider_account != GRAPHENE_TEMP_ACCOUNT );
+    FC_ASSERT( fee.amount >= 0 );
+    FC_ASSERT( payment_service_provider_account != account_id_type() );
+  }
 
 } } // namespace graphene::chain

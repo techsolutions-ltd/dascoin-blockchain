@@ -97,7 +97,7 @@ namespace graphene { namespace chain {
 
       const auto& balance = d.get_balance( op.account, d.get_dascoin_asset_id() );
 
-      FC_ASSERT( op.asset_to_reserve.amount <= balance.amount, "Cannot reserve ${a} dascoin because there is only ${b} left", ("a", d.to_pretty_string(op.asset_to_reserve))("b", d.to_pretty_string(balance)) );
+      FC_ASSERT( op.asset_to_reserve.amount <= balance.amount, "Cannot reserve ${a} because there is only ${b} left", ("a", d.to_pretty_string(op.asset_to_reserve))("b", d.to_pretty_string(balance)) );
 
       return {};
   } FC_CAPTURE_AND_RETHROW((op)) }
@@ -121,7 +121,7 @@ namespace graphene { namespace chain {
       const auto& balance = d.get_balance_object( op.account, d.get_dascoin_asset_id() );
       const auto& reserved_asset = asset{ balance.reserved, d.get_dascoin_asset_id() };
 
-      FC_ASSERT( op.asset_to_unreserve.amount <= balance.reserved, "Cannot unreserve ${a} dascoin because there is only ${b} left", ("a", d.to_pretty_string(op.asset_to_unreserve))("b", d.to_pretty_string(reserved_asset)) );
+      FC_ASSERT( op.asset_to_unreserve.amount <= balance.reserved, "Cannot unreserve ${a} because there is only ${b} left", ("a", d.to_pretty_string(op.asset_to_unreserve))("b", d.to_pretty_string(reserved_asset)) );
 
       return {};
   } FC_CAPTURE_AND_RETHROW((op)) }

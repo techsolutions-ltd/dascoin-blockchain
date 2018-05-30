@@ -581,7 +581,6 @@ void_result asset_create_issue_request_evaluator::do_evaluate(const asset_create
    {
       if( op.unique_id == "6" || op.unique_id == "98" || op.unique_id == "106" )
       {
-         //FC_ASSERT(false, "Remove test operations that were broadcast to production, and resulted in unintended issuance of asset!");
          return {};
       }
    }
@@ -640,7 +639,6 @@ object_id_type asset_create_issue_request_evaluator::do_apply(const asset_create
    {
       if( op.unique_id == "6" || op.unique_id == "98" || op.unique_id == "106" )
       {
-         //ilog( "Ignoring asset_create_issue_request ${unique_id} block num ${head}", ("unique_id",op.unique_id) ("head", d.head_block_num()) );
          return object_id_type();
       }
    }

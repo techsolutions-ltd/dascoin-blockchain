@@ -1003,26 +1003,20 @@ public:
       return tx;
    } FC_CAPTURE_AND_RETHROW( (name)(owner)(active)(broadcast) ) }
 
-   signed_transaction daspay_debit(string name, share_type amount, public_key_type daspay_key, bool broadcast = false)
+   signed_transaction set_daspay_transaction_ratio(const string& authority, share_type debit_ratio, share_type credit_ratio, bool broadcast = false)
    { try {
       FC_ASSERT( !self.is_locked() );
-
-      account_object account = get_account(name);
-      account_id_type account_id = account.id;
-
-      daspay_debit_operation daspay_op;
-
-      daspay_op.issuer = account_id;
-      daspay_op.amount = amount;
-      daspay_op.auth_key = daspay_key;
-
+      set_daspay_transaction_ratio_operation op;
+      op.authority = get_account(authority).id;
+      op.debit_ratio = debit_ratio;
+      op.debit_ratio = credit_ratio;
       signed_transaction tx;
-      tx.operations.push_back(daspay_op);
+      tx.operations.push_back(op);
       set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
       tx.validate();
 
       return sign_transaction(tx, broadcast);
-   } FC_CAPTURE_AND_RETHROW( (name)(daspay_key)(broadcast) ) }
+   } FC_CAPTURE_AND_RETHROW( (authority)(debit_ratio)(credit_ratio)(broadcast) ) }
 
    signed_transaction create_payment_service_provider(const string& authority, const string& payment_service_provider_account, const vector<string>& payment_service_provider_clearing_accounts, bool broadcast = false)
    { try {
@@ -1110,6 +1104,24 @@ public:
 
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (account)(payment_provider) ) }
+
+   signed_transaction daspay_debit_account(string payment_service_provider_account,
+                                           string user_account,
+                                           string asset_amount,
+                                           string asset_symbol,
+                                           string clearing_account,
+                                           string transaction_id,
+                                           optional<string> details,
+                                           bool broadcast = false)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      signed_transaction tx;
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (payment_service_provider_account)(user_account)(asset_amount)(asset_symbol)(clearing_account)(transaction_id)(details)(broadcast) ) }
 
    signed_transaction tether_accounts(string wallet, string vault, bool broadcast = false)
    { try {
@@ -3675,52 +3687,6 @@ signed_transaction wallet_api::register_vault_account(string name,
    return my->register_account( account_kind::vault, name, owner_pubkey, active_pubkey, broadcast );
 }
 
-signed_transaction wallet_api::daspay_debit(string name,
-                                            share_type amount,
-                                            public_key_type daspay_key,
-                                            bool broadcast)
-{
-   return my->daspay_debit( name, amount, daspay_key, broadcast );
-}
-
-signed_transaction wallet_api::create_payment_service_provider(const string& authority,
-                                               const string& payment_service_provider_account,
-                                               const vector<string>& payment_service_provider_clearing_accounts,
-                                               bool broadcast) const
-{
-   return my->create_payment_service_provider( authority, payment_service_provider_account, payment_service_provider_clearing_accounts, broadcast );
-}
-
-signed_transaction wallet_api::update_payment_service_provider(const string& authority,
-                                               const string& payment_service_provider_account,
-                                               const vector<string>& payment_service_provider_clearing_accounts,
-                                               bool broadcast) const
-{
-   return my->update_payment_service_provider( authority, payment_service_provider_account, payment_service_provider_clearing_accounts, broadcast );
-}
-
-signed_transaction wallet_api::delete_payment_service_provider(const string& authority,
-                                               const string& payment_service_provider_account,
-                                               bool broadcast) const
-{
-   return my->delete_payment_service_provider( authority, payment_service_provider_account, broadcast );
-}
-
-signed_transaction wallet_api::register_daspay_authority(const string& account,
-                                                         const string& payment_provider,
-                                                         public_key_type daspay_public_key,
-                                                         bool broadcast) const
-{
-   return my->register_daspay_authority( account, payment_provider, daspay_public_key, broadcast );
-}
-
-signed_transaction wallet_api::unregister_daspay_authority(const string& account,
-                                                           const string& payment_provider,
-                                                           bool broadcast) const
-{
-   return my->unregister_daspay_authority( account, payment_provider, broadcast );
-}
-
 signed_transaction wallet_api::tether_accounts(string wallet,
                                                string vault,
                                                bool broadcast)
@@ -5090,9 +5056,67 @@ order_book wallet_api::get_order_book( const string& base, const string& quote, 
    return( my->_remote_db->get_order_book( base, quote, limit ) );
 }
 
+signed_transaction wallet_api::set_daspay_transaction_ratio(const string& authority,
+                                               share_type debit_ratio,
+                                               share_type credit_ratio,
+                                               bool broadcast) const
+{
+   return my->set_daspay_transaction_ratio( authority, debit_ratio, credit_ratio, broadcast );
+}
+
+signed_transaction wallet_api::create_payment_service_provider(const string& authority,
+                                               const string& payment_service_provider_account,
+                                               const vector<string>& payment_service_provider_clearing_accounts,
+                                               bool broadcast) const
+{
+   return my->create_payment_service_provider( authority, payment_service_provider_account, payment_service_provider_clearing_accounts, broadcast );
+}
+
+signed_transaction wallet_api::update_payment_service_provider(const string& authority,
+                                               const string& payment_service_provider_account,
+                                               const vector<string>& payment_service_provider_clearing_accounts,
+                                               bool broadcast) const
+{
+   return my->update_payment_service_provider( authority, payment_service_provider_account, payment_service_provider_clearing_accounts, broadcast );
+}
+
+signed_transaction wallet_api::delete_payment_service_provider(const string& authority,
+                                               const string& payment_service_provider_account,
+                                               bool broadcast) const
+{
+   return my->delete_payment_service_provider( authority, payment_service_provider_account, broadcast );
+}
+
 vector<payment_service_provider_object> wallet_api::get_payment_service_providers() const
 {
    return my->_remote_db->get_payment_service_providers();
+}
+
+signed_transaction wallet_api::register_daspay_authority(const string& account,
+                                                         const string& payment_provider,
+                                                         public_key_type daspay_public_key,
+                                                         bool broadcast) const
+{
+   return my->register_daspay_authority( account, payment_provider, daspay_public_key, broadcast );
+}
+
+signed_transaction wallet_api::unregister_daspay_authority(const string& account,
+                                                           const string& payment_provider,
+                                                           bool broadcast) const
+{
+   return my->unregister_daspay_authority( account, payment_provider, broadcast );
+}
+
+signed_transaction wallet_api::daspay_debit_account(const string& payment_service_provider_account,
+                                                    const string& user_account,
+                                                    const string& asset_amount,
+                                                    const string& asset_symbol,
+                                                    const string& clearing_account,
+                                                    const string& transaction_id,
+                                                    optional<string> details,
+                                                    bool broadcast) const
+{
+   return my->daspay_debit_account( payment_service_provider_account, user_account, asset_amount, asset_symbol, clearing_account, transaction_id, details, broadcast );
 }
 
 signed_block_with_info::signed_block_with_info( const signed_block& block )

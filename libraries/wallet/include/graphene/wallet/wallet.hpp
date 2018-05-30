@@ -742,11 +742,6 @@ class wallet_api
                                                        string account_name,
                                                        bool broadcast = false);
 
-      signed_transaction daspay_debit(string name,
-                                      share_type amount,
-                                      public_key_type daspay_key,
-                                      bool broadcast = false);
-
       /** Transfer an amount from one account to another.
        * @param from the name or id of the account sending the funds
        * @param to the name or id of the account receiving the funds
@@ -1721,7 +1716,7 @@ class wallet_api
       * @param credit_ratio        New ratio for CREDIT transactions.
       * @param broadcast           True to broadcast the transaction on the network.
       */
-      signed_transaction set_daspay_transaction_ratio(const string& authority, share_type debit_ratio, share_type credit_ratio) const;
+      signed_transaction set_daspay_transaction_ratio(const string& authority, share_type debit_ratio, share_type credit_ratio, bool broadcast = false) const;
       //////////////////////////
 
       /**
@@ -1753,6 +1748,12 @@ class wallet_api
       signed_transaction delete_payment_service_provider(const string& authority, const string& payment_service_provider_account, bool broadcast = false) const;
 
       /**
+      * @brief Get all clearing accounts for all payment service providers.
+      * @return List of payment service provider accounts with their respective clearing accounts.
+      */
+      vector<payment_service_provider_object> get_payment_service_providers() const;
+
+      /**
        * Register daspay authority.
        * @param account                                                 Account ID.
        * @param payment_provider                                        Account of payment provider.
@@ -1768,6 +1769,26 @@ class wallet_api
        * @param broadcast                                               True to broadcast the transaction on the network.
        */
       signed_transaction unregister_daspay_authority(const string& account, const string& payment_provider, bool broadcast = false) const;
+
+      /**
+       * DasPay debit user account.
+       * @param payment_service_provider_account                        Account of payment service provider.
+       * @param user_account                                            User account to debit.
+       * @param asset_amount                                            Amount to debit (ie 12.50).
+       * @param asset_symbol                                            Symbol or id of the asset to debit.
+       * @param clearing_account                                        Payment service provider clearing account.
+       * @param transaction_id                                          Payment service provider transaction id.
+       * @param details                                                 Transaction details (optional).
+       * @param broadcast                                               True to broadcast the transaction on the network.
+       */
+      signed_transaction daspay_debit_account(const string& payment_service_provider_account,
+                                      const string& user_account,
+                                      const string& asset_amount,
+                                      const string& asset_symbol,
+                                      const string& clearing_account,
+                                      const string& transaction_id,
+                                      optional<string> details,
+                                      bool broadcast = false) const;
 
       //////////////////////////
       // REQUESTS:            //
@@ -1816,18 +1837,6 @@ class wallet_api
        * @return           All elements on DasCoin reward queue submitted by given account.
        */
       acc_id_queue_subs_w_pos_res get_queue_submissions_with_pos(account_id_type account_id) const;
-
-
-      //////////////////////////
-      // DASPAY:              //
-      //////////////////////////
-
-      /**
-      * @brief Get all clearing accounts for all payment service providers.
-      * @return List of payment service provider accounts with their respective clearing accounts.
-      */
-      vector<payment_service_provider_object> get_payment_service_providers() const;
-
 
       void dbg_make_uia(string creator, string symbol);
       void dbg_make_mia(string creator, string symbol);
@@ -1968,7 +1977,6 @@ FC_API( graphene::wallet::wallet_api,
         (buy)
         (borrow_asset)
         (cancel_order)
-        (daspay_debit)
         (transfer)
         (transfer2)
         (transfer_vault_to_wallet)
@@ -2071,8 +2079,10 @@ FC_API( graphene::wallet::wallet_api,
         (create_payment_service_provider)
         (update_payment_service_provider)
         (delete_payment_service_provider)
+        (get_payment_service_providers)
         (register_daspay_authority)
         (unregister_daspay_authority)
+        (daspay_debit_account)
         // Requests:
         (get_all_webasset_issue_requests)
         (get_all_wire_out_holders)

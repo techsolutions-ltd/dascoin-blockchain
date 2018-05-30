@@ -275,6 +275,7 @@ void database::initialize_evaluators()
    register_evaluator<daspay_debit_evaluator>();
    register_evaluator<set_daspay_transaction_ratio_evaluator>();
    register_evaluator<create_payment_service_provider_evaluator>();
+   register_evaluator<fee_pool_cycles_submit_evaluator>();
 }
 
 void database::initialize_indexes()

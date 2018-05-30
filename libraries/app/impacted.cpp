@@ -340,6 +340,11 @@ struct get_impacted_account_visitor
       _impacted.insert( op.account );
    }
 
+   void operator()( const fee_pool_cycles_submit_operation& op )
+   {
+      _impacted.insert( op.issuer );
+   }
+
    void operator()( const submit_cycles_to_queue_operation& op )
    {
       _impacted.insert( op.account );

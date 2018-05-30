@@ -52,6 +52,15 @@ namespace graphene { namespace chain {
     license_type_id_type _license_type;
   };
 
+  class fee_pool_cycles_submit_evaluator : public evaluator<fee_pool_cycles_submit_evaluator>
+  {
+  public:
+    typedef fee_pool_cycles_submit_operation operation_type;
+
+    void_result do_evaluate(const operation_type& op);
+    object_id_type do_apply(const operation_type& op);
+  };
+
   class submit_cycles_to_queue_by_license_evaluator : public evaluator<submit_cycles_to_queue_by_license_evaluator>
   {
   public:

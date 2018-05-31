@@ -62,7 +62,6 @@ add_library( graphene_chain
              protocol/vote.cpp
              protocol/license.cpp
              protocol/upgrade_event.cpp
-             # protocol/personal_identity.cpp
              protocol/wire.cpp
              protocol/wire_out_with_fee.cpp
              protocol/cycle.cpp
@@ -88,7 +87,6 @@ add_library( graphene_chain
              confidential_evaluator.cpp
              license_evaluator.cpp
              upgrade_event_evaluator.cpp
-             # personal_identity_evaluator.cpp
              special_authority.cpp
              buyback.cpp
              upgrade_type.cpp

@@ -251,13 +251,18 @@ struct get_impacted_account_visitor
       _impacted.insert( op.account );
    }
 
-   void operator()( const update_pi_limits_operation& op )
+   void operator()( const set_roll_back_enabled_operation& op )
    {
-      _impacted.insert( op.pi_validator );
-      _impacted.insert( op.account );
+     _impacted.insert( op.account );
    }
 
-   void operator()( const asset_create_issue_request_operation& op )
+   void operator()( const roll_back_public_keys_operation& op )
+   {
+     _impacted.insert( op.authority );
+     _impacted.insert( op.account );
+   }
+
+  void operator()( const asset_create_issue_request_operation& op )
    {
       _impacted.insert( op.issuer );
       _impacted.insert( op.receiver );
@@ -334,6 +339,11 @@ struct get_impacted_account_visitor
    void operator()( const submit_cycles_to_queue_operation& op )
    {
       _impacted.insert( op.account );
+   }
+
+   void operator()( const fee_pool_cycles_submit_operation& op )
+   {
+      _impacted.insert( op.issuer );
    }
 
    void operator()( const submit_cycles_to_queue_by_license_operation& op )

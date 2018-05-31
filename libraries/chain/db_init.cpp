@@ -64,7 +64,6 @@
 #include <graphene/chain/cycle_evaluator.hpp>
 #include <graphene/chain/license_evaluator.hpp>
 #include <graphene/chain/market_evaluator.hpp>
-#include <graphene/chain/personal_identity_evaluator.hpp>
 #include <graphene/chain/proposal_evaluator.hpp>
 #include <graphene/chain/transfer_evaluator.hpp>
 #include <graphene/chain/vesting_balance_evaluator.hpp>
@@ -264,6 +263,9 @@ void database::initialize_evaluators()
    register_evaluator<wire_out_with_fee_complete_evaluator>();
    register_evaluator<wire_out_with_fee_reject_evaluator>();
    register_evaluator<set_starting_cycle_asset_amount_evaluator>();
+   register_evaluator<set_roll_back_enabled_evaluator>();
+   register_evaluator<roll_back_public_keys_evaluator>();
+   register_evaluator<fee_pool_cycles_submit_evaluator>();
 }
 
 void database::initialize_indexes()
@@ -834,8 +836,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    initialize_chain_authority("cycle_issuer", genesis_state.initial_cycle_issuing_authority.owner_name);
    initialize_chain_authority("cycle_authenticator", genesis_state.initial_cycle_authentication_authority.owner_name);
    initialize_chain_authority("registrar", genesis_state.initial_registrar.owner_name);
-   // TODO: implement in genesis state
-   // initialize_chain_authority(chain_authority_kind::pi_validator, genesis_state.initial_pi_validator.owner_name);
+   initialize_chain_authority("pi_validator", genesis_state.initial_personal_identity_validation_authority.owner_name);
    initialize_chain_authority("wire_out_handler", genesis_state.initial_wire_out_handler.owner_name);
 
    // Set up web asset issuer and authenticator:

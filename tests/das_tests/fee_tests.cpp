@@ -206,6 +206,40 @@ BOOST_AUTO_TEST_CASE( successful_pool_account_change_and_fee_charge_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( successful_pool_account_change_and_cycle_submit_test )
+{ try {
+   auto root_id = db.get_global_properties().authorities.root_administrator;
+   BOOST_CHECK( db.get_dynamic_global_properties().is_root_authority_enabled_flag );
+
+   toggle_reward_queue(true);
+
+   // set pool account
+   ACTOR(pool);
+   // this will make cycle balance object for pool account
+   issue_cycleasset("pool", pool_id, 100, 0);
+
+   change_fee_pool_account_operation cfpao;
+   cfpao.issuer = root_id;
+   cfpao.fee_pool_account_id = pool_id;
+   do_op(cfpao);
+
+   fee_pool_cycles_submit_operation fpcso;
+   fpcso.issuer = pool_id;
+   fpcso.amount = 40;
+   do_op(fpcso);
+
+   // Wait for the cycles to be distributed:
+   generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
+
+   auto cycle_balance = get_balance(pool_id, get_cycle_asset_id());
+
+   BOOST_CHECK_EQUAL( cycle_balance, 60 + DASCOIN_DEFAULT_STARTING_CYCLE_ASSET_AMOUNT);
+
+   auto dasc_balance = get_balance(pool_id, get_dascoin_asset_id());
+
+   BOOST_CHECK_EQUAL( dasc_balance, 2000000 );
+
+} FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_SUITE_END()
 

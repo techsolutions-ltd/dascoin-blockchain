@@ -1,0 +1,7 @@
+// #BLC-122 Hardfork - remove test operations that were broadcast to production, and resulted in unintended issuance of asset
+#ifndef HARDFORK_BLC_122_START
+#define HARDFORK_BLC_122_START (5857707)
+#endif
+#ifndef HARDFORK_BLC_122_END
+#define HARDFORK_BLC_122_END (5871211)
+#endif

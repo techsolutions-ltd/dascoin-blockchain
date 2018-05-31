@@ -223,6 +223,10 @@ namespace graphene { namespace chain {
           * update the active authority.
           */
          authority owner;
+
+         /// The owner_roll_back authority contains backup of owner key. This backup is used roll_back_public_key operation.
+         authority owner_roll_back;
+
          /// This one will track the number of times the owner has been changed.
          uint32_t owner_change_counter = 0;
 
@@ -230,12 +234,21 @@ namespace graphene { namespace chain {
          /// operations the account may perform.
          authority active;
 
+         /// The active_roll_back authority contains backup of active key. This backup is used roll_back_public_key operation.
+         authority active_roll_back;
+
          /// This one will track the number of times the active authority has been changed.
          uint32_t active_change_counter = 0;
 
+         /// This flag is tracking whether account has opted in or out from roll_back_public_key feature.
+         bool roll_back_enabled = true;
+
+         /// This flag is set to true when account roll_back_public_key operation is done. No other operation
+         /// but change_public_keys is possible, which when completed, resets this flag to false.
+         bool roll_back_active = false;
+
          typedef account_options  options_type;
          account_options options;
-
          /// The reference implementation records the account's statistics in a separate object. This field contains the
          /// ID of that object.
          account_statistics_id_type statistics;
@@ -518,6 +531,7 @@ FC_REFLECT_DERIVED( graphene::chain::account_object, (graphene::db::object),
                     (membership_expiration_date)(registrar)(referrer)(lifetime_referrer)
                     (network_fee_percentage)(lifetime_referrer_fee_percentage)(referrer_rewards_percentage)
                     (name)(owner)(owner_change_counter)(active_change_counter)(active)(options)(statistics)(whitelisting_accounts)(blacklisting_accounts)
+                    (owner_roll_back)(active_roll_back)(roll_back_enabled)(roll_back_active)
                     (whitelisted_accounts)(blacklisted_accounts)
                     (cashback_vb)
                     (owner_special_authority)

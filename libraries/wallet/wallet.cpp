@@ -2771,6 +2771,29 @@ public:
      return sign_transaction(tx, broadcast);
    }
 
+
+   signed_transaction set_roll_back_enabled(const string& account_name, bool roll_back_enabled, bool broadcast)
+   {
+     set_roll_back_enabled_operation op;
+     op.account = get_account(account_name).id;
+     op.roll_back_enabled = roll_back_enabled;
+     signed_transaction tx;
+     tx.operations.push_back(op);
+     set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
+     return sign_transaction(tx, broadcast);
+   }
+
+   signed_transaction roll_back_public_keys(const string& authority, const string& account_name, bool broadcast)
+   {
+     roll_back_public_keys_operation op;
+     op.authority = get_account(authority).id;
+     op.account = get_account(account_name).id;
+     signed_transaction tx;
+     tx.operations.push_back(op);
+     set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
+     return sign_transaction(tx, broadcast);
+   }
+
    void dbg_make_uia(string creator, string symbol)
    {
       asset_options opts;
@@ -4832,6 +4855,16 @@ signed_transaction wallet_api::wire_out_with_fee(const string& account, share_ty
                                                  const string& to_address, const string& memo, bool broadcast) const
 {
   return my->wire_out_with_fee(account, amount, currency_of_choice, to_address, memo, broadcast);
+}
+
+signed_transaction wallet_api::set_roll_back_enabled(const string& account, bool roll_back_enabled, bool broadcast) const
+{
+  return my->set_roll_back_enabled(account, roll_back_enabled, broadcast);
+}
+
+signed_transaction wallet_api::roll_back_public_keys(const string& authority, const string& account,bool broadcast) const
+{
+  return my->roll_back_public_keys(authority, account, broadcast);
 }
 
 vector<issue_asset_request_object> wallet_api::get_all_webasset_issue_requests() const

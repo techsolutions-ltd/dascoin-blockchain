@@ -1571,10 +1571,26 @@ class wallet_api
         bool broadcast /* false */
         );
 
+      /** 
+       * Get all license type ids found on the blockchain
+       *
+       * @return Vector of license type ids
+       */
       vector<license_type_object> get_license_types() const;
+
+      /**
+       * Get names and license type ids found on the blockchain
+       *
+       * @return Vector of license name/type-ids pairs
+       */
       vector<pair<string, license_type_id_type>> get_license_type_names_ids() const;
 
-
+      /**
+       * Get a list of account issued license types. This function has semantics identical to get_objects
+       *
+       * @param account_ids IDs of the accounts to retrieve
+       * @return            Vector of issued license information objects
+       */
       vector<optional<license_information_object>> get_license_information(const vector<account_id_type>& account_ids) const;
 
       ///////////////////////////////
@@ -1588,7 +1604,18 @@ class wallet_api
        */
       acc_id_share_t_res get_account_cycle_balance(const string& account) const;
 
+      /**
+       * Deprecated
+       */
       acc_id_vec_cycle_agreement_res get_full_cycle_balances(const string& account) const;
+
+      /**
+       * Get amount of DasCoin for on an account.
+       *
+       * @param  account Account name or stringified id.
+       * @return         An object containing dascoin balance of an account
+       */
+      acc_id_share_t_res get_dascoin_balance(const string& account) const;
 
       /**
        * Purchase cycles.
@@ -1612,8 +1639,15 @@ class wallet_api
        */
       optional<cycle_price> calculate_cycle_price(share_type cycle_amount, string asset_symbol_or_id) const;
 
-      acc_id_share_t_res get_dascoin_balance(const string& account) const;
-
+      /**
+       * Update various reward queue parameters
+       * 
+       * @param enable_dascoin_queue         true if minting is enabled
+       * @param reward_interval_time_seconds the time interval between DasCoin reward events
+       * @param dascoin_reward_amount        the amount of DasCoins produced on the DasCoin reward event
+       * @param broadcast                    true to broadcast the transaction on the network.
+       * @return                             signed transaction updating the queue
+       */
       signed_transaction update_queue_parameters(optional<bool> enable_dascoin_queue,
                                                  optional<uint32_t> reward_interval_time_seconds,
                                                  optional<share_type> dascoin_reward_amount,
@@ -1642,6 +1676,22 @@ class wallet_api
       */
       signed_transaction wire_out_with_fee(const string& account, share_type amount, const string& currency_of_choice,
                                            const string& to_address, const string& memo, bool broadcast) const;
+
+      /**
+      * Toggle roll-back enabled.
+      * @param account             Account ID.
+      * @param roll_back_enabled   New value for roll_back_enabled flag.
+      * @param broadcast           True to broadcast the transaction on the network.
+      */
+      signed_transaction set_roll_back_enabled(const string& account, bool roll_back_enabled, bool broadcast) const;
+
+      /**
+      * Roll-back public keys.
+      * @param authority           This MUST be personal information validation authority.
+      * @param account             Account ID.
+      * @param broadcast           True to broadcast the transaction on the network.
+      */
+      signed_transaction roll_back_public_keys(const string& authority, const string& account, bool broadcast) const;
 
       //////////////////////////
       // REQUESTS:            //
@@ -1683,6 +1733,12 @@ class wallet_api
      */
     vector<reward_queue_object> get_reward_queue_by_page(uint32_t from, uint32_t amount) const;
 
+    /**
+     * Get all current submissions to reward queue by account id.
+     *
+     * @param account_id Id of account whose submissions should be returned.
+     * @return           All elements on DasCoin reward queue submitted by given account.
+     */
     acc_id_queue_subs_w_pos_res get_queue_submissions_with_pos(account_id_type account_id) const;
 
       void dbg_make_uia(string creator, string symbol);
@@ -1694,7 +1750,16 @@ class wallet_api
 
       void flood_network(string prefix, uint32_t number_of_transactions);
 
+      /**
+       * Connect to a new peer
+       *
+       * @param nodes List of the IP addresses and ports of new nodes
+       */
       void network_add_nodes( const vector<string>& nodes );
+      
+      /**
+       * Get status of all current connections to peers
+       */
       vector< variant > network_get_connected_peers();
 
       /**

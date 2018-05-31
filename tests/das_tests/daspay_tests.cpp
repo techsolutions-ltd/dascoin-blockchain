@@ -118,5 +118,100 @@ BOOST_AUTO_TEST_CASE( unregister_daspay_authority_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( reserve_asset_on_account_test )
+{ try {
+  ACTOR(foo);
+  VAULT_ACTOR(bar);
+
+  tether_accounts(foo_id, bar_id);
+
+  auto lic_typ = *(_dal.get_license_type("standard_charter"));
+
+  do_op(issue_license_operation(get_license_issuer_id(), bar_id, lic_typ.id,
+                                10, 200, db.head_block_time()));
+
+  toggle_reward_queue(true);
+  generate_blocks(db.head_block_time() + fc::seconds(get_chain_parameters().reward_interval_time_seconds));
+  db.adjust_balance_limit(bar, get_dascoin_asset_id(), 1000 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+  // Generate some coins:
+  adjust_dascoin_reward(500 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  adjust_frequency(200);
+
+  // Wait for the cycles to be distributed:
+  generate_blocks(db.head_block_time() + fc::seconds(get_chain_parameters().reward_interval_time_seconds));
+  BOOST_CHECK_EQUAL( get_balance(bar_id, get_dascoin_asset_id()), 605 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+  // Fails: only dascoin can be reserved:
+  GRAPHENE_REQUIRE_THROW( do_op(reserve_asset_on_account_operation(foo_id, asset{ 10, db.get_web_asset_id() })), fc::exception );
+
+  // Fails: cannot reserve 0 dascoins:
+  GRAPHENE_REQUIRE_THROW( do_op(reserve_asset_on_account_operation(foo_id, asset{ 0, db.get_dascoin_asset_id() })), fc::exception );
+
+  // Fails: cannot reserve 0.0001 dascoins, since balance is 0:
+  GRAPHENE_REQUIRE_THROW( do_op(reserve_asset_on_account_operation(foo_id, asset{ 10, db.get_dascoin_asset_id() })), fc::exception );
+
+  transfer_dascoin_vault_to_wallet(bar_id, foo_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  BOOST_CHECK_EQUAL( get_balance(foo_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+  // Fails: only 100 dascoin on balance:
+  GRAPHENE_REQUIRE_THROW( do_op(reserve_asset_on_account_operation(foo_id, asset{ 101 * DASCOIN_DEFAULT_ASSET_PRECISION, db.get_dascoin_asset_id() })), fc::exception );
+
+  // Success:
+  do_op(reserve_asset_on_account_operation(foo_id, asset{ 50 * DASCOIN_DEFAULT_ASSET_PRECISION, db.get_dascoin_asset_id() }));
+
+  BOOST_CHECK_EQUAL( get_balance(foo_id, get_dascoin_asset_id()), 50 * DASCOIN_DEFAULT_ASSET_PRECISION );
+  BOOST_CHECK_EQUAL( get_reserved_balance(foo_id, get_dascoin_asset_id()), 50 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( unreserve_asset_on_account_test )
+{ try {
+  ACTOR(foo);
+  VAULT_ACTOR(bar);
+
+  tether_accounts(foo_id, bar_id);
+
+  auto lic_typ = *(_dal.get_license_type("standard_charter"));
+
+  do_op(issue_license_operation(get_license_issuer_id(), bar_id, lic_typ.id,
+                                10, 200, db.head_block_time()));
+
+  toggle_reward_queue(true);
+  generate_blocks(db.head_block_time() + fc::seconds(get_chain_parameters().reward_interval_time_seconds));
+  db.adjust_balance_limit(bar, get_dascoin_asset_id(), 1000 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+  // Generate some coins:
+  adjust_dascoin_reward(500 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  adjust_frequency(200);
+
+  // Wait for the cycles to be distributed:
+  generate_blocks(db.head_block_time() + fc::seconds(get_chain_parameters().reward_interval_time_seconds));
+  BOOST_CHECK_EQUAL( get_balance(bar_id, get_dascoin_asset_id()), 605 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+  // Fails: only dascoin can be unreserved:
+  GRAPHENE_REQUIRE_THROW( do_op(unreserve_asset_on_account_operation(foo_id, asset{ 10, db.get_web_asset_id() })), fc::exception );
+
+  // Fails: cannot unreserve 0 dascoins:
+  GRAPHENE_REQUIRE_THROW( do_op(unreserve_asset_on_account_operation(foo_id, asset{ 0, db.get_dascoin_asset_id() })), fc::exception );
+
+  // Fails: cannot unreserve 0.0001 dascoins, since reserved balance is 0:
+  GRAPHENE_REQUIRE_THROW( do_op(unreserve_asset_on_account_operation(foo_id, asset{ 10, db.get_dascoin_asset_id() })), fc::exception );
+
+  transfer_dascoin_vault_to_wallet(bar_id, foo_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+  // Reserve 50:
+  do_op(reserve_asset_on_account_operation(foo_id, asset{ 50 * DASCOIN_DEFAULT_ASSET_PRECISION, db.get_dascoin_asset_id() }));
+
+  // Fails: cannot unreserve 60 dascoins, since reserved balance is 50:
+  GRAPHENE_REQUIRE_THROW( do_op(unreserve_asset_on_account_operation(foo_id, asset{ 60 * DASCOIN_DEFAULT_ASSET_PRECISION, db.get_dascoin_asset_id() })), fc::exception );
+
+  do_op(unreserve_asset_on_account_operation(foo_id, asset{ 10 * DASCOIN_DEFAULT_ASSET_PRECISION, db.get_dascoin_asset_id() }));
+
+  BOOST_CHECK_EQUAL( get_balance(foo_id, get_dascoin_asset_id()), 60 * DASCOIN_DEFAULT_ASSET_PRECISION );
+  BOOST_CHECK_EQUAL( get_reserved_balance(foo_id, get_dascoin_asset_id()), 40 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_SUITE_END()  // dascoin_tests::daspay_tests
 BOOST_AUTO_TEST_SUITE_END()  // dascoin_tests

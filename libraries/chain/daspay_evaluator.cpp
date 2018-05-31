@@ -106,7 +106,7 @@ namespace graphene { namespace chain {
   {
     try {
       database& d = db();
-      d.adjust_balance( op.account, asset{0, d.get_dascoin_asset_id()}, op.asset_to_reserve.amount );
+      d.adjust_balance( op.account, asset{-op.asset_to_reserve.amount, d.get_dascoin_asset_id()}, op.asset_to_reserve.amount );
 
       return {};
   } FC_CAPTURE_AND_RETHROW((op)) }
@@ -130,7 +130,7 @@ namespace graphene { namespace chain {
   {
     try {
       database& d = db();
-      d.adjust_balance( op.account, asset{0, d.get_dascoin_asset_id()}, -op.asset_to_unreserve.amount );
+      d.adjust_balance( op.account, asset{op.asset_to_unreserve.amount, d.get_dascoin_asset_id()}, -op.asset_to_unreserve.amount );
 
       return {};
   } FC_CAPTURE_AND_RETHROW((op)) }

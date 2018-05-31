@@ -856,6 +856,10 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    initialize_chain_authority("registrar", genesis_state.initial_registrar.owner_name);
    initialize_chain_authority("pi_validator", genesis_state.initial_personal_identity_validation_authority.owner_name);
    initialize_chain_authority("wire_out_handler", genesis_state.initial_wire_out_handler.owner_name);
+   if (genesis_state.initial_daspay_administrator_authority.owner_name.length() > 0)
+   {
+     initialize_chain_authority("daspay_administrator", genesis_state.initial_daspay_administrator_authority.owner_name);
+   }
 
    // Set up web asset issuer and authenticator:
    // TODO: refactor this to be handled all at once.

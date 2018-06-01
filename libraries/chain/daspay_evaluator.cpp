@@ -33,7 +33,7 @@ namespace graphene { namespace chain {
       const auto& gpo = d.get_global_properties();
       const auto& issuer_obj = op.authority(d);
 
-      d.perform_chain_authority_check("root authority", gpo.authorities.root_administrator, issuer_obj);
+      d.perform_chain_authority_check("daspay authority", gpo.authorities.daspay_administrator, issuer_obj);
 
       return {};
 
@@ -174,7 +174,7 @@ namespace graphene { namespace chain {
     const auto& gpo = d.get_global_properties();
 
     const auto& issuer_obj = op.authority(d);
-    d.perform_chain_authority_check("root authority", gpo.authorities.root_administrator, issuer_obj);
+    d.perform_chain_authority_check("daspay authority", gpo.authorities.daspay_administrator, issuer_obj);
 
     op.payment_service_provider_account(d);
     FC_ASSERT( op.payment_service_provider_account(d).is_wallet(),
@@ -209,7 +209,7 @@ namespace graphene { namespace chain {
     const auto& gpo = d.get_global_properties();
 
     const auto& issuer_obj = op.authority(d);
-    d.perform_chain_authority_check("root authority", gpo.authorities.root_administrator, issuer_obj);
+    d.perform_chain_authority_check("daspay authority", gpo.authorities.daspay_administrator, issuer_obj);
 
     op.payment_service_provider_account(d);
     for (const auto& clearing_acc : op.payment_service_provider_clearing_accounts)
@@ -243,12 +243,14 @@ namespace graphene { namespace chain {
     const auto& gpo = d.get_global_properties();
 
     const auto& issuer_obj = op.authority(d);
-    d.perform_chain_authority_check("root authority", gpo.authorities.root_administrator, issuer_obj);
+    d.perform_chain_authority_check("daspay authority", gpo.authorities.daspay_administrator, issuer_obj);
 
     op.payment_service_provider_account(d);
 
     const auto& idx = d.get_index_type<payment_service_provider_index>().indices().get<by_payment_service_provider>();
-    FC_ASSERT(idx.find(op.payment_service_provider_account) != idx.end(), "Payment service provider with account ${1} doesn't exists.", ("1", op.payment_service_provider_account));
+    auto psp_iterator = idx.find(op.payment_service_provider_account);
+    FC_ASSERT( psp_iterator != idx.end(), "Payment service provider with account ${1} doesn't exists.", ("1", op.payment_service_provider_account));
+    pspo_to_delete = &(*psp_iterator);
 
     return {};
 
@@ -258,7 +260,7 @@ namespace graphene { namespace chain {
   { try {
     auto& d = db();
 
-    d.remove(op.payment_service_provider_account(d));
+    d.remove(*pspo_to_delete);
 
     return {};
   } FC_CAPTURE_AND_RETHROW((op)) }

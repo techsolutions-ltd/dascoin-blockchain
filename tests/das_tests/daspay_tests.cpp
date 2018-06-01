@@ -228,8 +228,54 @@ BOOST_AUTO_TEST_CASE( unreserve_asset_on_account_test )
 
 BOOST_AUTO_TEST_CASE( daspay_credit_test )
 { try {
-  ACTOR(foo);
+  ACTORS((foo)(clearing)(payment));
   VAULT_ACTOR(bar);
+
+  tether_accounts(clearing_id, bar_id);
+
+  auto lic_typ = *(_dal.get_license_type("standard_charter"));
+
+  do_op(issue_license_operation(get_license_issuer_id(), bar_id, lic_typ.id,
+                                10, 200, db.head_block_time()));
+
+  toggle_reward_queue(true);
+  generate_blocks(db.head_block_time() + fc::seconds(get_chain_parameters().reward_interval_time_seconds));
+  db.adjust_balance_limit(bar, get_dascoin_asset_id(), 1000 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+  // Generate some coins:
+  adjust_dascoin_reward(500 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  adjust_frequency(200);
+
+  // Wait for the cycles to be distributed:
+  generate_blocks(db.head_block_time() + fc::seconds(get_chain_parameters().reward_interval_time_seconds));
+
+  // Fails: cannot credit 0 amount
+  GRAPHENE_REQUIRE_THROW( do_op(daspay_credit_account_operation(bar_id, foo_id, asset{0, db.get_dascoin_asset_id()}, foo_id, "", {})), fc::exception );
+
+  // Fails: only web euro can be used to credit:
+  GRAPHENE_REQUIRE_THROW( do_op(daspay_credit_account_operation(bar_id, foo_id, asset{1, db.get_dascoin_asset_id()}, foo_id, "", {})), fc::exception );
+
+  // Fails: service provider not found:
+  GRAPHENE_REQUIRE_THROW( do_op(daspay_credit_account_operation(bar_id, foo_id, asset{1, db.get_web_asset_id()}, foo_id, "", {})), fc::exception );
+
+  vector<account_id_type> v{clearing_id};
+  const auto& root_id = db.get_global_properties().authorities.daspay_administrator;
+  do_op(create_payment_service_provider_operation(root_id, payment_id, v));
+
+  // Fails: clearing account not found:
+  GRAPHENE_REQUIRE_THROW( do_op(daspay_credit_account_operation(payment_id, foo_id, asset{1, db.get_web_asset_id()}, foo_id, "", {})), fc::exception );
+
+  // Fails: cannot credit vault account:
+  GRAPHENE_REQUIRE_THROW( do_op(daspay_credit_account_operation(payment_id, bar_id, asset{1, db.get_web_asset_id()}, clearing_id, "", {})), fc::exception );
+
+  // Fails: no funds on clearing account:
+  GRAPHENE_REQUIRE_THROW( do_op(daspay_credit_account_operation(payment_id, foo_id, asset{1, db.get_web_asset_id()}, clearing_id, "", {})), fc::exception );
+
+  transfer_dascoin_vault_to_wallet(bar_id, clearing_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+  do_op(daspay_credit_account_operation(payment_id, foo_id, asset{1, db.get_web_asset_id()}, clearing_id, "", {}));
+
+  BOOST_CHECK ( get_reserved_balance(foo_id, get_dascoin_asset_id()) > 0 );
 
 } FC_LOG_AND_RETHROW() }
 

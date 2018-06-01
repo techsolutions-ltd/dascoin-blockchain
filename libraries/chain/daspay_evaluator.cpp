@@ -33,7 +33,7 @@ namespace graphene { namespace chain {
       const auto& gpo = d.get_global_properties();
       const auto& issuer_obj = op.authority(d);
 
-      d.perform_chain_authority_check("root authority", gpo.authorities.root_administrator, issuer_obj);
+      d.perform_chain_authority_check("daspay authority", gpo.authorities.daspay_administrator, issuer_obj);
 
       return {};
 
@@ -174,7 +174,7 @@ namespace graphene { namespace chain {
     const auto& gpo = d.get_global_properties();
 
     const auto& issuer_obj = op.authority(d);
-    d.perform_chain_authority_check("root authority", gpo.authorities.root_administrator, issuer_obj);
+    d.perform_chain_authority_check("daspay authority", gpo.authorities.daspay_administrator, issuer_obj);
 
     op.payment_service_provider_account(d);
     FC_ASSERT( op.payment_service_provider_account(d).is_wallet(),
@@ -209,7 +209,7 @@ namespace graphene { namespace chain {
     const auto& gpo = d.get_global_properties();
 
     const auto& issuer_obj = op.authority(d);
-    d.perform_chain_authority_check("root authority", gpo.authorities.root_administrator, issuer_obj);
+    d.perform_chain_authority_check("daspay authority", gpo.authorities.daspay_administrator, issuer_obj);
 
     op.payment_service_provider_account(d);
     for (const auto& clearing_acc : op.payment_service_provider_clearing_accounts)
@@ -243,7 +243,7 @@ namespace graphene { namespace chain {
     const auto& gpo = d.get_global_properties();
 
     const auto& issuer_obj = op.authority(d);
-    d.perform_chain_authority_check("root authority", gpo.authorities.root_administrator, issuer_obj);
+    d.perform_chain_authority_check("daspay authority", gpo.authorities.daspay_administrator, issuer_obj);
 
     op.payment_service_provider_account(d);
 

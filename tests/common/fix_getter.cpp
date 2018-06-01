@@ -112,6 +112,11 @@ account_id_type database_fixture::get_wire_out_handler_id() const
   return db.get_global_properties().authorities.wire_out_handler;
 }
 
+account_id_type database_fixture::get_daspay_administrator_id() const
+{
+  return db.get_global_properties().authorities.daspay_administrator;
+}
+
 asset_id_type database_fixture::get_web_asset_id() const
 {
   return db.get_web_asset_id();

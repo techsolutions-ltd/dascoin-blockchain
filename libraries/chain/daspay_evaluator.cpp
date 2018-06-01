@@ -300,7 +300,7 @@ namespace graphene { namespace chain {
     tmp.amount += tmp.amount * dgpo.daspay_credit_transaction_ratio / 10000;
     to_credit = tmp * dgpo.last_dascoin_price;
 
-    FC_ASSERT( to_credit <= balance, "Not enough balance on clearing account ${a}, left ${l}, needed ${n}", ("a", op.clearing_account)("l", d.to_pretty_string(balance))("n", to_credit) );
+    FC_ASSERT( to_credit <= balance, "Not enough balance on clearing account ${a}, left ${l}, needed ${n}", ("a", op.clearing_account)("l", d.to_pretty_string(balance))("n", d.to_pretty_string(to_credit)) );
 
     return {};
 

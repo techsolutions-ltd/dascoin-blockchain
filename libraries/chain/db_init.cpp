@@ -281,6 +281,7 @@ void database::initialize_evaluators()
    register_evaluator<delete_payment_service_provider_evaluator>();
    register_evaluator<reserve_asset_on_account_evaluator>();
    register_evaluator<unreserve_asset_on_account_evaluator>();
+   register_evaluator<daspay_credit_account_evaluator>();
 }
 
 void database::initialize_indexes()

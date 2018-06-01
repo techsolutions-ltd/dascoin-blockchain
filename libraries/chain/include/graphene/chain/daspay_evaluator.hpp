@@ -117,4 +117,13 @@ namespace graphene { namespace chain {
     void_result do_apply(const delete_payment_service_provider_operation& op);
   };
 
+  class daspay_credit_account_evaluator : public evaluator<daspay_credit_account_evaluator>
+  {
+  public:
+    typedef daspay_credit_account_operation operation_type;
+
+    void_result do_evaluate(const operation_type& op);
+    void_result do_apply(const operation_type& op);
+  };
+
 } }  // namespace graphene::chain

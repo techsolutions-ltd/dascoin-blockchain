@@ -240,7 +240,41 @@ namespace graphene { namespace chain {
       share_type calculate_fee(const fee_parameters_type&) const { return 0; }
     };
 
-  } }  // namespace graphene::chain
+    struct daspay_credit_account_operation : public base_operation
+    {
+      struct fee_parameters_type {};
+      asset fee;
+
+      account_id_type payment_service_provider_account;
+      account_id_type account;
+      asset amount;
+      account_id_type clearing_account;
+      string transaction_id;
+      optional<string> details;
+
+      extensions_type extensions;
+
+      daspay_credit_account_operation() = default;
+      explicit daspay_credit_account_operation(
+              const account_id_type& payment_service_provider_account,
+              const account_id_type& account,
+              const asset& amount,
+              const account_id_type& clearing_account,
+              const string& transaction_id,
+              const optional<string>& details)
+              : payment_service_provider_account(payment_service_provider_account),
+                account(account),
+                amount(amount),
+                clearing_account(clearing_account),
+                transaction_id(transaction_id),
+                details(details) {}
+
+      account_id_type fee_payer() const { return payment_service_provider_account; }
+      void validate() const;
+      share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+    };
+
+} }  // namespace graphene::chain
 
 ////////////////////////////////
 // REFLECTIONS:               //
@@ -319,5 +353,17 @@ FC_REFLECT( graphene::chain::delete_payment_service_provider_operation,
             (fee)
             (authority)
             (payment_service_provider_account)
+            (extensions)
+          )
+
+FC_REFLECT( graphene::chain::daspay_credit_account_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::daspay_credit_account_operation,
+            (fee)
+            (payment_service_provider_account)
+            (account)
+            (amount)
+            (clearing_account)
+            (transaction_id)
+            (details)
             (extensions)
           )

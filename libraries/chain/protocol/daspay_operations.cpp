@@ -82,4 +82,14 @@ namespace graphene { namespace chain {
     FC_ASSERT( payment_service_provider_account != account_id_type() );
   }
 
+  void daspay_credit_account_operation::validate() const
+  {
+    FC_ASSERT( amount.amount > 0, "Cannot credit 0 amount" );
+    FC_ASSERT( transaction_id.length() <= DASCOIN_MAX_COMMENT_LENGTH );
+    if (details.valid())
+    {
+      FC_ASSERT( details->length() <= DASCOIN_MAX_COMMENT_LENGTH );
+    }
+  }
+
 } } // namespace graphene::chain

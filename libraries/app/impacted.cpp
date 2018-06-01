@@ -485,10 +485,17 @@ struct get_impacted_account_visitor
       _impacted.insert(op.issuer);
    }
 
+   void operator() (const daspay_credit_account_operation& op)
+   {
+      _impacted.insert(op.payment_service_provider_account);
+      _impacted.insert(op.account);
+      _impacted.insert(op.clearing_account);
+   }
+
    void operator() ( const set_chain_authority_operation& op)
    {
-     _impacted.insert(op.issuer);
-     _impacted.insert(op.account);
+      _impacted.insert(op.issuer);
+      _impacted.insert(op.account);
    }
 };
 

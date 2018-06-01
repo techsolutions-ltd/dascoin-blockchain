@@ -224,7 +224,7 @@ namespace graphene { namespace chain {
 
   } FC_CAPTURE_AND_RETHROW((op)) }
 
-    void_result update_payment_service_provider_evaluator::do_apply(const update_payment_service_provider_operation& op)
+  void_result update_payment_service_provider_evaluator::do_apply(const update_payment_service_provider_operation& op)
   { try {
     auto& d = db();
 
@@ -289,6 +289,14 @@ namespace graphene { namespace chain {
                          it->payment_service_provider_clearing_accounts.end(),
                          op.clearing_account) != it->payment_service_provider_clearing_accounts.end(), "Invalid clearing account" );
 
+    const auto& balance = d.get_balance(op.clearing_account, d.get_dascoin_asset_id());
+    const auto& dgpo = d.get_dynamic_global_properties();
+    decltype(op.amount) tmp{op.amount};
+    tmp.amount += tmp.amount * dgpo.daspay_credit_transaction_ratio / 10000;
+    to_credit = tmp * dgpo.last_dascoin_price;
+
+    FC_ASSERT( to_credit <= balance, "Not enough balance on clearing account ${a}, left ${l}, needed ${n}", ("a", op.clearing_account)("l", d.to_pretty_string(balance))("n", to_credit) );
+
     return {};
 
   } FC_CAPTURE_AND_RETHROW((op)) }
@@ -296,6 +304,9 @@ namespace graphene { namespace chain {
   void_result daspay_credit_account_evaluator::do_apply(const operation_type& op)
   { try {
     auto& d = db();
+
+    d.adjust_balance(op.clearing_account, asset{-to_credit.amount, to_credit.asset_id}, 0);
+    d.adjust_balance(op.account, asset{0, to_credit.asset_id}, to_credit.amount);
 
     return {};
 

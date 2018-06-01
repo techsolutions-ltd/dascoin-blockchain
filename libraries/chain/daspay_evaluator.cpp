@@ -283,6 +283,9 @@ namespace graphene { namespace chain {
 
     FC_ASSERT( op.amount.asset_id == d.get_web_asset_id(), "Only webeur can be credited, ${a} sent", ("a", d.to_pretty_string(op.amount)) );
 
+    const auto& account = op.account(d);
+    FC_ASSERT( account.is_wallet(), "Cannot credit vault account ${i}", ("i", op.account) );
+
     const auto& idx = d.get_index_type<payment_service_provider_index>().indices().get<by_payment_service_provider>();
     const auto& it = idx.find(op.payment_service_provider_account);
     FC_ASSERT( it != idx.end(), "Payment service provider with account ${1} does not exist.", ("1", op.payment_service_provider_account) );

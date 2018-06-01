@@ -145,35 +145,6 @@ namespace graphene { namespace chain {
       share_type calculate_fee(const fee_parameters_type&) const { return 0; }
     };
 
-    struct daspay_debit_operation : public base_operation
-    {
-      struct fee_parameters_type {};
-      asset fee;
-
-      account_id_type issuer;
-      share_type amount;
-      public_key_type auth_key;
-
-      extensions_type extensions;
-
-      daspay_debit_operation() = default;
-      explicit daspay_debit_operation(account_id_type issuer, share_type amount, public_key_type auth_key)
-              : issuer(issuer)
-              , amount(amount)
-              , auth_key(auth_key) {}
-
-      account_id_type fee_payer() const { return GRAPHENE_TEMP_ACCOUNT; }
-      void validate() const {};
-      share_type calculate_fee(const fee_parameters_type&) const { return 0; }
-      void get_required_authorities( vector<authority>& o ) const
-      {
-        authority auth;
-        auth.key_auths[auth_key] = 1;
-        auth.weight_threshold = 1;
-        o.emplace_back( std::move(auth) );
-      }
-    };
-
     struct create_payment_service_provider_operation : public base_operation
     {
       struct fee_parameters_type {};
@@ -240,6 +211,45 @@ namespace graphene { namespace chain {
       share_type calculate_fee(const fee_parameters_type&) const { return 0; }
     };
 
+    struct daspay_debit_account_operation : public base_operation
+    {
+      struct fee_parameters_type {};
+      asset fee;
+
+      account_id_type payment_service_provider_account;
+      public_key_type auth_key;
+      account_id_type account;
+      asset debit_amount;
+      account_id_type clearing_account;
+      share_type transaction_id;
+      optional<string> description;
+
+      extensions_type extensions;
+
+      daspay_debit_account_operation() = default;
+      explicit daspay_debit_account_operation(account_id_type payment_service_provider_account,
+                                              public_key_type auth_key,
+                                              account_id_type account, asset debit_amount,
+                                              account_id_type clearing_account, share_type transaction_id,
+                                              optional<string> description)
+              : payment_service_provider_account(payment_service_provider_account),
+                auth_key(auth_key),
+                account(account), debit_amount(debit_amount),
+                clearing_account(clearing_account), transaction_id(transaction_id),
+                description(description) {}
+
+      account_id_type fee_payer() const { return payment_service_provider_account; }
+      void validate() const {};
+      share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+      void get_required_authorities( vector<authority>& ra ) const
+      {
+        authority a;
+        a.key_auths[auth_key] = 1;
+        a.weight_threshold = 1;
+        ra.emplace_back( std::move(a) );
+      }
+    };
+
     struct daspay_credit_account_operation : public base_operation
     {
       struct fee_parameters_type {};
@@ -261,7 +271,7 @@ namespace graphene { namespace chain {
               const asset& amount,
               const account_id_type& clearing_account,
               const string& transaction_id,
-              const optional<string>& details)
+              optional<string> details)
               : payment_service_provider_account(payment_service_provider_account),
                 account(account),
                 amount(amount),
@@ -321,15 +331,6 @@ FC_REFLECT( graphene::chain::unreserve_asset_on_account_operation,
             (asset_to_unreserve)
           )
 
-FC_REFLECT( graphene::chain::daspay_debit_operation::fee_parameters_type, )
-FC_REFLECT( graphene::chain::daspay_debit_operation,
-            (fee)
-            (issuer)
-            (amount)
-            (auth_key)
-            (extensions)
-          )
-
 FC_REFLECT( graphene::chain::create_payment_service_provider_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::create_payment_service_provider_operation,
             (fee)
@@ -356,6 +357,19 @@ FC_REFLECT( graphene::chain::delete_payment_service_provider_operation,
             (extensions)
           )
 
+FC_REFLECT( graphene::chain::daspay_debit_account_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::daspay_debit_account_operation,
+            (fee)
+            (payment_service_provider_account)
+            (auth_key)
+            (account)
+            (debit_amount)
+            (clearing_account)
+            (transaction_id)
+            (description)
+            (extensions)
+          )
+
 FC_REFLECT( graphene::chain::daspay_credit_account_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::daspay_credit_account_operation,
             (fee)
@@ -365,5 +379,4 @@ FC_REFLECT( graphene::chain::daspay_credit_account_operation,
             (clearing_account)
             (transaction_id)
             (details)
-            (extensions)
           )

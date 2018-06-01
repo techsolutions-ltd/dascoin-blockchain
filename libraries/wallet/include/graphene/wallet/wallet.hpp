@@ -1716,7 +1716,7 @@ class wallet_api
 
       /**
       * Set Daspay Transaction Ratio.
-      * @param authority           This MUST be master authority.
+      * @param authority           This MUST be daspay authority.
       * @param debit_ratio         New ratio for DEBIT transactions.
       * @param credit_ratio        New ratio for CREDIT transactions.
       * @param broadcast           True to broadcast the transaction on the network.
@@ -1726,7 +1726,7 @@ class wallet_api
 
       /**
       * Create payment service provider.
-      * @param authority                                               This MUST be master authority.
+      * @param authority                                               This MUST be daspay authority.
       * @param payment_service_provider_account                        Account used to identify payment_service_provider.
       * @param payment_service_provider_clearing_accounts              List of clearing accounts for payment_service_provider_account.
       * @param broadcast                                               True to broadcast the transaction on the network.
@@ -1736,7 +1736,7 @@ class wallet_api
 
       /**
       * Update payment service provider.
-      * @param authority                                               This MUST be master authority.
+      * @param authority                                               This MUST be daspay authority.
       * @param payment_service_provider_account                        Account used to identify payment_service_provider.
       * @param payment_service_provider_clearing_accounts              List of clearing accounts for payment_service_provider_account.
       * @param broadcast                                               True to broadcast the transaction on the network.
@@ -1746,7 +1746,7 @@ class wallet_api
 
       /**
       * Delete payment service provider.
-      * @param authority                                               This MUST be master authority.
+      * @param authority                                               This MUST be daspay authority.
       * @param payment_service_provider_account                        Account used to identify payment_service_provider.
       * @param broadcast                                               True to broadcast the transaction on the network.
       */
@@ -1778,6 +1778,7 @@ class wallet_api
       /**
        * DasPay debit user account.
        * @param payment_service_provider_account                        Account of payment service provider.
+       * @param auth_key                                                Public key authorized for reserved assets on user account.
        * @param user_account                                            User account to debit.
        * @param asset_amount                                            Amount to debit (ie 12.50).
        * @param asset_symbol                                            Symbol or id of the asset to debit.
@@ -1787,6 +1788,7 @@ class wallet_api
        * @param broadcast                                               True to broadcast the transaction on the network.
        */
       signed_transaction daspay_debit_account(const string& payment_service_provider_account,
+                                      const public_key_type& auth_key,
                                       const string& user_account,
                                       const string& asset_amount,
                                       const string& asset_symbol,
@@ -2079,6 +2081,7 @@ FC_API( graphene::wallet::wallet_api,
         (transfer_cycles_from_licence_to_wallet)
         (purchase_cycle_asset)
         (calculate_cycle_price)
+
         // Daspay:
         (set_daspay_transaction_ratio)
         (create_payment_service_provider)
@@ -2088,6 +2091,7 @@ FC_API( graphene::wallet::wallet_api,
         (register_daspay_authority)
         (unregister_daspay_authority)
         (daspay_debit_account)
+
         // Requests:
         (get_all_webasset_issue_requests)
         (get_all_wire_out_holders)

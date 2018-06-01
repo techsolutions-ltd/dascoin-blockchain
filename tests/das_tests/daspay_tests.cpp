@@ -38,7 +38,20 @@ BOOST_FIXTURE_TEST_SUITE( daspay_tests, database_fixture )
 BOOST_AUTO_TEST_CASE( set_daspay_transaction_ratio_test )
 { try {
 
-} FC_LOG_AND_RETHROW() }
+    // Try to set daspay transaction ratio by using the wrong authority:
+    GRAPHENE_REQUIRE_THROW( do_op(set_daspay_transaction_ratio_operation(get_pi_validator_id(), 150, 130)), fc::exception );
+
+    // Try to set daspay transaction ratio with debit and credit ratio illegal (< 10000):
+    GRAPHENE_REQUIRE_THROW( do_op(set_daspay_transaction_ratio_operation(get_daspay_administrator_id(), 10000, 10000)), fc::exception );
+
+    do_op(set_daspay_transaction_ratio_operation(get_daspay_administrator_id(), 150, 130));
+
+    auto daspay_debit_transaction_ratio = db.get_dynamic_global_properties().daspay_debit_transaction_ratio;
+    auto daspay_credit_transaction_ratio = db.get_dynamic_global_properties().daspay_credit_transaction_ratio;
+    BOOST_CHECK_EQUAL( daspay_debit_transaction_ratio.value, 150 );
+    BOOST_CHECK_EQUAL( daspay_credit_transaction_ratio.value, 130 );
+
+  } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_CASE( daspay_authority_index_test )
 { try {

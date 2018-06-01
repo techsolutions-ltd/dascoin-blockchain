@@ -106,6 +106,9 @@ namespace graphene { namespace chain {
 
     void_result do_evaluate(const delete_payment_service_provider_operation& op);
     void_result do_apply(const delete_payment_service_provider_operation& op);
+
+  private:
+    const payment_service_provider_object* pspo_to_delete = nullptr;
   };
 
   class daspay_debit_account_evaluator : public evaluator<daspay_debit_account_evaluator>

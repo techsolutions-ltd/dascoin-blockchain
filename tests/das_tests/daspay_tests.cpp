@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE( register_daspay_authority_test )
 { try {
   ACTORS((foo)(bar)(foobar)(payment));
   public_key_type pk = public_key_type(generate_private_key("foo").get_public_key());
-  const auto& root_id = db.get_global_properties().authorities.root_administrator;
+  const auto& root_id = db.get_global_properties().authorities.daspay_administrator;
 
   // Cannot register because payment provider is not registered:
   GRAPHENE_REQUIRE_THROW( do_op(register_daspay_authority_operation(foo_id, bar_id, pk, {})), fc::exception );
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE( unregister_daspay_authority_test )
   // This fails - none registered:
   GRAPHENE_REQUIRE_THROW( do_op(unregister_daspay_authority_operation(foo_id, bar_id)), fc::exception );
 
-  const auto& root_id = db.get_global_properties().authorities.root_administrator;
+  const auto& root_id = db.get_global_properties().authorities.daspay_administrator;
   vector<account_id_type> v{foo_id, bar_id};
   do_op(create_payment_service_provider_operation(root_id, bar_id, v));
 
@@ -223,6 +223,13 @@ BOOST_AUTO_TEST_CASE( unreserve_asset_on_account_test )
 
   BOOST_CHECK_EQUAL( get_balance(foo_id, get_dascoin_asset_id()), 60 * DASCOIN_DEFAULT_ASSET_PRECISION );
   BOOST_CHECK_EQUAL( get_reserved_balance(foo_id, get_dascoin_asset_id()), 40 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( daspay_credit_test )
+{ try {
+  ACTOR(foo);
+  VAULT_ACTOR(bar);
 
 } FC_LOG_AND_RETHROW() }
 

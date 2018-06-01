@@ -168,21 +168,6 @@ namespace graphene { namespace chain {
       return {};
   } FC_CAPTURE_AND_RETHROW((op)) }
 
-  void_result daspay_debit_evaluator::do_evaluate(const operation_type& op)
-  {
-    try {
-      const auto& d = db();
-      _account_obj = &op.issuer(d);
-
-      return {};
-    } FC_CAPTURE_AND_RETHROW((op)) }
-
-  void_result daspay_debit_evaluator::do_apply(const operation_type& op)
-  { try {
-
-    return {};
-  } FC_CAPTURE_AND_RETHROW((op)) }
-
   void_result create_payment_service_provider_evaluator::do_evaluate(const create_payment_service_provider_operation& op)
   { try {
     const auto& d = db();
@@ -231,20 +216,24 @@ namespace graphene { namespace chain {
       clearing_acc(d);
 
     const auto& idx = d.get_index_type<payment_service_provider_index>().indices().get<by_payment_service_provider>();
-    FC_ASSERT(idx.find(op.payment_service_provider_account) != idx.end(), "Payment service provider with account ${1} doesn't exists.", ("1", op.payment_service_provider_account));
+    auto psp_iterator = idx.find(op.payment_service_provider_account);
+    FC_ASSERT( psp_iterator != idx.end(), "Payment service provider with account ${1} doesn't exists.", ("1", op.payment_service_provider_account));
+    pspo_to_update = &(*psp_iterator);
 
     return {};
 
   } FC_CAPTURE_AND_RETHROW((op)) }
 
-  object_id_type update_payment_service_provider_evaluator::do_apply(const update_payment_service_provider_operation& op)
+    void_result update_payment_service_provider_evaluator::do_apply(const update_payment_service_provider_operation& op)
   { try {
     auto& d = db();
 
-    return d.create<payment_service_provider_object>([&](payment_service_provider_object& pspo){
+    d.modify(*pspo_to_update, [&](payment_service_provider_object& pspo) {
       pspo.payment_service_provider_account = op.payment_service_provider_account;
       pspo.payment_service_provider_clearing_accounts = op.payment_service_provider_clearing_accounts;
-    }).id;
+    });
+
+    return {};
 
   } FC_CAPTURE_AND_RETHROW((op)) }
 
@@ -273,5 +262,17 @@ namespace graphene { namespace chain {
 
     return {};
   } FC_CAPTURE_AND_RETHROW((op)) }
+
+    void_result daspay_debit_account_evaluator::do_evaluate(const daspay_debit_account_operation& op)
+    { try {
+
+        return {};
+      } FC_CAPTURE_AND_RETHROW((op)) }
+
+    void_result daspay_debit_account_evaluator::do_apply(const daspay_debit_account_operation& op)
+    { try {
+
+        return {};
+      } FC_CAPTURE_AND_RETHROW((op)) }
 
 } }  // namespace graphene::chain

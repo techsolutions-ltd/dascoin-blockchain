@@ -24,14 +24,7 @@
 
 #include <graphene/chain/protocol/daspay_operations.hpp>
 
-// TODO: set_daspay_ratio()
-// TODO: CRUD payment_service_provider map
 // TODO: blacklist operation
-// TODO: daspay_debit_transaction()
-// TODO: daspay_credit_transaction()
-// TODO: register_daspay_authority()
-// TODO: reserve_asset()
-// TODO: unreserve_asset()
 
 namespace graphene { namespace chain {
 

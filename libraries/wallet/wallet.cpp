@@ -1105,12 +1105,13 @@ public:
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (account)(payment_provider) ) }
 
-   signed_transaction daspay_debit_account(string payment_service_provider_account,
-                                           string user_account,
-                                           string asset_amount,
-                                           string asset_symbol,
-                                           string clearing_account,
-                                           string transaction_id,
+   signed_transaction daspay_debit_account(const string& payment_service_provider_account,
+                                           const public_key_type& auth_key,
+                                           const string& user_account,
+                                           const string& asset_amount,
+                                           const string& asset_symbol,
+                                           const string& clearing_account,
+                                           const string& transaction_id,
                                            optional<string> details,
                                            bool broadcast = false)
    { try {
@@ -1121,7 +1122,7 @@ public:
       tx.validate();
 
       return sign_transaction(tx, broadcast);
-   } FC_CAPTURE_AND_RETHROW( (payment_service_provider_account)(user_account)(asset_amount)(asset_symbol)(clearing_account)(transaction_id)(details)(broadcast) ) }
+   } FC_CAPTURE_AND_RETHROW( (payment_service_provider_account)(auth_key)(user_account)(asset_amount)(asset_symbol)(clearing_account)(transaction_id)(details)(broadcast) ) }
 
    signed_transaction tether_accounts(string wallet, string vault, bool broadcast = false)
    { try {
@@ -5125,6 +5126,7 @@ signed_transaction wallet_api::unregister_daspay_authority(const string& account
 }
 
 signed_transaction wallet_api::daspay_debit_account(const string& payment_service_provider_account,
+                                                    const public_key_type& auth_key,
                                                     const string& user_account,
                                                     const string& asset_amount,
                                                     const string& asset_symbol,
@@ -5133,7 +5135,7 @@ signed_transaction wallet_api::daspay_debit_account(const string& payment_servic
                                                     optional<string> details,
                                                     bool broadcast) const
 {
-   return my->daspay_debit_account( payment_service_provider_account, user_account, asset_amount, asset_symbol, clearing_account, transaction_id, details, broadcast );
+   return my->daspay_debit_account( payment_service_provider_account, auth_key, user_account, asset_amount, asset_symbol, clearing_account, transaction_id, details, broadcast );
 }
 
 signed_block_with_info::signed_block_with_info( const signed_block& block )

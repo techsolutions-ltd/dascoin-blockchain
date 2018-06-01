@@ -379,33 +379,6 @@ struct get_impacted_account_visitor
       _impacted.insert( op.authority );
    }
 
-   void operator()( const set_daspay_transaction_ratio_operation& op )
-   {
-      _impacted.insert( op.authority );
-   }
-
-   void operator()( const create_payment_service_provider_operation& op )
-   {
-      _impacted.insert( op.authority );
-      _impacted.insert( op.payment_service_provider_account );
-      for (const auto& acc : op.payment_service_provider_clearing_accounts)
-        _impacted.insert( acc );
-   }
-
-   void operator()( const update_payment_service_provider_operation& op )
-   {
-     _impacted.insert( op.authority );
-     _impacted.insert( op.payment_service_provider_account );
-     for (const auto& acc : op.payment_service_provider_clearing_accounts)
-       _impacted.insert( acc );
-   }
-
-   void operator()( const delete_payment_service_provider_operation& op )
-   {
-     _impacted.insert( op.authority );
-     _impacted.insert( op.payment_service_provider_account );
-   }
-
    void operator() ( const issue_free_cycles_operation& op )
    {
       _impacted.insert( op.authority );
@@ -460,6 +433,33 @@ struct get_impacted_account_visitor
       _impacted.insert(op.issuer);
    }
 
+   void operator()( const set_daspay_transaction_ratio_operation& op )
+   {
+     _impacted.insert( op.authority );
+   }
+
+   void operator()( const create_payment_service_provider_operation& op )
+   {
+     _impacted.insert( op.authority );
+     _impacted.insert( op.payment_service_provider_account );
+     for (const auto& acc : op.payment_service_provider_clearing_accounts)
+       _impacted.insert( acc );
+   }
+
+   void operator()( const update_payment_service_provider_operation& op )
+   {
+     _impacted.insert( op.authority );
+     _impacted.insert( op.payment_service_provider_account );
+     for (const auto& acc : op.payment_service_provider_clearing_accounts)
+       _impacted.insert( acc );
+   }
+
+   void operator()( const delete_payment_service_provider_operation& op )
+   {
+     _impacted.insert( op.authority );
+     _impacted.insert( op.payment_service_provider_account );
+   }
+
    void operator() (const register_daspay_authority_operation& op)
    {
       _impacted.insert(op.issuer);
@@ -480,9 +480,11 @@ struct get_impacted_account_visitor
       _impacted.insert(op.account);
    }
 
-   void operator() (const daspay_debit_operation& op)
+   void operator() (const daspay_debit_account_operation& op)
    {
-      _impacted.insert(op.issuer);
+      _impacted.insert(op.payment_service_provider_account);
+      _impacted.insert(op.account);
+      _impacted.insert(op.clearing_account);
    }
 
    void operator() ( const set_chain_authority_operation& op)

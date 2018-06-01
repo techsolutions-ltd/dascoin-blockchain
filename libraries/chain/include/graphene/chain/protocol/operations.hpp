@@ -179,13 +179,13 @@ namespace graphene { namespace chain {
             set_chain_authority_operation,
             register_daspay_authority_operation,
             unregister_daspay_authority_operation,
-            daspay_debit_operation,
             set_daspay_transaction_ratio_operation,
             create_payment_service_provider_operation,
             update_payment_service_provider_operation,
             delete_payment_service_provider_operation,
             reserve_asset_on_account_operation,
             unreserve_asset_on_account_operation,
+            daspay_debit_account_operation,
 
             // Virtual operations below this point:
 

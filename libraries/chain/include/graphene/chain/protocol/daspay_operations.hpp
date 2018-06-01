@@ -221,8 +221,8 @@ namespace graphene { namespace chain {
       account_id_type account;
       asset debit_amount;
       account_id_type clearing_account;
-      share_type transaction_id;
-      optional<string> description;
+      string transaction_id;
+      optional<string> details;
 
       extensions_type extensions;
 
@@ -230,16 +230,16 @@ namespace graphene { namespace chain {
       explicit daspay_debit_account_operation(account_id_type payment_service_provider_account,
                                               public_key_type auth_key,
                                               account_id_type account, asset debit_amount,
-                                              account_id_type clearing_account, share_type transaction_id,
-                                              optional<string> description)
+                                              account_id_type clearing_account, string transaction_id,
+                                              optional<string> details)
               : payment_service_provider_account(payment_service_provider_account),
                 auth_key(auth_key),
                 account(account), debit_amount(debit_amount),
                 clearing_account(clearing_account), transaction_id(transaction_id),
-                description(description) {}
+                details(details) {}
 
       account_id_type fee_payer() const { return payment_service_provider_account; }
-      void validate() const {};
+      void validate() const;
       share_type calculate_fee(const fee_parameters_type&) const { return 0; }
       void get_required_authorities( vector<authority>& ra ) const
       {
@@ -366,7 +366,7 @@ FC_REFLECT( graphene::chain::daspay_debit_account_operation,
             (debit_amount)
             (clearing_account)
             (transaction_id)
-            (description)
+            (details)
             (extensions)
           )
 

@@ -118,6 +118,9 @@ namespace graphene { namespace chain {
 
     void_result do_evaluate( const daspay_debit_account_operation& op );
     void_result do_apply( const daspay_debit_account_operation& op );
+
+  private:
+    asset to_debit;
   };
 
   class daspay_credit_account_evaluator : public evaluator<daspay_credit_account_evaluator> {

@@ -30,6 +30,7 @@ namespace graphene { namespace chain {
 
   void set_daspay_transaction_ratio_operation::validate() const
   {
+    FC_ASSERT( fee.amount >= 0 );
     FC_ASSERT( debit_ratio >= 0 && debit_ratio < 10000 );
     FC_ASSERT( credit_ratio >= 0 && credit_ratio < 10000 );
   }
@@ -62,21 +63,33 @@ namespace graphene { namespace chain {
 
   void update_payment_service_provider_operation::validate() const
   {
-    FC_ASSERT( payment_service_provider_account != GRAPHENE_TEMP_ACCOUNT );
     FC_ASSERT( fee.amount >= 0 );
+    FC_ASSERT( payment_service_provider_account != GRAPHENE_TEMP_ACCOUNT );
     FC_ASSERT( payment_service_provider_account != account_id_type() );
     FC_ASSERT( !payment_service_provider_clearing_accounts.empty() );
   }
 
   void delete_payment_service_provider_operation::validate() const
   {
-    FC_ASSERT( payment_service_provider_account != GRAPHENE_TEMP_ACCOUNT );
     FC_ASSERT( fee.amount >= 0 );
+    FC_ASSERT( payment_service_provider_account != GRAPHENE_TEMP_ACCOUNT );
     FC_ASSERT( payment_service_provider_account != account_id_type() );
+  }
+
+  void daspay_debit_account_operation::validate() const
+  {
+    FC_ASSERT( fee.amount >= 0 );
+    FC_ASSERT( debit_amount.amount > 0, "Cannot debit 0 amount" );
+    FC_ASSERT( transaction_id.length() <= DASCOIN_MAX_COMMENT_LENGTH );
+    if (details.valid())
+    {
+      FC_ASSERT( details->length() <= DASCOIN_MAX_COMMENT_LENGTH );
+    }
   }
 
   void daspay_credit_account_operation::validate() const
   {
+    FC_ASSERT( fee.amount >= 0 );
     FC_ASSERT( amount.amount > 0, "Cannot credit 0 amount" );
     FC_ASSERT( transaction_id.length() <= DASCOIN_MAX_COMMENT_LENGTH );
     if (details.valid())

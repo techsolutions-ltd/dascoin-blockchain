@@ -1117,7 +1117,17 @@ public:
    { try {
       FC_ASSERT( !self.is_locked() );
 
+      daspay_debit_account_operation op;
+      op.payment_service_provider_account = get_account(payment_service_provider_account).id;
+      op.auth_key = auth_key;
+      op.account = get_account(user_account).id;
+      op.debit_amount = get_asset(asset_symbol).amount_from_string(asset_amount);
+      op.clearing_account = get_account(clearing_account).id;
+      op.transaction_id = transaction_id;
+      op.details = details;
+
       signed_transaction tx;
+      tx.operations.push_back(op);
       set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
       tx.validate();
 

@@ -93,7 +93,7 @@ namespace graphene { namespace chain {
   void daspay_credit_account_operation::validate() const
   {
     FC_ASSERT( fee.amount >= 0 );
-    FC_ASSERT( amount.amount > 0, "Cannot credit 0 amount" );
+    FC_ASSERT( credit_amount.amount > 0, "Cannot credit 0 amount" );
     FC_ASSERT( transaction_id.length() <= DASCOIN_MAX_COMMENT_LENGTH );
     if (details.valid())
     {

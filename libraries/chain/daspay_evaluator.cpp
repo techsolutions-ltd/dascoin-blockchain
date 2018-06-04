@@ -307,7 +307,7 @@ namespace graphene { namespace chain {
   { try {
     const auto& d = db();
 
-    FC_ASSERT( op.amount.asset_id == d.get_web_asset_id(), "Only webeur can be credited, ${a} sent", ("a", d.to_pretty_string(op.amount)) );
+    FC_ASSERT( op.credit_amount.asset_id == d.get_web_asset_id(), "Only webeur can be credited, ${a} sent", ("a", d.to_pretty_string(op.credit_amount)) );
 
     const auto& account = op.account(d);
     FC_ASSERT( account.is_wallet(), "Cannot credit vault account ${i}", ("i", op.account) );
@@ -322,7 +322,7 @@ namespace graphene { namespace chain {
 
     const auto& balance = d.get_balance(op.clearing_account, d.get_dascoin_asset_id());
     const auto& dgpo = d.get_dynamic_global_properties();
-    decltype(op.amount) tmp{op.amount};
+    decltype(op.credit_amount) tmp{op.credit_amount};
     tmp.amount += tmp.amount * dgpo.daspay_credit_transaction_ratio / 10000;
     to_credit = tmp * dgpo.last_dascoin_price;
 

@@ -257,7 +257,7 @@ namespace graphene { namespace chain {
 
       account_id_type payment_service_provider_account;
       account_id_type account;
-      asset amount;
+      asset credit_amount;
       account_id_type clearing_account;
       string transaction_id;
       optional<string> details;
@@ -268,13 +268,13 @@ namespace graphene { namespace chain {
       explicit daspay_credit_account_operation(
               const account_id_type& payment_service_provider_account,
               const account_id_type& account,
-              const asset& amount,
+              const asset& credit_amount,
               const account_id_type& clearing_account,
               const string& transaction_id,
               optional<string> details)
               : payment_service_provider_account(payment_service_provider_account),
                 account(account),
-                amount(amount),
+                credit_amount(credit_amount),
                 clearing_account(clearing_account),
                 transaction_id(transaction_id),
                 details(details) {}
@@ -375,7 +375,7 @@ FC_REFLECT( graphene::chain::daspay_credit_account_operation,
             (fee)
             (payment_service_provider_account)
             (account)
-            (amount)
+            (credit_amount)
             (clearing_account)
             (transaction_id)
             (details)

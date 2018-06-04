@@ -1806,14 +1806,34 @@ class wallet_api
        * @param broadcast                                               True to broadcast the transaction on the network.
        */
       signed_transaction daspay_debit_account(const string& payment_service_provider_account,
-                                      const public_key_type& auth_key,
-                                      const string& user_account,
-                                      const string& asset_amount,
-                                      const string& asset_symbol,
-                                      const string& clearing_account,
-                                      const string& transaction_id,
-                                      optional<string> details,
-                                      bool broadcast = false) const;
+                                              const public_key_type& auth_key,
+                                              const string& user_account,
+                                              const string& asset_amount,
+                                              const string& asset_symbol,
+                                              const string& clearing_account,
+                                              const string& transaction_id,
+                                              optional<string> details,
+                                              bool broadcast = false) const;
+
+      /**
+       * DasPay credit user account.
+       * @param payment_service_provider_account                        Account of payment service provider.
+       * @param user_account                                            User account to debit.
+       * @param asset_amount                                            Amount to debit (ie 12.50).
+       * @param asset_symbol                                            Symbol or id of the asset to debit.
+       * @param clearing_account                                        Payment service provider clearing account.
+       * @param transaction_id                                          Payment service provider transaction id.
+       * @param details                                                 Transaction details (optional).
+       * @param broadcast                                               True to broadcast the transaction on the network.
+       */
+      signed_transaction daspay_credit_account(const string& payment_service_provider_account,
+                                               const string& user_account,
+                                               const string& asset_amount,
+                                               const string& asset_symbol,
+                                               const string& clearing_account,
+                                               const string& transaction_id,
+                                               optional<string> details,
+                                               bool broadcast = false) const;
 
       //////////////////////////
       // REQUESTS:            //
@@ -2111,6 +2131,7 @@ FC_API( graphene::wallet::wallet_api,
         (reserve_asset_on_account)
         (unreserve_asset_on_account)
         (daspay_debit_account)
+        (daspay_credit_account)
 
         // Requests:
         (get_all_webasset_issue_requests)

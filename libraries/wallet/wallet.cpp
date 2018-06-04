@@ -1172,6 +1172,33 @@ public:
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (payment_service_provider_account)(auth_key)(user_account)(asset_amount)(asset_symbol)(clearing_account)(transaction_id)(details)(broadcast) ) }
 
+   signed_transaction daspay_credit_account(const string& payment_service_provider_account,
+                                            const string& user_account,
+                                            const string& asset_amount,
+                                            const string& asset_symbol,
+                                            const string& clearing_account,
+                                            const string& transaction_id,
+                                            optional<string> details,
+                                            bool broadcast = false)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      daspay_credit_account_operation op;
+      op.payment_service_provider_account = get_account(payment_service_provider_account).id;
+      op.account = get_account(user_account).id;
+      op.credit_amount = get_asset(asset_symbol).amount_from_string(asset_amount);
+      op.clearing_account = get_account(clearing_account).id;
+      op.transaction_id = transaction_id;
+      op.details = details;
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (payment_service_provider_account)(user_account)(asset_amount)(asset_symbol)(clearing_account)(transaction_id)(details)(broadcast) ) }
+
    signed_transaction tether_accounts(string wallet, string vault, bool broadcast = false)
    { try {
       FC_ASSERT( !self.is_locked() );
@@ -5200,6 +5227,18 @@ signed_transaction wallet_api::daspay_debit_account(const string& payment_servic
                                                     bool broadcast) const
 {
    return my->daspay_debit_account( payment_service_provider_account, auth_key, user_account, asset_amount, asset_symbol, clearing_account, transaction_id, details, broadcast );
+}
+
+signed_transaction wallet_api::daspay_credit_account(const string& payment_service_provider_account,
+                                                     const string& user_account,
+                                                     const string& asset_amount,
+                                                     const string& asset_symbol,
+                                                     const string& clearing_account,
+                                                     const string& transaction_id,
+                                                     optional<string> details,
+                                                     bool broadcast) const
+{
+   return my->daspay_credit_account( payment_service_provider_account, user_account, asset_amount, asset_symbol, clearing_account, transaction_id, details, broadcast );
 }
 
 signed_block_with_info::signed_block_with_info( const signed_block& block )

@@ -1776,6 +1776,24 @@ class wallet_api
       signed_transaction unregister_daspay_authority(const string& account, const string& payment_provider, bool broadcast = false) const;
 
       /**
+       * Reserve asset on account.
+       * @param account                                                 Account ID.
+       * @param asset_amount                                            Asset amount
+       * @param asset_symbol                                            Asset symbol
+       * @param broadcast                                               True to broadcast the transaction on the network.
+       */
+      signed_transaction reserve_asset_on_account(const string& account, const string& asset_amount, const string& asset_symbol, bool broadcast = false) const;
+
+      /**
+       * Unreserve asset on account.
+       * @param account                                                 Account ID.
+       * @param asset_amount                                            Asset amount
+       * @param asset_symbol                                            Asset symbol
+       * @param broadcast                                               True to broadcast the transaction on the network.
+       */
+      signed_transaction unreserve_asset_on_account(const string& account, const string& asset_amount, const string& asset_symbol, bool broadcast = false) const;
+
+      /**
        * DasPay debit user account.
        * @param payment_service_provider_account                        Account of payment service provider.
        * @param auth_key                                                Public key authorized for reserved assets on user account.
@@ -2090,6 +2108,8 @@ FC_API( graphene::wallet::wallet_api,
         (get_payment_service_providers)
         (register_daspay_authority)
         (unregister_daspay_authority)
+        (reserve_asset_on_account)
+        (unreserve_asset_on_account)
         (daspay_debit_account)
 
         // Requests:

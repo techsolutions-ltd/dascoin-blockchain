@@ -1105,6 +1105,44 @@ public:
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (account)(payment_provider) ) }
 
+   signed_transaction reserve_asset_on_account(const string& account, const string& asset_amount, const string& asset_symbol, bool broadcast = false)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      account_id_type account_id = get_account(account).id;
+
+      reserve_asset_on_account_operation reserve_op;
+
+      reserve_op.account = account_id;
+      reserve_op.asset_to_reserve = get_asset(asset_symbol).amount_from_string(asset_amount);
+
+      signed_transaction tx;
+      tx.operations.push_back(reserve_op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (account)(asset_amount)(asset_symbol) ) }
+
+   signed_transaction unreserve_asset_on_account(const string& account, const string& asset_amount, const string& asset_symbol, bool broadcast = false)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      account_id_type account_id = get_account(account).id;
+
+      unreserve_asset_on_account_operation unreserve_op;
+
+      unreserve_op.account = account_id;
+      unreserve_op.asset_to_unreserve = get_asset(asset_symbol).amount_from_string(asset_amount);
+
+      signed_transaction tx;
+      tx.operations.push_back(unreserve_op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (account)(asset_amount)(asset_symbol) ) }
+
    signed_transaction daspay_debit_account(const string& payment_service_provider_account,
                                            const public_key_type& auth_key,
                                            const string& user_account,
@@ -5133,6 +5171,22 @@ signed_transaction wallet_api::unregister_daspay_authority(const string& account
                                                            bool broadcast) const
 {
    return my->unregister_daspay_authority( account, payment_provider, broadcast );
+}
+
+signed_transaction wallet_api::reserve_asset_on_account(const string& account,
+                                                        const string& asset_amount,
+                                                        const string& asset_symbol,
+                                                        bool broadcast) const
+{
+   return my->reserve_asset_on_account( account, asset_amount, asset_symbol, broadcast );
+}
+
+signed_transaction wallet_api::unreserve_asset_on_account(const string& account,
+                                                          const string& asset_amount,
+                                                          const string& asset_symbol,
+                                                          bool broadcast) const
+{
+   return my->unreserve_asset_on_account( account, asset_amount, asset_symbol, broadcast );
 }
 
 signed_transaction wallet_api::daspay_debit_account(const string& payment_service_provider_account,

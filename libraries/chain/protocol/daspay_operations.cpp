@@ -37,6 +37,7 @@ namespace graphene { namespace chain {
 
   void register_daspay_authority_operation::validate() const
   {
+    FC_ASSERT( fee.amount >= 0 );
     if (memo.valid())
     {
       FC_ASSERT( memo->length() <= DASCOIN_MAX_COMMENT_LENGTH );
@@ -45,11 +46,13 @@ namespace graphene { namespace chain {
 
   void reserve_asset_on_account_operation::validate() const
   {
+    FC_ASSERT( fee.amount >= 0 );
     FC_ASSERT( asset_to_reserve.amount > 0, "Cannot reserve 0 amount" );
   }
 
   void unreserve_asset_on_account_operation::validate() const
   {
+    FC_ASSERT( fee.amount >= 0 );
     FC_ASSERT( asset_to_unreserve.amount > 0, "Cannot unreserve 0 amount" );
   }
 

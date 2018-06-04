@@ -281,7 +281,7 @@ namespace graphene { namespace chain {
                          it->payment_service_provider_clearing_accounts.end(),
                          op.clearing_account) != it->payment_service_provider_clearing_accounts.end(), "Invalid clearing account" );
 
-    const auto& balance = d.get_balance(op.clearing_account, d.get_dascoin_asset_id());
+    const auto& balance = d.get_balance(op.account, d.get_dascoin_asset_id());
     const auto& dgpo = d.get_dynamic_global_properties();
     decltype(op.debit_amount) tmp{op.debit_amount};
     tmp.amount += tmp.amount * dgpo.daspay_credit_transaction_ratio / 10000;
@@ -296,8 +296,8 @@ namespace graphene { namespace chain {
   { try {
     auto& d = db();
 
-    d.adjust_balance(op.account, asset{-to_debit.amount, to_debit.asset_id}, 0);
-    d.adjust_balance(op.clearing_account, asset{0, to_debit.asset_id}, to_debit.amount);
+    d.adjust_balance(op.account, asset{0, to_debit.asset_id}, -to_debit.amount);
+    d.adjust_balance(op.clearing_account, asset{to_debit.amount, to_debit.asset_id}, 0);
 
     return {};
 

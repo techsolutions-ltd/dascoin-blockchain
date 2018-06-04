@@ -1029,7 +1029,8 @@ public:
 
       op.authority = get_account(authority).id;
       op.payment_service_provider_account = get_account(payment_service_provider_account).id;
-      op.payment_service_provider_clearing_accounts = payment_service_provider_clearing_accounts;
+      for (const auto& acc : payment_service_provider_clearing_accounts)
+        op.payment_service_provider_clearing_accounts.emplace_back(get_account(acc).id);
 
       signed_transaction tx;
       tx.operations.push_back(op);
@@ -1047,7 +1048,8 @@ public:
 
       op.authority = get_account(authority).id;
       op.payment_service_provider_account = get_account(payment_service_provider_account).id;
-      op.payment_service_provider_clearing_accounts = payment_service_provider_clearing_accounts;
+      for (const auto& acc : payment_service_provider_clearing_accounts)
+        op.payment_service_provider_clearing_accounts.emplace_back(get_account(acc).id);
 
       signed_transaction tx;
       tx.operations.push_back(op);

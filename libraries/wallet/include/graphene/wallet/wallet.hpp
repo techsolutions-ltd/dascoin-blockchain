@@ -1835,6 +1835,13 @@ class wallet_api
                                                optional<string> details,
                                                bool broadcast = false) const;
 
+      /**
+       * Retrieve DasPay data for account
+       * @param account                                                 Account ID.
+       * @return An object containing daspay data of an account
+       */
+      optional<daspay_authority> get_daspay_authority_for_account(const string& account) const;
+
       //////////////////////////
       // REQUESTS:            //
       //////////////////////////
@@ -2132,6 +2139,7 @@ FC_API( graphene::wallet::wallet_api,
         (unreserve_asset_on_account)
         (daspay_debit_account)
         (daspay_credit_account)
+        (get_daspay_authority_for_account)
 
         // Requests:
         (get_all_webasset_issue_requests)

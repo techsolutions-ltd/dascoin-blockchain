@@ -5241,6 +5241,12 @@ signed_transaction wallet_api::daspay_credit_account(const string& payment_servi
    return my->daspay_credit_account( payment_service_provider_account, user_account, asset_amount, asset_symbol, clearing_account, transaction_id, details, broadcast );
 }
 
+optional<daspay_authority> wallet_api::get_daspay_authority_for_account(const string& account) const
+{
+    account_object account_obj = my->get_account(account);
+    return my->_remote_db->get_daspay_authority_for_account(account_obj.id);
+}
+
 signed_block_with_info::signed_block_with_info( const signed_block& block )
    : signed_block( block )
 {

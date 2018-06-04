@@ -1006,10 +1006,13 @@ public:
    signed_transaction set_daspay_transaction_ratio(const string& authority, share_type debit_ratio, share_type credit_ratio, bool broadcast = false)
    { try {
       FC_ASSERT( !self.is_locked() );
+
       set_daspay_transaction_ratio_operation op;
+
       op.authority = get_account(authority).id;
       op.debit_ratio = debit_ratio;
       op.debit_ratio = credit_ratio;
+
       signed_transaction tx;
       tx.operations.push_back(op);
       set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
@@ -1021,11 +1024,13 @@ public:
    signed_transaction create_payment_service_provider(const string& authority, const string& payment_service_provider_account, const vector<string>& payment_service_provider_clearing_accounts, bool broadcast = false)
    { try {
       FC_ASSERT( !self.is_locked() );
+
       create_payment_service_provider_operation op;
+
       op.authority = get_account(authority).id;
       op.payment_service_provider_account = get_account(payment_service_provider_account).id;
-      for (const auto& acc : payment_service_provider_clearing_accounts)
-        op.payment_service_provider_clearing_accounts.emplace_back(get_account(acc).id);
+      op.payment_service_provider_clearing_accounts = payment_service_provider_clearing_accounts;
+
       signed_transaction tx;
       tx.operations.push_back(op);
       set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
@@ -1037,11 +1042,13 @@ public:
    signed_transaction update_payment_service_provider(const string& authority, const string& payment_service_provider_account, const vector<string>& payment_service_provider_clearing_accounts, bool broadcast = false)
    { try {
       FC_ASSERT( !self.is_locked() );
+
       update_payment_service_provider_operation op;
+
       op.authority = get_account(authority).id;
       op.payment_service_provider_account = get_account(payment_service_provider_account).id;
-      for (const auto& acc : payment_service_provider_clearing_accounts)
-        op.payment_service_provider_clearing_accounts.emplace_back(get_account(acc).id);
+      op.payment_service_provider_clearing_accounts = payment_service_provider_clearing_accounts;
+
       signed_transaction tx;
       tx.operations.push_back(op);
       set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
@@ -1053,9 +1060,11 @@ public:
    signed_transaction delete_payment_service_provider(const string& authority, const string& payment_service_provider_account, bool broadcast = false)
    { try {
      FC_ASSERT( !self.is_locked() );
+
      delete_payment_service_provider_operation op;
      op.authority = get_account(authority).id;
      op.payment_service_provider_account = get_account(payment_service_provider_account).id;
+
      signed_transaction tx;
      tx.operations.push_back(op);
      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
@@ -1156,6 +1165,7 @@ public:
       FC_ASSERT( !self.is_locked() );
 
       daspay_debit_account_operation op;
+
       op.payment_service_provider_account = get_account(payment_service_provider_account).id;
       op.auth_key = auth_key;
       op.account = get_account(user_account).id;
@@ -1184,6 +1194,7 @@ public:
       FC_ASSERT( !self.is_locked() );
 
       daspay_credit_account_operation op;
+
       op.payment_service_provider_account = get_account(payment_service_provider_account).id;
       op.account = get_account(user_account).id;
       op.credit_amount = get_asset(asset_symbol).amount_from_string(asset_amount);

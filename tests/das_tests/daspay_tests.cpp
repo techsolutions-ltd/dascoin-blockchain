@@ -273,9 +273,13 @@ BOOST_AUTO_TEST_CASE( daspay_credit_test )
 
   transfer_dascoin_vault_to_wallet(bar_id, clearing_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
 
-  do_op(daspay_credit_account_operation(payment_id, foo_id, asset{1, db.get_web_asset_id()}, clearing_id, "", {}));
+  // Credit one web euro:
+  do_op(daspay_credit_account_operation(payment_id, foo_id, asset{1 * DASCOIN_FIAT_ASSET_PRECISION, db.get_web_asset_id()}, clearing_id, "", {}));
 
-  BOOST_CHECK ( get_reserved_balance(foo_id, get_dascoin_asset_id()) > 0 );
+  const auto& dgpo = db.get_dynamic_global_properties();
+  const auto& returned = asset{1 * DASCOIN_FIAT_ASSET_PRECISION, db.get_web_asset_id()} * dgpo.last_dascoin_price;
+
+  BOOST_CHECK_EQUAL( get_reserved_balance(foo_id, get_dascoin_asset_id()), returned.amount.value );
 
 } FC_LOG_AND_RETHROW() }
 

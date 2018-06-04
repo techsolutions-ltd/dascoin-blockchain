@@ -143,6 +143,13 @@ struct cycle_price
    frequency_type             frequency;
 };
 
+struct daspay_authority
+{
+   account_id_type            payment_provider;
+   public_key_type            daspay_public_key;
+   optional<string>           memo;
+};
+
 /**
  * @brief The database_api class implements the RPC API for the chain database.
  *
@@ -854,10 +861,16 @@ class database_api
       //////////////////////////
 
       /**
-      * @brief Get all clearing accounts for all payment service providers.
-      * @return List of payment service provider accounts with their respective clearing accounts.
-      */
+       * @brief Get all clearing accounts for all payment service providers.
+       * @return List of payment service provider accounts with their respective clearing accounts.
+       */
       vector<payment_service_provider_object> get_payment_service_providers() const;
+
+      /**
+       * @brief Get daspay authority data for a specified account
+       * @return daspay_authority structure (optional)
+       */
+      optional<daspay_authority> get_daspay_authority_for_account(account_id_type account) const;
 
    private:
       std::shared_ptr< database_api_impl > my;
@@ -873,6 +886,7 @@ FC_REFLECT( graphene::app::market_trade, (sequence)(date)(price)(amount)(value) 
 FC_REFLECT( graphene::app::agregated_limit_orders_with_same_price, (price)(base_volume)(quote_volume)(count) );
 FC_REFLECT( graphene::app::limit_orders_grouped_by_price, (buy)(sell) );
 FC_REFLECT( graphene::app::cycle_price, (cycle_amount)(asset_amount)(frequency) );
+FC_REFLECT( graphene::app::daspay_authority, (payment_provider)(daspay_public_key)(memo) );
 
 FC_API( graphene::app::database_api,
    // Objects
@@ -1012,5 +1026,5 @@ FC_API( graphene::app::database_api,
 
    // DasPay
    (get_payment_service_providers)
-
+   (get_daspay_authority_for_account)
 )

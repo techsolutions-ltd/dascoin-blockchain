@@ -298,7 +298,7 @@ namespace graphene { namespace chain {
     auto& d = db();
 
     d.adjust_balance(op.account, asset{0, to_debit.asset_id}, -to_debit.amount);
-    d.adjust_balance(op.clearing_account, asset{to_debit.amount, to_debit.asset_id}, 0);
+    d.adjust_balance(op.clearing_account, to_debit, 0);
 
     return {};
 

@@ -281,13 +281,14 @@ namespace graphene { namespace chain {
                          it->payment_service_provider_clearing_accounts.end(),
                          op.clearing_account) != it->payment_service_provider_clearing_accounts.end(), "Invalid clearing account" );
 
-    const auto& balance = d.get_balance(op.clearing_account, d.get_dascoin_asset_id());
+    const auto& balance = d.get_balance_object(op.account, d.get_dascoin_asset_id());
     const auto& dgpo = d.get_dynamic_global_properties();
     decltype(op.debit_amount) tmp{op.debit_amount};
     tmp.amount += tmp.amount * dgpo.daspay_credit_transaction_ratio / 10000;
     to_debit = tmp * dgpo.last_dascoin_price;
 
-    FC_ASSERT( to_debit <= balance, "Not enough balance on user account ${a}, left ${l}, needed ${n}", ("a", op.account)("l", d.to_pretty_string(balance))("n", d.to_pretty_string(to_debit)) );
+    const asset reserved{balance.reserved, d.get_dascoin_asset_id()};
+    FC_ASSERT( to_debit <= reserved, "Not enough reserved balance on user account ${a}, left ${l}, needed ${n}", ("a", op.account)("l", d.to_pretty_string(reserved))("n", d.to_pretty_string(to_debit)) );
 
     return {};
   } FC_CAPTURE_AND_RETHROW((op)) }
@@ -296,8 +297,8 @@ namespace graphene { namespace chain {
   { try {
     auto& d = db();
 
-    d.adjust_balance(op.account, asset{-to_debit.amount, to_debit.asset_id}, 0);
-    d.adjust_balance(op.clearing_account, asset{0, to_debit.asset_id}, to_debit.amount);
+    d.adjust_balance(op.account, asset{0, to_debit.asset_id}, -to_debit.amount);
+    d.adjust_balance(op.clearing_account, asset{to_debit.amount, to_debit.asset_id}, 0);
 
     return {};
 

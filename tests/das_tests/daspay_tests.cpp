@@ -324,9 +324,9 @@ BOOST_AUTO_TEST_CASE( daspay_debit_test )
   do_op(daspay_debit_account_operation(payment_id, pk, foo_id, asset{1 * DASCOIN_FIAT_ASSET_PRECISION, db.get_web_asset_id()}, clearing_id, "", {}));
 
   const auto& dgpo = db.get_dynamic_global_properties();
-  const auto& returned = asset{1 * DASCOIN_FIAT_ASSET_PRECISION, db.get_web_asset_id()} * dgpo.last_dascoin_price;
+  const auto& clearing_amount = asset{1 * DASCOIN_FIAT_ASSET_PRECISION, db.get_web_asset_id()} * dgpo.last_dascoin_price;
 
-  BOOST_CHECK_EQUAL( get_dascoin_balance(clearing_id), returned.amount.value );
+  BOOST_CHECK_EQUAL( get_dascoin_balance(clearing_id), clearing_amount.amount.value );
 
 } FC_LOG_AND_RETHROW() }
 
@@ -364,7 +364,10 @@ BOOST_AUTO_TEST_CASE( daspay_credit_test )
 
   vector<account_id_type> v{clearing_id};
   const auto& root_id = db.get_global_properties().authorities.daspay_administrator;
+  public_key_type pk = public_key_type(generate_private_key("foo").get_public_key());
+
   do_op(create_payment_service_provider_operation(root_id, payment_id, v));
+  do_op(register_daspay_authority_operation(foo_id, payment_id, pk, {}));
 
   // Fails: clearing account not found:
   GRAPHENE_REQUIRE_THROW( do_op(daspay_credit_account_operation(payment_id, foo_id, asset{1, db.get_web_asset_id()}, foo_id, "", {})), fc::exception );

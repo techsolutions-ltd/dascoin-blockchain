@@ -273,6 +273,13 @@ namespace graphene { namespace chain {
     const auto& account = op.account(d);
     FC_ASSERT( account.is_wallet(), "Cannot debit vault account ${i}", ("i", op.account) );
 
+    const auto& da_idx = d.get_index_type<daspay_authority_index>().indices().get<by_daspay_user>();
+    const auto& da_it = da_idx.find(op.account);
+
+    FC_ASSERT( da_it != da_idx.end(), "Cannot debit user who has not enabled daspay" );
+
+    FC_ASSERT( da_it->daspay_public_key == op.auth_key, "Trying to sign debit operation with the key user has not authorized" );
+
     const auto& idx = d.get_index_type<payment_service_provider_index>().indices().get<by_payment_service_provider>();
     const auto& it = idx.find(op.payment_service_provider_account);
     FC_ASSERT( it != idx.end(), "Payment service provider with account ${1} does not exist.", ("1", op.payment_service_provider_account) );
@@ -312,6 +319,11 @@ namespace graphene { namespace chain {
 
     const auto& account = op.account(d);
     FC_ASSERT( account.is_wallet(), "Cannot credit vault account ${i}", ("i", op.account) );
+
+    const auto& da_idx = d.get_index_type<daspay_authority_index>().indices().get<by_daspay_user>();
+    const auto& da_it = da_idx.find(op.account);
+
+    FC_ASSERT( da_it != da_idx.end(), "Cannot credit user who has not enabled daspay" );
 
     const auto& idx = d.get_index_type<payment_service_provider_index>().indices().get<by_payment_service_provider>();
     const auto& it = idx.find(op.payment_service_provider_account);

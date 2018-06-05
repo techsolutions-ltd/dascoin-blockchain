@@ -320,6 +320,11 @@ BOOST_AUTO_TEST_CASE( daspay_debit_test )
   transfer_dascoin_vault_to_wallet(bar_id, foo_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
   do_op(reserve_asset_on_account_operation(foo_id, asset{ 50 * DASCOIN_DEFAULT_ASSET_PRECISION, db.get_dascoin_asset_id() }));
 
+  public_key_type pk2 = public_key_type(generate_private_key("foo2").get_public_key());
+
+  // Fails: wrong key used:
+  GRAPHENE_REQUIRE_THROW( do_op(daspay_debit_account_operation(payment_id, pk2, foo_id, asset{1 * DASCOIN_FIAT_ASSET_PRECISION, db.get_web_asset_id()}, clearing_id, "", {})), fc::exception );
+
   // Debit one web euro:
   do_op(daspay_debit_account_operation(payment_id, pk, foo_id, asset{1 * DASCOIN_FIAT_ASSET_PRECISION, db.get_web_asset_id()}, clearing_id, "", {}));
 

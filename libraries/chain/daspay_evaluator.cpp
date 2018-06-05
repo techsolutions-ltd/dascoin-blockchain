@@ -268,7 +268,7 @@ namespace graphene { namespace chain {
   { try {
     const auto& d = db();
 
-    FC_ASSERT( op.debit_amount.asset_id == d.get_web_asset_id(), "Only dascoin can be debited, ${a} sent", ("a", d.to_pretty_string(op.debit_amount)) );
+    FC_ASSERT( op.debit_amount.asset_id == d.get_web_asset_id(), "Only web euro can be debited, ${a} sent", ("a", d.to_pretty_string(op.debit_amount)) );
 
     const auto& account = op.account(d);
     FC_ASSERT( account.is_wallet(), "Cannot debit vault account ${i}", ("i", op.account) );

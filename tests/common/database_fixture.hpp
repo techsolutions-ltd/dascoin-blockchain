@@ -371,6 +371,7 @@ struct database_fixture {
    void roll_back_public_keys(account_id_type authority, account_id_type account_id);
 
    // fix_daspay.cpp
+   vector<payment_service_provider_object> get_payment_service_providers() const;
 
    // fix_web_assets.cpp
    asset web_asset(share_type amount);

@@ -53,6 +53,50 @@ BOOST_AUTO_TEST_CASE( set_daspay_transaction_ratio_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( das_payment_service_provider_test )
+{ try {
+
+  // Check for empty payment service providers
+  BOOST_CHECK_EQUAL(get_payment_service_providers().size(), 0);
+
+  // Create two clearing accounts and one provider account
+  ACTORS((provideraccount)(clearingaccount1)(clearingaccount2));
+  vector<account_id_type> v;
+
+  // Require throw (empty clearing_accounts)
+  GRAPHENE_REQUIRE_THROW(do_op(create_payment_service_provider_operation(get_daspay_administrator_id(), provideraccount_id, v)), fc::exception );
+
+  v.emplace_back( clearingaccount1_id );
+  v.emplace_back( clearingaccount2_id );
+
+  // Require throw (wrong authority)
+  GRAPHENE_REQUIRE_THROW(do_op(create_payment_service_provider_operation(get_pi_validator_id(), provideraccount_id, v)), fc::exception );
+
+  // Payment service provider create
+  do_op(create_payment_service_provider_operation(get_daspay_administrator_id(), provideraccount_id, v));
+
+  // Check if providers size is 1
+  BOOST_CHECK_EQUAL(get_payment_service_providers().size(), 1);
+  FC_ASSERT(get_payment_service_providers()[0].payment_service_provider_account == provideraccount_id);
+  FC_ASSERT(get_payment_service_providers()[0].payment_service_provider_clearing_accounts == v);
+
+  // Payment service provider delete
+  do_op(delete_payment_service_provider_operation(get_daspay_administrator_id(), provideraccount_id));
+  BOOST_CHECK_EQUAL(get_payment_service_providers().size(), 0);
+
+  do_op(create_payment_service_provider_operation(get_daspay_administrator_id(), provideraccount_id, v));
+  BOOST_CHECK_EQUAL(get_payment_service_providers().size(), 1);
+
+  // Remove one clearing account
+  v.erase(std::remove(v.begin(), v.end(), clearingaccount2_id), v.end());
+  BOOST_CHECK_EQUAL(v.size(), 1);
+
+  // Payment service provider update (new clearing_accounts)
+  do_op(update_payment_service_provider_operation(get_daspay_administrator_id(), provideraccount_id, v));
+  FC_ASSERT(get_payment_service_providers()[0].payment_service_provider_clearing_accounts.size() == 1);
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_CASE( daspay_authority_index_test )
 { try {
   VAULT_ACTORS((foo)(bar));
@@ -223,6 +267,66 @@ BOOST_AUTO_TEST_CASE( unreserve_asset_on_account_test )
 
   BOOST_CHECK_EQUAL( get_balance(foo_id, get_dascoin_asset_id()), 60 * DASCOIN_DEFAULT_ASSET_PRECISION );
   BOOST_CHECK_EQUAL( get_reserved_balance(foo_id, get_dascoin_asset_id()), 40 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( daspay_debit_test )
+{ try {
+  ACTORS((foo)(clearing)(payment));
+  VAULT_ACTOR(bar);
+
+  tether_accounts(foo_id, bar_id);
+
+  auto lic_typ = *(_dal.get_license_type("standard_charter"));
+
+  do_op(issue_license_operation(get_license_issuer_id(), bar_id, lic_typ.id,
+                                10, 200, db.head_block_time()));
+
+  toggle_reward_queue(true);
+  generate_blocks(db.head_block_time() + fc::seconds(get_chain_parameters().reward_interval_time_seconds));
+  db.adjust_balance_limit(bar, get_dascoin_asset_id(), 1000 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+  // Generate some coins:
+  adjust_dascoin_reward(500 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  adjust_frequency(200);
+
+  // Wait for the cycles to be distributed:
+  generate_blocks(db.head_block_time() + fc::seconds(get_chain_parameters().reward_interval_time_seconds));
+
+  public_key_type pk = public_key_type(generate_private_key("foo").get_public_key());
+  vector<account_id_type> v{clearing_id};
+
+  // Fails: cannot debit 0 amount
+  GRAPHENE_REQUIRE_THROW( do_op(daspay_debit_account_operation(payment_id, pk, foo_id, asset{0, db.get_dascoin_asset_id()}, clearing_id, "", {})), fc::exception );
+
+  // Fails: only dasc can be used to credit:
+  GRAPHENE_REQUIRE_THROW( do_op(daspay_debit_account_operation(payment_id, pk, foo_id, asset{0, db.get_web_asset_id()}, clearing_id, "", {})), fc::exception );
+
+  // Fails: service provider not found:
+  GRAPHENE_REQUIRE_THROW( do_op(daspay_debit_account_operation(bar_id, pk, foo_id, asset{0, db.get_dascoin_asset_id()}, clearing_id, "", {})), fc::exception );
+
+  do_op(create_payment_service_provider_operation(get_daspay_administrator_id(), payment_id, v));
+  do_op(register_daspay_authority_operation(foo_id, payment_id, pk, {}));
+
+  // Fails: clearing account not found:
+  GRAPHENE_REQUIRE_THROW( do_op(daspay_debit_account_operation(payment_id, pk, foo_id, asset{1, db.get_dascoin_asset_id()}, foo_id, "", {})), fc::exception );
+
+  // Fails: cannot debit vault account:
+  GRAPHENE_REQUIRE_THROW( do_op(daspay_debit_account_operation(payment_id, pk, bar_id, asset{1, db.get_dascoin_asset_id()}, clearing_id, "", {})), fc::exception );
+
+  // Fails: no funds on user account:
+  GRAPHENE_REQUIRE_THROW( do_op(daspay_debit_account_operation(payment_id, pk, foo_id, asset{1, db.get_dascoin_asset_id()}, clearing_id, "", {})), fc::exception );
+
+  transfer_dascoin_vault_to_wallet(bar_id, foo_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  do_op(reserve_asset_on_account_operation(foo_id, asset{ 50 * DASCOIN_DEFAULT_ASSET_PRECISION, db.get_dascoin_asset_id() }));
+
+  // Debit one web euro:
+  do_op(daspay_debit_account_operation(payment_id, pk, foo_id, asset{1 * DASCOIN_FIAT_ASSET_PRECISION, db.get_web_asset_id()}, clearing_id, "", {}));
+
+  const auto& dgpo = db.get_dynamic_global_properties();
+  const auto& returned = asset{1 * DASCOIN_FIAT_ASSET_PRECISION, db.get_web_asset_id()} * dgpo.last_dascoin_price;
+
+  BOOST_CHECK_EQUAL( get_dascoin_balance(clearing_id), returned.amount.value );
 
 } FC_LOG_AND_RETHROW() }
 

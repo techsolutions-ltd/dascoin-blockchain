@@ -306,16 +306,20 @@ BOOST_AUTO_TEST_CASE( daspay_debit_test )
   GRAPHENE_REQUIRE_THROW( do_op(daspay_debit_account_operation(bar_id, pk, foo_id, asset{0, db.get_dascoin_asset_id()}, clearing_id, "", {})), fc::exception );
 
   do_op(create_payment_service_provider_operation(get_daspay_administrator_id(), payment_id, v));
+
+  // Fails: user has not enabled daspay:
+  GRAPHENE_REQUIRE_THROW( do_op(daspay_debit_account_operation(payment_id, pk, foo_id, asset{1, db.get_web_asset_id()}, clearing_id, "", {})), fc::exception );
+
   do_op(register_daspay_authority_operation(foo_id, payment_id, pk, {}));
 
   // Fails: clearing account not found:
-  GRAPHENE_REQUIRE_THROW( do_op(daspay_debit_account_operation(payment_id, pk, foo_id, asset{1, db.get_dascoin_asset_id()}, foo_id, "", {})), fc::exception );
+  GRAPHENE_REQUIRE_THROW( do_op(daspay_debit_account_operation(payment_id, pk, foo_id, asset{1, db.get_web_asset_id()}, foo_id, "", {})), fc::exception );
 
   // Fails: cannot debit vault account:
-  GRAPHENE_REQUIRE_THROW( do_op(daspay_debit_account_operation(payment_id, pk, bar_id, asset{1, db.get_dascoin_asset_id()}, clearing_id, "", {})), fc::exception );
+  GRAPHENE_REQUIRE_THROW( do_op(daspay_debit_account_operation(payment_id, pk, bar_id, asset{1, db.get_web_asset_id()}, clearing_id, "", {})), fc::exception );
 
   // Fails: no funds on user account:
-  GRAPHENE_REQUIRE_THROW( do_op(daspay_debit_account_operation(payment_id, pk, foo_id, asset{1, db.get_dascoin_asset_id()}, clearing_id, "", {})), fc::exception );
+  GRAPHENE_REQUIRE_THROW( do_op(daspay_debit_account_operation(payment_id, pk, foo_id, asset{1, db.get_web_asset_id()}, clearing_id, "", {})), fc::exception );
 
   transfer_dascoin_vault_to_wallet(bar_id, foo_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
   do_op(reserve_asset_on_account_operation(foo_id, asset{ 50 * DASCOIN_DEFAULT_ASSET_PRECISION, db.get_dascoin_asset_id() }));

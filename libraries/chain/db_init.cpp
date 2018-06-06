@@ -584,7 +584,16 @@ void database::init_genesis(const genesis_state_type& genesis_state)
 
    // Create global properties
    create<global_property_object>([&](global_property_object& p) {
+       auto fee_schedule_temp = fee_schedule::get_default();
        p.parameters = genesis_state.initial_parameters;
+       for(auto param : fee_schedule_temp.parameters)
+       {
+          if( p.parameters.current_fees->parameters.find(param) == p.parameters.current_fees->parameters.end() )
+          {
+             p.parameters.current_fees->parameters.insert(param);
+          }
+       }
+
        // Set fees to zero initially, so that genesis initialization needs not pay them
        // We'll fix it at the end of the function
        p.parameters.current_fees->zero_all_fees();

@@ -26,8 +26,8 @@
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/access_layer.hpp>
 #include <graphene/chain/exceptions.hpp>
-#include "../common/database_fixture.hpp"
 #include <graphene/chain/daspay_object.hpp>
+#include "../common/database_fixture.hpp"
 
 using namespace graphene::chain;
 using namespace graphene::chain::test;
@@ -321,21 +321,29 @@ BOOST_AUTO_TEST_CASE( daspay_debit_test )
   // Fails: no funds on user account:
   GRAPHENE_REQUIRE_THROW( do_op(daspay_debit_account_operation(payment_id, pk, foo_id, asset{1, db.get_web_asset_id()}, clearing_id, "", {})), fc::exception );
 
-  transfer_dascoin_vault_to_wallet(bar_id, foo_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
-  do_op(reserve_asset_on_account_operation(foo_id, asset{ 50 * DASCOIN_DEFAULT_ASSET_PRECISION, db.get_dascoin_asset_id() }));
+  transfer_dascoin_vault_to_wallet(bar_id, foo_id, 200 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  do_op(reserve_asset_on_account_operation(foo_id, asset{ 200 * DASCOIN_DEFAULT_ASSET_PRECISION, db.get_dascoin_asset_id() }));
 
   public_key_type pk2 = public_key_type(generate_private_key("foo2").get_public_key());
 
   // Fails: wrong key used:
   GRAPHENE_REQUIRE_THROW( do_op(daspay_debit_account_operation(payment_id, pk2, foo_id, asset{1 * DASCOIN_FIAT_ASSET_PRECISION, db.get_web_asset_id()}, clearing_id, "", {})), fc::exception );
 
+  // Set debit transaction ratio to 2.0%
+  do_op(set_daspay_transaction_ratio_operation(get_daspay_administrator_id(), 200, 0));
+
+  // Set price to 1we -> 100dasc
+  set_last_dascoin_price(asset(100 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()) / asset(1 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()));
+
   // Debit one web euro:
   do_op(daspay_debit_account_operation(payment_id, pk, foo_id, asset{1 * DASCOIN_FIAT_ASSET_PRECISION, db.get_web_asset_id()}, clearing_id, "", {}));
 
   const auto& dgpo = db.get_dynamic_global_properties();
-  const auto& clearing_amount = asset{1 * DASCOIN_FIAT_ASSET_PRECISION, db.get_web_asset_id()} * dgpo.last_dascoin_price;
+  share_type debit_amount_with_fee = 1 * DASCOIN_FIAT_ASSET_PRECISION;
+  debit_amount_with_fee += debit_amount_with_fee * db.get_dynamic_global_properties().daspay_debit_transaction_ratio / 10000;
+  const auto& debit_amount = asset{debit_amount_with_fee, db.get_web_asset_id()} * dgpo.last_dascoin_price;
 
-  BOOST_CHECK_EQUAL( get_dascoin_balance(clearing_id), clearing_amount.amount.value );
+  BOOST_CHECK_EQUAL( get_dascoin_balance(clearing_id), debit_amount.amount.value );
 
 } FC_LOG_AND_RETHROW() }
 
@@ -387,15 +395,23 @@ BOOST_AUTO_TEST_CASE( daspay_credit_test )
   // Fails: no funds on clearing account:
   GRAPHENE_REQUIRE_THROW( do_op(daspay_credit_account_operation(payment_id, foo_id, asset{1, db.get_web_asset_id()}, clearing_id, "", {})), fc::exception );
 
-  transfer_dascoin_vault_to_wallet(bar_id, clearing_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  transfer_dascoin_vault_to_wallet(bar_id, clearing_id, 200 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+  // Set credit transaction ratio to 2.0%
+  do_op(set_daspay_transaction_ratio_operation(get_daspay_administrator_id(), 0, 200));
+
+  // Set price to 1we -> 100dasc
+  set_last_dascoin_price(asset(100 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()) / asset(1 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()));
 
   // Credit one web euro:
   do_op(daspay_credit_account_operation(payment_id, foo_id, asset{1 * DASCOIN_FIAT_ASSET_PRECISION, db.get_web_asset_id()}, clearing_id, "", {}));
 
   const auto& dgpo = db.get_dynamic_global_properties();
-  const auto& returned = asset{1 * DASCOIN_FIAT_ASSET_PRECISION, db.get_web_asset_id()} * dgpo.last_dascoin_price;
+  share_type credit_amount_with_fee = 1 * DASCOIN_FIAT_ASSET_PRECISION;
+  credit_amount_with_fee += credit_amount_with_fee * db.get_dynamic_global_properties().daspay_credit_transaction_ratio / 10000;
+  const auto& credit_amount = asset{credit_amount_with_fee, db.get_web_asset_id()} * dgpo.last_dascoin_price;
 
-  BOOST_CHECK_EQUAL( get_reserved_balance(foo_id, get_dascoin_asset_id()), returned.amount.value );
+  BOOST_CHECK_EQUAL( get_reserved_balance(foo_id, get_dascoin_asset_id()), credit_amount.amount.value );
 
 } FC_LOG_AND_RETHROW() }
 

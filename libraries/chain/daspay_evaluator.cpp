@@ -291,7 +291,7 @@ namespace graphene { namespace chain {
     const auto& balance = d.get_balance_object(op.account, d.get_dascoin_asset_id());
     const auto& dgpo = d.get_dynamic_global_properties();
     decltype(op.debit_amount) tmp{op.debit_amount};
-    tmp.amount += tmp.amount * dgpo.daspay_credit_transaction_ratio / 10000;
+    tmp.amount += tmp.amount * dgpo.daspay_debit_transaction_ratio / 10000;
     to_debit = tmp * dgpo.last_dascoin_price;
 
     const asset reserved{balance.reserved, d.get_dascoin_asset_id()};

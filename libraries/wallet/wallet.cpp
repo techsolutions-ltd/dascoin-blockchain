@@ -726,6 +726,12 @@ public:
       std::copy(owner_keys.begin(), owner_keys.end(), std::inserter(all_keys_for_account, all_keys_for_account.end()));
       all_keys_for_account.insert(account.options.memo_key);
 
+      optional<daspay_authority> daspay_auth = _remote_db->get_daspay_authority_for_account( account.id );
+      if (daspay_auth.valid())
+      {
+          all_keys_for_account.insert(daspay_auth->daspay_public_key);
+      }
+
       _keys[wif_pub_key] = wif_key;
 
       _wallet.update_account(account);

@@ -328,6 +328,8 @@ namespace graphene { namespace chain {
    class wire_out_with_fee_holder_object;
    class daspay_authority_object;
    class payment_service_provider_object;
+   class das33_project_object;
+   class das33_cycles_pledge_holder_object;
 
    typedef object_id< implementation_ids, impl_global_property_object_type,  global_property_object>                    global_property_id_type;
    typedef object_id< implementation_ids, impl_dynamic_global_property_object_type,  dynamic_global_property_object>    dynamic_global_property_id_type;

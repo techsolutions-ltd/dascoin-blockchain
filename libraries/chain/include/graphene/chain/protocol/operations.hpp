@@ -45,6 +45,7 @@
 #include <graphene/chain/protocol/worker.hpp>
 #include <graphene/chain/protocol/fee_operations.hpp>
 #include <graphene/chain/protocol/daspay_operations.hpp>
+#include <graphene/chain/protocol/das33_operations.hpp>
 
 namespace graphene { namespace chain {
 
@@ -187,6 +188,8 @@ namespace graphene { namespace chain {
             unreserve_asset_on_account_operation,
             daspay_debit_account_operation,
             daspay_credit_account_operation,
+
+            das33_pledge_cycles_operation,
 
             // Virtual operations below this point:
 

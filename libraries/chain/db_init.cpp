@@ -54,6 +54,7 @@
 #include <graphene/chain/witness_schedule_object.hpp>
 #include <graphene/chain/worker_object.hpp>
 #include <graphene/chain/daspay_object.hpp>
+#include <graphene/chain/das33_object.hpp>
 
 #include <graphene/chain/account_evaluator.hpp>
 #include <graphene/chain/asset_evaluator.hpp>
@@ -76,6 +77,7 @@
 #include <graphene/chain/worker_evaluator.hpp>
 #include <graphene/chain/change_fee_evaluator.hpp>
 #include <graphene/chain/daspay_evaluator.hpp>
+#include <graphene/chain/das33_evaluator.hpp>
 
 #include <graphene/chain/protocol/fee_schedule.hpp>
 
@@ -282,6 +284,7 @@ void database::initialize_evaluators()
    register_evaluator<unreserve_asset_on_account_evaluator>();
    register_evaluator<daspay_debit_account_evaluator>();
    register_evaluator<daspay_credit_account_evaluator>();
+   register_evaluator<das33_pledge_cycles_evaluator>();
 }
 
 void database::initialize_indexes()

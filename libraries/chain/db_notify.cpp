@@ -495,6 +495,12 @@ struct get_impacted_account_visitor
      _impacted.insert(op.issuer);
      _impacted.insert(op.account);
    }
+
+   void operator() (const das33_pledge_cycles_operation& op)
+   {
+     _impacted.insert(op.vault_id);
+   }
+
 };
 
 void operation_get_impacted_accounts( const operation& op, flat_set<account_id_type>& result )
@@ -677,6 +683,8 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
            case impl_payment_service_provider_object_type:
              break;
            case impl_daspay_authority_object_type:
+             break;
+           case impl_das33_project_object_type:
              break;
       }
    }

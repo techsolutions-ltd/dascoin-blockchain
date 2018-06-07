@@ -66,6 +66,7 @@ add_library( graphene_chain
              protocol/wire_out_with_fee.cpp
              protocol/cycle.cpp
              protocol/daspay_operations.cpp
+             protocol/das33_operations.cpp
 
              genesis_state.cpp
              get_config.cpp
@@ -115,6 +116,8 @@ add_library( graphene_chain
              access_layer.cpp
 
              daspay_evaluator.cpp
+             das33_evaluator.cpp
+
              ${HEADERS}
              "${CMAKE_CURRENT_BINARY_DIR}/include/graphene/chain/hardfork.hpp"
            )

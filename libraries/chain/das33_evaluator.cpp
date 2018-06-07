@@ -22,21 +22,25 @@
  * SOFTWARE.
  */
 
-#pragma once
-
-#include <graphene/chain/evaluator.hpp>
-#include <graphene/chain/protocol/das33_operations.hpp>
-#include <graphene/chain/das33_object.hpp>
+#include <graphene/chain/das33_evaluator.hpp>
+#include <graphene/chain/database.hpp>
 
 namespace graphene { namespace chain {
 
-  class das33_pledge_cycles_evaluator : public evaluator<das33_pledge_cycles_evaluator>
-  {
-  public:
-    typedef das33_pledge_cycles_operation operation_type;
+  void_result das33_pledge_cycles_evaluator::do_evaluate(const das33_pledge_cycles_operation& op)
+  { try {
 
-    void_result do_evaluate( const operation_type& op );
-    void_result do_apply( const operation_type& op );
-  };
+      FC_ASSERT( false, "Not implemented" );
+      return {};
+
+    } FC_CAPTURE_AND_RETHROW((op)) }
+
+  void_result das33_pledge_cycles_evaluator::do_apply(const das33_pledge_cycles_operation& op)
+  { try {
+
+    FC_ASSERT( false, "Not implemented" );
+    return {};
+
+  } FC_CAPTURE_AND_RETHROW((op)) }
 
 } }  // namespace graphene::chain

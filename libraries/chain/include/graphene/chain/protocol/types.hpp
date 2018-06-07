@@ -260,7 +260,8 @@ namespace graphene { namespace chain {
       impl_witness_delegate_data_colection_object_type,
       impl_wire_out_with_fee_holder_object_type,
       impl_daspay_authority_object_type,
-      impl_payment_service_provider_object_type
+      impl_payment_service_provider_object_type,
+      impl_das33_project_object_type
    };
 
    //typedef fc::unsigned_int            object_id_type;
@@ -394,6 +395,10 @@ namespace graphene { namespace chain {
    typedef object_id<
          implementation_ids, impl_witness_delegate_data_colection_object_type, witness_delegate_data_colection_type
       > witness_delegate_data_colection_id_type;
+
+   typedef object_id<
+         implementation_ids, impl_das33_project_object_type, das33_project_object
+      > das33_project_id_type;
 
    typedef fc::array<char, GRAPHENE_MAX_ASSET_SYMBOL_LENGTH>    symbol_type;
    typedef fc::ripemd160                                        block_id_type;
@@ -536,7 +541,7 @@ REFLECT_ENUM_CHECK( graphene::chain::chain_authority_kind,
                     (pi_validator)
                     (wire_out_handler)
                     (root_administrator)
-		    (daspay_administrator)
+                    (daspay_administrator)
                     (CHAIN_AUTHORITY_KIND_COUNT)
                   )
 
@@ -611,6 +616,7 @@ FC_REFLECT_ENUM( graphene::chain::impl_object_type,
                  (impl_wire_out_with_fee_holder_object_type)
                  (impl_daspay_authority_object_type)
                  (impl_payment_service_provider_object_type)
+                 (impl_das33_project_object_type)
                )
 
 FC_REFLECT_TYPENAME( graphene::chain::share_type )
@@ -655,6 +661,7 @@ FC_REFLECT_TYPENAME( graphene::chain::frequency_history_record_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::witness_delegate_data_colection_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::wire_out_with_fee_holder_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::payment_service_provider_id_type )
+FC_REFLECT_TYPENAME( graphene::chain::das33_project_id_type )
 
 FC_REFLECT( graphene::chain::void_t, )
 

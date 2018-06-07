@@ -22,21 +22,15 @@
  * SOFTWARE.
  */
 
-#pragma once
-
-#include <graphene/chain/evaluator.hpp>
 #include <graphene/chain/protocol/das33_operations.hpp>
-#include <graphene/chain/das33_object.hpp>
+
+// TODO: blacklist operation
 
 namespace graphene { namespace chain {
 
-  class das33_pledge_cycles_evaluator : public evaluator<das33_pledge_cycles_evaluator>
+  void das33_pledge_cycles_operation::validate() const
   {
-  public:
-    typedef das33_pledge_cycles_operation operation_type;
+    FC_ASSERT( fee.amount >= 0 );
+  }
 
-    void_result do_evaluate( const operation_type& op );
-    void_result do_apply( const operation_type& op );
-  };
-
-} }  // namespace graphene::chain
+} } // namespace graphene::chain

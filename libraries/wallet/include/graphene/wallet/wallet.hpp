@@ -1840,7 +1840,7 @@ class wallet_api
        * @param account                                                 Account ID.
        * @return An object containing daspay data of an account
        */
-      optional<daspay_authority> get_daspay_authority_for_account(const string& account) const;
+      optional<vector<daspay_authority>> get_daspay_authority_for_account(const string& account) const;
 
       //////////////////////////
       // REQUESTS:            //

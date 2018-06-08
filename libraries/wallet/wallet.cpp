@@ -726,10 +726,10 @@ public:
       std::copy(owner_keys.begin(), owner_keys.end(), std::inserter(all_keys_for_account, all_keys_for_account.end()));
       all_keys_for_account.insert(account.options.memo_key);
 
-      optional<daspay_authority> daspay_auth = _remote_db->get_daspay_authority_for_account( account.id );
+      optional<vector<daspay_authority>> daspay_auth = _remote_db->get_daspay_authority_for_account( account.id );
       if (daspay_auth.valid())
       {
-          all_keys_for_account.insert(daspay_auth->daspay_public_key);
+          std::transform(daspay_auth->begin(), daspay_auth->end(), std::inserter(all_keys_for_account, all_keys_for_account.end()), [](const daspay_authority& da) { return da.daspay_public_key; });
       }
 
       _keys[wif_pub_key] = wif_key;
@@ -5260,7 +5260,7 @@ signed_transaction wallet_api::daspay_credit_account(const string& payment_servi
    return my->daspay_credit_account( payment_service_provider_account, user_account, asset_amount, asset_symbol, clearing_account, transaction_id, details, broadcast );
 }
 
-optional<daspay_authority> wallet_api::get_daspay_authority_for_account(const string& account) const
+optional<vector<daspay_authority>> wallet_api::get_daspay_authority_for_account(const string& account) const
 {
     account_object account_obj = my->get_account(account);
     return my->_remote_db->get_daspay_authority_for_account(account_obj.id);

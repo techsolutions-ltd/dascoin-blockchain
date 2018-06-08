@@ -402,6 +402,8 @@ namespace graphene { namespace app {
                   break;
                  case impl_das33_project_object_type:
                   break;
+                 case impl_das33_cycles_pledge_holder_object_type:
+                  break;
           }
        }
        return result;

@@ -30,29 +30,29 @@ namespace graphene { namespace chain {
 
     struct das33_pledge_cycles_operation : public base_operation
     {
-        struct fee_parameters_type {};
-        asset fee;
+      struct fee_parameters_type {};
+      asset fee;
 
-        account_id_type        vault_id;
-        license_type_id_type   license_id;
-        share_type             cycles_amount;
-        das33_project_id_type  project_id;
-        extensions_type        extensions;
+      account_id_type        vault_id;
+      license_type_id_type   license_id;
+      share_type             cycles_amount;
+      das33_project_id_type  project_id;
+      extensions_type        extensions;
 
-        das33_pledge_cycles_operation() = default;
+      das33_pledge_cycles_operation() = default;
 
-        explicit das33_pledge_cycles_operation(const account_id_type& vault_id,
-                                               const license_type_id_type& license_id,
-                                               share_type cycles_amount,
-                                               const das33_project_id_type& project_id)
-                : vault_id(vault_id)
-                , license_id(license_id)
-                , cycles_amount(cycles_amount)
-                , project_id(project_id) {}
+      explicit das33_pledge_cycles_operation(const account_id_type& vault_id,
+                                             const license_type_id_type& license_id,
+                                             share_type cycles_amount,
+                                             const das33_project_id_type& project_id)
+              : vault_id(vault_id)
+              , license_id(license_id)
+              , cycles_amount(cycles_amount)
+              , project_id(project_id) {}
 
-        account_id_type fee_payer() const { return vault_id; }
-        void validate() const;
-        share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+      account_id_type fee_payer() const { return vault_id; }
+      void validate() const;
+      share_type calculate_fee(const fee_parameters_type&) const { return 0; }
     };
 
 } }  // namespace graphene::chain

@@ -36,7 +36,10 @@ namespace graphene { namespace chain {
     typedef das33_pledge_cycles_operation operation_type;
 
     void_result do_evaluate( const operation_type& op );
-    void_result do_apply( const operation_type& op );
+    object_id_type do_apply( const operation_type& op );
+
+    const asset_dynamic_data_object* asset_dyn_data_ = nullptr;
+    const account_balance_object*    from_balance_obj_ = nullptr;
   };
 
 } }  // namespace graphene::chain

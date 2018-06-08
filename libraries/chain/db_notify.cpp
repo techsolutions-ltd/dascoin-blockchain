@@ -686,6 +686,8 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
              break;
            case impl_das33_project_object_type:
              break;
+           case impl_das33_cycles_pledge_holder_object_type:
+               break;
       }
    }
 }

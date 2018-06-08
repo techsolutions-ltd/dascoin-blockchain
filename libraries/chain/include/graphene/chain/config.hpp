@@ -293,3 +293,14 @@
 ///@{
 #define DASCOIN_DEFAULT_STARTING_CYCLE_ASSET_AMOUNT (100)
 ///@}
+
+
+/**
+ * Daspay parameters:
+ */
+///@{
+#define DASPAY_DEFAULT_CLEARING_ENABLED  (false) ///< by default off
+#define DASPAY_DEFAULT_CLEARING_INTERVAL_TIME_SECONDS (300) ///< in seconds
+#define DASPAY_DEFAULT_CLEARING_COLLATERAL_DASC (0 * DASCOIN_DEFAULT_ASSET_PRECISION) ///< by default set to 0
+#define DASPAY_DEFAULT_CLEARING_COLLATERAL_WEBEUR (0 * DASCOIN_FIAT_ASSET_PRECISION) ///< by default set to 0
+///@}

@@ -55,6 +55,15 @@ namespace graphene { namespace chain {
          vector<committee_member_id_type>   active_committee_members; // updated once per maintenance interval
          flat_set<witness_id_type>          active_witnesses; // updated once per maintenance interval
          // n.b. witness scheduling is done by witness_schedule object
+
+         struct daspay
+         {
+           bool clearing_enabled = DASPAY_DEFAULT_CLEARING_ENABLED; ///< by default off
+           uint32_t clearing_interval_time_seconds = DASPAY_DEFAULT_CLEARING_INTERVAL_TIME_SECONDS; ///< in seconds
+           share_type collateral_dascoin = DASPAY_DEFAULT_CLEARING_COLLATERAL_DASC; ///< by default set to 0
+           share_type collateral_webeur = DASPAY_DEFAULT_CLEARING_COLLATERAL_WEBEUR; ///< by default set to 0
+         };
+         daspay daspay_parameters;
    };
 
    /**
@@ -138,6 +147,7 @@ namespace graphene { namespace chain {
           */
          share_type daspay_debit_transaction_ratio = 0;
          share_type daspay_credit_transaction_ratio = 0;
+         time_point_sec daspay_clearing_interval_time = fc::time_point_sec();
 
 
          /**
@@ -218,6 +228,7 @@ FC_REFLECT_DERIVED( graphene::chain::dynamic_global_property_object, (graphene::
                     (frequency)
                     (daspay_debit_transaction_ratio)
                     (daspay_credit_transaction_ratio)
+                    (daspay_clearing_interval_time)
                     (dynamic_flags)
                     (last_irreversible_block_num)
                     (next_dascoin_reward_time)
@@ -227,6 +238,13 @@ FC_REFLECT_DERIVED( graphene::chain::dynamic_global_property_object, (graphene::
                     (fee_pool_account_id)
                   )
 
+FC_REFLECT( graphene::chain::global_property_object::daspay,
+            (clearing_enabled)
+            (clearing_interval_time_seconds)
+            (collateral_dascoin)
+            (collateral_webeur)
+          )
+
 FC_REFLECT_DERIVED( graphene::chain::global_property_object, (graphene::db::object),
                     (parameters)
                     (pending_parameters)
@@ -234,4 +252,5 @@ FC_REFLECT_DERIVED( graphene::chain::global_property_object, (graphene::db::obje
                     (active_committee_members)
                     (authorities)
                     (active_witnesses)
+                    (daspay_parameters)
                   )

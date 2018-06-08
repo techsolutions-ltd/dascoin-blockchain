@@ -147,7 +147,7 @@ namespace graphene { namespace chain {
           */
          share_type daspay_debit_transaction_ratio = 0;
          share_type daspay_credit_transaction_ratio = 0;
-         time_point_sec daspay_clearing_interval_time = fc::time_point_sec();
+         time_point_sec daspay_next_clearing_time = fc::time_point_sec();
 
 
          /**
@@ -228,7 +228,7 @@ FC_REFLECT_DERIVED( graphene::chain::dynamic_global_property_object, (graphene::
                     (frequency)
                     (daspay_debit_transaction_ratio)
                     (daspay_credit_transaction_ratio)
-                    (daspay_clearing_interval_time)
+                    (daspay_next_clearing_time)
                     (dynamic_flags)
                     (last_irreversible_block_num)
                     (next_dascoin_reward_time)

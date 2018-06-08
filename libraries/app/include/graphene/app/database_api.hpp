@@ -870,7 +870,7 @@ class database_api
        * @brief Get daspay authority data for a specified account
        * @return daspay_authority structure (optional)
        */
-      optional<daspay_authority> get_daspay_authority_for_account(account_id_type account) const;
+      optional<vector<daspay_authority>> get_daspay_authority_for_account(account_id_type account) const;
 
    private:
       std::shared_ptr< database_api_impl > my;

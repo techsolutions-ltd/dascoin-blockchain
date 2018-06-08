@@ -190,7 +190,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
 
       // DasPay:
       vector<payment_service_provider_object> get_payment_service_providers() const;
-      optional<daspay_authority> get_daspay_authority_for_account(account_id_type account) const;
+      optional<vector<daspay_authority>> get_daspay_authority_for_account(account_id_type account) const;
 
       template<typename T>
       void subscribe_to_item( const T& i )const
@@ -2547,20 +2547,27 @@ vector<payment_service_provider_object> database_api::get_payment_service_provid
     return my->list_all_objects<payment_service_provider_index, by_payment_service_provider>();
 }
 
-optional<daspay_authority> database_api::get_daspay_authority_for_account(account_id_type account) const
+optional<vector<daspay_authority>> database_api::get_daspay_authority_for_account(account_id_type account) const
 {
     return my->get_daspay_authority_for_account(account);
 }
 
-optional<daspay_authority> database_api_impl::get_daspay_authority_for_account(account_id_type account) const
+optional<vector<daspay_authority>> database_api_impl::get_daspay_authority_for_account(account_id_type account) const
 {
     const auto& idx = _db.get_index_type<daspay_authority_index>().indices().get<by_daspay_user>();
-    const auto& it = idx.find(account);
+    auto it = idx.lower_bound(account);
     if (it == idx.end())
     {
         return {};
     }
-    return daspay_authority{it->payment_provider, it->daspay_public_key, it->memo};
+    vector<daspay_authority> ret;
+    while (it != idx.end())
+    {
+        ret.emplace_back(daspay_authority{it->payment_provider, it->daspay_public_key, it->memo});
+        ++it;
+    }
+
+    return ret;
 }
 
 //////////////////////////////////////////////////////////////////////

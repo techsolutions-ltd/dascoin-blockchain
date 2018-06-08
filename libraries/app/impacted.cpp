@@ -494,6 +494,11 @@ struct get_impacted_account_visitor
       _impacted.insert(op.clearing_account);
    }
 
+   void operator()( const update_daspay_clearing_parameters_operation& op )
+   {
+     _impacted.insert(op.authority);
+   }
+
    void operator() ( const set_chain_authority_operation& op)
    {
       _impacted.insert(op.issuer);

@@ -42,4 +42,12 @@ namespace graphene { namespace chain {
     return result;
   }
 
+  void database_fixture::set_daspay_clearing_enabled(bool state)
+  { try {
+    db.modify(get_global_properties(), [state](global_property_object& gpo) {
+      gpo.daspay_parameters.clearing_enabled = state;
+    });
+
+  } FC_LOG_AND_RETHROW() };
+
 } }  // namespace graphene::chain

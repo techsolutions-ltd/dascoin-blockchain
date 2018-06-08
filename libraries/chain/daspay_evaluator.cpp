@@ -356,4 +356,37 @@ namespace graphene { namespace chain {
 
   } FC_CAPTURE_AND_RETHROW((op)) }
 
+  void_result update_daspay_clearing_parameters_evaluator::do_evaluate(const update_daspay_clearing_parameters_operation& op)
+  { try {
+    const auto& d = db();
+    const auto& gpo = d.get_global_properties();
+    const auto& authority_obj = op.authority(d);
+
+    d.perform_chain_authority_check("daspay authority", gpo.authorities.daspay_administrator, authority_obj);
+
+    if ( op.clearing_interval_time_seconds.valid() )
+      FC_ASSERT( *op.clearing_interval_time_seconds % gpo.parameters.block_interval == 0,
+                 "Clearing interval must be a multiple of the block interval ${bi}",
+                 ("bi", gpo.parameters.block_interval)
+      );
+
+    return {};
+
+  } FC_CAPTURE_AND_RETHROW((op)) }
+
+  void_result update_daspay_clearing_parameters_evaluator::do_apply(const update_daspay_clearing_parameters_operation& op)
+  { try {
+    auto& d = db();
+
+    d.modify(d.get_global_properties(), [&](global_property_object& gpo){
+      CHECK_AND_SET_OPT(gpo.daspay_parameters.clearing_enabled, op.clearing_enabled);
+      CHECK_AND_SET_OPT(gpo.daspay_parameters.clearing_interval_time_seconds, op.clearing_interval_time_seconds);
+      CHECK_AND_SET_OPT(gpo.daspay_parameters.collateral_dascoin, op.collateral_dascoin);
+      CHECK_AND_SET_OPT(gpo.daspay_parameters.collateral_webeur, op.collateral_webeur);
+    });
+
+    return {};
+
+  } FC_CAPTURE_AND_RETHROW((op)) }
+
 } }  // namespace graphene::chain

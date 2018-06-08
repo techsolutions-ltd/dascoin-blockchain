@@ -187,6 +187,7 @@ namespace graphene { namespace chain {
             unreserve_asset_on_account_operation,
             daspay_debit_account_operation,
             daspay_credit_account_operation,
+            update_daspay_clearing_parameters_operation,
 
             // Virtual operations below this point:
 

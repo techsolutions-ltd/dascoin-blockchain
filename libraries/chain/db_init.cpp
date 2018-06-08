@@ -282,6 +282,7 @@ void database::initialize_evaluators()
    register_evaluator<unreserve_asset_on_account_evaluator>();
    register_evaluator<daspay_debit_account_evaluator>();
    register_evaluator<daspay_credit_account_evaluator>();
+   register_evaluator<update_daspay_clearing_parameters_evaluator>();
 }
 
 void database::initialize_indexes()

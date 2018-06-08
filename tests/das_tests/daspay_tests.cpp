@@ -415,5 +415,22 @@ BOOST_AUTO_TEST_CASE( daspay_credit_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( update_queue_parameters_unit_test )
+{ try {
+
+  do_op(update_daspay_clearing_parameters_operation(get_daspay_administrator_id(),
+                                                    {true},
+                                                    {600},
+                                                    {90000 * DASCOIN_FIAT_ASSET_PRECISION},
+                                                    {250000 * DASCOIN_DEFAULT_ASSET_PRECISION}));
+
+  const auto& daspay_params = get_daspay_parameters();
+  BOOST_CHECK_EQUAL( daspay_params.clearing_enabled, true );
+  BOOST_CHECK_EQUAL( daspay_params.clearing_interval_time_seconds, 600 );
+  BOOST_CHECK_EQUAL( daspay_params.collateral_dascoin.value, 90000 * DASCOIN_FIAT_ASSET_PRECISION );
+  BOOST_CHECK_EQUAL( daspay_params.collateral_webeur.value, 250000 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_SUITE_END()  // dascoin_tests::daspay_tests
 BOOST_AUTO_TEST_SUITE_END()  // dascoin_tests

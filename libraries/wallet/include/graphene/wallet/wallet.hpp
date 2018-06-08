@@ -1842,6 +1842,22 @@ class wallet_api
        */
       optional<vector<daspay_authority>> get_daspay_authority_for_account(const string& account) const;
 
+      /**
+       * Update various daspay clearing parameters
+       * 
+       * @param clearing_enabled                                        true if clearing is enabled
+       * @param clearing_interval_time_seconds                          time in seconds between Daspay clearing events
+       * @param collateral_dascoin                                      the amount of DasCoins for credit transactions collateral
+       * @param collateral_webeur                                       the amount of WebEur for clearing collateral
+       * @param broadcast                                               true to broadcast the transaction on the network.
+       */
+      signed_transaction update_daspay_clearing_parameters(optional<bool> clearing_enabled,
+                                                           optional<uint32_t> clearing_interval_time_seconds,
+                                                           optional<share_type> collateral_dascoin,
+                                                           optional<share_type> collateral_webeur,
+                                                           bool broadcast) const;
+
+
       //////////////////////////
       // REQUESTS:            //
       //////////////////////////

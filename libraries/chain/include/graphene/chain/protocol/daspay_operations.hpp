@@ -32,9 +32,11 @@ namespace graphene { namespace chain {
     {
       struct fee_parameters_type {};
       asset fee;
+
       account_id_type authority;
       share_type debit_ratio;
       share_type credit_ratio;
+
       extensions_type extensions;
 
       set_daspay_transaction_ratio_operation() = default;
@@ -149,9 +151,11 @@ namespace graphene { namespace chain {
     {
       struct fee_parameters_type {};
       asset fee;
+
       account_id_type authority;
       account_id_type payment_service_provider_account;
       vector<account_id_type> payment_service_provider_clearing_accounts;
+
       extensions_type extensions;
 
       create_payment_service_provider_operation() = default;
@@ -172,9 +176,11 @@ namespace graphene { namespace chain {
     {
       struct fee_parameters_type {};
       asset fee;
+
       account_id_type authority;
       account_id_type payment_service_provider_account;
       vector<account_id_type> payment_service_provider_clearing_accounts;
+
       extensions_type extensions;
 
       update_payment_service_provider_operation() = default;
@@ -195,8 +201,10 @@ namespace graphene { namespace chain {
     {
       struct fee_parameters_type {};
       asset fee;
+
       account_id_type authority;
       account_id_type payment_service_provider_account;
+
       extensions_type extensions;
 
       delete_payment_service_provider_operation() = default;
@@ -280,6 +288,37 @@ namespace graphene { namespace chain {
                 details(details) {}
 
       account_id_type fee_payer() const { return payment_service_provider_account; }
+      void validate() const;
+      share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+    };
+
+    struct update_daspay_clearing_parameters_operation : public base_operation
+    {
+      struct fee_parameters_type {};
+      asset fee;
+
+      account_id_type authority;
+
+      optional<bool> clearing_enabled;
+      optional<uint32_t> clearing_interval_time_seconds;
+      optional<share_type> collateral_dascoin;
+      optional<share_type> collateral_webeur;
+
+      update_daspay_clearing_parameters_operation() = default;
+      explicit update_daspay_clearing_parameters_operation(account_id_type authority,
+                                                           optional<bool> clearing_enabled,
+                                                           optional<uint32_t> clearing_interval_time_seconds,
+                                                           optional<share_type> collateral_dascoin,
+                                                           optional<share_type> collateral_webeur)
+              : authority(authority),
+              clearing_enabled(clearing_enabled),
+              clearing_interval_time_seconds(clearing_interval_time_seconds),
+              collateral_dascoin(collateral_dascoin),
+              collateral_webeur(collateral_webeur) {}
+
+      extensions_type extensions;
+
+      account_id_type fee_payer() const { return authority; }
       void validate() const;
       share_type calculate_fee(const fee_parameters_type&) const { return 0; }
     };
@@ -379,4 +418,14 @@ FC_REFLECT( graphene::chain::daspay_credit_account_operation,
             (clearing_account)
             (transaction_id)
             (details)
+          )
+
+FC_REFLECT( graphene::chain::update_daspay_clearing_parameters_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::update_daspay_clearing_parameters_operation,
+            (fee)
+            (authority)
+            (clearing_enabled)
+            (clearing_interval_time_seconds)
+            (collateral_dascoin)
+            (collateral_webeur)
           )

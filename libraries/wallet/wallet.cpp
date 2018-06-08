@@ -1218,6 +1218,29 @@ public:
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (payment_service_provider_account)(user_account)(asset_amount)(asset_symbol)(clearing_account)(transaction_id)(details)(broadcast) ) }
 
+   signed_transaction update_daspay_clearing_parameters(optional<bool> clearing_enabled,
+                                                        optional<uint32_t> clearing_interval_time_seconds,
+                                                        optional<share_type> collateral_dascoin,
+                                                        optional<share_type> collateral_webeur,
+                                                        bool broadcast)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      update_daspay_clearing_parameters_operation op;
+
+      op.clearing_enabled = clearing_enabled;
+      op.clearing_interval_time_seconds = clearing_interval_time_seconds;
+      op.collateral_dascoin = collateral_dascoin;
+      op.collateral_webeur = collateral_webeur;
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (clearing_enabled)(clearing_interval_time_seconds)(collateral_dascoin)(collateral_webeur)(broadcast) ) }
+
    signed_transaction tether_accounts(string wallet, string vault, bool broadcast = false)
    { try {
       FC_ASSERT( !self.is_locked() );
@@ -5264,6 +5287,19 @@ optional<vector<daspay_authority>> wallet_api::get_daspay_authority_for_account(
 {
     account_object account_obj = my->get_account(account);
     return my->_remote_db->get_daspay_authority_for_account(account_obj.id);
+}
+
+signed_transaction wallet_api::update_daspay_clearing_parameters(optional<bool> clearing_enabled,
+                                                                 optional<uint32_t> clearing_interval_time_seconds,
+                                                                 optional<share_type> collateral_dascoin,
+                                                                 optional<share_type> collateral_webeur,
+                                                                 bool broadcast) const
+{
+  return my->update_daspay_clearing_parameters(clearing_enabled,
+                                     clearing_interval_time_seconds,
+                                     collateral_dascoin,
+                                     collateral_webeur,
+                                     broadcast);
 }
 
 signed_block_with_info::signed_block_with_info( const signed_block& block )

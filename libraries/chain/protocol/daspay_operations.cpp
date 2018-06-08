@@ -101,4 +101,22 @@ namespace graphene { namespace chain {
     }
   }
 
+  void update_daspay_clearing_parameters_operation::validate() const
+  {
+    if ( clearing_interval_time_seconds.valid() )
+      FC_ASSERT( *clearing_interval_time_seconds > GRAPHENE_MIN_BLOCK_INTERVAL,
+                 "Must be greater than the minimal block interval"
+      );
+
+    if ( collateral_dascoin.valid() )
+      FC_ASSERT( *collateral_dascoin > 0,
+                 "Collateral amount must be positive number."
+      );
+
+    if ( collateral_webeur.valid() )
+      FC_ASSERT( *collateral_webeur > 0,
+                 "Collateral amount must be positive number."
+      );
+  }
+
 } } // namespace graphene::chain

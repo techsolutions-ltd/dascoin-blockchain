@@ -1218,7 +1218,8 @@ public:
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (payment_service_provider_account)(user_account)(asset_amount)(asset_symbol)(clearing_account)(transaction_id)(details)(broadcast) ) }
 
-   signed_transaction update_daspay_clearing_parameters(optional<bool> clearing_enabled,
+   signed_transaction update_daspay_clearing_parameters(const string& authority,
+                                                        optional<bool> clearing_enabled,
                                                         optional<uint32_t> clearing_interval_time_seconds,
                                                         optional<share_type> collateral_dascoin,
                                                         optional<share_type> collateral_webeur,
@@ -1228,6 +1229,7 @@ public:
 
       update_daspay_clearing_parameters_operation op;
 
+      op.authority = get_account(authority).id;
       op.clearing_enabled = clearing_enabled;
       op.clearing_interval_time_seconds = clearing_interval_time_seconds;
       op.collateral_dascoin = collateral_dascoin;
@@ -5289,17 +5291,19 @@ optional<vector<daspay_authority>> wallet_api::get_daspay_authority_for_account(
     return my->_remote_db->get_daspay_authority_for_account(account_obj.id);
 }
 
-signed_transaction wallet_api::update_daspay_clearing_parameters(optional<bool> clearing_enabled,
+signed_transaction wallet_api::update_daspay_clearing_parameters(const string& authority,
+                                                                 optional<bool> clearing_enabled,
                                                                  optional<uint32_t> clearing_interval_time_seconds,
                                                                  optional<share_type> collateral_dascoin,
                                                                  optional<share_type> collateral_webeur,
                                                                  bool broadcast) const
 {
-  return my->update_daspay_clearing_parameters(clearing_enabled,
-                                     clearing_interval_time_seconds,
-                                     collateral_dascoin,
-                                     collateral_webeur,
-                                     broadcast);
+  return my->update_daspay_clearing_parameters(authority,
+                                               clearing_enabled,
+                                               clearing_interval_time_seconds,
+                                               collateral_dascoin,
+                                               collateral_webeur,
+                                               broadcast);
 }
 
 signed_block_with_info::signed_block_with_info( const signed_block& block )

@@ -104,6 +104,7 @@ namespace graphene { namespace chain {
       chartered = 1,
       promo = 2,
       locked_frequency = 3,
+      utility = 4,
       none = 99,
       LICENSE_KIND_COUNT
    };
@@ -130,6 +131,7 @@ namespace graphene { namespace chain {
      user_submit = 0,
      charter_license = 1,
      reserve_cycles = 2,
+     utility_license = 3,
      DASCOIN_ORIGIN_KIND_COUNT
    };
 

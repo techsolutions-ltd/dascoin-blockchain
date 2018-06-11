@@ -38,7 +38,9 @@ namespace graphene { namespace chain {
     enum policy
     {
       standard,
-      president
+      president,
+      utility,
+      utility_president
     };
 
     class policy_class
@@ -49,7 +51,12 @@ namespace graphene { namespace chain {
       {
         if (p == standard)
           return policy_class::get_amount_to_upgrade(upgradeable);
-        return policy_class::get_amount_to_upgrade_president(upgradeable);
+        else if (p == president)
+          return policy_class::get_amount_to_upgrade_president(upgradeable);
+        else if (p == utility)
+          return policy_class::get_amount_to_upgrade(upgradeable);
+        else if (p == utility_president)
+          return policy_class::get_amount_to_upgrade_das_33_license(upgradeable);
       }
 
     private:
@@ -63,6 +70,12 @@ namespace graphene { namespace chain {
       static share_type get_amount_to_upgrade_president(const T& upgradeable)
       {
         return upgradeable.base_amount + upgradeable.base_amount * upgradeable.bonus_percent / 100;
+      }
+
+      template<typename T>
+      static share_type get_amount_to_upgrade_das_33_license(const T& upgradeable)
+      {
+        return upgradeable.base_amount;
       }
     };
   }
@@ -85,6 +98,7 @@ namespace graphene { namespace chain {
         time_point_sec issued_on_blockchain;
         upgrade_type balance_upgrade;
         vector<pair<upgrade_event_id_type, time_point_sec>> upgrades;
+        share_type shadow_amount;
 
         using upgrade_policy = detail::policy;
 
@@ -108,7 +122,8 @@ namespace graphene { namespace chain {
               activated_at(activated_at),
               issued_on_blockchain(issued_on_blockchain),
               balance_upgrade(balance_upgrade),
-              up_policy(up_policy) {}
+              up_policy(up_policy),
+              shadow_amount(0){}
 
         share_type amount_to_upgrade()
         {

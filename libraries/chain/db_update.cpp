@@ -594,7 +594,7 @@ void database::mint_dascoin_rewards()
 
 } FC_CAPTURE_AND_RETHROW() }
 
-void database::run_clearing()
+void database::daspay_clearing_start()
 { try {
   const auto& params = get_global_properties();
   const auto& dgpo = get_dynamic_global_properties();

@@ -640,10 +640,10 @@ namespace graphene { namespace chain {
          void update_maintenance_flag( bool new_maintenance_flag );
          void update_withdraw_permissions();
          bool check_for_blackswan( const asset_object& mia, bool enable_black_swan = true );
-         void assign_licenses();
          void distribute_issue_requested_assets();
          void mint_dascoin_rewards();
          void reset_spending_limits();
+         void run_clearing();
 private:
 
          ///Steps performed only at maintenance intervals

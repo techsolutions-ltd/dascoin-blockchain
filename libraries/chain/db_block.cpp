@@ -605,6 +605,9 @@ void database::_apply_block( const signed_block& next_block )
    if ( global_props.parameters.enable_dascoin_queue )
       mint_dascoin_rewards();
 
+   if ( global_props.daspay_parameters.clearing_enabled )
+      run_clearing();
+
    if( !_node_property_object.debug_updates.empty() )
       apply_debug_updates();
 

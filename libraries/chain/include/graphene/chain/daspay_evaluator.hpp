@@ -75,7 +75,7 @@ namespace graphene { namespace chain {
     typedef unreserve_asset_on_account_operation operation_type;
 
     void_result do_evaluate( const operation_type& op );
-    void_result do_apply( const operation_type& op );
+    object_id_type do_apply( const operation_type& op );
   };
 
   class create_payment_service_provider_evaluator : public evaluator<create_payment_service_provider_evaluator>

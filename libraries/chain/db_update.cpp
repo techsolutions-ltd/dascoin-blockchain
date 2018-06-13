@@ -694,4 +694,25 @@ void database::daspay_clearing_start()
 
 } FC_CAPTURE_AND_RETHROW() }
 
+void database::daspay_resolve_unreserve()
+{ try {
+  const auto& params = get_global_properties();
+  const auto& dgpo = get_dynamic_global_properties();
+
+  if ( dgpo.daspay_next_clearing_time > head_block_time() )
+    return;
+
+  ilog("resolve unreserve smart contract running");
+  const auto& idx = get_index_type<daspay_delayed_unreserve_index>().indices().get<by_account>();
+  for (auto it = idx.cbegin(); it != idx.cend(); ++it)
+  {
+
+  }
+
+  modify(dgpo, [&](dynamic_global_property_object& dgpo){
+    dgpo.daspay_next_clearing_time = head_block_time() + params.daspay_parameters.clearing_interval_time_seconds;
+  });
+
+} FC_CAPTURE_AND_RETHROW() }
+
 } }  // namespace database::chain

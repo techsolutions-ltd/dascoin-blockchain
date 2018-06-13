@@ -115,6 +115,11 @@ namespace graphene { namespace chain {
   { try {
     const database& d = db();
 
+    const auto& idx = d.get_index_type<daspay_delayed_unreserve_index>().indices().get<by_account>();
+    const auto& itr = idx.lower_bound(op.account);
+
+    FC_ASSERT( itr == idx.end(), "Cannot issue another unreserve operation while the previous one is pending ${a}", ("a", itr->id) );
+
     FC_ASSERT( op.asset_to_unreserve.asset_id == d.get_dascoin_asset_id(), "Only dascoin can be unreserved for daspay" );
 
     const auto& balance = d.get_balance_object( op.account, d.get_dascoin_asset_id() );
@@ -125,10 +130,15 @@ namespace graphene { namespace chain {
     return {};
   } FC_CAPTURE_AND_RETHROW((op)) }
 
-  void_result unreserve_asset_on_account_evaluator::do_apply(const operation_type& op)
+  object_id_type unreserve_asset_on_account_evaluator::do_apply(const operation_type& op)
   { try {
     database& d = db();
     d.adjust_balance( op.account, asset{op.asset_to_unreserve.amount, d.get_dascoin_asset_id()}, -op.asset_to_unreserve.amount );
+    return d.create<daspay_delayed_unreserve_object>([&](daspay_delayed_unreserve_object& duo) {
+      duo.account = op.account;
+      duo.asset_to_unreserve = op.asset_to_unreserve;
+      duo.issued_time = d.head_block_time();
+    }).id;
 
     return {};
   } FC_CAPTURE_AND_RETHROW((op)) }

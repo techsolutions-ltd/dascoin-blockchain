@@ -79,6 +79,31 @@ namespace graphene { namespace chain {
     {}
   };
 
+  class daspay_delayed_unreserve_object : public abstract_object<daspay_delayed_unreserve_object>
+  {
+  public:
+    static const uint8_t space_id = implementation_ids;
+    static const uint8_t type_id  = impl_daspay_delayed_unreserve_object_type;
+
+    account_id_type account;
+    asset asset_to_unreserve;
+    fc::time_point_sec issued_time;
+    uint32_t skip;
+
+    extensions_type extensions;
+
+    daspay_delayed_unreserve_object() = default;
+    explicit daspay_delayed_unreserve_object(account_id_type account,
+                                             asset asset_to_unreserve,
+                                             fc::time_point_sec issued_time,
+                                             uint32_t skip)
+            : account(account),
+              asset_to_unreserve(asset_to_unreserve),
+              issued_time(issued_time),
+              skip(skip)
+    {}
+  };
+
   ///////////////////////////////
   // MULTI INDEX CONTAINERS:   //
   ///////////////////////////////
@@ -127,6 +152,26 @@ namespace graphene { namespace chain {
 
   using daspay_authority_index = generic_index<daspay_authority_object, daspay_authority_multi_index_type>;
 
+  struct by_account;
+  using daspay_delayed_unreserve_multi_index_type = multi_index_container<
+    daspay_delayed_unreserve_object,
+    indexed_by<
+      ordered_unique<
+        tag<by_id>,
+        member< object, object_id_type, &object::id >
+      >,
+      ordered_unique<
+        tag<by_account>,
+          composite_key< daspay_delayed_unreserve_object,
+            member< daspay_delayed_unreserve_object, account_id_type, &daspay_delayed_unreserve_object::account >,
+            member< object, object_id_type, &object::id >
+          >
+        >
+    >
+  >;
+
+  using daspay_delayed_unreserve_index = generic_index<daspay_delayed_unreserve_object, daspay_delayed_unreserve_multi_index_type>;
+
 } }  // namespace graphene::chain
 
 ///////////////////////////////
@@ -144,4 +189,11 @@ FC_REFLECT_DERIVED( graphene::chain::daspay_authority_object, (graphene::db::obj
                     (payment_provider)
                     (daspay_public_key)
                     (memo)
+                  )
+
+FC_REFLECT_DERIVED( graphene::chain::daspay_delayed_unreserve_object, (graphene::db::object),
+                    (account)
+                    (asset_to_unreserve)
+                    (issued_time)
+                    (skip)
                   )

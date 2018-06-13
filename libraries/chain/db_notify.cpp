@@ -679,10 +679,12 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
                break;
             case impl_witness_delegate_data_colection_object_type:
                break;
-           case impl_payment_service_provider_object_type:
-             break;
-           case impl_daspay_authority_object_type:
-             break;
+            case impl_payment_service_provider_object_type:
+               break;
+            case impl_daspay_authority_object_type:
+               break;
+           case impl_daspay_delayed_unreserve_object_type:
+               break;
       }
    }
 }

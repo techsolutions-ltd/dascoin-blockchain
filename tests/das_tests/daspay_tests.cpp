@@ -27,6 +27,7 @@
 #include <graphene/chain/access_layer.hpp>
 #include <graphene/chain/exceptions.hpp>
 #include <graphene/chain/daspay_object.hpp>
+#include <graphene/chain/market_object.hpp>
 #include "../common/database_fixture.hpp"
 
 using namespace graphene::chain;
@@ -429,6 +430,77 @@ BOOST_AUTO_TEST_CASE( update_queue_parameters_unit_test )
   BOOST_CHECK_EQUAL( daspay_params.clearing_interval_time_seconds, 600 );
   BOOST_CHECK_EQUAL( daspay_params.collateral_dascoin.value, 90000 * DASCOIN_FIAT_ASSET_PRECISION );
   BOOST_CHECK_EQUAL( daspay_params.collateral_webeur.value, 250000 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( daspay_clearing_test )
+{ try {
+  ACTORS((foo)(clearing)(payment));
+  VAULT_ACTORS((bar)(foobar));
+
+  tether_accounts(foo_id, bar_id);
+  tether_accounts(clearing_id, foobar_id);
+
+  auto lic_typ = *(_dal.get_license_type("standard_charter"));
+
+  do_op(issue_license_operation(get_license_issuer_id(), bar_id, lic_typ.id,
+                                10, 200, db.head_block_time()));
+
+  do_op(issue_license_operation(get_license_issuer_id(), foobar_id, lic_typ.id,
+                                10, 200, db.head_block_time()));
+
+  toggle_reward_queue(true);
+  generate_blocks(db.head_block_time() + fc::seconds(get_chain_parameters().reward_interval_time_seconds));
+  db.adjust_balance_limit(bar, get_dascoin_asset_id(), 1000 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+  // Generate some coins:
+  adjust_dascoin_reward(500 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  adjust_frequency(200);
+
+  // Wait for the cycles to be distributed:
+  generate_blocks(db.head_block_time() + fc::seconds(get_chain_parameters().reward_interval_time_seconds));
+
+  vector<account_id_type> v{clearing_id};
+  const auto& root_id = db.get_global_properties().authorities.daspay_administrator;
+  public_key_type pk = public_key_type(generate_private_key("foo").get_public_key());
+
+  do_op(create_payment_service_provider_operation(root_id, payment_id, v));
+  do_op(register_daspay_authority_operation(foo_id, payment_id, pk, {}));
+
+  db.adjust_balance_limit(bar, get_dascoin_asset_id(), 1000 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  db.adjust_balance_limit(foobar, get_dascoin_asset_id(), 1000 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+  transfer_dascoin_vault_to_wallet(bar_id, foo_id, 200 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  transfer_dascoin_vault_to_wallet(foobar_id, clearing_id, 200 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  do_op(reserve_asset_on_account_operation(foo_id, asset{ 200 * DASCOIN_DEFAULT_ASSET_PRECISION, db.get_dascoin_asset_id() }));
+
+  // Set credit transaction ratio to 2.0%
+  do_op(set_daspay_transaction_ratio_operation(get_daspay_administrator_id(), 0, 200));
+
+  // Set price to 1we -> 100dasc
+  set_last_dascoin_price(asset(100 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()) / asset(1 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()));
+
+  // Debit one web euro:
+  do_op(daspay_debit_account_operation(payment_id, pk, foo_id, asset{1 * DASCOIN_FIAT_ASSET_PRECISION, db.get_web_asset_id()}, clearing_id, "", {}));
+
+  const auto& limit_order_idx = db.get_index_type<limit_order_index>();
+  const auto& limit_price_idx = limit_order_idx.indices().get<by_price>();
+
+  // No limit orders at this point:
+  BOOST_CHECK_EQUAL( limit_price_idx.size(), 0 );
+
+  // Enable daspay clearing:
+  do_op(update_daspay_clearing_parameters_operation(get_daspay_administrator_id(), true, 12, {}, {}));
+
+  // Wait for the next clearing interval:
+  generate_blocks(db.head_block_time() + fc::seconds(18));
+
+  // At this point there should be one limit order:
+  BOOST_CHECK_EQUAL( limit_price_idx.size(), 1 );
+
+  const auto& loo = *(limit_price_idx.begin());
+
+  BOOST_CHECK( loo.seller == clearing_id );
 
 } FC_LOG_AND_RETHROW() }
 

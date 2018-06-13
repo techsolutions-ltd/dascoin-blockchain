@@ -365,11 +365,17 @@ namespace graphene { namespace chain {
     d.perform_chain_authority_check("daspay authority", gpo.authorities.daspay_administrator, authority_obj);
 
     if ( op.clearing_interval_time_seconds.valid() )
+    {
       FC_ASSERT( *op.clearing_interval_time_seconds % gpo.parameters.block_interval == 0,
-                 "Clearing interval must be a multiple of the block interval ${bi}",
-                 ("bi", gpo.parameters.block_interval)
+                "Clearing interval must be a multiple of the block interval ${bi}",
+                ("bi", gpo.parameters.block_interval)
       );
 
+      FC_ASSERT( *op.clearing_interval_time_seconds >= 2 * gpo.parameters.block_interval,
+                 "Clearing interval must be greater or equal to double of block interval ${bi}",
+                 ("bi", gpo.parameters.block_interval)
+      );
+    }
     return {};
 
   } FC_CAPTURE_AND_RETHROW((op)) }

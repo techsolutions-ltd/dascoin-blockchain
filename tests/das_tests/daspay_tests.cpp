@@ -416,7 +416,7 @@ BOOST_AUTO_TEST_CASE( daspay_credit_test )
 
 } FC_LOG_AND_RETHROW() }
 
-BOOST_AUTO_TEST_CASE( update_queue_parameters_unit_test )
+BOOST_AUTO_TEST_CASE( update_daspay_clearing_parameters_unit_test )
 { try {
 
   do_op(update_daspay_clearing_parameters_operation(get_daspay_administrator_id(),

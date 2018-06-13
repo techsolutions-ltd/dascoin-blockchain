@@ -373,6 +373,9 @@ struct database_fixture {
    // fix_daspay.cpp
    vector<payment_service_provider_object> get_payment_service_providers() const;
 
+   // fix_das33.cpp
+   vector<das33_project_object> get_das33_projects() const;
+
    // fix_web_assets.cpp
    asset web_asset(share_type amount);
    const issued_asset_record_object* issue_webasset(const string& unique_id, account_id_type receiver_id, 

@@ -22,39 +22,24 @@
  * SOFTWARE.
  */
 
-#include <graphene/chain/protocol/das33_operations.hpp>
+#include "database_fixture.hpp"
+#include <graphene/chain/das33_object.hpp>
 
-// TODO: blacklist operation
+
+using namespace graphene::chain::test;
 
 namespace graphene { namespace chain {
 
-  void das33_project_create_operation::validate() const
+  vector<das33_project_object> database_fixture::get_das33_projects() const
   {
-    FC_ASSERT( fee.amount >= 0 );
-    //FC_ASSERT( ratio. >= 0 && ratio.second >= 0);
-    const size_t len = name.size();
-    FC_ASSERT ( len >= GRAPHENE_MIN_ACCOUNT_NAME_LENGTH );
-    FC_ASSERT ( len <= GRAPHENE_MAX_ACCOUNT_NAME_LENGTH );
+    const auto& idx = db.get_index_type<das33_project_index>().indices().get<by_project_name>();
+    auto itr = idx.begin();
+    vector<das33_project_object> result;
+
+    while( itr != idx.end() )
+      result.emplace_back(*itr++);
+
+    return result;
   }
 
-  void das33_project_update_operation::validate() const
-  {
-    FC_ASSERT( fee.amount >= 0 );
-    //if (ratio)
-    //  FC_ASSERT( (*ratio).first >= 0 && (*ratio).second >= 0);
-    const size_t len = name.size();
-    FC_ASSERT ( len >= GRAPHENE_MIN_ACCOUNT_NAME_LENGTH );
-    FC_ASSERT ( len <= GRAPHENE_MAX_ACCOUNT_NAME_LENGTH );
-  }
-
-  void das33_project_delete_operation::validate() const
-  {
-    FC_ASSERT( fee.amount >= 0 );
-  }
-
-  void das33_pledge_cycles_operation::validate() const
-  {
-    FC_ASSERT( fee.amount >= 0 );
-  }
-
-} } // namespace graphene::chain
+} }  // namespace graphene::chain

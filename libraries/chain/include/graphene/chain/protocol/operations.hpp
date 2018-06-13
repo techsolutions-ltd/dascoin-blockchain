@@ -189,6 +189,9 @@ namespace graphene { namespace chain {
             daspay_debit_account_operation,
             daspay_credit_account_operation,
 
+	    das33_project_create_operation,
+	    das33_project_update_operation,
+	    das33_project_delete_operation,
             das33_pledge_cycles_operation,
 
             // Virtual operations below this point:

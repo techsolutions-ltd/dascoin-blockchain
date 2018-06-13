@@ -37,6 +37,7 @@
 #include <fc/uint128.hpp>
 #include <fc/static_variant.hpp>
 #include <fc/smart_ref_fwd.hpp>
+#include <boost/rational.hpp>
 
 #include <memory>
 #include <vector>
@@ -140,6 +141,13 @@ namespace graphene { namespace chain {
      admin = 1,
      unknown = 2,
      CYCLE_ORIGIN_KIND_COUNT
+   };
+
+   enum das33_project_status
+   {
+     inactive = 0,
+     active = 1,
+     DAS33_PROJECT_STATUS_COUNT
    };
 
    enum asset_issuer_permission_flags
@@ -563,6 +571,12 @@ REFLECT_ENUM_CHECK( graphene::chain::cycle_origin_kind,
                     (unknown)
                     (CYCLE_ORIGIN_KIND_COUNT)
                   )
+
+REFLECT_ENUM_CHECK( graphene::chain::das33_project_status,
+		    (inactive)
+		    (active)
+		    (DAS33_PROJECT_STATUS_COUNT)
+		  )
 
 FC_REFLECT( graphene::chain::public_key_type, (key_data) )
 FC_REFLECT( graphene::chain::public_key_type::binary_key, (data)(check) )

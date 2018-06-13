@@ -39,7 +39,28 @@ namespace graphene { namespace chain {
 
   class das33_project_object : public graphene::db::abstract_object<das33_project_object>
   {
+public:
+    static const uint8_t space_id = implementation_ids;
+    static const uint8_t type_id  = impl_das33_project_object_type;
 
+    string name;
+    account_id_type owner;
+    asset_id_type token_id;
+    optional<share_type> min_to_collect;
+    share_type collected;
+    price cycles_to_token_ratio;
+    das33_project_status status;
+
+    das33_project_object() = default;
+    explicit das33_project_object(string name, account_id_type owner, asset_id_type token, share_type min_to_collect, price ratio)
+             : name(name),
+	       owner(owner),
+	       token_id(token),
+	       min_to_collect(min_to_collect),
+	       collected(0),
+	       cycles_to_token_ratio(ratio),
+	       status(das33_project_status::inactive)
+    {}
   };
 
   class das33_cycles_pledge_holder_object : public abstract_object<das33_cycles_pledge_holder_object>
@@ -110,6 +131,23 @@ namespace graphene { namespace chain {
 
   using das33_cycles_pledge_holder_index = generic_index<das33_cycles_pledge_holder_object, das33_cycles_pledge_holder_multi_index_type>;
 
+  struct by_project_name;
+  typedef multi_index_container<
+      das33_project_object,
+      indexed_by<
+        ordered_unique<
+	  tag<by_id>,
+	  member<object, object_id_type, &object::id>
+        >,
+	ordered_unique<
+	  tag<by_project_name>,
+	  member<das33_project_object, string, &das33_project_object::name>
+	>
+     >
+  > das33_project_multi_index_type;
+
+  typedef generic_index<das33_project_object, das33_project_multi_index_type> das33_project_index;
+
 } }  // namespace graphene::chain
 
 ///////////////////////////////
@@ -125,3 +163,12 @@ FC_REFLECT_DERIVED( graphene::chain::das33_cycles_pledge_holder_object, (graphen
                     (project_id)
 )
 
+FC_REFLECT_DERIVED( graphene::chain::das33_project_object, (graphene::db::object),
+                    (name)
+                    (owner)
+		    (token_id)
+		    (min_to_collect)
+		    (collected)
+		    (cycles_to_token_ratio)
+		    (status)
+                  )

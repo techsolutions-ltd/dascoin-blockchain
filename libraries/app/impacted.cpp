@@ -504,6 +504,22 @@ struct get_impacted_account_visitor
     {
        _impacted.insert(op.vault_id);
     }
+
+    void operator() (const das33_project_create_operation& op)
+    {
+      _impacted.insert(op.authority);
+      _impacted.insert(op.owner);
+    }
+
+    void operator() (const das33_project_update_operation& op)
+    {
+      _impacted.insert(op.authority);
+    }
+
+    void operator() (const das33_project_delete_operation& op)
+    {
+      _impacted.insert(op.authority);
+    }
 };
 
 void operation_get_impacted_accounts( const operation& op, flat_set<account_id_type>& result )

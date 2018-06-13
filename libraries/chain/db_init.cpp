@@ -284,6 +284,9 @@ void database::initialize_evaluators()
    register_evaluator<unreserve_asset_on_account_evaluator>();
    register_evaluator<daspay_debit_account_evaluator>();
    register_evaluator<daspay_credit_account_evaluator>();
+   register_evaluator<das33_project_create_evaluator>();
+   register_evaluator<das33_project_update_evaluator>();
+   register_evaluator<das33_project_delete_evaluator>();
    register_evaluator<das33_pledge_cycles_evaluator>();
 }
 
@@ -344,6 +347,7 @@ void database::initialize_indexes()
    add_index<primary_index<wire_out_with_fee_holder_index>>();
    add_index<primary_index<daspay_authority_index>>();
    add_index<primary_index<payment_service_provider_index>>();
+   add_index<primary_index<das33_project_index>>();
 }
 
 account_id_type database::initialize_chain_authority(const string& kind_name, const string& acc_name)

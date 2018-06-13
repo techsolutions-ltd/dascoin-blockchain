@@ -30,6 +30,37 @@
 
 namespace graphene { namespace chain {
 
+  class das33_project_create_evaluator : public evaluator<das33_project_create_evaluator>
+  {
+  public:
+    typedef das33_project_create_operation operation_type;
+
+    void_result do_evaluate( const operation_type& op );
+    object_id_type do_apply( const operation_type& op );
+  };
+
+  class das33_project_update_evaluator : public evaluator<das33_project_update_evaluator>
+  {
+  public:
+    typedef das33_project_update_operation operation_type;
+
+    void_result do_evaluate( const operation_type& op );
+    void_result do_apply( const operation_type& op );
+  private:
+    const das33_project_object* project_to_update = nullptr;
+  };
+
+  class das33_project_delete_evaluator : public evaluator<das33_project_delete_evaluator>
+  {
+  public:
+    typedef das33_project_delete_operation operation_type;
+
+    void_result do_evaluate( const operation_type& op );
+    void_result do_apply( const operation_type& op );
+  private:
+    const das33_project_object* project_to_delete = nullptr;
+  };
+
   class das33_pledge_cycles_evaluator : public evaluator<das33_pledge_cycles_evaluator>
   {
   public:

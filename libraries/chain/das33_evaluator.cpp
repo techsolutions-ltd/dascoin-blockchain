@@ -27,6 +27,104 @@
 
 namespace graphene { namespace chain {
 
+  void_result das33_project_create_evaluator::do_evaluate( const operation_type& op )
+  {
+    try {
+      const auto& d = db();
+      const auto& gpo = d.get_global_properties();
+
+      const auto& authority_obj = op.authority(d);
+      d.perform_chain_authority_check("root authority", gpo.authorities.root_administrator, authority_obj);
+
+      const auto& idx = d.get_index_type<das33_project_index>().indices().get<by_project_name>();
+      FC_ASSERT(idx.find(op.name) == idx.end(), "Das33 project called ${1} already exists.", ("1", op.name));
+
+      return {};
+    } FC_CAPTURE_AND_RETHROW((op))
+  }
+
+  object_id_type das33_project_create_evaluator::do_apply( const operation_type& op )
+  {
+    try {
+      auto& d = db();
+
+      return d.create<das33_project_object>([&](das33_project_object& dpo){
+	     dpo.name = op.name;
+	     dpo.owner = op.owner;
+	     dpo.token_id = op.token;
+	     dpo.min_to_collect = op.min_to_collect;
+	     dpo.collected = 0;
+	     dpo.cycles_to_token_ratio = op.ratio;
+	     dpo.status = das33_project_status::inactive;
+	   }).id;
+    } FC_CAPTURE_AND_RETHROW((op))
+  }
+
+  void_result das33_project_update_evaluator::do_evaluate( const operation_type& op )
+  {
+    try {
+      const auto& d = db();
+      const auto& gpo = d.get_global_properties();
+
+      const auto& authority_obj = op.authority(d);
+      d.perform_chain_authority_check("root authority", gpo.authorities.root_administrator, authority_obj);
+
+      const auto& idx = d.get_index_type<das33_project_index>().indices().get<by_project_name>();
+      auto project_iterator = idx.find(op.name);
+      FC_ASSERT(project_iterator != idx.end(), "Das33 project called ${1} does not exist.", ("1", op.name));
+      project_to_update = &(*project_iterator);
+
+      return {};
+    } FC_CAPTURE_AND_RETHROW((op))
+  }
+
+  void_result das33_project_update_evaluator::do_apply( const operation_type& op )
+  {
+    try {
+      auto& d = db();
+
+      d.modify<das33_project_object>(*project_to_update, [&](das33_project_object& dpo){
+	if (op.owner) dpo.owner = *op.owner;
+	if (op.min_to_collect) dpo.min_to_collect = op.min_to_collect;
+	if (op.ratio) dpo.cycles_to_token_ratio = *op.ratio;
+	if (op.status) dpo.status = static_cast<das33_project_status>(*op.status);
+      });
+
+      return {};
+    } FC_CAPTURE_AND_RETHROW((op))
+  }
+
+  void_result das33_project_delete_evaluator::do_evaluate( const operation_type& op )
+  {
+    try {
+      const auto& d = db();
+      const auto& gpo = d.get_global_properties();
+
+      const auto& authority_obj = op.authority(d);
+      d.perform_chain_authority_check("root authority", gpo.authorities.root_administrator, authority_obj);
+
+      const auto& idx = d.get_index_type<das33_project_index>().indices().get<by_id>();
+      auto project_iterator = idx.find(op.project_id);
+      FC_ASSERT(project_iterator != idx.end(), "Das33 project with id ${1} does not exist.", ("1", op.project_id));
+      project_to_delete = &(*project_iterator);
+
+      //TODO: Add assert that project has no pledges
+
+      return {};
+    } FC_CAPTURE_AND_RETHROW((op))
+  }
+
+  void_result das33_project_delete_evaluator::do_apply( const operation_type& op )
+  {
+    try {
+      auto& d = db();
+
+      d.remove(*project_to_delete);
+
+      return {};
+    } FC_CAPTURE_AND_RETHROW((op))
+  }
+
   void_result das33_pledge_cycles_evaluator::do_evaluate(const das33_pledge_cycles_operation& op)
   { try {
 

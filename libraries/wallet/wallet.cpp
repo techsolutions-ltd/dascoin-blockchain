@@ -1243,6 +1243,27 @@ public:
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (clearing_enabled)(clearing_interval_time_seconds)(collateral_dascoin)(collateral_webeur)(broadcast) ) }
 
+   signed_transaction update_daspay_delayed_unreserve_parameters(const string& authority,
+                                                        optional<bool> delayed_unreserve_enabled,
+                                                        optional<uint32_t> delayed_unreserve_interval_time_seconds,
+                                                        bool broadcast)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      update_daspay_delayed_unreserve_parameters_operation op;
+
+      op.authority = get_account(authority).id;
+      op.delayed_unreserve_enabled = delayed_unreserve_enabled;
+      op.delayed_unreserve_interval_time_seconds = delayed_unreserve_interval_time_seconds;
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (delayed_unreserve_enabled)(delayed_unreserve_interval_time_seconds)(broadcast) ) }
+
    signed_transaction tether_accounts(string wallet, string vault, bool broadcast = false)
    { try {
       FC_ASSERT( !self.is_locked() );
@@ -5303,6 +5324,17 @@ signed_transaction wallet_api::update_daspay_clearing_parameters(const string& a
                                                clearing_interval_time_seconds,
                                                collateral_dascoin,
                                                collateral_webeur,
+                                               broadcast);
+}
+
+signed_transaction wallet_api::update_daspay_delayed_unreserve_parameters(const string& authority,
+                                                                 optional<bool> delayed_unreserve_enabled,
+                                                                 optional<uint32_t> delayed_unreserve_interval_time_seconds,
+                                                                 bool broadcast) const
+{
+  return my->update_daspay_delayed_unreserve_parameters(authority,
+                                               delayed_unreserve_enabled,
+                                               delayed_unreserve_interval_time_seconds,
                                                broadcast);
 }
 

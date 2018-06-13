@@ -1859,6 +1859,19 @@ class wallet_api
                                                            optional<share_type> collateral_webeur,
                                                            bool broadcast) const;
 
+      /**
+       * Update various daspay delayed unreserve parameters
+       *
+       * @param authority                                               This MUST be daspay authority.
+       * @param delayed_unreserve_enabled                               true if clearing is enabled
+       * @param delayed_unreserve_interval_time_seconds                 time in seconds between Daspay delayed unreserve events
+       * @param broadcast                                               true to broadcast the transaction on the network.
+       */
+      signed_transaction update_daspay_delayed_unreserve_parameters(const string& authority,
+                                                           optional<bool> delayed_unreserve_enabled,
+                                                           optional<uint32_t> delayed_unreserve_interval_time_seconds,
+                                                           bool broadcast) const;
+
 
       //////////////////////////
       // REQUESTS:            //
@@ -2159,6 +2172,8 @@ FC_API( graphene::wallet::wallet_api,
         (daspay_credit_account)
         (get_daspay_authority_for_account)
         (update_daspay_clearing_parameters)
+        (update_daspay_delayed_unreserve_parameters)
+
 
         // Requests:
         (get_all_webasset_issue_requests)
@@ -2169,5 +2184,5 @@ FC_API( graphene::wallet::wallet_api,
         (get_reward_queue_size)
         (get_queue_submissions_with_pos)
 
-	(set_chain_authority)
+        (set_chain_authority)
       )

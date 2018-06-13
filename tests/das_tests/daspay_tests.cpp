@@ -504,5 +504,18 @@ BOOST_AUTO_TEST_CASE( daspay_clearing_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( update_daspay_delayed_unreserve_parameters_unit_test )
+{ try {
+
+  do_op(update_daspay_delayed_unreserve_parameters_operation(get_daspay_administrator_id(),
+                                                    {true},
+                                                    {600}));
+
+  const auto& daspay_params = get_daspay_parameters();
+  BOOST_CHECK_EQUAL( daspay_params.delayed_unreserve_enabled, true );
+  BOOST_CHECK_EQUAL( daspay_params.delayed_unreserve_interval_time_seconds, 600 );
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_SUITE_END()  // dascoin_tests::daspay_tests
 BOOST_AUTO_TEST_SUITE_END()  // dascoin_tests

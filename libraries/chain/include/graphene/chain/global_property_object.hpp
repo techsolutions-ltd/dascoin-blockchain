@@ -62,8 +62,11 @@ namespace graphene { namespace chain {
            uint32_t clearing_interval_time_seconds = DASPAY_DEFAULT_CLEARING_INTERVAL_TIME_SECONDS; ///< in seconds
            share_type collateral_dascoin = DASPAY_DEFAULT_CLEARING_COLLATERAL_DASC; ///< by default set to 0
            share_type collateral_webeur = DASPAY_DEFAULT_CLEARING_COLLATERAL_WEBEUR; ///< by default set to 0
+           bool delayed_unreserve_enabled = DASPAY_DEFAULT_DELAYED_UNRESOLVE_ENABLED; ///< by default off
+           uint32_t delayed_unreserve_interval_time_seconds = DASPAY_DEFAULT_DELAYED_UNRESERVE_INTERVAL_TIME_SECONDS; ///< in seconds
          };
          daspay daspay_parameters;
+
    };
 
    /**
@@ -143,11 +146,12 @@ namespace graphene { namespace chain {
          frequency_type frequency;
 
          /**
-          * Daspay transaction ratio percentage
+          * Daspay
           */
          share_type daspay_debit_transaction_ratio = 0;
          share_type daspay_credit_transaction_ratio = 0;
          time_point_sec daspay_next_clearing_time = fc::time_point_sec();
+         time_point_sec daspay_next_delayed_unreserve_time = fc::time_point_sec();
 
 
          /**
@@ -229,6 +233,7 @@ FC_REFLECT_DERIVED( graphene::chain::dynamic_global_property_object, (graphene::
                     (daspay_debit_transaction_ratio)
                     (daspay_credit_transaction_ratio)
                     (daspay_next_clearing_time)
+                    (daspay_next_delayed_unreserve_time)
                     (dynamic_flags)
                     (last_irreversible_block_num)
                     (next_dascoin_reward_time)

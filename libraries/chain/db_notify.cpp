@@ -407,6 +407,11 @@ struct get_impacted_account_visitor
      _impacted.insert( op.authority );
    }
 
+   void operator()( const update_daspay_delayed_unreserve_parameters_operation& op )
+   {
+     _impacted.insert( op.authority );
+   }
+
    void operator() ( const issue_free_cycles_operation& op )
    {
       _impacted.insert( op.authority );

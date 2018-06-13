@@ -122,7 +122,7 @@ namespace graphene { namespace chain {
     >
   > payment_service_provider_multi_index_type;
 
-  typedef generic_index<payment_service_provider_object, payment_service_provider_multi_index_type> payment_service_provider_index;
+  using payment_service_provider_index = generic_index<payment_service_provider_object, payment_service_provider_multi_index_type>;
 
   struct by_daspay_user;
   struct by_payment_provider;

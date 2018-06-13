@@ -143,12 +143,20 @@ struct cycle_price
    frequency_type             frequency;
 };
 
+struct dasc_holder
+{
+    account_id_type           holder;
+    uint32_t                  vaults;
+    share_type                amount;
+};
+
 struct daspay_authority
 {
    account_id_type            payment_provider;
    public_key_type            daspay_public_key;
    optional<string>           memo;
 };
+
 
 /**
  * @brief The database_api class implements the RPC API for the chain database.
@@ -856,6 +864,12 @@ class database_api
        */
       optional<cycle_price> calculate_cycle_price(share_type cycle_amount, asset_id_type asset_id) const;
 
+      /**
+       * @brief Calculates and returns the list of top 100 dascoin holders.
+       * @return Vector of dasc_holder objects.
+       */
+      vector<dasc_holder> get_top_dasc_holders() const;
+
       //////////////////////////
       // DASPAY:              //
       //////////////////////////
@@ -886,6 +900,7 @@ FC_REFLECT( graphene::app::market_trade, (sequence)(date)(price)(amount)(value) 
 FC_REFLECT( graphene::app::agregated_limit_orders_with_same_price, (price)(base_volume)(quote_volume)(count) );
 FC_REFLECT( graphene::app::limit_orders_grouped_by_price, (buy)(sell) );
 FC_REFLECT( graphene::app::cycle_price, (cycle_amount)(asset_amount)(frequency) );
+FC_REFLECT( graphene::app::dasc_holder, (holder)(vaults)(amount) );
 FC_REFLECT( graphene::app::daspay_authority, (payment_provider)(daspay_public_key)(memo) );
 
 FC_API( graphene::app::database_api,
@@ -1023,6 +1038,9 @@ FC_API( graphene::app::database_api,
 
    // Calculate cycle price
    (calculate_cycle_price)
+
+   // Top dascoin holders
+   (get_top_dasc_holders)
 
    // DasPay
    (get_payment_service_providers)

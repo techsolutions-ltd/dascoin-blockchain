@@ -123,7 +123,8 @@ namespace graphene { namespace chain {
     asset to_debit;
   };
 
-  class daspay_credit_account_evaluator : public evaluator<daspay_credit_account_evaluator> {
+  class daspay_credit_account_evaluator : public evaluator<daspay_credit_account_evaluator>
+  {
   public:
     typedef daspay_credit_account_operation operation_type;
 
@@ -132,6 +133,15 @@ namespace graphene { namespace chain {
 
   private:
     asset to_credit;
+  };
+
+  class update_daspay_clearing_parameters_evaluator : public evaluator<update_daspay_clearing_parameters_evaluator>
+  {
+  public:
+    typedef update_daspay_clearing_parameters_operation operation_type;
+
+    void_result do_evaluate(const update_daspay_clearing_parameters_operation& op);
+    void_result do_apply(const update_daspay_clearing_parameters_operation& op);
   };
 
 } }  // namespace graphene::chain

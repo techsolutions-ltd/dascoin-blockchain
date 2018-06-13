@@ -284,6 +284,7 @@ void database::initialize_evaluators()
    register_evaluator<unreserve_asset_on_account_evaluator>();
    register_evaluator<daspay_debit_account_evaluator>();
    register_evaluator<daspay_credit_account_evaluator>();
+   register_evaluator<update_daspay_clearing_parameters_evaluator>();
    register_evaluator<das33_project_create_evaluator>();
    register_evaluator<das33_project_update_evaluator>();
    register_evaluator<das33_project_delete_evaluator>();

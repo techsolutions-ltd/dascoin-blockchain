@@ -117,6 +117,11 @@ account_id_type database_fixture::get_daspay_administrator_id() const
   return db.get_global_properties().authorities.daspay_administrator;
 }
 
+const global_property_object::daspay& database_fixture::get_daspay_parameters() const
+{
+  return db.get_global_properties().daspay_parameters;
+}
+
 asset_id_type database_fixture::get_web_asset_id() const
 {
   return db.get_web_asset_id();

@@ -188,9 +188,11 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
 
       optional<cycle_price> calculate_cycle_price(share_type cycle_amount, asset_id_type asset_id) const;
 
+      vector<dasc_holder> get_top_dasc_holders() const;
+
       // DasPay:
       vector<payment_service_provider_object> get_payment_service_providers() const;
-      optional<daspay_authority> get_daspay_authority_for_account(account_id_type account) const;
+      optional<vector<daspay_authority>> get_daspay_authority_for_account(account_id_type account) const;
 
       template<typename T>
       void subscribe_to_item( const T& i )const
@@ -2536,6 +2538,49 @@ optional<cycle_price> database_api_impl::calculate_cycle_price(share_type cycle_
     return cycle_price{cycle_amount, asset(price * std::pow(10, asset_obj.precision), asset_obj.id), dgpo.frequency};
 }
 
+vector<dasc_holder> database_api::get_top_dasc_holders() const
+{
+    return my->get_top_dasc_holders();
+}
+
+vector<dasc_holder> database_api_impl::get_top_dasc_holders() const
+{
+    static const uint32_t max_holders = 100;
+    vector<dasc_holder> tmp;
+    const auto& dasc_id = _db.get_dascoin_asset_id();
+    const auto& idx = _db.get_index_type<account_index>().indices().get<by_id>();
+    for ( auto it = idx.cbegin(); it != idx.cend(); ++it )
+    {
+        const auto& account = *it;
+        dasc_holder holder;
+        holder.holder = account.id;
+        if (account.kind == account_kind::wallet)
+        {
+            holder.vaults = account.vault.size();
+            const auto& balance_obj = _db.get_balance_object(account.id, dasc_id);
+            holder.amount = balance_obj.balance;
+            std::for_each(account.vault.begin(), account.vault.end(), [this, &holder, &dasc_id](const account_id_type& vault_id) {
+                const auto& balance_obj = _db.get_balance_object(vault_id, dasc_id);
+                holder.amount += balance_obj.balance;
+            });
+            tmp.emplace_back(holder);
+        }
+        else if (account.kind == account_kind::custodian || (account.kind == account_kind::vault && account.parents.empty()))
+        {
+            holder.vaults = 0;
+            const auto& balance_obj = _db.get_balance_object(account.id, dasc_id);
+            holder.amount = balance_obj.balance;
+            tmp.emplace_back(holder);
+        }
+    }
+
+    std::partial_sort(tmp.begin(), tmp.begin() + max_holders, tmp.end(), [](dasc_holder& a, dasc_holder& b) {
+        return a.amount > b.amount;
+    });
+    vector<dasc_holder> ret(tmp.begin(), tmp.begin() + max_holders);
+    return ret;
+}
+
 //////////////////////////////////////////////////////////////////////
 //                                                                  //
 // DASPAY:                                                          //
@@ -2547,20 +2592,27 @@ vector<payment_service_provider_object> database_api::get_payment_service_provid
     return my->list_all_objects<payment_service_provider_index, by_payment_service_provider>();
 }
 
-optional<daspay_authority> database_api::get_daspay_authority_for_account(account_id_type account) const
+optional<vector<daspay_authority>> database_api::get_daspay_authority_for_account(account_id_type account) const
 {
     return my->get_daspay_authority_for_account(account);
 }
 
-optional<daspay_authority> database_api_impl::get_daspay_authority_for_account(account_id_type account) const
+optional<vector<daspay_authority>> database_api_impl::get_daspay_authority_for_account(account_id_type account) const
 {
     const auto& idx = _db.get_index_type<daspay_authority_index>().indices().get<by_daspay_user>();
-    const auto& it = idx.find(account);
+    auto it = idx.lower_bound(account);
     if (it == idx.end())
     {
         return {};
     }
-    return daspay_authority{it->payment_provider, it->daspay_public_key, it->memo};
+    vector<daspay_authority> ret;
+    while (it != idx.end())
+    {
+        ret.emplace_back(daspay_authority{it->payment_provider, it->daspay_public_key, it->memo});
+        ++it;
+    }
+
+    return ret;
 }
 
 //////////////////////////////////////////////////////////////////////

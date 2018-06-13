@@ -402,6 +402,11 @@ struct get_impacted_account_visitor
      _impacted.insert( op.payment_service_provider_account );
    }
 
+   void operator()( const update_daspay_clearing_parameters_operation& op )
+   {
+     _impacted.insert( op.authority );
+   }
+
    void operator() ( const issue_free_cycles_operation& op )
    {
       _impacted.insert( op.authority );

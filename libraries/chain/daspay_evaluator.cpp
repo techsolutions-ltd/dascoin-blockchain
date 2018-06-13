@@ -300,14 +300,14 @@ namespace graphene { namespace chain {
     return {};
   } FC_CAPTURE_AND_RETHROW((op)) }
 
-  void_result daspay_debit_account_evaluator::do_apply(const daspay_debit_account_operation& op)
+  operation_result daspay_debit_account_evaluator::do_apply(const daspay_debit_account_operation& op)
   { try {
     auto& d = db();
 
     d.adjust_balance(op.account, asset{0, to_debit.asset_id}, -to_debit.amount);
     d.adjust_balance(op.clearing_account, to_debit, 0);
 
-    return {};
+    return to_debit;
 
   } FC_CAPTURE_AND_RETHROW((op)) }
 
@@ -345,14 +345,14 @@ namespace graphene { namespace chain {
 
   } FC_CAPTURE_AND_RETHROW((op)) }
 
-  void_result daspay_credit_account_evaluator::do_apply(const operation_type& op)
+  operation_result daspay_credit_account_evaluator::do_apply(const operation_type& op)
   { try {
     auto& d = db();
 
     d.adjust_balance(op.clearing_account, asset{-to_credit.amount, to_credit.asset_id}, 0);
     d.adjust_balance(op.account, asset{0, to_credit.asset_id}, to_credit.amount);
 
-    return {};
+    return to_credit;
 
   } FC_CAPTURE_AND_RETHROW((op)) }
 

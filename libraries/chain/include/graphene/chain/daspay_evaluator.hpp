@@ -117,7 +117,7 @@ namespace graphene { namespace chain {
     typedef daspay_debit_account_operation operation_type;
 
     void_result do_evaluate( const daspay_debit_account_operation& op );
-    void_result do_apply( const daspay_debit_account_operation& op );
+    operation_result do_apply( const daspay_debit_account_operation& op );
 
   private:
     asset to_debit;
@@ -129,7 +129,7 @@ namespace graphene { namespace chain {
     typedef daspay_credit_account_operation operation_type;
 
     void_result do_evaluate(const operation_type &op);
-    void_result do_apply(const operation_type &op);
+    operation_result do_apply(const operation_type &op);
 
   private:
     asset to_credit;

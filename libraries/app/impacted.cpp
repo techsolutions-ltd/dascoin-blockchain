@@ -505,9 +505,9 @@ struct get_impacted_account_visitor
       _impacted.insert(op.account);
    }
 
-    void operator() (const das33_pledge_cycles_operation& op)
+    void operator() (const das33_pledge_asset_operation& op)
     {
-       _impacted.insert(op.vault_id);
+       _impacted.insert(op.account_id);
     }
 
     void operator() (const das33_project_create_operation& op)

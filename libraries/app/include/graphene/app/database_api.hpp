@@ -48,6 +48,7 @@
 #include <graphene/chain/wire_out_with_fee_object.hpp>
 #include <graphene/chain/witness_object.hpp>
 #include <graphene/chain/daspay_object.hpp>
+#include <graphene/chain/das33_object.hpp>
 
 #include <graphene/market_history/market_history_plugin.hpp>
 
@@ -886,7 +887,16 @@ class database_api
        */
       optional<vector<daspay_authority>> get_daspay_authority_for_account(account_id_type account) const;
 
-   private:
+      //////////////////////////
+      // DAS33:               //
+      //////////////////////////
+
+      vector<das33_pledge_holder_object> get_das33_pledges() const;
+      vector<das33_pledge_holder_object> get_das33_pledges_by_account(account_id_type account) const;
+      vector<das33_pledge_holder_object> get_das33_pledges_by_project(das33_project_id_type project) const;
+
+
+private:
       std::shared_ptr< database_api_impl > my;
 };
 
@@ -1045,4 +1055,9 @@ FC_API( graphene::app::database_api,
    // DasPay
    (get_payment_service_providers)
    (get_daspay_authority_for_account)
+
+   // Das33
+   (get_das33_pledges)
+   (get_das33_pledges_by_account)
+   (get_das33_pledges_by_project)
 )

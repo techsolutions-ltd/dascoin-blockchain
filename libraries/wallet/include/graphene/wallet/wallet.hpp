@@ -1861,6 +1861,15 @@ class wallet_api
 
 
       //////////////////////////
+      // DAS33:               //
+      //////////////////////////
+
+      vector<das33_pledge_holder_object> get_das33_pledges() const;
+      vector<das33_pledge_holder_object> get_das33_pledges_by_account(account_id_type account) const;
+      vector<das33_pledge_holder_object> get_das33_pledges_by_project(das33_project_id_type project) const;
+
+
+      //////////////////////////
       // REQUESTS:            //
       //////////////////////////
 
@@ -2159,6 +2168,11 @@ FC_API( graphene::wallet::wallet_api,
         (daspay_credit_account)
         (get_daspay_authority_for_account)
         (update_daspay_clearing_parameters)
+
+        // Das33
+        (get_das33_pledges)
+        (get_das33_pledges_by_account)
+        (get_das33_pledges_by_project)
 
         // Requests:
         (get_all_webasset_issue_requests)

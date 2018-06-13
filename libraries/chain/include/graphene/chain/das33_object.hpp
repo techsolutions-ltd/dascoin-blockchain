@@ -31,7 +31,6 @@
 #include <boost/multi_index/composite_key.hpp>
 
 namespace graphene { namespace chain {
-  using namespace boost::multi_index;
 
   ///////////////////////////////
   // OBJECTS:                  //
@@ -63,33 +62,33 @@ public:
     {}
   };
 
-  class das33_cycles_pledge_holder_object : public abstract_object<das33_cycles_pledge_holder_object>
+  class das33_pledge_holder_object : public abstract_object<das33_pledge_holder_object>
   {
   public:
     static const uint8_t space_id = implementation_ids;
-    static const uint8_t type_id  = impl_das33_cycles_pledge_holder_object_type;
+    static const uint8_t type_id  = impl_das33_pledge_holder_object_type;
 
-    account_id_type       vault_id;
-    license_type_id_type  license_id;
-    share_type            cycles_amount;
-    share_type            token_amount;
-    das33_project_id_type project_id;
-    time_point_sec        timestamp;
+    account_id_type                account_id;
+    asset                          pledged;
+    asset                          expected;
+    optional<license_type_id_type> license_id;
+    das33_project_id_type          project_id;
+    time_point_sec                 timestamp;
 
     extensions_type extensions;
 
-    das33_cycles_pledge_holder_object() = default;
+    das33_pledge_holder_object() = default;
 
-    explicit das33_cycles_pledge_holder_object(account_id_type vault_id,
-                                               license_type_id_type license_id,
-                                               share_type cycles_amount,
-                                               share_type token_amount,
-                                               das33_project_id_type project_id,
-                                               time_point_sec timestamp)
-            : vault_id(vault_id),
+    explicit das33_pledge_holder_object(account_id_type account_id,
+                                        asset pledged,
+                                        asset expected,
+                                        optional<license_type_id_type> license_id,
+                                        das33_project_id_type project_id,
+                                        time_point_sec timestamp)
+            : account_id(account_id),
+              pledged(pledged),
+              expected(expected),
               license_id(license_id),
-              cycles_amount(cycles_amount),
-              token_amount(token_amount),
               project_id(project_id),
               timestamp(timestamp) {}
   };
@@ -98,38 +97,45 @@ public:
   // MULTI INDEX CONTAINERS:   //
   ///////////////////////////////
 
-  struct by_vault;
+  using boost::multi_index::multi_index_container;
+  using boost::multi_index::indexed_by;
+  using boost::multi_index::ordered_unique;
+  using boost::multi_index::tag;
+  using boost::multi_index::member;
+  using boost::multi_index::composite_key;
+
+  struct by_user;
   struct by_project;
 
-  using das33_cycles_pledge_holder_multi_index_type = boost::multi_index::multi_index_container<
-    das33_cycles_pledge_holder_object,
+  using das33_pledge_holder_multi_index_type = boost::multi_index::multi_index_container<
+    das33_pledge_holder_object,
     indexed_by<
       ordered_unique<
         tag<by_id>,
         member< object, object_id_type, &object::id >
       >,
       ordered_unique<
-        tag<by_vault>,
+        tag<by_user>,
         composite_key<
-          das33_cycles_pledge_holder_object,
-          member< das33_cycles_pledge_holder_object, account_id_type, &das33_cycles_pledge_holder_object::vault_id >,
-          member< das33_cycles_pledge_holder_object, das33_project_id_type, &das33_cycles_pledge_holder_object::project_id >,
+          das33_pledge_holder_object,
+          member< das33_pledge_holder_object, account_id_type, &das33_pledge_holder_object::account_id >,
+          member< das33_pledge_holder_object, das33_project_id_type, &das33_pledge_holder_object::project_id >,
           member< object, object_id_type, &object::id >
         >
       >,
       ordered_unique<
         tag<by_project>,
         composite_key<
-          das33_cycles_pledge_holder_object,
-          member< das33_cycles_pledge_holder_object, das33_project_id_type, &das33_cycles_pledge_holder_object::project_id >,
-          member< das33_cycles_pledge_holder_object, account_id_type, &das33_cycles_pledge_holder_object::vault_id >,
+          das33_pledge_holder_object,
+          member< das33_pledge_holder_object, das33_project_id_type, &das33_pledge_holder_object::project_id >,
+          member< das33_pledge_holder_object, account_id_type, &das33_pledge_holder_object::account_id >,
           member< object, object_id_type, &object::id >
         >
       >
     >
   >;
 
-  using das33_cycles_pledge_holder_index = generic_index<das33_cycles_pledge_holder_object, das33_cycles_pledge_holder_multi_index_type>;
+  using das33_pledge_holder_index = generic_index<das33_pledge_holder_object, das33_pledge_holder_multi_index_type>;
 
   struct by_project_name;
   typedef multi_index_container<
@@ -154,13 +160,13 @@ public:
 // REFLECTIONS:              //
 ///////////////////////////////
 
-FC_REFLECT_DERIVED( graphene::chain::das33_cycles_pledge_holder_object, (graphene::db::object),
-                    (vault_id)
+FC_REFLECT_DERIVED( graphene::chain::das33_pledge_holder_object, (graphene::db::object),
+                    (account_id)
+                    (pledged)
+                    (expected)
                     (license_id)
-                    (cycles_amount)
-                    (token_amount)
-                    (timestamp)
                     (project_id)
+                    (timestamp)
 )
 
 FC_REFLECT_DERIVED( graphene::chain::das33_project_object, (graphene::db::object),

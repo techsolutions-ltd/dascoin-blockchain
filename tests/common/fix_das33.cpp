@@ -42,4 +42,15 @@ namespace graphene { namespace chain {
     return result;
   }
 
+  vector<das33_pledge_holder_object> database_fixture::get_das33_pledges() const
+  {
+    vector<das33_pledge_holder_object> result;
+
+    const auto& idx = db.get_index_type<das33_pledge_holder_index>().indices().get<by_id>();
+    std::copy(idx.begin(), idx.end(), std::back_inserter(result));
+
+    return result;
+  }
+
+
 } }  // namespace graphene::chain

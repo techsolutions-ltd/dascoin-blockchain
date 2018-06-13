@@ -193,7 +193,7 @@ namespace graphene { namespace chain {
 	    das33_project_create_operation,
 	    das33_project_update_operation,
 	    das33_project_delete_operation,
-            das33_pledge_cycles_operation,
+            das33_pledge_asset_operation,
 
             // Virtual operations below this point:
 

@@ -377,6 +377,7 @@ struct database_fixture {
 
    // fix_das33.cpp
    vector<das33_project_object> get_das33_projects() const;
+   vector<das33_pledge_holder_object> get_das33_pledges() const;
 
    // fix_web_assets.cpp
    asset web_asset(share_type amount);

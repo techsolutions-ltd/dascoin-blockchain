@@ -194,6 +194,10 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<payment_service_provider_object> get_payment_service_providers() const;
       optional<vector<daspay_authority>> get_daspay_authority_for_account(account_id_type account) const;
 
+      // Das33
+      vector<das33_pledge_holder_object> get_das33_pledges_by_account(account_id_type account) const;
+      vector<das33_pledge_holder_object> get_das33_pledges_by_project(das33_project_id_type project) const;
+
       template<typename T>
       void subscribe_to_item( const T& i )const
       {
@@ -2614,6 +2618,56 @@ optional<vector<daspay_authority>> database_api_impl::get_daspay_authority_for_a
 
     return ret;
 }
+
+//////////////////////////////////////////////////////////////////////
+//                                                                  //
+// DAS33:                                                          //
+//                                                                  //
+//////////////////////////////////////////////////////////////////////
+
+vector<das33_pledge_holder_object> database_api::get_das33_pledges() const
+{
+    return my->list_all_objects<das33_pledge_holder_index, by_id>();
+}
+
+vector<das33_pledge_holder_object> database_api::get_das33_pledges_by_account(account_id_type account) const
+{
+    return my->get_das33_pledges_by_account(account);
+}
+
+vector<das33_pledge_holder_object> database_api::get_das33_pledges_by_project(das33_project_id_type project) const
+{
+    return my->get_das33_pledges_by_project(project);
+}
+
+vector<das33_pledge_holder_object> database_api_impl::get_das33_pledges_by_account(account_id_type account) const
+{
+    vector<typename das33_pledge_holder_index::object_type> result;
+
+//    const auto& idx = _db.get_index_type<das33_pledge_holder_index>().indices().get<by_user>();
+//    auto it = idx.find(account);
+//    while (it != idx.end() && it->account_id == account)
+//    {
+//        result.emplace_back(*it);
+//        ++it;
+//    }
+
+    const auto& idx = _db.get_index_type<das33_pledge_holder_index>().indices().get<by_user>().equal_range(account);
+    std::copy(idx.first, idx.second, std::back_inserter(result));
+
+    return result;
+}
+
+vector<das33_pledge_holder_object> database_api_impl::get_das33_pledges_by_project(das33_project_id_type project) const
+{
+    vector<typename das33_pledge_holder_index::object_type> result;
+
+    const auto& idx = _db.get_index_type<das33_pledge_holder_index>().indices().get<by_project>().equal_range(project);
+    std::copy(idx.first, idx.second, std::back_inserter(result));
+
+    return result;
+}
+
 
 //////////////////////////////////////////////////////////////////////
 //                                                                  //

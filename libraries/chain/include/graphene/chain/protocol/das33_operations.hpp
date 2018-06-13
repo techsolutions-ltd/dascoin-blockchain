@@ -117,29 +117,29 @@ namespace graphene { namespace chain {
       share_type calculate_fee(const fee_parameters_type&) const { return 0; }
     };
 
-    struct das33_pledge_cycles_operation : public base_operation
+    struct das33_pledge_asset_operation : public base_operation
     {
       struct fee_parameters_type {};
       asset fee;
 
-      account_id_type        vault_id;
-      license_type_id_type   license_id;
-      share_type             cycles_amount;
-      das33_project_id_type  project_id;
-      extensions_type        extensions;
+      account_id_type                 account_id;
+      asset                           pledged;
+      optional<license_type_id_type>  license_id;
+      das33_project_id_type           project_id;
+      extensions_type                 extensions;
 
-      das33_pledge_cycles_operation() = default;
+      das33_pledge_asset_operation() = default;
 
-      explicit das33_pledge_cycles_operation(const account_id_type& vault_id,
-                                             const license_type_id_type& license_id,
-                                             share_type cycles_amount,
-                                             const das33_project_id_type& project_id)
-              : vault_id(vault_id)
+      explicit das33_pledge_asset_operation(const account_id_type& account_id,
+                                            const asset& pledged,
+                                            const license_type_id_type& license_id,
+                                            const das33_project_id_type& project_id)
+              : account_id(account_id)
+              , pledged(pledged)
               , license_id(license_id)
-              , cycles_amount(cycles_amount)
               , project_id(project_id) {}
 
-      account_id_type fee_payer() const { return vault_id; }
+      account_id_type fee_payer() const { return account_id; }
       void validate() const;
       share_type calculate_fee(const fee_parameters_type&) const { return 0; }
     };
@@ -150,12 +150,12 @@ namespace graphene { namespace chain {
 // REFLECTIONS:               //
 ////////////////////////////////
 
-FC_REFLECT( graphene::chain::das33_pledge_cycles_operation::fee_parameters_type, )
-FC_REFLECT( graphene::chain::das33_pledge_cycles_operation,
+FC_REFLECT( graphene::chain::das33_pledge_asset_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::das33_pledge_asset_operation,
             (fee)
-            (vault_id)
+            (account_id)
+            (pledged)
             (license_id)
-            (cycles_amount)
             (project_id)
             (extensions)
           )

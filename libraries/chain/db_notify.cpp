@@ -501,9 +501,9 @@ struct get_impacted_account_visitor
      _impacted.insert(op.account);
    }
 
-   void operator() (const das33_pledge_cycles_operation& op)
+   void operator() (const das33_pledge_asset_operation& op)
    {
-     _impacted.insert(op.vault_id);
+     _impacted.insert(op.account_id);
    }
 
    void operator() (const das33_project_create_operation& op)
@@ -707,7 +707,7 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
              break;
            case impl_das33_project_object_type:
              break;
-           case impl_das33_cycles_pledge_holder_object_type:
+           case impl_das33_pledge_holder_object_type:
                break;
       }
    }

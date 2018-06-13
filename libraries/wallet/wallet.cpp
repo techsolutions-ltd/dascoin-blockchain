@@ -5306,6 +5306,23 @@ signed_transaction wallet_api::update_daspay_clearing_parameters(const string& a
                                                broadcast);
 }
 
+vector<das33_pledge_holder_object> wallet_api::get_das33_pledges() const
+{
+    return my->_remote_db->get_das33_pledges();
+}
+
+vector<das33_pledge_holder_object> wallet_api::get_das33_pledges_by_account(account_id_type account) const
+{
+   account_object account_obj = my->get_account(account);
+   return my->_remote_db->get_das33_pledges_by_account(account_obj.id);
+   //return my->_remote_db->get_das33_pledges_by_account(account);
+}
+
+vector<das33_pledge_holder_object> wallet_api::get_das33_pledges_by_project(das33_project_id_type project) const
+{
+    return my->_remote_db->get_das33_pledges_by_project(project);
+}
+
 signed_block_with_info::signed_block_with_info( const signed_block& block )
    : signed_block( block )
 {

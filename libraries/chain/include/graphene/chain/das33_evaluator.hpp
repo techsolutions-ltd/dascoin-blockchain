@@ -61,10 +61,10 @@ namespace graphene { namespace chain {
     const das33_project_object* project_to_delete = nullptr;
   };
 
-  class das33_pledge_cycles_evaluator : public evaluator<das33_pledge_cycles_evaluator>
+  class das33_pledge_asset_evaluator : public evaluator<das33_pledge_asset_evaluator>
   {
   public:
-    typedef das33_pledge_cycles_operation operation_type;
+    typedef das33_pledge_asset_operation operation_type;
 
     void_result do_evaluate( const operation_type& op );
     object_id_type do_apply( const operation_type& op );

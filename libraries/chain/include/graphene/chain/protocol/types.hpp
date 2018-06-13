@@ -270,7 +270,7 @@ namespace graphene { namespace chain {
       impl_daspay_authority_object_type,
       impl_payment_service_provider_object_type,
       impl_das33_project_object_type,
-      impl_das33_cycles_pledge_holder_object_type
+      impl_das33_pledge_holder_object_type
    };
 
    //typedef fc::unsigned_int            object_id_type;
@@ -339,7 +339,7 @@ namespace graphene { namespace chain {
    class daspay_authority_object;
    class payment_service_provider_object;
    class das33_project_object;
-   class das33_cycles_pledge_holder_object;
+   class das33_pledge_holder_object;
 
    typedef object_id< implementation_ids, impl_global_property_object_type,  global_property_object>                    global_property_id_type;
    typedef object_id< implementation_ids, impl_dynamic_global_property_object_type,  dynamic_global_property_object>    dynamic_global_property_id_type;
@@ -410,8 +410,8 @@ namespace graphene { namespace chain {
       > das33_project_id_type;
 
    typedef object_id<
-         implementation_ids, impl_das33_cycles_pledge_holder_object_type, das33_cycles_pledge_holder_object
-      > das33_cycles_pledge_holder_id_type;
+         implementation_ids, impl_das33_pledge_holder_object_type, das33_pledge_holder_object
+      > das33_pledge_holder_id_type;
 
    typedef fc::array<char, GRAPHENE_MAX_ASSET_SYMBOL_LENGTH>    symbol_type;
    typedef fc::ripemd160                                        block_id_type;
@@ -636,7 +636,7 @@ FC_REFLECT_ENUM( graphene::chain::impl_object_type,
                  (impl_daspay_authority_object_type)
                  (impl_payment_service_provider_object_type)
                  (impl_das33_project_object_type)
-                 (impl_das33_cycles_pledge_holder_object_type)
+                 (impl_das33_pledge_holder_object_type)
                )
 
 FC_REFLECT_TYPENAME( graphene::chain::share_type )
@@ -682,7 +682,7 @@ FC_REFLECT_TYPENAME( graphene::chain::witness_delegate_data_colection_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::wire_out_with_fee_holder_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::payment_service_provider_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::das33_project_id_type )
-FC_REFLECT_TYPENAME( graphene::chain::das33_cycles_pledge_holder_id_type )
+FC_REFLECT_TYPENAME( graphene::chain::das33_pledge_holder_id_type )
 
 FC_REFLECT( graphene::chain::void_t, )
 

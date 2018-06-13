@@ -76,6 +76,28 @@ BOOST_AUTO_TEST_CASE( das33_project_test )
     BOOST_CHECK_EQUAL(get_das33_projects().size(), 0);
 } FC_LOG_AND_RETHROW() }
 
+
+BOOST_AUTO_TEST_CASE( das33_test )
+{ try {
+
+    ACTOR(alice);
+    VAULT_ACTOR(alicev);
+
+    tether_accounts(alice_id, alicev_id);
+
+    // Issue a bunch of assets
+    issue_dascoin(alicev_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+    issue_dascoin(alice_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+    issue_webasset("1", alice_id, 100, 100);
+    BOOST_CHECK_EQUAL( get_balance(alicev_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
+    BOOST_CHECK_EQUAL( get_balance(alice_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
+    BOOST_CHECK_EQUAL( get_balance(alice_id, get_web_asset_id()), 100 );
+
+    // Check for empty pledges holder object
+    BOOST_CHECK_EQUAL(get_das33_pledges().size(), 0);
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_SUITE_END()  // dascoin_tests::das33_tests
 BOOST_AUTO_TEST_SUITE_END()  // dascoin_tests
 

@@ -237,7 +237,7 @@ object_id_type issue_license_evaluator::do_apply(const issue_license_operation& 
     });
   }
 
-  if ( kind == license_kind::regular || kind == license_kind::locked_frequency )
+  if ( kind == license_kind::regular || kind == license_kind::locked_frequency || kind == license_kind::utility)
   {
     d.issue_cycles(op.account, amount);
   }

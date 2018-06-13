@@ -498,6 +498,7 @@ REFLECT_ENUM_CHECK( graphene::chain::license_kind,
                     (chartered)
                     (promo)
                     (locked_frequency)
+                    (utility)
                     (none)
                     (LICENSE_KIND_COUNT)
                   )
@@ -530,6 +531,7 @@ REFLECT_ENUM_CHECK( graphene::chain::dascoin_origin_kind,
                     (user_submit)
                     (charter_license)
                     (reserve_cycles)
+                    (utility_license)
                     (DASCOIN_ORIGIN_KIND_COUNT)
                   )
 

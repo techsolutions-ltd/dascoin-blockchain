@@ -56,7 +56,7 @@ namespace graphene { namespace chain {
         else if (p == utility)
           return policy_class::get_amount_to_upgrade(upgradeable);
         else if (p == utility_president)
-          return policy_class::get_amount_to_upgrade_das_33_license(upgradeable);
+          return policy_class::get_amount_to_upgrade_utility_president(upgradeable);
       }
 
     private:
@@ -73,7 +73,7 @@ namespace graphene { namespace chain {
       }
 
       template<typename T>
-      static share_type get_amount_to_upgrade_das_33_license(const T& upgradeable)
+      static share_type get_amount_to_upgrade_utility_president(const T& upgradeable)
       {
         return upgradeable.base_amount;
       }

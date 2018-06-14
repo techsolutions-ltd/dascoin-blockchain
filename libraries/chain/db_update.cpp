@@ -699,18 +699,24 @@ void database::daspay_resolve_unreserve()
   const auto& params = get_global_properties();
   const auto& dgpo = get_dynamic_global_properties();
 
-  if ( dgpo.daspay_next_clearing_time > head_block_time() )
+  if ( dgpo.daspay_next_delayed_unreserve_time > head_block_time() )
     return;
 
   ilog("resolve unreserve smart contract running");
   const auto& idx = get_index_type<daspay_delayed_unreserve_index>().indices().get<by_account>();
   for (auto it = idx.cbegin(); it != idx.cend(); ++it)
   {
-
+    ilog("issued_time ${i}, skip ${s}", ("i", it->issued_time)("s", it->skip));
+    if (it->issued_time + it->skip >= head_block_time())
+    {
+      ilog("unreserving ${d}", ("d", to_pretty_string(it->asset_to_unreserve)));
+      adjust_balance( it->account, asset{ it->asset_to_unreserve.amount, get_dascoin_asset_id() }, -it->asset_to_unreserve.amount );
+      remove(*it);
+    }
   }
 
   modify(dgpo, [&](dynamic_global_property_object& dgpo){
-    dgpo.daspay_next_clearing_time = head_block_time() + params.daspay_parameters.clearing_interval_time_seconds;
+    dgpo.daspay_next_delayed_unreserve_time = head_block_time() + params.daspay_parameters.delayed_unreserve_interval_time_seconds;
   });
 
 } FC_CAPTURE_AND_RETHROW() }

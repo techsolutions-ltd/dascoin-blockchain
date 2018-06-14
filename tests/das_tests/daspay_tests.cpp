@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE( reserve_asset_on_account_test )
   adjust_dascoin_reward(500 * DASCOIN_DEFAULT_ASSET_PRECISION);
   adjust_frequency(200);
 
-  // Wait for the cycles to be distributed:
+  // Wait for the coins to be distributed:
   generate_blocks(db.head_block_time() + fc::seconds(get_chain_parameters().reward_interval_time_seconds));
   BOOST_CHECK_EQUAL( get_balance(bar_id, get_dascoin_asset_id()), 605 * DASCOIN_DEFAULT_ASSET_PRECISION );
 
@@ -243,7 +243,7 @@ BOOST_AUTO_TEST_CASE( unreserve_asset_on_account_test )
   adjust_dascoin_reward(500 * DASCOIN_DEFAULT_ASSET_PRECISION);
   adjust_frequency(200);
 
-  // Wait for the cycles to be distributed:
+  // Wait for the coins to be distributed:
   generate_blocks(db.head_block_time() + fc::seconds(get_chain_parameters().reward_interval_time_seconds));
   BOOST_CHECK_EQUAL( get_balance(bar_id, get_dascoin_asset_id()), 605 * DASCOIN_DEFAULT_ASSET_PRECISION );
 
@@ -265,6 +265,17 @@ BOOST_AUTO_TEST_CASE( unreserve_asset_on_account_test )
   GRAPHENE_REQUIRE_THROW( do_op(unreserve_asset_on_account_operation(foo_id, asset{ 60 * DASCOIN_DEFAULT_ASSET_PRECISION, db.get_dascoin_asset_id() })), fc::exception );
 
   do_op(unreserve_asset_on_account_operation(foo_id, asset{ 10 * DASCOIN_DEFAULT_ASSET_PRECISION, db.get_dascoin_asset_id() }));
+
+  // Fails: cannot issue another unreserve operation before the first one is resolved:
+  GRAPHENE_REQUIRE_THROW( do_op(unreserve_asset_on_account_operation(foo_id, asset{ 10 * DASCOIN_DEFAULT_ASSET_PRECISION, db.get_dascoin_asset_id() })), fc::exception );
+
+  // Unreserve resolver is not working, so no change on the balance:
+  BOOST_CHECK_EQUAL( get_balance(foo_id, get_dascoin_asset_id()), 50 * DASCOIN_DEFAULT_ASSET_PRECISION );
+  BOOST_CHECK_EQUAL( get_reserved_balance(foo_id, get_dascoin_asset_id()), 50 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+  // Start unreserve resolver and wait
+  do_op(update_daspay_delayed_unreserve_parameters_operation(get_daspay_administrator_id(), true, 60));
+  generate_blocks(db.head_block_time() + fc::seconds(100));
 
   BOOST_CHECK_EQUAL( get_balance(foo_id, get_dascoin_asset_id()), 60 * DASCOIN_DEFAULT_ASSET_PRECISION );
   BOOST_CHECK_EQUAL( get_reserved_balance(foo_id, get_dascoin_asset_id()), 40 * DASCOIN_DEFAULT_ASSET_PRECISION );
@@ -291,7 +302,7 @@ BOOST_AUTO_TEST_CASE( daspay_debit_test )
   adjust_dascoin_reward(500 * DASCOIN_DEFAULT_ASSET_PRECISION);
   adjust_frequency(200);
 
-  // Wait for the cycles to be distributed:
+  // Wait for the coins to be distributed:
   generate_blocks(db.head_block_time() + fc::seconds(get_chain_parameters().reward_interval_time_seconds));
 
   public_key_type pk = public_key_type(generate_private_key("foo").get_public_key());
@@ -368,7 +379,7 @@ BOOST_AUTO_TEST_CASE( daspay_credit_test )
   adjust_dascoin_reward(500 * DASCOIN_DEFAULT_ASSET_PRECISION);
   adjust_frequency(200);
 
-  // Wait for the cycles to be distributed:
+  // Wait for the coins to be distributed:
   generate_blocks(db.head_block_time() + fc::seconds(get_chain_parameters().reward_interval_time_seconds));
 
   // Fails: cannot credit 0 amount
@@ -457,7 +468,7 @@ BOOST_AUTO_TEST_CASE( daspay_clearing_test )
   adjust_dascoin_reward(500 * DASCOIN_DEFAULT_ASSET_PRECISION);
   adjust_frequency(200);
 
-  // Wait for the cycles to be distributed:
+  // Wait for the coins to be distributed:
   generate_blocks(db.head_block_time() + fc::seconds(get_chain_parameters().reward_interval_time_seconds));
 
   vector<account_id_type> v{clearing_id};

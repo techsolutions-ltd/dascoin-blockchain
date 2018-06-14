@@ -24,6 +24,7 @@
 
 #include <graphene/chain/das33_evaluator.hpp>
 #include <graphene/chain/database.hpp>
+#include <iostream>
 
 namespace graphene { namespace chain {
 
@@ -54,7 +55,7 @@ namespace graphene { namespace chain {
 	     dpo.token_id = op.token;
 	     dpo.min_to_collect = op.min_to_collect;
 	     dpo.collected = 0;
-	     dpo.cycles_to_token_ratio = op.ratio;
+	     dpo.token_prices = op.ratios;
 	     dpo.status = das33_project_status::inactive;
 	   }).id;
     } FC_CAPTURE_AND_RETHROW((op))
@@ -86,7 +87,7 @@ namespace graphene { namespace chain {
       d.modify<das33_project_object>(*project_to_update, [&](das33_project_object& dpo){
 	if (op.owner) dpo.owner = *op.owner;
 	if (op.min_to_collect) dpo.min_to_collect = op.min_to_collect;
-	if (op.ratio) dpo.cycles_to_token_ratio = *op.ratio;
+	if (op.ratios.size() > 0) dpo.token_prices = op.ratios;
 	if (op.status) dpo.status = static_cast<das33_project_status>(*op.status);
       });
 

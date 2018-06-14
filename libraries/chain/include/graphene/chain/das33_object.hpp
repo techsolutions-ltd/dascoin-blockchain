@@ -47,17 +47,17 @@ public:
     asset_id_type token_id;
     optional<share_type> min_to_collect;
     share_type collected;
-    price cycles_to_token_ratio;
+    vector<price> token_prices;
     das33_project_status status;
 
     das33_project_object() = default;
-    explicit das33_project_object(string name, account_id_type owner, asset_id_type token, share_type min_to_collect, price ratio)
+    explicit das33_project_object(string name, account_id_type owner, asset_id_type token, share_type min_to_collect, vector<price> ratios)
              : name(name),
 	       owner(owner),
 	       token_id(token),
 	       min_to_collect(min_to_collect),
 	       collected(0),
-	       cycles_to_token_ratio(ratio),
+	       token_prices(ratios),
 	       status(das33_project_status::inactive)
     {}
   };
@@ -175,6 +175,6 @@ FC_REFLECT_DERIVED( graphene::chain::das33_project_object, (graphene::db::object
 		    (token_id)
 		    (min_to_collect)
 		    (collected)
-		    (cycles_to_token_ratio)
+		    (token_prices)
 		    (status)
                   )

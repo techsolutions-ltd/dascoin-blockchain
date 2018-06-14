@@ -25,6 +25,7 @@
 #pragma once
 
 #include <graphene/chain/protocol/base.hpp>
+#include <iostream>
 
 namespace graphene { namespace chain {
 
@@ -37,7 +38,7 @@ namespace graphene { namespace chain {
     string                       name;
     account_id_type              owner;
     asset_id_type                token;
-    price			 ratio;
+    vector<price>                ratios;
     optional<share_type>         min_to_collect;
     extensions_type              extensions;
 
@@ -47,13 +48,13 @@ namespace graphene { namespace chain {
 					    const string& name,
 					    const account_id_type& owner,
 					    const asset_id_type& token,
-					    const price& ratio,
+					    const vector<price>& ratios,
 					    share_type min_to_collect)
 	      : authority(authority)
               , name(name)
 	      , owner(owner)
 	      , token(token)
-	      , ratio(ratio)
+	      , ratios(ratios)
 	      , min_to_collect(min_to_collect) {}
 
     account_id_type fee_payer() const { return authority; }
@@ -69,25 +70,12 @@ namespace graphene { namespace chain {
     account_id_type                        authority;
     string                                 name;
     optional<account_id_type>              owner;
-    optional<price>                        ratio;
+    vector<price>                          ratios;
     optional<share_type>                   min_to_collect;
     optional<uint8_t>                      status;
     extensions_type                        extensions;
 
     das33_project_update_operation() = default;
-
-    explicit das33_project_update_operation(const account_id_type& authority,
-					    const string& name,
-					    const optional<account_id_type>& owner,
-					    const optional<price>& ratio,
-					    const optional<share_type>& min_to_collect,
-					    const optional<uint8_t>& status)
-	      : authority(authority)
-              , name(name)
-	      , owner(owner)
-	      , ratio(ratio)
-	      , min_to_collect(min_to_collect)
-              , status(status) {}
 
     account_id_type fee_payer() const { return authority; }
     void validate() const;
@@ -167,7 +155,7 @@ FC_REFLECT( graphene::chain::das33_project_create_operation,
 	    (name)
 	    (owner)
 	    (token)
-	    (ratio)
+	    (ratios)
 	    (min_to_collect)
 	    (extensions)
 	  )
@@ -178,7 +166,7 @@ FC_REFLECT( graphene::chain::das33_project_update_operation,
 	    (authority)
 	    (name)
 	    (owner)
-	    (ratio)
+	    (ratios)
 	    (min_to_collect)
 	    (status)
 	    (extensions)

@@ -2601,12 +2601,14 @@ optional<vector<daspay_authority>> database_api_impl::get_daspay_authority_for_a
 {
     const auto& idx = _db.get_index_type<daspay_authority_index>().indices().get<by_daspay_user>();
     auto it = idx.lower_bound(account);
+    const auto& it_end = idx.upper_bound(account);
+
     if (it == idx.end())
     {
         return {};
     }
     vector<daspay_authority> ret;
-    while (it != idx.end())
+    while (it != it_end)
     {
         ret.emplace_back(daspay_authority{it->payment_provider, it->daspay_public_key, it->memo});
         ++it;

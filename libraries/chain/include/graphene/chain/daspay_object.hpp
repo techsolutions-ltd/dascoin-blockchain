@@ -143,9 +143,9 @@ namespace graphene { namespace chain {
       ordered_unique<
         tag<by_payment_provider>,
           composite_key< daspay_authority_object,
-            member< daspay_authority_object, account_id_type, &daspay_authority_object::payment_provider >,
-            member< daspay_authority_object, account_id_type, &daspay_authority_object::daspay_user >
-          >
+            member< daspay_authority_object, account_id_type, &daspay_authority_object::daspay_user >,
+            member< daspay_authority_object, account_id_type, &daspay_authority_object::payment_provider >
+        >
       >
     >
   >;

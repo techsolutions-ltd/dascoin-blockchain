@@ -66,8 +66,9 @@ namespace graphene { namespace chain {
 
     const auto& idx = d.get_index_type<daspay_authority_index>().indices().get<by_daspay_user>();
     auto itr = idx.lower_bound(op.issuer);
+    const auto& itr_end = idx.upper_bound(op.issuer);
 
-    while( itr != idx.end() )
+    while( itr != itr_end )
     {
       FC_ASSERT ( itr->payment_provider != op.payment_provider, "DasPay payment provider ${p} already set", ("p", op.payment_provider) );
       ++itr;
@@ -153,7 +154,8 @@ namespace graphene { namespace chain {
     auto itr = idx.lower_bound(op.issuer);
     FC_ASSERT( itr != idx.end(), "Cannot unregister DasPay authority because none has been set" );
 
-    while( itr != idx.end() )
+    const auto& itr_end = idx.upper_bound(op.issuer);
+    while( itr != itr_end )
     {
       if ( itr->payment_provider == op.payment_provider )
       {

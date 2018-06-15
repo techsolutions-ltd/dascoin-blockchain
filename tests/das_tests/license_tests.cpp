@@ -965,7 +965,6 @@ BOOST_AUTO_TEST_CASE( utility_license_unit_test )
   share_type frequency_lock = 0;
   const time_point_sec issue_time = db.head_block_time();
   const uint32_t amount = DASCOIN_BASE_STANDARD_CYCLES;
-  const uint32_t bonus = (50 * DASCOIN_BASE_STANDARD_CYCLES) / 100;
 
   // This will fail, frequency cannot be zero:
   GRAPHENE_REQUIRE_THROW( do_op(issue_license_operation(get_license_issuer_id(), vault_id, utility.id,

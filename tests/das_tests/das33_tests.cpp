@@ -122,6 +122,13 @@ BOOST_AUTO_TEST_CASE( das33_cycles_pledge_test )
                                          10000));
     das33_project_object project = get_das33_projects()[0];
 
+    // Edit status of this project
+    das33_project_update_operation op;
+    op.project_id = project.id;
+    op.authority = db.get_global_properties().authorities.root_administrator;
+    op.status = 1;
+    do_op(op);
+
     // Initial check
     BOOST_CHECK_EQUAL(get_das33_pledges().size(), 0);
 
@@ -173,6 +180,13 @@ BOOST_AUTO_TEST_CASE( das33_dasc_pledge_test )
                                          prices,
                                          10000));
     das33_project_object project = get_das33_projects()[0];
+
+    // Edit status of this project
+    das33_project_update_operation op;
+    op.project_id = project.id;
+    op.authority = db.get_global_properties().authorities.root_administrator;
+    op.status = 1;
+    do_op(op);
 
     // Initial check
     BOOST_CHECK_EQUAL(get_das33_pledges().size(), 0);

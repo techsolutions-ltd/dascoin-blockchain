@@ -183,6 +183,9 @@ namespace graphene { namespace chain {
                "Cannot pledge project tokens"
     );
 
+    // Check if project is active
+    FC_ASSERT(project_obj.status == das33_project_status::active, "Pladge can only be made to active project");
+
     // Evaluate different things for cycles and other assets
     if( op.pledged.asset_id == d.get_cycle_asset_id() )
     {

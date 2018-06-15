@@ -116,7 +116,7 @@ namespace graphene { namespace chain {
   { try {
     const database& d = db();
 
-    const auto& idx = d.get_index_type<daspay_delayed_operations_index>().indices().get<by_account>();
+    const auto& idx = d.get_index_type<delayed_operations_index>().indices().get<by_account>();
     const auto& itr = idx.lower_bound(op.account);
 
     FC_ASSERT( itr == idx.end(), "Cannot issue another unreserve operation while the previous one is pending ${a}", ("a", itr->id) );
@@ -136,7 +136,7 @@ namespace graphene { namespace chain {
     database& d = db();
     const auto& gpo = d.get_global_properties();
 
-    return d.create<daspay_delayed_operation_object>([&](daspay_delayed_operation_object& duo) {
+    return d.create<delayed_operation_object>([&](delayed_operation_object& duo) {
       duo.account = op.account;
       duo.op = op;
       duo.issued_time = d.head_block_time();
@@ -281,7 +281,7 @@ namespace graphene { namespace chain {
   { try {
     const auto& d = db();
 
-    const auto& delayed_unreserve_idx = d.get_index_type<daspay_delayed_operations_index>().indices().get<by_account>();
+    const auto& delayed_unreserve_idx = d.get_index_type<delayed_operations_index>().indices().get<by_account>();
     auto delayed_unreserve_iterator = delayed_unreserve_idx.find(op.account);
     FC_ASSERT( delayed_unreserve_iterator == delayed_unreserve_idx.end(), "Account ${1} initiated delayed unreserve operation.", ("1", op.account) );
 

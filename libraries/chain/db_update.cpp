@@ -703,7 +703,7 @@ void database::daspay_resolve_delayed_operations()
     return;
 
   ilog("resolve delayed operations smart contract running");
-  const auto& idx = get_index_type<daspay_delayed_operations_index>().indices().get<by_account>();
+  const auto& idx = get_index_type<delayed_operations_index>().indices().get<by_account>();
   for (auto it = idx.cbegin(); it != idx.cend(); ++it)
   {
     ilog("issued_time ${i}, skip ${s}, h ${h}", ("i", it->issued_time)("s", it->skip)("h", head_block_time()));

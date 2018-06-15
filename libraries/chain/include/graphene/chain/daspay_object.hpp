@@ -80,11 +80,11 @@ namespace graphene { namespace chain {
     {}
   };
 
-  class daspay_delayed_operation_object : public abstract_object<daspay_delayed_operation_object>
+  class delayed_operation_object : public abstract_object<delayed_operation_object>
   {
   public:
     static const uint8_t space_id = implementation_ids;
-    static const uint8_t type_id  = impl_daspay_delayed_unreserve_object_type;
+    static const uint8_t type_id  = impl_delayed_operation_object_type;
 
     account_id_type account;
     operation op;
@@ -97,8 +97,8 @@ namespace graphene { namespace chain {
       return op.which();
     }
 
-    daspay_delayed_operation_object() = default;
-    explicit daspay_delayed_operation_object(account_id_type account,
+    delayed_operation_object() = default;
+    explicit delayed_operation_object(account_id_type account,
                                              operation op,
                                              fc::time_point_sec issued_time,
                                              uint32_t skip)
@@ -181,8 +181,8 @@ namespace graphene { namespace chain {
 
   struct by_account;
   struct by_operation;
-  using daspay_delayed_operations_multi_index_type = multi_index_container<
-    daspay_delayed_operation_object,
+  using delayed_operations_multi_index_type = multi_index_container<
+    delayed_operation_object,
     indexed_by<
       ordered_unique<
         tag<by_id>,
@@ -190,22 +190,22 @@ namespace graphene { namespace chain {
       >,
       ordered_unique<
         tag<by_account>,
-          composite_key< daspay_delayed_operation_object,
-            member< daspay_delayed_operation_object, account_id_type, &daspay_delayed_operation_object::account >,
+          composite_key< delayed_operation_object,
+            member< delayed_operation_object, account_id_type, &delayed_operation_object::account >,
             member< object, object_id_type, &object::id >
           >
       >,
       ordered_unique<
         tag<by_operation>,
-          composite_key< daspay_delayed_operation_object,
-            member< daspay_delayed_operation_object, account_id_type, &daspay_delayed_operation_object::account >,
-            const_mem_fun< daspay_delayed_operation_object, int, &daspay_delayed_operation_object::which >
+          composite_key< delayed_operation_object,
+            member< delayed_operation_object, account_id_type, &delayed_operation_object::account >,
+            const_mem_fun< delayed_operation_object, int, &delayed_operation_object::which >
           >
       >
     >
   >;
 
-  using daspay_delayed_operations_index = generic_index<daspay_delayed_operation_object, daspay_delayed_operations_multi_index_type>;
+  using delayed_operations_index = generic_index<delayed_operation_object, delayed_operations_multi_index_type>;
 
 } }  // namespace graphene::chain
 
@@ -226,7 +226,7 @@ FC_REFLECT_DERIVED( graphene::chain::daspay_authority_object, (graphene::db::obj
                     (memo)
                   )
 
-FC_REFLECT_DERIVED( graphene::chain::daspay_delayed_operation_object, (graphene::db::object),
+FC_REFLECT_DERIVED( graphene::chain::delayed_operation_object, (graphene::db::object),
                     (account)
                     (op)
                     (issued_time)

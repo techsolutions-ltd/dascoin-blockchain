@@ -104,6 +104,7 @@ namespace graphene { namespace chain {
       chartered = 1,
       promo = 2,
       locked_frequency = 3,
+      utility = 4,
       none = 99,
       LICENSE_KIND_COUNT
    };
@@ -131,6 +132,7 @@ namespace graphene { namespace chain {
      user_submit = 0,
      charter_license = 1,
      reserve_cycles = 2,
+     utility_license = 3,
      DASCOIN_ORIGIN_KIND_COUNT
    };
 
@@ -515,6 +517,7 @@ REFLECT_ENUM_CHECK( graphene::chain::license_kind,
                     (chartered)
                     (promo)
                     (locked_frequency)
+                    (utility)
                     (none)
                     (LICENSE_KIND_COUNT)
                   )
@@ -548,6 +551,7 @@ REFLECT_ENUM_CHECK( graphene::chain::dascoin_origin_kind,
                     (user_submit)
                     (charter_license)
                     (reserve_cycles)
+                    (utility_license)
                     (DASCOIN_ORIGIN_KIND_COUNT)
                   )
 

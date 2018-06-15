@@ -68,7 +68,8 @@ namespace graphene { namespace chain {
     asset fee;
 
     account_id_type                        authority;
-    string                                 name;
+    das33_project_id_type                  project_id;
+    optional<string>                       name;
     optional<account_id_type>              owner;
     vector<price>                          ratios;
     optional<share_type>                   min_to_collect;
@@ -164,6 +165,7 @@ FC_REFLECT( graphene::chain::das33_project_update_operation::fee_parameters_type
 FC_REFLECT( graphene::chain::das33_project_update_operation,
 	    (fee)
 	    (authority)
+	    (project_id)
 	    (name)
 	    (owner)
 	    (ratios)

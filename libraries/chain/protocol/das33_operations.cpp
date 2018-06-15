@@ -31,7 +31,7 @@ namespace graphene { namespace chain {
   void das33_project_create_operation::validate() const
   {
     FC_ASSERT( fee.amount >= 0 );
-    //FC_ASSERT( ratio. >= 0 && ratio.second >= 0);
+    FC_ASSERT( ratios.size() > 0);
     const size_t len = name.size();
     FC_ASSERT ( len >= GRAPHENE_MIN_ACCOUNT_NAME_LENGTH );
     FC_ASSERT ( len <= GRAPHENE_MAX_ACCOUNT_NAME_LENGTH );
@@ -40,11 +40,12 @@ namespace graphene { namespace chain {
   void das33_project_update_operation::validate() const
   {
     FC_ASSERT( fee.amount >= 0 );
-    //if (ratio)
-    //  FC_ASSERT( (*ratio).first >= 0 && (*ratio).second >= 0);
-    const size_t len = name.size();
-    FC_ASSERT ( len >= GRAPHENE_MIN_ACCOUNT_NAME_LENGTH );
-    FC_ASSERT ( len <= GRAPHENE_MAX_ACCOUNT_NAME_LENGTH );
+    if(name)
+    {
+      const size_t len = (*name).size();
+      FC_ASSERT ( len >= GRAPHENE_MIN_ACCOUNT_NAME_LENGTH );
+      FC_ASSERT ( len <= GRAPHENE_MAX_ACCOUNT_NAME_LENGTH );
+    }
   }
 
   void das33_project_delete_operation::validate() const

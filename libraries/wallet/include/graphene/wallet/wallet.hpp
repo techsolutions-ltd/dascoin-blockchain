@@ -1867,6 +1867,26 @@ class wallet_api
       vector<das33_pledge_holder_object> get_das33_pledges() const;
       vector<das33_pledge_holder_object> get_das33_pledges_by_account(account_id_type account) const;
       vector<das33_pledge_holder_object> get_das33_pledges_by_project(das33_project_id_type project) const;
+      signed_transaction create_das33_project(const string& authority,
+					      const string& name,
+					      const string& owner,
+					      const string& token,
+					      const vector<pair<string, string>>& ratios,
+					      share_type min_to_collect,
+					      bool broadcast) const;
+      signed_transaction update_das33_project(const string& authority,
+					      const string& project_id,
+					      optional<string> name,
+					      optional<string> owner,
+					      const vector<pair<string, string>>& ratios,
+					      optional<share_type> min_to_collect,
+      					      optional<uint8_t> status,
+					      bool broadcast) const;
+      signed_transaction delete_das33_project(const string& authority,
+					      const string& project_id,
+					      bool broadcast) const;
+      vector<das33_project_object> get_das33_projects(const string& lower_bound_name, uint32_t limit) const;
+
 
 
       //////////////////////////
@@ -2173,6 +2193,10 @@ FC_API( graphene::wallet::wallet_api,
         (get_das33_pledges)
         (get_das33_pledges_by_account)
         (get_das33_pledges_by_project)
+	(create_das33_project)
+	(update_das33_project)
+	(delete_das33_project)
+	(get_das33_projects)
 
         // Requests:
         (get_all_webasset_issue_requests)

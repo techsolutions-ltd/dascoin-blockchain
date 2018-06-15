@@ -45,28 +45,37 @@ BOOST_AUTO_TEST_CASE( das33_project_test )
     VAULT_ACTOR(owner);
 
     // Create a new token
-    //do_op(create_)
+    asset_id_type test_asset_id = db.get_index<asset_object>().get_next_id();
+    asset_create_operation creator;
+    creator.issuer = account_id_type();
+    //creator.fee = asset();
+    creator.symbol = "TEST";
+    creator.common_options.max_supply = 100000000;
+    creator.precision = 2;
+    creator.common_options.core_exchange_rate = price({asset(1),asset(1,asset_id_type(1))});
+    do_op(creator);
 
-    const price expected_price{ asset{10, get_cycle_asset_id()}, asset{1 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()} };
+    const price expected_price{ asset{10, get_cycle_asset_id()}, asset{100, test_asset_id} };
     vector<price> expected_prices;
     expected_prices.emplace_back( expected_price );
 
     // Create a das33 project
     auto root_id = db.get_global_properties().authorities.root_administrator;
-    do_op(das33_project_create_operation(root_id,"test_project1", owner_id, get_dascoin_asset_id(), expected_prices, 10000));
+    do_op(das33_project_create_operation(root_id,"test_project1", owner_id, test_asset_id, expected_prices, 10000));
 
     // There should be one inactive das33 project with ratio 10/1
     BOOST_CHECK_EQUAL(get_das33_projects().size(), 1);
     auto project = get_das33_projects()[0];
     BOOST_CHECK_EQUAL(project.collected.value, 0);
 
-    BOOST_CHECK_EQUAL(project.token_prices[0].to_real(), 10.0 / DASCOIN_DEFAULT_ASSET_PRECISION);
+    BOOST_CHECK_EQUAL(project.token_prices[0].to_real(), 0.1);
     BOOST_CHECK_EQUAL(project.status, das33_project_status::inactive);
 
     // Edit status of this project
     das33_project_update_operation op;
+    op.project_id = project.id;
     op.authority = root_id;
-    op.name = "test_project1";
+    //op.name = "test_project1";
     op.status = 1;
     do_op(op);
     //do_op(das33_project_update_operation(root_id, "test_project1", owner_id, expected_price, nullptr, 1));
@@ -74,7 +83,7 @@ BOOST_AUTO_TEST_CASE( das33_project_test )
     // Check project
     project = get_das33_projects()[0];
     BOOST_CHECK_EQUAL(project.collected.value, 0);
-    BOOST_CHECK_EQUAL(project.token_prices[0].to_real(), 10.0 / DASCOIN_DEFAULT_ASSET_PRECISION);
+    BOOST_CHECK_EQUAL(project.token_prices[0].to_real(), 0.1);
     BOOST_CHECK_EQUAL(project.status, das33_project_status::active);
 
     // delete the project

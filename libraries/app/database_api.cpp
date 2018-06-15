@@ -197,6 +197,8 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       // Das33
       vector<das33_pledge_holder_object> get_das33_pledges_by_account(account_id_type account) const;
       vector<das33_pledge_holder_object> get_das33_pledges_by_project(das33_project_id_type project) const;
+      vector<das33_project_object> get_das33_projects(const string& lower_bound_name, uint32_t limit) const;
+
 
       template<typename T>
       void subscribe_to_item( const T& i )const
@@ -2666,6 +2668,29 @@ vector<das33_pledge_holder_object> database_api_impl::get_das33_pledges_by_proje
     std::copy(idx.first, idx.second, std::back_inserter(result));
 
     return result;
+}
+
+
+vector<das33_project_object> database_api::get_das33_projects(const string& lower_bound_name, uint32_t limit) const
+{
+  return my->get_das33_projects(lower_bound_name, limit);
+}
+
+
+vector<das33_project_object> database_api_impl::get_das33_projects(const string& lower_bound_name, uint32_t limit) const
+{
+  FC_ASSERT( limit <= 1000 );
+  const auto& projects_by_name = _db.get_index_type<das33_project_index>().indices().get<by_project_name>();
+  vector<das33_project_object> result;
+
+  for( auto itr = projects_by_name.lower_bound(lower_bound_name);
+       limit-- && itr != projects_by_name.end();
+       ++itr )
+  {
+     result.emplace_back(*itr);
+  }
+
+  return result;
 }
 
 

@@ -894,6 +894,7 @@ class database_api
       vector<das33_pledge_holder_object> get_das33_pledges() const;
       vector<das33_pledge_holder_object> get_das33_pledges_by_account(account_id_type account) const;
       vector<das33_pledge_holder_object> get_das33_pledges_by_project(das33_project_id_type project) const;
+      vector<das33_project_object> get_das33_projects(const string& lower_bound_name, uint32_t limit)const;
 
 
 private:
@@ -1060,4 +1061,5 @@ FC_API( graphene::app::database_api,
    (get_das33_pledges)
    (get_das33_pledges_by_account)
    (get_das33_pledges_by_project)
+   (get_das33_projects)
 )

@@ -28,6 +28,34 @@
 
 namespace graphene { namespace chain {
 
+  // Helper methods:
+  void prices_check(const vector<price>& prices, asset_id_type token)
+  {
+    // check that all prices are for project token and that no price for asset is used multiple times:
+    std::map<asset_id_type, int> asset_count;
+    for(auto item : prices)
+    {
+      FC_ASSERT(item.base.asset_id == token || item.quote.asset_id == token, "All prices must be for project token");
+      if (asset_count.find(item.base.asset_id) != asset_count.end())
+        asset_count[item.base.asset_id] += 1;
+      else
+    	asset_count[item.base.asset_id] = 1;
+      if (asset_count.find(item.quote.asset_id) != asset_count.end())
+        asset_count[item.quote.asset_id] += 1;
+      else
+        asset_count[item.quote.asset_id] = 1;
+    }
+    std::map<asset_id_type, int>::iterator itr = asset_count.begin();
+    while(itr != asset_count.end())
+    {
+      if (itr->first != token)
+        FC_ASSERT(itr->second == 1, "Each asset can appear only once in ratios");
+      itr++;
+    }
+  }
+
+  // method implementations:
+
   void_result das33_project_create_evaluator::do_evaluate( const operation_type& op )
   {
     try {
@@ -39,6 +67,16 @@ namespace graphene { namespace chain {
 
       const auto& idx = d.get_index_type<das33_project_index>().indices().get<by_project_name>();
       FC_ASSERT(idx.find(op.name) == idx.end(), "Das33 project called ${1} already exists.", ("1", op.name));
+
+      // Check that token is not used by another project
+      auto itr = idx.begin();
+      while (itr != idx.end())
+      {
+	FC_ASSERT(itr->token_id != op.token, "Token with id ${1} is already used by anouther project", ("1", op.token));
+	itr++;
+      }
+
+      prices_check(op.ratios, op.token);
 
       return {};
     } FC_CAPTURE_AND_RETHROW((op))
@@ -70,10 +108,13 @@ namespace graphene { namespace chain {
       const auto& authority_obj = op.authority(d);
       d.perform_chain_authority_check("root authority", gpo.authorities.root_administrator, authority_obj);
 
-      const auto& idx = d.get_index_type<das33_project_index>().indices().get<by_project_name>();
-      auto project_iterator = idx.find(op.name);
-      FC_ASSERT(project_iterator != idx.end(), "Das33 project called ${1} does not exist.", ("1", op.name));
+      const auto& idx = d.get_index_type<das33_project_index>().indices().get<by_id>();
+      auto project_iterator = idx.find(op.project_id);
+      FC_ASSERT(project_iterator != idx.end(), "Das33 project with id ${1} does not exist.", ("1", op.project_id));
       project_to_update = &(*project_iterator);
+
+      if (op.ratios.size() > 0)
+        prices_check(op.ratios, project_to_update->token_id);
 
       return {};
     } FC_CAPTURE_AND_RETHROW((op))
@@ -85,6 +126,7 @@ namespace graphene { namespace chain {
       auto& d = db();
 
       d.modify<das33_project_object>(*project_to_update, [&](das33_project_object& dpo){
+	if (op.name) dpo.name = *op.name;
 	if (op.owner) dpo.owner = *op.owner;
 	if (op.min_to_collect) dpo.min_to_collect = op.min_to_collect;
 	if (op.ratios.size() > 0) dpo.token_prices = op.ratios;
@@ -109,7 +151,9 @@ namespace graphene { namespace chain {
       FC_ASSERT(project_iterator != idx.end(), "Das33 project with id ${1} does not exist.", ("1", op.project_id));
       project_to_delete = &(*project_iterator);
 
-      //TODO: Add assert that project has no pledges
+      const auto& pledges_idx = d.get_index_type<das33_pledge_holder_index>().indices().get<by_project>().equal_range(op.project_id);
+      //auto pledges_iterator = pledges_idx.begin();
+      FC_ASSERT(pledges_idx.first == pledges_idx.second, "Project can not be deleted as it has no pledges");
 
       return {};
     } FC_CAPTURE_AND_RETHROW((op))

@@ -1243,6 +1243,100 @@ public:
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (clearing_enabled)(clearing_interval_time_seconds)(collateral_dascoin)(collateral_webeur)(broadcast) ) }
 
+   signed_transaction create_das33_project(const string& authority,
+   					   const string& name,
+   					   const string& owner,
+   					   const string& token,
+   					   const vector<pair<string, string>>& ratios,
+   					   share_type min_to_collect,
+					   bool broadcast)
+   { try {
+         FC_ASSERT( !self.is_locked() );
+
+         das33_project_create_operation op;
+
+         op.authority = get_account(authority).id;
+         op.name = name;
+         op.owner = get_account(owner).id;
+         op.token = get_asset_id(token);
+         op.min_to_collect = min_to_collect;
+
+         FC_ASSERT(ratios.size() % 2 == 0, "Must have even number of assets in ratios");
+         vector<price> prices;
+         for(uint32_t i=0; i<ratios.size(); i+=2)
+         {
+             prices.emplace_back(get_asset(ratios[i].second).amount_from_string(ratios[i].first), get_asset(ratios[i+1].second).amount_from_string(ratios[i+1].first));
+         }
+         op.ratios = prices;
+
+         signed_transaction tx;
+         tx.operations.push_back(op);
+         set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+         tx.validate();
+
+         return sign_transaction(tx, broadcast);
+      } FC_CAPTURE_AND_RETHROW( (authority)(name)(owner)(token)(ratios)(min_to_collect) ) }
+
+   signed_transaction update_das33_project(const string& authority,
+					   const string& project_id,
+					   optional<string> name,
+					   optional<string> owner,
+					   const vector<pair<string, string>>& ratios,
+					   optional<share_type> min_to_collect,
+   					   optional<uint8_t> status,
+					   bool broadcast)
+   { try {
+         FC_ASSERT( !self.is_locked() );
+
+         das33_project_update_operation op;
+
+         op.authority = get_account(authority).id;
+         auto id = maybe_id<das33_project_id_type>(project_id);
+         op.project_id = *id;
+         if (name) op.name = name;
+         if (owner) op.owner = get_account(*owner).id;
+         if (min_to_collect) op.min_to_collect = *min_to_collect;
+         if (status) op.status = *status;
+
+         if (ratios.size() > 0)
+         {
+	   FC_ASSERT(ratios.size() % 2 == 0, "Must have even number of assets in ratios");
+	   vector<price> prices;
+	   for(uint32_t i=0; i<ratios.size(); i+=2)
+	   {
+	       prices.emplace_back(get_asset(ratios[i].second).amount_from_string(ratios[i].first), get_asset(ratios[i+1].second).amount_from_string(ratios[i+1].first));
+	   }
+	   op.ratios = prices;
+         }
+
+         signed_transaction tx;
+         tx.operations.push_back(op);
+         set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+         tx.validate();
+
+         return sign_transaction(tx, broadcast);
+      } FC_CAPTURE_AND_RETHROW( (authority)(project_id)(name)(owner)(ratios)(min_to_collect)(status) ) }
+
+   signed_transaction delete_das33_project(const string& authority,
+   					   const string& project_id,
+					   bool broadcast)
+   { try {
+         FC_ASSERT( !self.is_locked() );
+
+         das33_project_delete_operation op;
+
+         op.authority = get_account(authority).id;
+         auto id = maybe_id<das33_project_id_type>(project_id);
+         op.project_id = *id;
+
+         signed_transaction tx;
+         tx.operations.push_back(op);
+         set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+         tx.validate();
+
+         return sign_transaction(tx, broadcast);
+      } FC_CAPTURE_AND_RETHROW( (authority)(project_id) ) }
+
    signed_transaction tether_accounts(string wallet, string vault, bool broadcast = false)
    { try {
       FC_ASSERT( !self.is_locked() );
@@ -5321,6 +5415,57 @@ vector<das33_pledge_holder_object> wallet_api::get_das33_pledges_by_account(acco
 vector<das33_pledge_holder_object> wallet_api::get_das33_pledges_by_project(das33_project_id_type project) const
 {
     return my->_remote_db->get_das33_pledges_by_project(project);
+}
+
+
+vector<das33_project_object> wallet_api::get_das33_projects(const string& lower_bound_name, uint32_t limit) const
+{
+    return my->_remote_db->get_das33_projects(lower_bound_name, limit);
+}
+
+signed_transaction wallet_api::create_das33_project(const string& authority,
+						    const string& name,
+						    const string& owner,
+						    const string& token,
+						    const vector<pair<string, string>>& ratios,
+						    share_type min_to_collect,
+						    bool broadcast) const
+{
+    return my->create_das33_project(authority,
+				    name,
+				    owner,
+				    token,
+				    ratios,
+				    min_to_collect,
+				    broadcast);
+}
+
+signed_transaction wallet_api::update_das33_project(const string& authority,
+					            const string& project_id,
+						    optional<string> name,
+						    optional<string> owner,
+						    const vector<pair<string, string>>& ratios,
+						    optional<share_type> min_to_collect,
+						    optional<uint8_t> status,
+						    bool broadcast) const
+{
+  return my->update_das33_project(authority,
+				  project_id,
+				  name,
+				  owner,
+				  ratios,
+				  min_to_collect,
+				  status,
+				  broadcast);
+}
+
+signed_transaction wallet_api::delete_das33_project(const string& authority,
+					const string& project_id,
+					bool broadcast) const
+{
+  return my->delete_das33_project(authority,
+				  project_id,
+				  broadcast);
 }
 
 signed_block_with_info::signed_block_with_info( const signed_block& block )

@@ -1337,6 +1337,30 @@ public:
          return sign_transaction(tx, broadcast);
       } FC_CAPTURE_AND_RETHROW( (authority)(project_id) ) }
 
+   signed_transaction das33_pledge_asset(const string& account,
+                                         const string& amount,
+                                         const string& symbol,
+                                         optional<license_type_id_type> license,
+                                         das33_project_id_type project,
+                                         bool broadcast)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      das33_pledge_asset_operation op;
+
+      op.account_id = get_account(account).id;
+      op.pledged = get_asset(symbol).amount_from_string(amount);
+      op.license_id = license;
+      op.project_id = project;
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (account)(amount)(license)(project)(broadcast) ) }
+
    signed_transaction tether_accounts(string wallet, string vault, bool broadcast = false)
    { try {
       FC_ASSERT( !self.is_locked() );
@@ -5398,6 +5422,16 @@ signed_transaction wallet_api::update_daspay_clearing_parameters(const string& a
                                                collateral_dascoin,
                                                collateral_webeur,
                                                broadcast);
+}
+
+signed_transaction wallet_api::das33_pledge_asset(const string& account,
+                                                  const string& amount,
+                                                  const string& symbol,
+                                                  optional<license_type_id_type> license,
+                                                  das33_project_id_type project,
+                                                  bool broadcast) const
+{
+   return my->das33_pledge_asset( account, amount, symbol, license, project, broadcast );
 }
 
 vector<das33_pledge_holder_object> wallet_api::get_das33_pledges() const

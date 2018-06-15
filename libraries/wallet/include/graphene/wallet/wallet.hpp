@@ -1864,6 +1864,22 @@ class wallet_api
       // DAS33:               //
       //////////////////////////
 
+      /**
+       * Pledge some asset to das33 project
+       * @param account         Account name or id
+       * @param amount          Amount of asset to pledge
+       * @param symbol          Symbol of asset to pledge
+       * @param license         License to transfer asset from (Optional - Not null when pledging cycles, null otherwise)
+       * @param project         Project id
+       * @param broadcast       True to broadcast the transaction on the network.
+       */
+      signed_transaction das33_pledge_asset(const string& account,
+                                            const string& amount,
+                                            const string& symbol,
+                                            optional<license_type_id_type> license,
+                                            das33_project_id_type project,
+                                            bool broadcast = false) const;
+
       vector<das33_pledge_holder_object> get_das33_pledges() const;
       vector<das33_pledge_holder_object> get_das33_pledges_by_account(account_id_type account) const;
       vector<das33_pledge_holder_object> get_das33_pledges_by_project(das33_project_id_type project) const;
@@ -2185,11 +2201,11 @@ FC_API( graphene::wallet::wallet_api,
         (reserve_asset_on_account)
         (unreserve_asset_on_account)
         (daspay_debit_account)
-        (daspay_credit_account)
         (get_daspay_authority_for_account)
         (update_daspay_clearing_parameters)
 
         // Das33
+        (das33_pledge_asset)
         (get_das33_pledges)
         (get_das33_pledges_by_account)
         (get_das33_pledges_by_project)

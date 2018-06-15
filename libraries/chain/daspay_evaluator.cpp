@@ -140,10 +140,9 @@ namespace graphene { namespace chain {
       duo.account = op.account;
       duo.asset_to_unreserve = op.asset_to_unreserve;
       duo.issued_time = d.head_block_time();
-      duo.skip = gpo.daspay_parameters.delayed_unreserve_interval_time_seconds;
+      duo.skip = gpo.delayed_operations_resolver_interval_time_seconds;
     }).id;
 
-    return {};
   } FC_CAPTURE_AND_RETHROW((op)) }
 
   void_result unregister_daspay_authority_evaluator::do_evaluate(const operation_type& op)
@@ -413,18 +412,18 @@ namespace graphene { namespace chain {
 
   } FC_CAPTURE_AND_RETHROW((op)) }
 
-  void_result update_daspay_delayed_unreserve_parameters_evaluator::do_evaluate(const update_daspay_delayed_unreserve_parameters_operation& op)
+  void_result update_delayed_operations_resolver_parameters_evaluator::do_evaluate(const update_delayed_operations_resolver_parameters_operation& op)
   { try {
     const auto& d = db();
     const auto& gpo = d.get_global_properties();
     const auto& authority_obj = op.authority(d);
 
-    d.perform_chain_authority_check("daspay authority", gpo.authorities.daspay_administrator, authority_obj);
+    d.perform_chain_authority_check("root authority", gpo.authorities.root_administrator, authority_obj);
 
-    if ( op.delayed_unreserve_interval_time_seconds.valid() )
+    if ( op.delayed_operations_resolver_interval_time_seconds.valid() )
     {
-      FC_ASSERT( *op.delayed_unreserve_interval_time_seconds % gpo.parameters.block_interval == 0,
-                 "Delayed unreserve interval must be a multiple of the block interval ${bi}",
+      FC_ASSERT( *op.delayed_operations_resolver_interval_time_seconds % gpo.parameters.block_interval == 0,
+                 "Delayed operations resolver interval must be a multiple of the block interval ${bi}",
                  ("bi", gpo.parameters.block_interval)
       );
 
@@ -433,13 +432,13 @@ namespace graphene { namespace chain {
 
   } FC_CAPTURE_AND_RETHROW((op)) }
 
-  void_result update_daspay_delayed_unreserve_parameters_evaluator::do_apply(const update_daspay_delayed_unreserve_parameters_operation& op)
+  void_result update_delayed_operations_resolver_parameters_evaluator::do_apply(const update_delayed_operations_resolver_parameters_operation& op)
   { try {
     auto& d = db();
 
     d.modify(d.get_global_properties(), [&](global_property_object& gpo){
-      CHECK_AND_SET_OPT(gpo.daspay_parameters.delayed_unreserve_enabled, op.delayed_unreserve_enabled);
-      CHECK_AND_SET_OPT(gpo.daspay_parameters.delayed_unreserve_interval_time_seconds, op.delayed_unreserve_interval_time_seconds);
+      CHECK_AND_SET_OPT(gpo.delayed_operations_resolver_enabled, op.delayed_operations_resolver_enabled);
+      CHECK_AND_SET_OPT(gpo.delayed_operations_resolver_interval_time_seconds, op.delayed_operations_resolver_interval_time_seconds);
     });
 
     return {};

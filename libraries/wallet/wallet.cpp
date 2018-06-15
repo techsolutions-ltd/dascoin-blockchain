@@ -1243,18 +1243,17 @@ public:
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (clearing_enabled)(clearing_interval_time_seconds)(collateral_dascoin)(collateral_webeur)(broadcast) ) }
 
-   signed_transaction update_daspay_delayed_unreserve_parameters(const string& authority,
-                                                        optional<bool> delayed_unreserve_enabled,
-                                                        optional<uint32_t> delayed_unreserve_interval_time_seconds,
+   signed_transaction update_delayed_operations_resolver_parameters(optional<bool> delayed_operations_resolver_enabled,
+                                                        optional<uint32_t> delayed_operations_resolver_interval_time_seconds,
                                                         bool broadcast)
    { try {
       FC_ASSERT( !self.is_locked() );
 
-      update_daspay_delayed_unreserve_parameters_operation op;
+      update_delayed_operations_resolver_parameters_operation op;
 
-      op.authority = get_account(authority).id;
-      op.delayed_unreserve_enabled = delayed_unreserve_enabled;
-      op.delayed_unreserve_interval_time_seconds = delayed_unreserve_interval_time_seconds;
+      op.authority = _remote_db->get_global_properties().authorities.root_administrator;
+      op.delayed_operations_resolver_enabled = delayed_operations_resolver_enabled;
+      op.delayed_operations_resolver_interval_time_seconds = delayed_operations_resolver_interval_time_seconds;
 
       signed_transaction tx;
       tx.operations.push_back(op);
@@ -1262,7 +1261,7 @@ public:
       tx.validate();
 
       return sign_transaction(tx, broadcast);
-   } FC_CAPTURE_AND_RETHROW( (delayed_unreserve_enabled)(delayed_unreserve_interval_time_seconds)(broadcast) ) }
+   } FC_CAPTURE_AND_RETHROW( (delayed_operations_resolver_enabled)(delayed_operations_resolver_interval_time_seconds)(broadcast) ) }
 
    signed_transaction tether_accounts(string wallet, string vault, bool broadcast = false)
    { try {
@@ -5327,14 +5326,12 @@ signed_transaction wallet_api::update_daspay_clearing_parameters(const string& a
                                                broadcast);
 }
 
-signed_transaction wallet_api::update_daspay_delayed_unreserve_parameters(const string& authority,
-                                                                 optional<bool> delayed_unreserve_enabled,
-                                                                 optional<uint32_t> delayed_unreserve_interval_time_seconds,
+signed_transaction wallet_api::update_delayed_operations_resolver_parameters(optional<bool> delayed_operations_resolver_enabled,
+                                                                 optional<uint32_t> delayed_operations_resolver_interval_time_seconds,
                                                                  bool broadcast) const
 {
-  return my->update_daspay_delayed_unreserve_parameters(authority,
-                                               delayed_unreserve_enabled,
-                                               delayed_unreserve_interval_time_seconds,
+  return my->update_delayed_operations_resolver_parameters(delayed_operations_resolver_enabled,
+                                               delayed_operations_resolver_interval_time_seconds,
                                                broadcast);
 }
 

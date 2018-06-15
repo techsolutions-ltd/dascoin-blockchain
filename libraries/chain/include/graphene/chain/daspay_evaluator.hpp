@@ -144,13 +144,13 @@ namespace graphene { namespace chain {
     void_result do_apply(const update_daspay_clearing_parameters_operation& op);
   };
 
-  class update_daspay_delayed_unreserve_parameters_evaluator : public evaluator<update_daspay_delayed_unreserve_parameters_evaluator>
+  class update_delayed_operations_resolver_parameters_evaluator : public evaluator<update_delayed_operations_resolver_parameters_evaluator>
   {
   public:
-    typedef update_daspay_delayed_unreserve_parameters_operation operation_type;
+    typedef update_delayed_operations_resolver_parameters_operation operation_type;
 
-    void_result do_evaluate(const update_daspay_delayed_unreserve_parameters_operation& op);
-    void_result do_apply(const update_daspay_delayed_unreserve_parameters_operation& op);
+    void_result do_evaluate(const update_delayed_operations_resolver_parameters_operation& op);
+    void_result do_apply(const update_delayed_operations_resolver_parameters_operation& op);
   };
 
 } }  // namespace graphene::chain

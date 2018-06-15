@@ -296,13 +296,19 @@
 
 
 /**
- * Daspay parameters:
+ * DasPay parameters:
  */
 ///@{
 #define DASPAY_DEFAULT_CLEARING_ENABLED  (false) ///< by default off
 #define DASPAY_DEFAULT_CLEARING_INTERVAL_TIME_SECONDS (300) ///< in seconds
 #define DASPAY_DEFAULT_CLEARING_COLLATERAL_DASC (0 * DASCOIN_DEFAULT_ASSET_PRECISION) ///< by default set to 0
 #define DASPAY_DEFAULT_CLEARING_COLLATERAL_WEBEUR (0 * DASCOIN_FIAT_ASSET_PRECISION) ///< by default set to 0
-#define DASPAY_DEFAULT_DELAYED_UNRESOLVE_ENABLED  (false) ///< by default off
-#define DASPAY_DEFAULT_DELAYED_UNRESERVE_INTERVAL_TIME_SECONDS (6) ///< in seconds
+///@}
+
+/**
+ * Delayed operations resolver parameters:
+ */
+///@{
+#define DASCOIN_DEFAULT_DELAYED_OPERATIONS_RESOLVER_ENABLED  (false) ///< by default off
+#define DASCOIN_DEFAULT_DELAYED_OPERATIONS_RESOLVER_INTERVAL_TIME_SECONDS (6)  ///< in seconds
 ///@}

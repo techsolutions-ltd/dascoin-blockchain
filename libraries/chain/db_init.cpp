@@ -283,7 +283,7 @@ void database::initialize_evaluators()
    register_evaluator<daspay_debit_account_evaluator>();
    register_evaluator<daspay_credit_account_evaluator>();
    register_evaluator<update_daspay_clearing_parameters_evaluator>();
-   register_evaluator<update_daspay_delayed_unreserve_parameters_evaluator>();
+   register_evaluator<update_delayed_operations_resolver_parameters_evaluator>();
 }
 
 void database::initialize_indexes()

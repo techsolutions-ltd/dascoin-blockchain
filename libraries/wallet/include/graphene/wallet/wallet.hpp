@@ -1715,7 +1715,7 @@ class wallet_api
       ///////////////////////////////
 
       /**
-      * Set Daspay Transaction Ratio.
+      * Set DasPay Transaction Ratio.
       * @param authority           This MUST be daspay authority.
       * @param debit_ratio         New ratio for DEBIT transactions.
       * @param credit_ratio        New ratio for CREDIT transactions.
@@ -1847,7 +1847,7 @@ class wallet_api
        * 
        * @param authority                                               This MUST be daspay authority.
        * @param clearing_enabled                                        true if clearing is enabled
-       * @param clearing_interval_time_seconds                          time in seconds between Daspay clearing events
+       * @param clearing_interval_time_seconds                          time in seconds between DasPay clearing events
        * @param collateral_dascoin                                      the amount of DasCoins for credit transactions collateral
        * @param collateral_webeur                                       the amount of WebEur for clearing collateral
        * @param broadcast                                               true to broadcast the transaction on the network.
@@ -1859,17 +1859,20 @@ class wallet_api
                                                            optional<share_type> collateral_webeur,
                                                            bool broadcast) const;
 
+
+      ///////////////////////////////
+      /// DELAYED OPERATIONS:     ///
+      ///////////////////////////////
+
       /**
-       * Update various daspay delayed unreserve parameters
+       * Update various delayed operations resolver parameters
        *
-       * @param authority                                               This MUST be daspay authority.
-       * @param delayed_unreserve_enabled                               true if clearing is enabled
-       * @param delayed_unreserve_interval_time_seconds                 time in seconds between Daspay delayed unreserve events
+       * @param delayed_operations_resolver_enabled                     true if delayed operations resolver is enabled
+       * @param delayed_operations_resolver_interval_time_seconds       time in seconds between two delayed operations resolver checks
        * @param broadcast                                               true to broadcast the transaction on the network.
        */
-      signed_transaction update_daspay_delayed_unreserve_parameters(const string& authority,
-                                                           optional<bool> delayed_unreserve_enabled,
-                                                           optional<uint32_t> delayed_unreserve_interval_time_seconds,
+      signed_transaction update_delayed_operations_resolver_parameters(optional<bool> delayed_operations_resolver_enabled,
+                                                           optional<uint32_t> delayed_operations_resolver_interval_time_seconds,
                                                            bool broadcast) const;
 
 
@@ -2158,7 +2161,7 @@ FC_API( graphene::wallet::wallet_api,
         (purchase_cycle_asset)
         (calculate_cycle_price)
 
-        // Daspay:
+        // DasPay:
         (set_daspay_transaction_ratio)
         (create_payment_service_provider)
         (update_payment_service_provider)
@@ -2172,7 +2175,9 @@ FC_API( graphene::wallet::wallet_api,
         (daspay_credit_account)
         (get_daspay_authority_for_account)
         (update_daspay_clearing_parameters)
-        (update_daspay_delayed_unreserve_parameters)
+
+        // Delayed operations resolver:
+        (update_delayed_operations_resolver_parameters)
 
 
         // Requests:

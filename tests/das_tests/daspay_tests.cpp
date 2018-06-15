@@ -274,7 +274,7 @@ BOOST_AUTO_TEST_CASE( unreserve_asset_on_account_test )
   BOOST_CHECK_EQUAL( get_reserved_balance(foo_id, get_dascoin_asset_id()), 50 * DASCOIN_DEFAULT_ASSET_PRECISION );
 
   // Start unreserve resolver and wait
-  do_op(update_daspay_delayed_unreserve_parameters_operation(get_daspay_administrator_id(), true, 60));
+  do_op(update_delayed_operations_resolver_parameters_operation(db.get_global_properties().authorities.root_administrator, true, 60));
   generate_blocks(db.head_block_time() + fc::seconds(100));
 
   BOOST_CHECK_EQUAL( get_balance(foo_id, get_dascoin_asset_id()), 60 * DASCOIN_DEFAULT_ASSET_PRECISION );
@@ -515,16 +515,15 @@ BOOST_AUTO_TEST_CASE( daspay_clearing_test )
 
 } FC_LOG_AND_RETHROW() }
 
-BOOST_AUTO_TEST_CASE( update_daspay_delayed_unreserve_parameters_unit_test )
+BOOST_AUTO_TEST_CASE( update_delayed_operations_resolver_parameters_unit_test )
 { try {
 
-  do_op(update_daspay_delayed_unreserve_parameters_operation(get_daspay_administrator_id(),
+  do_op(update_delayed_operations_resolver_parameters_operation(db.get_global_properties().authorities.root_administrator,
                                                     {true},
                                                     {600}));
 
-  const auto& daspay_params = get_daspay_parameters();
-  BOOST_CHECK_EQUAL( daspay_params.delayed_unreserve_enabled, true );
-  BOOST_CHECK_EQUAL( daspay_params.delayed_unreserve_interval_time_seconds, 600 );
+  BOOST_CHECK_EQUAL( db.get_global_properties().delayed_operations_resolver_enabled, true );
+  BOOST_CHECK_EQUAL( db.get_global_properties().delayed_operations_resolver_interval_time_seconds, 600 );
 
 } FC_LOG_AND_RETHROW() }
 

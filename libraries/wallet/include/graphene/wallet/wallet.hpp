@@ -1715,7 +1715,7 @@ class wallet_api
       ///////////////////////////////
 
       /**
-      * Set Daspay Transaction Ratio.
+      * Set DasPay Transaction Ratio.
       * @param authority           This MUST be daspay authority.
       * @param debit_ratio         New ratio for DEBIT transactions.
       * @param credit_ratio        New ratio for CREDIT transactions.
@@ -1847,7 +1847,7 @@ class wallet_api
        * 
        * @param authority                                               This MUST be daspay authority.
        * @param clearing_enabled                                        true if clearing is enabled
-       * @param clearing_interval_time_seconds                          time in seconds between Daspay clearing events
+       * @param clearing_interval_time_seconds                          time in seconds between DasPay clearing events
        * @param collateral_dascoin                                      the amount of DasCoins for credit transactions collateral
        * @param collateral_webeur                                       the amount of WebEur for clearing collateral
        * @param broadcast                                               true to broadcast the transaction on the network.
@@ -1857,6 +1857,22 @@ class wallet_api
                                                            optional<uint32_t> clearing_interval_time_seconds,
                                                            optional<share_type> collateral_dascoin,
                                                            optional<share_type> collateral_webeur,
+                                                           bool broadcast) const;
+
+
+      ///////////////////////////////
+      /// DELAYED OPERATIONS:     ///
+      ///////////////////////////////
+
+      /**
+       * Update various delayed operations resolver parameters
+       *
+       * @param delayed_operations_resolver_enabled                     true if delayed operations resolver is enabled
+       * @param delayed_operations_resolver_interval_time_seconds       time in seconds between two delayed operations resolver checks
+       * @param broadcast                                               true to broadcast the transaction on the network.
+       */
+      signed_transaction update_delayed_operations_resolver_parameters(optional<bool> delayed_operations_resolver_enabled,
+                                                           optional<uint32_t> delayed_operations_resolver_interval_time_seconds,
                                                            bool broadcast) const;
 
 
@@ -2190,7 +2206,7 @@ FC_API( graphene::wallet::wallet_api,
         (purchase_cycle_asset)
         (calculate_cycle_price)
 
-        // Daspay:
+        // DasPay:
         (set_daspay_transaction_ratio)
         (create_payment_service_provider)
         (update_payment_service_provider)
@@ -2214,6 +2230,9 @@ FC_API( graphene::wallet::wallet_api,
 	(delete_das33_project)
 	(get_das33_projects)
 
+        // Delayed operations resolver:
+        (update_delayed_operations_resolver_parameters)
+
         // Requests:
         (get_all_webasset_issue_requests)
         (get_all_wire_out_holders)
@@ -2223,5 +2242,5 @@ FC_API( graphene::wallet::wallet_api,
         (get_reward_queue_size)
         (get_queue_submissions_with_pos)
 
-	(set_chain_authority)
+        (set_chain_authority)
       )

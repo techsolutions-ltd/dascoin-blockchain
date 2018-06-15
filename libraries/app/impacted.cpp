@@ -499,6 +499,11 @@ struct get_impacted_account_visitor
      _impacted.insert(op.authority);
    }
 
+   void operator()( const update_delayed_operations_resolver_parameters_operation& op )
+   {
+     _impacted.insert(op.authority);
+   }
+
    void operator() ( const set_chain_authority_operation& op)
    {
       _impacted.insert(op.issuer);

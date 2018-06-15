@@ -781,17 +781,34 @@ void database::perform_upgrades(const account_object& account, const upgrade_eve
                              << (int) license_history.balance_upgrade.max;
                      push_queue_submission(origin, license_history.license, account.id, amount, license_history.frequency_lock, comment.str());
                      push_applied_operation(
-                             record_submit_charter_license_cycles_operation(get_chain_authorities().license_issuer, account.id, amount, license_history.frequency_lock)
+                          record_submit_charter_license_cycles_operation(get_chain_authorities().license_issuer, account.id, amount, license_history.frequency_lock)
                      );
+                  }
+                  else if (lio.vault_license_kind == utility)
+                  {
+                     auto origin = fc::reflector<dascoin_origin_kind>::to_string(dascoin_origin_kind::utility_license);
+                     std::ostringstream comment;
+                     comment << "Licence "
+                             << license_id_to_string(license_history.base_amount)
+                             << " Upgrade "
+                             << (int) license_history.balance_upgrade.used
+                             << "/"
+                             << (int) license_history.balance_upgrade.max;
+                     push_queue_submission(origin, license_history.license, account.id, amount + license_history.shadow_amount, license_history.frequency_lock, comment.str());
+                     push_applied_operation(
+                          record_submit_charter_license_cycles_operation(get_chain_authorities().license_issuer, account.id, amount + license_history.shadow_amount, license_history.frequency_lock)
+                     );
+                     if (license_history.base_amount != DASCOIN_BASE_PRESIDENT_CYCLES)
+                        license_history.shadow_amount = amount;
                   }
                   else
                   {
-                    if (license_history.base_amount == DASCOIN_BASE_PRESIDENT_CYCLES)
-                      license_history.amount += amount;
-                    else
-                      license_history.amount = amount;
-                    new_balance += license_history.amount;
-                    update_balance = true;
+                     if (license_history.base_amount == DASCOIN_BASE_PRESIDENT_CYCLES)
+                        license_history.amount += amount;
+                     else
+                        license_history.amount = amount;
+                     new_balance += license_history.amount;
+                     update_balance = true;
                   }
                }
                license_history.upgrades.emplace_back(std::make_pair(upgrade.id, head_block_time()));

@@ -75,7 +75,7 @@ namespace graphene { namespace chain {
     typedef unreserve_asset_on_account_operation operation_type;
 
     void_result do_evaluate( const operation_type& op );
-    void_result do_apply( const operation_type& op );
+    object_id_type do_apply( const operation_type& op );
   };
 
   class create_payment_service_provider_evaluator : public evaluator<create_payment_service_provider_evaluator>
@@ -117,7 +117,7 @@ namespace graphene { namespace chain {
     typedef daspay_debit_account_operation operation_type;
 
     void_result do_evaluate( const daspay_debit_account_operation& op );
-    void_result do_apply( const daspay_debit_account_operation& op );
+    operation_result do_apply( const daspay_debit_account_operation& op );
 
   private:
     asset to_debit;
@@ -129,7 +129,7 @@ namespace graphene { namespace chain {
     typedef daspay_credit_account_operation operation_type;
 
     void_result do_evaluate(const operation_type &op);
-    void_result do_apply(const operation_type &op);
+    operation_result do_apply(const operation_type &op);
 
   private:
     asset to_credit;
@@ -142,6 +142,15 @@ namespace graphene { namespace chain {
 
     void_result do_evaluate(const update_daspay_clearing_parameters_operation& op);
     void_result do_apply(const update_daspay_clearing_parameters_operation& op);
+  };
+
+  class update_delayed_operations_resolver_parameters_evaluator : public evaluator<update_delayed_operations_resolver_parameters_evaluator>
+  {
+  public:
+    typedef update_delayed_operations_resolver_parameters_operation operation_type;
+
+    void_result do_evaluate(const update_delayed_operations_resolver_parameters_operation& op);
+    void_result do_apply(const update_delayed_operations_resolver_parameters_operation& op);
   };
 
 } }  // namespace graphene::chain

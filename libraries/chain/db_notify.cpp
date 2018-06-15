@@ -407,6 +407,11 @@ struct get_impacted_account_visitor
      _impacted.insert( op.authority );
    }
 
+   void operator()( const update_delayed_operations_resolver_parameters_operation& op )
+   {
+     _impacted.insert( op.authority );
+   }
+
    void operator() ( const issue_free_cycles_operation& op )
    {
       _impacted.insert( op.authority );
@@ -701,14 +706,16 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
                break;
             case impl_witness_delegate_data_colection_object_type:
                break;
-           case impl_payment_service_provider_object_type:
-             break;
-           case impl_daspay_authority_object_type:
-             break;
-           case impl_das33_project_object_type:
-             break;
-           case impl_das33_pledge_holder_object_type:
+            case impl_payment_service_provider_object_type:
                break;
+            case impl_daspay_authority_object_type:
+              break;
+            case impl_das33_project_object_type:
+              break;
+            case impl_das33_pledge_holder_object_type:
+	      break;
+            case impl_delayed_operation_object_type:
+              break;
       }
    }
 }

@@ -119,4 +119,14 @@ namespace graphene { namespace chain {
       );
   }
 
+  void update_delayed_operations_resolver_parameters_operation::validate() const
+  {
+    if ( delayed_operations_resolver_interval_time_seconds.valid() )
+      FC_ASSERT( *delayed_operations_resolver_interval_time_seconds > GRAPHENE_MIN_BLOCK_INTERVAL,
+                 "Must be greater than the minimal block interval"
+      );
+
+  }
+
+
 } } // namespace graphene::chain

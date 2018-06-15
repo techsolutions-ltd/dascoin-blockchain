@@ -1361,6 +1361,26 @@ public:
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (account)(amount)(license)(project)(broadcast) ) }
 
+   signed_transaction update_delayed_operations_resolver_parameters(optional<bool> delayed_operations_resolver_enabled,
+                                                        optional<uint32_t> delayed_operations_resolver_interval_time_seconds,
+                                                        bool broadcast)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      update_delayed_operations_resolver_parameters_operation op;
+
+      op.authority = _remote_db->get_global_properties().authorities.root_administrator;
+      op.delayed_operations_resolver_enabled = delayed_operations_resolver_enabled;
+      op.delayed_operations_resolver_interval_time_seconds = delayed_operations_resolver_interval_time_seconds;
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (delayed_operations_resolver_enabled)(delayed_operations_resolver_interval_time_seconds)(broadcast) ) }
+
    signed_transaction tether_accounts(string wallet, string vault, bool broadcast = false)
    { try {
       FC_ASSERT( !self.is_locked() );
@@ -5500,6 +5520,15 @@ signed_transaction wallet_api::delete_das33_project(const string& authority,
   return my->delete_das33_project(authority,
 				  project_id,
 				  broadcast);
+}
+
+signed_transaction wallet_api::update_delayed_operations_resolver_parameters(optional<bool> delayed_operations_resolver_enabled,
+                                                                 optional<uint32_t> delayed_operations_resolver_interval_time_seconds,
+                                                                 bool broadcast) const
+{
+  return my->update_delayed_operations_resolver_parameters(delayed_operations_resolver_enabled,
+                                               delayed_operations_resolver_interval_time_seconds,
+                                               broadcast);
 }
 
 signed_block_with_info::signed_block_with_info( const signed_block& block )

@@ -66,8 +66,9 @@ namespace graphene { namespace chain {
 
     const auto& idx = d.get_index_type<daspay_authority_index>().indices().get<by_daspay_user>();
     auto itr = idx.lower_bound(op.issuer);
+    const auto& itr_end = idx.upper_bound(op.issuer);
 
-    while( itr != idx.end() )
+    while( itr != itr_end )
     {
       FC_ASSERT ( itr->payment_provider != op.payment_provider, "DasPay payment provider ${p} already set", ("p", op.payment_provider) );
       ++itr;
@@ -115,6 +116,11 @@ namespace graphene { namespace chain {
   { try {
     const database& d = db();
 
+    const auto& idx = d.get_index_type<delayed_operations_index>().indices().get<by_account>();
+    const auto& itr = idx.lower_bound(op.account);
+
+    FC_ASSERT( itr == idx.end(), "Cannot issue another unreserve operation while the previous one is pending ${a}", ("a", itr->id) );
+
     FC_ASSERT( op.asset_to_unreserve.asset_id == d.get_dascoin_asset_id(), "Only dascoin can be unreserved for daspay" );
 
     const auto& balance = d.get_balance_object( op.account, d.get_dascoin_asset_id() );
@@ -125,12 +131,18 @@ namespace graphene { namespace chain {
     return {};
   } FC_CAPTURE_AND_RETHROW((op)) }
 
-  void_result unreserve_asset_on_account_evaluator::do_apply(const operation_type& op)
+  object_id_type unreserve_asset_on_account_evaluator::do_apply(const operation_type& op)
   { try {
     database& d = db();
-    d.adjust_balance( op.account, asset{op.asset_to_unreserve.amount, d.get_dascoin_asset_id()}, -op.asset_to_unreserve.amount );
+    const auto& gpo = d.get_global_properties();
 
-    return {};
+    return d.create<delayed_operation_object>([&](delayed_operation_object& duo) {
+      duo.account = op.account;
+      duo.op = op;
+      duo.issued_time = d.head_block_time();
+      duo.skip = gpo.delayed_operations_resolver_interval_time_seconds;
+    }).id;
+
   } FC_CAPTURE_AND_RETHROW((op)) }
 
   void_result unregister_daspay_authority_evaluator::do_evaluate(const operation_type& op)
@@ -141,7 +153,8 @@ namespace graphene { namespace chain {
     auto itr = idx.lower_bound(op.issuer);
     FC_ASSERT( itr != idx.end(), "Cannot unregister DasPay authority because none has been set" );
 
-    while( itr != idx.end() )
+    const auto& itr_end = idx.upper_bound(op.issuer);
+    while( itr != itr_end )
     {
       if ( itr->payment_provider == op.payment_provider )
       {
@@ -268,6 +281,10 @@ namespace graphene { namespace chain {
   { try {
     const auto& d = db();
 
+    const auto& delayed_unreserve_idx = d.get_index_type<delayed_operations_index>().indices().get<by_account>();
+    auto delayed_unreserve_iterator = delayed_unreserve_idx.find(op.account);
+    FC_ASSERT( delayed_unreserve_iterator == delayed_unreserve_idx.end(), "Account ${1} initiated delayed unreserve operation.", ("1", op.account) );
+
     FC_ASSERT( op.debit_amount.asset_id == d.get_web_asset_id(), "Only web euro can be debited, ${a} sent", ("a", d.to_pretty_string(op.debit_amount)) );
 
     const auto& account = op.account(d);
@@ -280,9 +297,9 @@ namespace graphene { namespace chain {
 
     FC_ASSERT( da_it->daspay_public_key == op.auth_key, "Trying to sign debit operation with the key user has not authorized" );
 
-    const auto& idx = d.get_index_type<payment_service_provider_index>().indices().get<by_payment_service_provider>();
-    const auto& it = idx.find(op.payment_service_provider_account);
-    FC_ASSERT( it != idx.end(), "Payment service provider with account ${1} does not exist.", ("1", op.payment_service_provider_account) );
+    const auto& psp_idx = d.get_index_type<payment_service_provider_index>().indices().get<by_payment_service_provider>();
+    const auto& it = psp_idx.find(op.payment_service_provider_account);
+    FC_ASSERT( it != psp_idx.end(), "Payment service provider with account ${1} does not exist.", ("1", op.payment_service_provider_account) );
 
     FC_ASSERT( std::find(it->payment_service_provider_clearing_accounts.begin(),
                          it->payment_service_provider_clearing_accounts.end(),
@@ -300,14 +317,14 @@ namespace graphene { namespace chain {
     return {};
   } FC_CAPTURE_AND_RETHROW((op)) }
 
-  void_result daspay_debit_account_evaluator::do_apply(const daspay_debit_account_operation& op)
+  operation_result daspay_debit_account_evaluator::do_apply(const daspay_debit_account_operation& op)
   { try {
     auto& d = db();
 
     d.adjust_balance(op.account, asset{0, to_debit.asset_id}, -to_debit.amount);
     d.adjust_balance(op.clearing_account, to_debit, 0);
 
-    return {};
+    return to_debit;
 
   } FC_CAPTURE_AND_RETHROW((op)) }
 
@@ -345,14 +362,14 @@ namespace graphene { namespace chain {
 
   } FC_CAPTURE_AND_RETHROW((op)) }
 
-  void_result daspay_credit_account_evaluator::do_apply(const operation_type& op)
+  operation_result daspay_credit_account_evaluator::do_apply(const operation_type& op)
   { try {
     auto& d = db();
 
     d.adjust_balance(op.clearing_account, asset{-to_credit.amount, to_credit.asset_id}, 0);
     d.adjust_balance(op.account, asset{0, to_credit.asset_id}, to_credit.amount);
 
-    return {};
+    return to_credit;
 
   } FC_CAPTURE_AND_RETHROW((op)) }
 
@@ -389,6 +406,39 @@ namespace graphene { namespace chain {
       CHECK_AND_SET_OPT(gpo.daspay_parameters.clearing_interval_time_seconds, op.clearing_interval_time_seconds);
       CHECK_AND_SET_OPT(gpo.daspay_parameters.collateral_dascoin, op.collateral_dascoin);
       CHECK_AND_SET_OPT(gpo.daspay_parameters.collateral_webeur, op.collateral_webeur);
+    });
+
+    return {};
+
+  } FC_CAPTURE_AND_RETHROW((op)) }
+
+  void_result update_delayed_operations_resolver_parameters_evaluator::do_evaluate(const update_delayed_operations_resolver_parameters_operation& op)
+  { try {
+    const auto& d = db();
+    const auto& gpo = d.get_global_properties();
+    const auto& authority_obj = op.authority(d);
+
+    d.perform_chain_authority_check("root authority", gpo.authorities.root_administrator, authority_obj);
+
+    if ( op.delayed_operations_resolver_interval_time_seconds.valid() )
+    {
+      FC_ASSERT( *op.delayed_operations_resolver_interval_time_seconds % gpo.parameters.block_interval == 0,
+                 "Delayed operations resolver interval must be a multiple of the block interval ${bi}",
+                 ("bi", gpo.parameters.block_interval)
+      );
+
+    }
+    return {};
+
+  } FC_CAPTURE_AND_RETHROW((op)) }
+
+  void_result update_delayed_operations_resolver_parameters_evaluator::do_apply(const update_delayed_operations_resolver_parameters_operation& op)
+  { try {
+    auto& d = db();
+
+    d.modify(d.get_global_properties(), [&](global_property_object& gpo){
+      CHECK_AND_SET_OPT(gpo.delayed_operations_resolver_enabled, op.delayed_operations_resolver_enabled);
+      CHECK_AND_SET_OPT(gpo.delayed_operations_resolver_interval_time_seconds, op.delayed_operations_resolver_interval_time_seconds);
     });
 
     return {};

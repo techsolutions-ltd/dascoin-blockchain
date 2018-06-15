@@ -323,6 +323,31 @@ namespace graphene { namespace chain {
       share_type calculate_fee(const fee_parameters_type&) const { return 0; }
     };
 
+    struct update_delayed_operations_resolver_parameters_operation : public base_operation
+    {
+      struct fee_parameters_type {};
+      asset fee;
+
+      account_id_type authority;
+
+      optional<bool> delayed_operations_resolver_enabled;
+      optional<uint32_t> delayed_operations_resolver_interval_time_seconds;
+
+      update_delayed_operations_resolver_parameters_operation() = default;
+      explicit update_delayed_operations_resolver_parameters_operation(account_id_type authority,
+                                                           optional<bool> delayed_operations_resolver_enabled,
+                                                           optional<uint32_t> delayed_operations_resolver_interval_time_seconds)
+              : authority(authority),
+                delayed_operations_resolver_enabled(delayed_operations_resolver_enabled),
+                delayed_operations_resolver_interval_time_seconds(delayed_operations_resolver_interval_time_seconds) {}
+
+      extensions_type extensions;
+
+      account_id_type fee_payer() const { return authority; }
+      void validate() const;
+      share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+    };
+
 } }  // namespace graphene::chain
 
 ////////////////////////////////
@@ -428,4 +453,12 @@ FC_REFLECT( graphene::chain::update_daspay_clearing_parameters_operation,
             (clearing_interval_time_seconds)
             (collateral_dascoin)
             (collateral_webeur)
+          )
+
+FC_REFLECT( graphene::chain::update_delayed_operations_resolver_parameters_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::update_delayed_operations_resolver_parameters_operation,
+            (fee)
+            (authority)
+            (delayed_operations_resolver_enabled)
+            (delayed_operations_resolver_interval_time_seconds)
           )

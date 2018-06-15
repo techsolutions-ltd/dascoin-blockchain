@@ -694,4 +694,30 @@ void database::daspay_clearing_start()
 
 } FC_CAPTURE_AND_RETHROW() }
 
+void database::daspay_resolve_delayed_operations()
+{ try {
+  const auto& params = get_global_properties();
+  const auto& dgpo = get_dynamic_global_properties();
+
+  if ( dgpo.next_delayed_operations_resolver_time > head_block_time() )
+    return;
+
+  ilog("resolve delayed operations smart contract running");
+  const auto& idx = get_index_type<delayed_operations_index>().indices().get<by_account>();
+  for (auto it = idx.cbegin(); it != idx.cend(); ++it)
+  {
+    ilog("issued_time ${i}, skip ${s}, h ${h}", ("i", it->issued_time)("s", it->skip)("h", head_block_time()));
+    if (it->issued_time + it->skip <= head_block_time())
+    {
+      it->op.visit(op_visitor(*this));
+      remove(*it);
+    }
+  }
+
+  modify(dgpo, [&](dynamic_global_property_object& dgpo){
+    dgpo.next_delayed_operations_resolver_time = head_block_time() + params.delayed_operations_resolver_interval_time_seconds;
+  });
+
+} FC_CAPTURE_AND_RETHROW() }
+
 } }  // namespace database::chain

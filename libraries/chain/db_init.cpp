@@ -343,7 +343,7 @@ void database::initialize_indexes()
    add_index<primary_index<wire_out_with_fee_holder_index>>();
    add_index<primary_index<daspay_authority_index>>();
    add_index<primary_index<payment_service_provider_index>>();
-   add_index<primary_index<daspay_delayed_unreserve_index>>();
+   add_index<primary_index<daspay_delayed_operations_index>>();
 }
 
 account_id_type database::initialize_chain_authority(const string& kind_name, const string& acc_name)

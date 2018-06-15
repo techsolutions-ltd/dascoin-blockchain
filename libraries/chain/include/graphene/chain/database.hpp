@@ -644,7 +644,7 @@ namespace graphene { namespace chain {
          void mint_dascoin_rewards();
          void reset_spending_limits();
          void daspay_clearing_start();
-         void daspay_resolve_unreserve();
+         void daspay_resolve_delayed_operations();
 private:
 
          ///Steps performed only at maintenance intervals

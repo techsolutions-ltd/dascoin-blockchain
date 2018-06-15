@@ -694,7 +694,7 @@ void database::daspay_clearing_start()
 
 } FC_CAPTURE_AND_RETHROW() }
 
-void database::daspay_resolve_unreserve()
+void database::daspay_resolve_delayed_operations()
 { try {
   const auto& params = get_global_properties();
   const auto& dgpo = get_dynamic_global_properties();
@@ -702,15 +702,14 @@ void database::daspay_resolve_unreserve()
   if ( dgpo.daspay_next_delayed_unreserve_time > head_block_time() )
     return;
 
-  ilog("resolve unreserve smart contract running");
-  const auto& idx = get_index_type<daspay_delayed_unreserve_index>().indices().get<by_account>();
+  ilog("resolve delayed operations smart contract running");
+  const auto& idx = get_index_type<daspay_delayed_operations_index>().indices().get<by_account>();
   for (auto it = idx.cbegin(); it != idx.cend(); ++it)
   {
-    ilog("issued_time ${i}, skip ${s}", ("i", it->issued_time)("s", it->skip));
-    if (it->issued_time + it->skip >= head_block_time())
+    ilog("issued_time ${i}, skip ${s}, h ${h}", ("i", it->issued_time)("s", it->skip)("h", head_block_time()));
+    if (it->issued_time + it->skip <= head_block_time())
     {
-      ilog("unreserving ${d}", ("d", to_pretty_string(it->asset_to_unreserve)));
-      adjust_balance( it->account, asset{ it->asset_to_unreserve.amount, get_dascoin_asset_id() }, -it->asset_to_unreserve.amount );
+      it->op.visit(op_visitor(*this));
       remove(*it);
     }
   }

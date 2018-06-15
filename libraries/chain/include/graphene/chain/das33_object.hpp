@@ -107,7 +107,7 @@ public:
   struct by_user;
   struct by_project;
 
-  using das33_pledge_holder_multi_index_type = boost::multi_index::multi_index_container<
+  using das33_pledge_holder_multi_index_type = multi_index_container<
     das33_pledge_holder_object,
     indexed_by<
       ordered_unique<

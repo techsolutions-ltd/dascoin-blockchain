@@ -24,7 +24,7 @@
 
 #include <graphene/chain/das33_evaluator.hpp>
 #include <graphene/chain/database.hpp>
-#include <iostream>
+#include <graphene/chain/balance_checker.hpp>
 
 namespace graphene { namespace chain {
 
@@ -130,51 +130,50 @@ namespace graphene { namespace chain {
   { try {
 
     const auto& d = db();
-//    const auto& account_obj = op.account_id(d);
-//
-//    // IF  op.license_id.valid()
-//
-//    // Only vault accounts are allowed to submit cycles:
-//    FC_ASSERT( account_obj.is_vault(),
-//               "Account '${n}' is not a vault account",
-//               ("n", account_obj.name)
-//             );
-//
-//    FC_ASSERT( account_obj.license_information.valid(),
-//               "Cannot submit cycles, account '${n}' does not have any licenses",
-//               ("n", account_obj.name)
-//          );
-//
-//    const auto& license_information_obj = (*account_obj.license_information)(d);
-//
-//    // Check if this account has a required license:
-//    optional<license_information_object::license_history_record> license{license_information_obj.get_license(*op.license_id)};
-//    FC_ASSERT( license.valid(),
-//               "Account '${n}' does not have a license of type ${l}",
-//               ("n", account_obj.name)
-//               ("l", op.license_id)
-//             );
-//
-//    // Assure we have enough funds to submit:
-//    FC_ASSERT( license->total_cycles() >= op.pledged.amount,
-//               "Cannot submit ${am} cycles, account '${n}' license cycle balance is ${b}",
-//               ("am", op.pledged.amount)
-//               ("n", account_obj.name)
-//               ("b", license->amount)
-//          );
+    const auto& account_obj = op.account_id(d);
+    const auto& project_obj = op.project_id(d);
+    const auto& token_obj = project_obj.token_id(d);
 
-//TODO
-//     Assure that amount of cycles submitted would not exceed token max supply limit.
-//    const auto& project_obj = op.project_id(d);
-//    FC_ASSERT(d.cycles_to_asset(op.cycles_amount, frequency, project_obj.token_id) + project_obj.collected <= project_obj.token_id.max_supply * token_precision(project_obj.token_id),
-//                "Cannot submit ${am} cycles with frequency (${f}), "
-//                "because it would exceed token's max supply limit ${max_limit}",
-//                ("am", op.amount)
-//                ("f", frequency)
-//                ("max_limit", project_obj.token_id.max_supply * token_precision(project_obj.token_id))
-//              );
+    // Check if pledged asset and project token are different assets
+    FC_ASSERT( op.pledged.asset_id != project_obj.token_id,
+               "Cannot pledge project tokens"
+    );
 
-    // project exists ?
+    // Evaluate different things for cycles and other assets
+    if( op.pledged.asset_id == d.get_cycle_asset_id() )
+    {
+      do_evaluate_cycles(d, op, account_obj);
+    }
+    else
+    {
+      do_evaluate_asset(d, op, account_obj);
+    }
+
+    // Assure target project exists:
+    const auto& idx = d.get_index_type<das33_project_index>().indices().get<by_id>();
+    FC_ASSERT( idx.find(project_obj.id) != idx.end(), "Bad project id" );
+
+    // Calculate expected amount
+    expected.asset_id = project_obj.token_id;
+    for( const auto& current : project_obj.token_prices )
+    {
+      if( current.base.asset_id == op.pledged.asset_id )
+        expected.amount = op.pledged.amount.value * current.quote.amount.value / current.base.amount.value;
+      else if( current.quote.asset_id == op.pledged.asset_id)
+        expected.amount = op.pledged.amount.value * current.base.amount.value / current.quote.amount.value;
+    }
+    FC_ASSERT(expected.amount > 0,
+              "Cannot pledge because expected amount of ${tok} is ${ex}",
+              ("tok", token_obj.symbol)
+              ("ex", d.to_pretty_string(expected))
+    );
+
+    // Assure that amount pledged would not exceed token max supply limit.
+    FC_ASSERT(project_obj.collected + expected.amount <= token_obj.options.max_supply,
+              "Cannot pledge ${am} because it would exceed token's max supply limit ${max_limit}",
+              ("am", d.to_pretty_string(op.pledged))
+              ("max_limit", d.to_pretty_string(expected))
+    );
 
     return {};
 
@@ -185,24 +184,121 @@ namespace graphene { namespace chain {
 
     auto& d = db();
     const auto& account_obj = op.account_id(d);
-    //const auto& license_information_obj = (*account_obj.license_information)(d);
 
-    // Spend cycles, decrease balance and supply:
-//    d.reserve_cycles(op.account_id, op.cycles_amount);
-//    d.modify( license_information_obj, [&](license_information_object& lio){
-//              lio.subtract_cycles(op.license_id, op.cycles_amount);
-//            });
+    // Apply different things for cycles and other assets
+    if( op.pledged.asset_id == d.get_cycle_asset_id() )
+    {
+      const auto& license_information_obj = (*account_obj.license_information)(d);
+      do_apply_cycles(d, op, license_information_obj);
+    }
+    else
+    {
+      const auto& balance_obj = d.get_balance_object(op.account_id, op.pledged.asset_id);
+      do_apply_asset(d, op, balance_obj);
+    }
+
+    // Update project
+    const auto& project_obj = op.project_id(d);
+    d.modify(project_obj, [&](das33_project_object& p){
+        p.collected -= expected.amount;
+    });
 
     // Create the holder object and return its ID:
     return d.create<das33_pledge_holder_object>([&](das33_pledge_holder_object& cpho){
-        cpho.account_id = op.account_id;
-        cpho.pledged = op.pledged;
-        cpho.expected = asset{};
-        cpho.license_id = op.license_id;
-        cpho.project_id = op.project_id;
-        cpho.timestamp = d.head_block_time();
+      cpho.account_id = op.account_id;
+      cpho.pledged = op.pledged;
+      cpho.expected = expected;
+      cpho.license_id = op.license_id;
+      cpho.project_id = op.project_id;
+      cpho.timestamp = d.head_block_time();
     }).id;
 
   } FC_CAPTURE_AND_RETHROW((op)) }
+
+  void_result das33_pledge_asset_evaluator::do_evaluate_cycles(const database &d, const das33_pledge_asset_operation &op, const account_object &account_obj) const {
+
+    // Only vault accounts are allowed to submit cycles:
+    FC_ASSERT( account_obj.is_vault(),
+               "Account '${n}' is not a vault account",
+               ("n", account_obj.name)
+    );
+
+    // Check if this account has a license:
+    FC_ASSERT( account_obj.license_information.valid(),
+               "Cannot pledge cycles, account '${n}' does not have any licenses",
+               ("n", account_obj.name)
+    );
+
+    const auto& license_information_obj = (*account_obj.license_information)(d);
+
+    // Check if this account has a required license:
+    const auto& license_iterator = std::find_if(license_information_obj.history.begin(), license_information_obj.history.end(),
+                                                [&op](const license_information_object::license_history_record& history_record) {
+                                                    return history_record.license == op.license_id;
+                                                });
+    FC_ASSERT ( license_iterator != license_information_obj.history.end(),
+                "License ${l} is not issued to account ${a}",
+                ("l", op.license_id)
+                ("a", op.account_id)
+    );
+
+    // Assure we have enough cycles to submit:
+    FC_ASSERT ( (*license_iterator).amount >= op.pledged.amount,
+                "Trying to pledge ${t} cycles from license ${l} of vault ${v}, while ${r} remaining",
+                ("t", op.pledged.amount)
+                ("l", op.license_id)
+                ("v", op.account_id)
+                ("r", (*license_iterator).amount)
+    );
+
+    return {};
+  }
+
+  void_result das33_pledge_asset_evaluator::do_evaluate_asset(const database &d, const das33_pledge_asset_operation &op, const account_object &account_obj) const {
+
+    // Assure we have enough balance to pledge:
+    const auto& balance_obj = d.get_balance_object(op.account_id, op.pledged.asset_id);
+    FC_ASSERT( balance_obj.get_balance() >= op.pledged,
+               "Not enough balance on user account ${a}, left ${l}, needed ${n}",
+               ("a", op.account_id)
+               ("l", d.to_pretty_string(balance_obj.get_balance()))
+               ("n", d.to_pretty_string(op.pledged))
+    );
+
+    // Assure we dont spend last DASC:
+    const auto& asset_obj = op.pledged.asset_id(d);
+    balance_checker::check_remaining_balance(d, account_obj, asset_obj, op.pledged.amount);
+
+    return {};
+  }
+
+  void_result das33_pledge_asset_evaluator::do_apply_cycles(database &d, const das33_pledge_asset_operation &op, const license_information_object &license_obj) const {
+
+    // Spend cycles:
+    d.modify(license_obj, [&](license_information_object& lio) {
+      lio.subtract_cycles(*op.license_id, op.pledged.amount);
+    });
+
+    return {};
+  }
+
+
+  void_result das33_pledge_asset_evaluator::do_apply_asset(database &d, const das33_pledge_asset_operation &op, const account_balance_object &balance_obj) const {
+
+    // Adjust the balance and spent amount:
+    d.modify(balance_obj, [&](account_balance_object& from){
+      from.balance -= op.pledged.amount;
+      from.spent += op.pledged.amount;
+    });
+
+    // Decrease asset supply:
+    const auto& asset_obj = op.pledged.asset_id(d);
+    d.modify(asset_obj.dynamic_asset_data_id(d), [&](asset_dynamic_data_object& data){
+      data.current_supply -= op.pledged.amount;
+    });
+
+    return {};
+  }
+
 
 } }  // namespace graphene::chain

@@ -57,16 +57,14 @@ namespace graphene { namespace chain {
     FC_ASSERT( fee.amount >= 0 );
     FC_ASSERT( pledged.amount > 0, "Must submit a non-zero value" );
     FC_ASSERT( account_id != account_id_type(), "Illegal account id");
-    FC_ASSERT( project_id != das33_project_id_type(), "Illegal project id '${p}'", ("p", project_id));
-
-    // TODO do we need to assert that asset can only be DASCOIN or CYCLE ?
 
     /*
      * (cycle asset) AND (license valid)  OR  (NOT cycle asset) AND (NOT license valid)
      *  =>  NOT (NOT cycle asset) AND (license valid)  OR  (NOT cycle asset) AND NOT (license valid)
      *  =>  (NOT cycle asset) XOR (license valid)
      */
-    FC_ASSERT( (pledged.asset_id != asset_id_type{DASCOIN_CYCLE_ASSET_INDEX}) ^ license_id.valid(), "If cycles are pledged, license must be provided (and vice versa)");
+      FC_ASSERT( (pledged.asset_id != asset_id_type{DASCOIN_CYCLE_ASSET_INDEX}) ^ license_id.valid(),
+                  "If cycles are pledged, license must be provided. Otherwise license must NOT be provided");
   }
 
 } } // namespace graphene::chain

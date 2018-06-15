@@ -120,7 +120,7 @@ namespace graphene { namespace chain {
 
       explicit das33_pledge_asset_operation(const account_id_type& account_id,
                                             const asset& pledged,
-                                            const license_type_id_type& license_id,
+                                            optional<license_type_id_type> license_id,
                                             const das33_project_id_type& project_id)
               : account_id(account_id)
               , pledged(pledged)

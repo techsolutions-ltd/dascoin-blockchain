@@ -130,6 +130,34 @@ BOOST_AUTO_TEST_CASE( daspay_authority_index_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( daspay_delayed_operations_index_test )
+{ try {
+  ACTORS((wa1)(wa2));
+
+  db.create<daspay_delayed_operation_object>([&](daspay_delayed_operation_object& dlo){
+    dlo.account = wa1_id;
+    dlo.issued_time = db.head_block_time();
+    dlo.op = unreserve_asset_on_account_operation{wa1_id, asset{ 0, db.get_dascoin_asset_id() } };
+  });
+
+  // Fails: cannot create delayed operation of the same type
+  GRAPHENE_REQUIRE_THROW(
+    db.create<daspay_delayed_operation_object>([&](daspay_delayed_operation_object& dlo){
+      dlo.account = wa1_id;
+      dlo.issued_time = db.head_block_time();
+      dlo.op = unreserve_asset_on_account_operation{wa1_id, asset{ 0, db.get_dascoin_asset_id() } };
+    }),
+  fc::exception );
+
+  // Success: different operation
+  db.create<daspay_delayed_operation_object>([&](daspay_delayed_operation_object& dlo){
+    dlo.account = wa1_id;
+    dlo.issued_time = db.head_block_time();
+    dlo.op = reserve_asset_on_account_operation{wa1_id, asset{ 0, db.get_dascoin_asset_id() } };
+  });
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_CASE( register_daspay_authority_test )
 { try {
   ACTORS((foo)(bar)(foobar)(payment));

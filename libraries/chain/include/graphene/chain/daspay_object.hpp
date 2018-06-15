@@ -24,6 +24,7 @@
 
 #pragma once
 
+#include <graphene/chain/database.hpp>
 #include <graphene/chain/protocol/base.hpp>
 #include <graphene/chain/protocol/types.hpp>
 #include <graphene/db/generic_index.hpp>
@@ -79,29 +80,55 @@ namespace graphene { namespace chain {
     {}
   };
 
-  class daspay_delayed_unreserve_object : public abstract_object<daspay_delayed_unreserve_object>
+  class daspay_delayed_operation_object : public abstract_object<daspay_delayed_operation_object>
   {
   public:
     static const uint8_t space_id = implementation_ids;
     static const uint8_t type_id  = impl_daspay_delayed_unreserve_object_type;
 
     account_id_type account;
-    asset asset_to_unreserve;
+    operation op;
     fc::time_point_sec issued_time;
     uint32_t skip;
 
     extensions_type extensions;
 
-    daspay_delayed_unreserve_object() = default;
-    explicit daspay_delayed_unreserve_object(account_id_type account,
-                                             asset asset_to_unreserve,
+    int which() const {
+      return op.which();
+    }
+
+    daspay_delayed_operation_object() = default;
+    explicit daspay_delayed_operation_object(account_id_type account,
+                                             operation op,
                                              fc::time_point_sec issued_time,
                                              uint32_t skip)
             : account(account),
-              asset_to_unreserve(asset_to_unreserve),
+              op(op),
               issued_time(issued_time),
               skip(skip)
     {}
+  };
+
+  struct op_visitor
+  {
+    using result_type = void;
+
+    database& _db;
+
+    op_visitor(database &d)
+            : _db(d) {}
+
+    template<typename T>
+    result_type operator()( const T& v ) const
+    {
+      FC_ASSERT( false, "Handler for delayed operation not implemented" );
+    }
+
+    result_type operator()( const unreserve_asset_on_account_operation& op ) const
+    {
+      ilog("unreserving ${d}", ("d", _db.to_pretty_string(op.asset_to_unreserve)));
+      _db.adjust_balance( op.account, asset{ op.asset_to_unreserve.amount, _db.get_dascoin_asset_id() }, -op.asset_to_unreserve.amount );
+    }
   };
 
   ///////////////////////////////
@@ -153,8 +180,9 @@ namespace graphene { namespace chain {
   using daspay_authority_index = generic_index<daspay_authority_object, daspay_authority_multi_index_type>;
 
   struct by_account;
-  using daspay_delayed_unreserve_multi_index_type = multi_index_container<
-    daspay_delayed_unreserve_object,
+  struct by_operation;
+  using daspay_delayed_operations_multi_index_type = multi_index_container<
+    daspay_delayed_operation_object,
     indexed_by<
       ordered_unique<
         tag<by_id>,
@@ -162,15 +190,22 @@ namespace graphene { namespace chain {
       >,
       ordered_unique<
         tag<by_account>,
-          composite_key< daspay_delayed_unreserve_object,
-            member< daspay_delayed_unreserve_object, account_id_type, &daspay_delayed_unreserve_object::account >,
+          composite_key< daspay_delayed_operation_object,
+            member< daspay_delayed_operation_object, account_id_type, &daspay_delayed_operation_object::account >,
             member< object, object_id_type, &object::id >
           >
-        >
+      >,
+      ordered_unique<
+        tag<by_operation>,
+          composite_key< daspay_delayed_operation_object,
+            member< daspay_delayed_operation_object, account_id_type, &daspay_delayed_operation_object::account >,
+            const_mem_fun< daspay_delayed_operation_object, int, &daspay_delayed_operation_object::which >
+          >
+      >
     >
   >;
 
-  using daspay_delayed_unreserve_index = generic_index<daspay_delayed_unreserve_object, daspay_delayed_unreserve_multi_index_type>;
+  using daspay_delayed_operations_index = generic_index<daspay_delayed_operation_object, daspay_delayed_operations_multi_index_type>;
 
 } }  // namespace graphene::chain
 
@@ -191,9 +226,9 @@ FC_REFLECT_DERIVED( graphene::chain::daspay_authority_object, (graphene::db::obj
                     (memo)
                   )
 
-FC_REFLECT_DERIVED( graphene::chain::daspay_delayed_unreserve_object, (graphene::db::object),
+FC_REFLECT_DERIVED( graphene::chain::daspay_delayed_operation_object, (graphene::db::object),
                     (account)
-                    (asset_to_unreserve)
+                    (op)
                     (issued_time)
                     (skip)
                   )

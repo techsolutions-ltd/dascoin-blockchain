@@ -680,8 +680,12 @@ void database::daspay_clearing_start()
       if (sell_prices.size() == 2)
         ++price_it;
       share_type buy_price = *price_it;
-      const auto& to_sell = asset{ to_buy.amount * buy_price, get_web_asset_id() };
-      limit_orders.emplace_back(limit_order_create_operation{ clearing_acc, to_sell, to_buy, 0, {}, head_block_time() + params.daspay_parameters.clearing_interval_time_seconds });
+      const auto& to_sell = asset{ to_buy.amount * buy_price / DASCOIN_DEFAULT_ASSET_PRECISION, get_web_asset_id() };
+      ilog("balance ${b} to buy ${t} to sell ${s}",("b", dasc_balance)("t", to_buy)("s", to_sell));
+      if (webeur_balance >= to_sell)
+        limit_orders.emplace_back(limit_order_create_operation{ clearing_acc, to_sell, to_buy, 0, {}, head_block_time() + params.daspay_parameters.clearing_interval_time_seconds });
+      else
+        wlog("Clearing account ${a} has insufficient balance ${b}", ("a", clearing_acc)("b", to_pretty_string(webeur_balance)));
     }
   }
 

@@ -891,11 +891,10 @@ class database_api
       // DAS33:               //
       //////////////////////////
 
-      vector<das33_pledge_holder_object> get_das33_pledges() const;
+      vector<das33_pledge_holder_object> get_das33_pledges(das33_pledge_holder_id_type from, uint32_t limit) const;
       vector<das33_pledge_holder_object> get_das33_pledges_by_account(account_id_type account) const;
-      vector<das33_pledge_holder_object> get_das33_pledges_by_project(das33_project_id_type project) const;
+      vector<das33_pledge_holder_object> get_das33_pledges_by_project(das33_project_id_type project, das33_pledge_holder_id_type from, uint32_t limit) const;
       vector<das33_project_object> get_das33_projects(const string& lower_bound_name, uint32_t limit)const;
-
 
 private:
       std::shared_ptr< database_api_impl > my;

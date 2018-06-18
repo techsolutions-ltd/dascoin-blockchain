@@ -275,6 +275,11 @@ BOOST_AUTO_TEST_CASE( unreserve_asset_on_account_test )
   generate_blocks(db.head_block_time() + fc::seconds(get_chain_parameters().reward_interval_time_seconds));
   BOOST_CHECK_EQUAL( get_balance(bar_id, get_dascoin_asset_id()), 605 * DASCOIN_DEFAULT_ASSET_PRECISION );
 
+  // Fails: delayed operations resolver is not running:
+  GRAPHENE_REQUIRE_THROW( do_op(unreserve_asset_on_account_operation(foo_id, asset{ 10 * DASCOIN_DEFAULT_ASSET_PRECISION, db.get_dascoin_asset_id() })), fc::exception );
+
+  do_op(update_delayed_operations_resolver_parameters_operation(db.get_global_properties().authorities.root_administrator, true, 600));
+
   // Fails: only dascoin can be unreserved:
   GRAPHENE_REQUIRE_THROW( do_op(unreserve_asset_on_account_operation(foo_id, asset{ 10, db.get_web_asset_id() })), fc::exception );
 
@@ -301,9 +306,8 @@ BOOST_AUTO_TEST_CASE( unreserve_asset_on_account_test )
   BOOST_CHECK_EQUAL( get_balance(foo_id, get_dascoin_asset_id()), 50 * DASCOIN_DEFAULT_ASSET_PRECISION );
   BOOST_CHECK_EQUAL( get_reserved_balance(foo_id, get_dascoin_asset_id()), 50 * DASCOIN_DEFAULT_ASSET_PRECISION );
 
-  // Start unreserve resolver and wait
-  do_op(update_delayed_operations_resolver_parameters_operation(db.get_global_properties().authorities.root_administrator, true, 60));
-  generate_blocks(db.head_block_time() + fc::seconds(100));
+  // Wait for delayed operations resolver to kick in:
+  generate_blocks(db.head_block_time() + fc::seconds(660));
 
   BOOST_CHECK_EQUAL( get_balance(foo_id, get_dascoin_asset_id()), 60 * DASCOIN_DEFAULT_ASSET_PRECISION );
   BOOST_CHECK_EQUAL( get_reserved_balance(foo_id, get_dascoin_asset_id()), 40 * DASCOIN_DEFAULT_ASSET_PRECISION );

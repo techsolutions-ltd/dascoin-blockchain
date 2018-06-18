@@ -115,6 +115,9 @@ namespace graphene { namespace chain {
   void_result unreserve_asset_on_account_evaluator::do_evaluate(const operation_type& op)
   { try {
     const database& d = db();
+    const auto& gpo = d.get_global_properties();
+
+    FC_ASSERT( gpo.delayed_operations_resolver_enabled, "Cannot issue unreserve operation because delayed operations resolver is not running" );
 
     const auto& idx = d.get_index_type<delayed_operations_index>().indices().get<by_account>();
     const auto& itr = idx.lower_bound(op.account);

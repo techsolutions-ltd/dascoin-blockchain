@@ -2675,7 +2675,7 @@ vector<das33_pledge_holder_object> database_api_impl::get_das33_pledges_by_proje
     vector<das33_pledge_holder_object> result;
 
     const auto& pledges = _db.get_index_type<das33_pledge_holder_index>().indices().get<by_project>();
-    for( auto itr = pledges.lower_bound(make_tuple(project, from)); limit-- && *itr.project_id == project && itr != pledges.end(); ++itr )
+    for( auto itr = pledges.lower_bound(make_tuple(project, from)); limit-- && itr->project_id == project && itr != pledges.end(); ++itr )
     {
         result.emplace_back(*itr);
     }

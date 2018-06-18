@@ -266,6 +266,11 @@ class database_api
        */
       dynamic_global_property_object get_dynamic_global_properties() const;
 
+      /**
+       * @brief Get the total amount of cycles and total potential amount of dascoin
+       */
+      optional<total_cycles_res> get_total_cycles() const;
+
       //////////
       // Keys //
       //////////
@@ -901,6 +906,7 @@ FC_API( graphene::app::database_api,
    (get_config)
    (get_chain_id)
    (get_dynamic_global_properties)
+   (get_total_cycles)
 
    // Keys
    (get_key_references)

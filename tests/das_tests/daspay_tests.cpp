@@ -513,14 +513,17 @@ BOOST_AUTO_TEST_CASE( daspay_clearing_test )
   transfer_dascoin_vault_to_wallet(foobar_id, clearing_id, 200 * DASCOIN_DEFAULT_ASSET_PRECISION);
   do_op(reserve_asset_on_account_operation(foo_id, asset{ 200 * DASCOIN_DEFAULT_ASSET_PRECISION, db.get_dascoin_asset_id() }));
 
-  // Set credit transaction ratio to 2.0%
-  do_op(set_daspay_transaction_ratio_operation(get_daspay_administrator_id(), 0, 200));
+  // Set debit transaction ratio to 2.0%
+  do_op(set_daspay_transaction_ratio_operation(get_daspay_administrator_id(), 200, 0));
 
   // Set price to 1we -> 100dasc
   set_last_dascoin_price(asset(100 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()) / asset(1 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()));
 
   // Debit one web euro:
   do_op(daspay_debit_account_operation(payment_id, pk, foo_id, asset{1 * DASCOIN_FIAT_ASSET_PRECISION, db.get_web_asset_id()}, clearing_id, "", {}));
+
+  // Since price is 100 dasc for 1 web eur and transaction ratio is 2.0%, we took 102 dasc from foo's reserved balance:
+  BOOST_CHECK_EQUAL( get_reserved_balance(foo_id, get_dascoin_asset_id()), 98 * DASCOIN_DEFAULT_ASSET_PRECISION );
 
   const auto& limit_order_idx = db.get_index_type<limit_order_index>();
   const auto& limit_price_idx = limit_order_idx.indices().get<by_price>();
@@ -540,6 +543,11 @@ BOOST_AUTO_TEST_CASE( daspay_clearing_test )
   const auto& loo = *(limit_price_idx.begin());
 
   BOOST_CHECK( loo.seller == clearing_id );
+
+  // Since collateral is set to 0, we sell all but the last coin:
+  share_type tmp = share_type{301 * DASCOIN_DEFAULT_ASSET_PRECISION};
+  BOOST_CHECK_EQUAL( loo.sell_price.base.amount.value, tmp.value );
+  BOOST_CHECK_EQUAL( loo.sell_price.quote.amount.value, 1 );
 
 } FC_LOG_AND_RETHROW() }
 

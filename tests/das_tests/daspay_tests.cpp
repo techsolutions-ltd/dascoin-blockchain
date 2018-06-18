@@ -551,6 +551,67 @@ BOOST_AUTO_TEST_CASE( daspay_clearing_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( daspay_clearing2_test )
+{ try {
+  ACTORS((foo)(clearing)(payment));
+  VAULT_ACTORS((bar)(foobar));
+
+  tether_accounts(foo_id, bar_id);
+  tether_accounts(clearing_id, foobar_id);
+
+  vector<account_id_type> v{clearing_id};
+  const auto& root_id = db.get_global_properties().authorities.daspay_administrator;
+  public_key_type pk = public_key_type(generate_private_key("foo").get_public_key());
+
+  do_op(create_payment_service_provider_operation(root_id, payment_id, v));
+  do_op(register_daspay_authority_operation(foo_id, payment_id, pk, {}));
+
+  db.adjust_balance_limit(bar, get_dascoin_asset_id(), 1000 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  db.adjust_balance_limit(foobar, get_dascoin_asset_id(), 1000 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+  issue_dascoin(foo_id, 1000 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  issue_dascoin(clearing_id, 500 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+  issue_webasset("1", clearing_id, 100 * DASCOIN_FIAT_ASSET_PRECISION, 0);
+
+  // Set huge dasc collateral so no sells will be made:
+  do_op(update_daspay_clearing_parameters_operation(get_daspay_administrator_id(), {}, {}, 1000 * DASCOIN_DEFAULT_ASSET_PRECISION, {}));
+
+  do_op(limit_order_create_operation(foo_id, asset{100 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, asset{7 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()}, 0, {}, db.head_block_time() + fc::seconds(600)));
+
+  BOOST_CHECK_EQUAL( get_balance(clearing_id, get_dascoin_asset_id()), 500 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+  // Set price to 1we -> 100dasc
+  set_last_dascoin_price(asset(100 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()) / asset(1 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()));
+
+  // Return 1 web euro back:
+  do_op(daspay_credit_account_operation(payment_id, foo_id, asset{1 * DASCOIN_FIAT_ASSET_PRECISION, db.get_web_asset_id()}, clearing_id, "", {}));
+
+  // 100 dascoins were returned, 400 left:
+  BOOST_CHECK_EQUAL( get_balance(clearing_id, get_dascoin_asset_id()), 400 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+  // Set huge dasc collateral so no sells will be made:
+  do_op(update_daspay_clearing_parameters_operation(get_daspay_administrator_id(), true, {}, {}, {}));
+
+  // Wait for the next clearing interval:
+  generate_blocks(db.head_block_time() + fc::seconds(12));
+
+  const auto& limit_order_idx = db.get_index_type<limit_order_index>();
+  const auto& limit_price_idx = limit_order_idx.indices().get<by_price>();
+
+  // At this point there should be one limit order:
+  BOOST_CHECK_EQUAL( limit_price_idx.size(), 1 );
+  const auto& loo = *(limit_price_idx.begin());
+
+  // Seller is clearing account:
+  BOOST_CHECK( loo.seller == clearing_id );
+
+  // Price is 7 cents, so we are selling 42 euros for 600 dascoins (remember, collateral is 1000 dascoins):
+  BOOST_CHECK_EQUAL( loo.sell_price.base.amount.value, 42 * DASCOIN_FIAT_ASSET_PRECISION );
+  BOOST_CHECK_EQUAL( loo.sell_price.quote.amount.value, 600 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_CASE( update_delayed_operations_resolver_parameters_unit_test )
 { try {
 

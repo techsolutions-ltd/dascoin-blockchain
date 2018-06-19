@@ -149,7 +149,7 @@ namespace graphene { namespace chain {
 
       bool is_manual_submit()
       {
-         // TODO: Add check for license_kind.utility once it's implemented
+         // TODO: BLC-150 - Add check for license_kind.utility once it's implemented
         return vault_license_kind == license_kind::locked_frequency;
       }
 

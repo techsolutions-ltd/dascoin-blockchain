@@ -149,24 +149,21 @@ vector<acc_id_share_t_res> database_access_layer::get_dascoin_balances_for_accou
 optional<total_cycles_res> database_access_layer::get_total_cycles(account_id_type vault_id) const
 {
     const auto& account = get_opt<account_id_type, account_index, by_id>(vault_id);
-    if (!account.valid() || !account->is_vault())
-        return {};
-
-    auto license_information = _db.get_license_information(vault_id);
-    if (license_information.valid()) 
+    if (account.valid() && account->is_vault())
     {
-        auto history = license_information->history;
-        if (!license_information->is_manual_submit())
-            return {};
-
-        total_cycles_res result;
-        for (auto itr = history.begin(); itr != history.end(); ++itr)
+        auto license_information = _db.get_license_information(vault_id);
+        if (license_information.valid() && license_information->is_manual_submit()) 
         {
-            result.total_cycles += itr->amount;
-            result.total_cycles += itr->non_upgradeable_amount;
-            result.total_dascoin += _db.cycles_to_dascoin(result.total_cycles, itr->frequency_lock); 
+            auto history = license_information->history;
+            total_cycles_res result;
+            for (auto itr = history.begin(); itr != history.end(); ++itr)
+            {
+                result.total_cycles += itr->amount;
+                result.total_cycles += itr->non_upgradeable_amount;
+                result.total_dascoin += _db.cycles_to_dascoin(result.total_cycles, itr->frequency_lock); 
+            }
+            return result;
         }
-        return result;
     }
     return {};
 }

@@ -1598,7 +1598,7 @@ class wallet_api
       ///////////////////////////////
 
       /**
-       * Get the total amount of cycles and the potential total amount of dascoin.
+       * Gets total amount of cycles distributed to all vault accounts and maximum amount of DasCoin that could be minted using these cycles.
        * @return An object containig total amounts of cycles and dascoin.
        */
       optional<total_cycles_res> get_total_cycles() const;

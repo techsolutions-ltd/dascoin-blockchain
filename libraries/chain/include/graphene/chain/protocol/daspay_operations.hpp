@@ -304,6 +304,8 @@ namespace graphene { namespace chain {
       optional<share_type> collateral_dascoin;
       optional<share_type> collateral_webeur;
 
+      extensions_type extensions;
+
       update_daspay_clearing_parameters_operation() = default;
       explicit update_daspay_clearing_parameters_operation(account_id_type authority,
                                                            optional<bool> clearing_enabled,
@@ -315,8 +317,6 @@ namespace graphene { namespace chain {
               clearing_interval_time_seconds(clearing_interval_time_seconds),
               collateral_dascoin(collateral_dascoin),
               collateral_webeur(collateral_webeur) {}
-
-      extensions_type extensions;
 
       account_id_type fee_payer() const { return authority; }
       void validate() const;
@@ -333,6 +333,8 @@ namespace graphene { namespace chain {
       optional<bool> delayed_operations_resolver_enabled;
       optional<uint32_t> delayed_operations_resolver_interval_time_seconds;
 
+      extensions_type extensions;
+
       update_delayed_operations_resolver_parameters_operation() = default;
       explicit update_delayed_operations_resolver_parameters_operation(account_id_type authority,
                                                            optional<bool> delayed_operations_resolver_enabled,
@@ -340,8 +342,6 @@ namespace graphene { namespace chain {
               : authority(authority),
                 delayed_operations_resolver_enabled(delayed_operations_resolver_enabled),
                 delayed_operations_resolver_interval_time_seconds(delayed_operations_resolver_interval_time_seconds) {}
-
-      extensions_type extensions;
 
       account_id_type fee_payer() const { return authority; }
       void validate() const;
@@ -386,6 +386,7 @@ FC_REFLECT( graphene::chain::reserve_asset_on_account_operation,
             (fee)
             (account)
             (asset_to_reserve)
+            (extensions)
           )
 
 FC_REFLECT( graphene::chain::unreserve_asset_on_account_operation::fee_parameters_type, )
@@ -393,6 +394,7 @@ FC_REFLECT( graphene::chain::unreserve_asset_on_account_operation,
             (fee)
             (account)
             (asset_to_unreserve)
+            (extensions)
           )
 
 FC_REFLECT( graphene::chain::create_payment_service_provider_operation::fee_parameters_type, )
@@ -443,7 +445,8 @@ FC_REFLECT( graphene::chain::daspay_credit_account_operation,
             (clearing_account)
             (transaction_id)
             (details)
-          )
+            (extensions)
+           )
 
 FC_REFLECT( graphene::chain::update_daspay_clearing_parameters_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::update_daspay_clearing_parameters_operation,
@@ -453,6 +456,7 @@ FC_REFLECT( graphene::chain::update_daspay_clearing_parameters_operation,
             (clearing_interval_time_seconds)
             (collateral_dascoin)
             (collateral_webeur)
+            (extensions)
           )
 
 FC_REFLECT( graphene::chain::update_delayed_operations_resolver_parameters_operation::fee_parameters_type, )
@@ -461,4 +465,5 @@ FC_REFLECT( graphene::chain::update_delayed_operations_resolver_parameters_opera
             (authority)
             (delayed_operations_resolver_enabled)
             (delayed_operations_resolver_interval_time_seconds)
+            (extensions)
           )

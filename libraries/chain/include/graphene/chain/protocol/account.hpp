@@ -423,6 +423,8 @@ namespace graphene { namespace chain {
      /// Kind of chain authority that will be assigned
      string kind;
 
+     extensions_type extensions;
+
      set_chain_authority_operation() = default;
      explicit set_chain_authority_operation(account_id_type issuer, account_id_type account, string kind)
        : issuer(issuer)
@@ -540,16 +542,17 @@ FC_REFLECT( graphene::chain::roll_back_public_keys_operation,
 
 FC_REFLECT( graphene::chain::set_starting_cycle_asset_amount_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::set_starting_cycle_asset_amount_operation,
-	    (fee)
-	    (issuer)
-	    (new_amount)
-	    (extensions)
-	  )
+            (fee)
+            (issuer)
+            (new_amount)
+            (extensions)
+          )
 
 FC_REFLECT( graphene::chain::set_chain_authority_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::set_chain_authority_operation,
-	    (fee)
-	    (issuer)
-	    (account)
-	    (kind)
-	  )
+            (fee)
+            (issuer)
+            (account)
+            (kind)
+            (extensions)
+          )

@@ -2226,10 +2226,10 @@ FC_API( graphene::wallet::wallet_api,
         (get_das33_pledges)
         (get_das33_pledges_by_account)
         (get_das33_pledges_by_project)
-	(create_das33_project)
-	(update_das33_project)
-	(delete_das33_project)
-	(get_das33_projects)
+        (create_das33_project)
+        (update_das33_project)
+        (delete_das33_project)
+        (get_das33_projects)
 
         // Delayed operations resolver:
         (update_delayed_operations_resolver_parameters)

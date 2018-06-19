@@ -2217,6 +2217,7 @@ FC_API( graphene::wallet::wallet_api,
         (reserve_asset_on_account)
         (unreserve_asset_on_account)
         (daspay_debit_account)
+        (daspay_credit_account)
         (get_daspay_authority_for_account)
         (update_daspay_clearing_parameters)
 

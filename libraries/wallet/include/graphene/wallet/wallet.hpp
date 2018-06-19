@@ -1598,6 +1598,12 @@ class wallet_api
       ///////////////////////////////
 
       /**
+       * Gets total amount of cycles distributed to all vault accounts and maximum amount of DasCoin that could be minted using these cycles.
+       * @return An object containig total amounts of cycles and dascoin.
+       */
+      optional<total_cycles_res> get_total_cycles() const;
+
+      /**
        * Get the amount of cycles in the account.
        * @param  account Account name or stringified id.
        * @return         Cycle balance of the account.
@@ -1966,6 +1972,7 @@ FC_API( graphene::wallet::wallet_api,
         (issue_webasset)
 
         // Cycles:
+        (get_total_cycles)
         (get_account_cycle_balance)
         (get_full_cycle_balances)
         (get_dascoin_balance)

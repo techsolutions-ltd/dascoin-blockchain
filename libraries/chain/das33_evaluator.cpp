@@ -68,6 +68,10 @@ namespace graphene { namespace chain {
       const auto& idx = d.get_index_type<das33_project_index>().indices().get<by_project_name>();
       FC_ASSERT(idx.find(op.name) == idx.end(), "Das33 project called ${1} already exists.", ("1", op.name));
 
+      // Chcek that token isn't one of the system assets
+      FC_ASSERT(op.token != d.get_core_asset().id && op.token != d.get_web_asset_id()
+		&& op.token != d.get_dascoin_asset_id() && op.token != d.get_cycle_asset_id(), "Can not create project with system assets");
+
       // Check that token is not used by another project
       auto itr = idx.begin();
       while (itr != idx.end())

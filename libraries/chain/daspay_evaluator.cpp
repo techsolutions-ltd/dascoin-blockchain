@@ -68,11 +68,9 @@ namespace graphene { namespace chain {
     auto itr = idx.lower_bound(op.issuer);
     const auto& itr_end = idx.upper_bound(op.issuer);
 
-    while( itr != itr_end )
-    {
-      FC_ASSERT ( itr->payment_provider != op.payment_provider, "DasPay payment provider ${p} already set", ("p", op.payment_provider) );
-      ++itr;
-    }
+    FC_ASSERT( std::find_if(itr, itr_end, [&op](const daspay_authority_object& dao) {
+      return dao.payment_provider == op.payment_provider;
+    } ) == itr_end, "DasPay payment provider ${p} already set", ("p", op.payment_provider) );
 
     return {};
 

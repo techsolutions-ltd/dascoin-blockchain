@@ -68,11 +68,9 @@ namespace graphene { namespace chain {
     auto itr = idx.lower_bound(op.issuer);
     const auto& itr_end = idx.upper_bound(op.issuer);
 
-    while( itr != itr_end )
-    {
-      FC_ASSERT ( itr->payment_provider != op.payment_provider, "DasPay payment provider ${p} already set", ("p", op.payment_provider) );
-      ++itr;
-    }
+    FC_ASSERT( std::find_if(itr, itr_end, [&op](const daspay_authority_object& dao) {
+      return dao.payment_provider == op.payment_provider;
+    } ) == itr_end, "DasPay payment provider ${p} already set", ("p", op.payment_provider) );
 
     return {};
 
@@ -115,6 +113,9 @@ namespace graphene { namespace chain {
   void_result unreserve_asset_on_account_evaluator::do_evaluate(const operation_type& op)
   { try {
     const database& d = db();
+    const auto& gpo = d.get_global_properties();
+
+    FC_ASSERT( gpo.delayed_operations_resolver_enabled, "Cannot issue unreserve operation because delayed operations resolver is not running" );
 
     const auto& idx = d.get_index_type<delayed_operations_index>().indices().get<by_account>();
     const auto& itr = idx.lower_bound(op.account);
@@ -291,19 +292,19 @@ namespace graphene { namespace chain {
     FC_ASSERT( account.is_wallet(), "Cannot debit vault account ${i}", ("i", op.account) );
 
     const auto& da_idx = d.get_index_type<daspay_authority_index>().indices().get<by_daspay_user>();
-    const auto& da_it = da_idx.find(op.account);
+    FC_ASSERT( da_idx.find(op.account) != da_idx.end(), "Cannot debit user who has not enabled daspay" );
 
-    FC_ASSERT( da_it != da_idx.end(), "Cannot debit user who has not enabled daspay" );
-
-    FC_ASSERT( da_it->daspay_public_key == op.auth_key, "Trying to sign debit operation with the key user has not authorized" );
+    const auto& da_it = da_idx.lower_bound(op.account);
+    const auto& da_itr_end = da_idx.upper_bound(op.account);
+    FC_ASSERT( std::find_if(da_it, da_itr_end, [&op](const daspay_authority_object& dao) { return dao.daspay_public_key == op.auth_key; } ) != da_idx.end(), "Trying to sign debit operation with the key user has not authorized" );
 
     const auto& psp_idx = d.get_index_type<payment_service_provider_index>().indices().get<by_payment_service_provider>();
-    const auto& it = psp_idx.find(op.payment_service_provider_account);
-    FC_ASSERT( it != psp_idx.end(), "Payment service provider with account ${1} does not exist.", ("1", op.payment_service_provider_account) );
+    const auto& psp_it = psp_idx.find(op.payment_service_provider_account);
+    FC_ASSERT( psp_it != psp_idx.end(), "Payment service provider with account ${1} does not exist.", ("1", op.payment_service_provider_account) );
 
-    FC_ASSERT( std::find(it->payment_service_provider_clearing_accounts.begin(),
-                         it->payment_service_provider_clearing_accounts.end(),
-                         op.clearing_account) != it->payment_service_provider_clearing_accounts.end(), "Invalid clearing account" );
+    FC_ASSERT( std::find(psp_it->payment_service_provider_clearing_accounts.begin(),
+                         psp_it->payment_service_provider_clearing_accounts.end(),
+                         op.clearing_account) != psp_it->payment_service_provider_clearing_accounts.end(), "Invalid clearing account" );
 
     const auto& balance = d.get_balance_object(op.account, d.get_dascoin_asset_id());
     const auto& dgpo = d.get_dynamic_global_properties();

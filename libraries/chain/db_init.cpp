@@ -881,6 +881,10 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    {
      initialize_chain_authority("daspay_administrator", genesis_state.initial_daspay_administrator_authority.owner_name);
    }
+   if (genesis_state.initial_das33_administrator_authority.owner_name.length() > 0)
+   {
+     initialize_chain_authority("das33_administrator", genesis_state.initial_das33_administrator_authority.owner_name);
+   }
 
    // Set up web asset issuer and authenticator:
    // TODO: refactor this to be handled all at once.

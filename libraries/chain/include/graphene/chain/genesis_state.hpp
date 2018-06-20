@@ -149,6 +149,7 @@ struct genesis_state_type {
    initial_chain_authority_type             initial_personal_identity_validation_authority;
    initial_chain_authority_type             initial_wire_out_handler;
    initial_chain_authority_type             initial_daspay_administrator_authority;
+   initial_chain_authority_type             initial_das33_administrator_authority;
 
    /**
     * Initial dascoin price.
@@ -272,7 +273,8 @@ FC_REFLECT( graphene::chain::genesis_state_type,
             (initial_registrar)
             (initial_personal_identity_validation_authority)
             (initial_wire_out_handler)
-	    (initial_daspay_administrator_authority)
+            (initial_daspay_administrator_authority)
+            (initial_das33_administrator_authority)
             (initial_dascoin_price)
             (initial_chain_id)
             (immutable_parameters)

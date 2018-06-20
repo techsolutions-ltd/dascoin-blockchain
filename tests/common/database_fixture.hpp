@@ -356,6 +356,7 @@ struct database_fixture {
    account_id_type get_pi_validator_id() const;
    account_id_type get_wire_out_handler_id() const;
    account_id_type get_daspay_administrator_id() const;
+   account_id_type get_das33_administrator_id() const;
    asset_id_type get_web_asset_id() const;
    asset_id_type get_cycle_asset_id() const;
    asset_id_type get_dascoin_asset_id() const;

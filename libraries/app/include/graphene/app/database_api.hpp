@@ -153,9 +153,9 @@ struct dasc_holder
 
 struct daspay_authority
 {
-   account_id_type            payment_provider;
-   public_key_type            daspay_public_key;
-   optional<string>           memo;
+    account_id_type           payment_provider;
+    public_key_type           daspay_public_key;
+    optional<string>          memo;
 };
 
 
@@ -891,9 +891,36 @@ class database_api
       // DAS33:               //
       //////////////////////////
 
+      /**
+       * @brief Get all das33 pledges
+       * @params from pledges starting with this id will be returned
+       * @params limit number of pledges to return, max 100
+       * @return vector of das33 pledge objects
+       */
       vector<das33_pledge_holder_object> get_das33_pledges(das33_pledge_holder_id_type from, uint32_t limit) const;
+
+      /**
+      * @brief Get all das33 pledges made by an account
+      * @params account id of account
+      * @return vector of das33 pledge objects
+      */
       vector<das33_pledge_holder_object> get_das33_pledges_by_account(account_id_type account) const;
+
+      /**
+      * @brief Get das33 pledges for a project
+      * @params project id of a project
+      * @params from pledges starting with this id will be returned
+      * @params limit number of pledges to return, max 100
+      * @return vector of das33 pledge objects
+      */
       vector<das33_pledge_holder_object> get_das33_pledges_by_project(das33_project_id_type project, das33_pledge_holder_id_type from, uint32_t limit) const;
+
+      /**
+      * @brief Get all das33 projects
+      * @params lower_bound_name projects starting with this name will be returned
+      * @params limit number of projects to return, max 100
+      * @return vector of das33 project objects
+      */
       vector<das33_project_object> get_das33_projects(const string& lower_bound_name, uint32_t limit)const;
 
 private:

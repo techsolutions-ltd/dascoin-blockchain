@@ -2647,7 +2647,7 @@ vector<das33_pledge_holder_object> database_api::get_das33_pledges_by_project(da
 
 vector<das33_pledge_holder_object> database_api_impl::get_das33_pledges(das33_pledge_holder_id_type from, uint32_t limit) const
 {
-    FC_ASSERT( limit <= 1000 );
+    FC_ASSERT( limit <= 100 );
     vector<das33_pledge_holder_object> result;
 
     const auto& pledges = _db.get_index_type<das33_pledge_holder_index>().indices().get<by_id>();
@@ -2671,7 +2671,7 @@ vector<das33_pledge_holder_object> database_api_impl::get_das33_pledges_by_accou
 
 vector<das33_pledge_holder_object> database_api_impl::get_das33_pledges_by_project(das33_project_id_type project, das33_pledge_holder_id_type from, uint32_t limit) const
 {
-    FC_ASSERT( limit <= 1000 );
+    FC_ASSERT( limit <= 100 );
     vector<das33_pledge_holder_object> result;
 
     const auto& pledges = _db.get_index_type<das33_pledge_holder_index>().indices().get<by_project>();
@@ -2692,7 +2692,7 @@ vector<das33_project_object> database_api::get_das33_projects(const string& lowe
 
 vector<das33_project_object> database_api_impl::get_das33_projects(const string& lower_bound_name, uint32_t limit) const
 {
-  FC_ASSERT( limit <= 1000 );
+  FC_ASSERT( limit <= 100 );
   const auto& projects_by_name = _db.get_index_type<das33_project_index>().indices().get<by_project_name>();
   vector<das33_project_object> result;
 

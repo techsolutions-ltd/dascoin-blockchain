@@ -62,6 +62,7 @@ BOOST_AUTO_TEST_CASE( das_payment_service_provider_test )
 
   // Create two clearing accounts and one provider account
   ACTORS((provideraccount)(clearingaccount1)(clearingaccount2));
+  VAULT_ACTOR(foo);
   vector<account_id_type> v;
 
   // Require throw (empty clearing_accounts)
@@ -91,6 +92,9 @@ BOOST_AUTO_TEST_CASE( das_payment_service_provider_test )
   // Remove one clearing account
   v.erase(std::remove(v.begin(), v.end(), clearingaccount2_id), v.end());
   BOOST_CHECK_EQUAL(v.size(), 1);
+
+  // Fails: payment service provider must be a wallet:
+  GRAPHENE_REQUIRE_THROW( do_op(update_payment_service_provider_operation(get_daspay_administrator_id(), foo_id, v)), fc::exception );
 
   // Payment service provider update (new clearing_accounts)
   do_op(update_payment_service_provider_operation(get_daspay_administrator_id(), provideraccount_id, v));

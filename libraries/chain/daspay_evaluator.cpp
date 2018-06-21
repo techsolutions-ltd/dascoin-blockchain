@@ -259,8 +259,6 @@ namespace graphene { namespace chain {
 
     d.perform_chain_authority_check("daspay authority", gpo.authorities.daspay_administrator, issuer_obj);
 
-    op.payment_service_provider_account(d);
-
     const auto& idx = d.get_index_type<payment_service_provider_index>().indices().get<by_payment_service_provider>();
     auto psp_iterator = idx.find(op.payment_service_provider_account);
     FC_ASSERT( psp_iterator != idx.end(), "Payment service provider with account ${1} doesn't exists.", ("1", op.payment_service_provider_account));

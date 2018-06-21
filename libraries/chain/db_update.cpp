@@ -677,8 +677,7 @@ void database::daspay_clearing_start()
       const auto& to_buy = asset{ params.daspay_parameters.collateral_dascoin, get_dascoin_asset_id() } - dasc_balance;
       // If there is only one price in sell orders, use it; otherwise use the second one
       auto price_it = sell_prices.begin();
-      if (sell_prices.size() == 2)
-        ++price_it;
+      std::advance(price_it, sell_prices.size() - 1); // Use the second price is available
       share_type buy_price = *price_it;
       const auto& to_sell = asset{ to_buy.amount * buy_price / DASCOIN_DEFAULT_ASSET_PRECISION, get_web_asset_id() };
       ilog("balance ${b} to buy ${t} to sell ${s}",("b", dasc_balance)("t", to_buy)("s", to_sell));

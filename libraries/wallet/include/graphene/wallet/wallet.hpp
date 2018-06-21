@@ -1762,7 +1762,7 @@ class wallet_api
        * Register daspay authority.
        * @param account                                                 Account ID.
        * @param payment_provider                                        Account of payment provider.
-       * @param public_key_type                                         Public key registered to this Account.
+       * @param public_key_type                                         Public key to register to this Account.
        * @param broadcast                                               True to broadcast the transaction on the network.
        */
       signed_transaction register_daspay_authority(const string& account, const string& payment_provider, public_key_type daspay_public_key, bool broadcast = false) const;

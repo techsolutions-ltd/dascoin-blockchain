@@ -697,7 +697,7 @@ void database::daspay_clearing_start()
 
 } FC_CAPTURE_AND_RETHROW() }
 
-void database::daspay_resolve_delayed_operations()
+void database::resolve_delayed_operations()
 { try {
   const auto& params = get_global_properties();
   const auto& dgpo = get_dynamic_global_properties();

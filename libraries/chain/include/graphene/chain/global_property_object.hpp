@@ -158,7 +158,6 @@ namespace graphene { namespace chain {
           */
          time_point_sec next_delayed_operations_resolver_time = fc::time_point_sec();
 
-
          /**
           * dynamic_flags specifies chain state properties that can be
           * expressed in one bit.

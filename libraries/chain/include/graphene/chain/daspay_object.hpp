@@ -50,13 +50,6 @@ namespace graphene { namespace chain {
     void validate() const;
   };
 
-  /**
-   * @class daspay_authority_object
-   * @brief DasPay authority object keeps info on opted in payment provider per user
-   * @ingroup object
-   *
-   */
-
   class daspay_authority_object : public abstract_object<daspay_authority_object>
   {
   public:
@@ -135,7 +128,7 @@ namespace graphene { namespace chain {
   // MULTI INDEX CONTAINERS:   //
   ///////////////////////////////
   struct by_payment_service_provider;
-  typedef multi_index_container<
+  using payment_service_provider_multi_index_type = multi_index_container<
     payment_service_provider_object,
     indexed_by<
       ordered_unique<
@@ -147,7 +140,7 @@ namespace graphene { namespace chain {
         member<payment_service_provider_object, account_id_type, &payment_service_provider_object::payment_service_provider_account>
       >
     >
-  > payment_service_provider_multi_index_type;
+  >;
 
   using payment_service_provider_index = generic_index<payment_service_provider_object, payment_service_provider_multi_index_type>;
 

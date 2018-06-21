@@ -291,10 +291,12 @@ namespace graphene { namespace chain {
     FC_ASSERT( op.debit_amount.asset_id == d.get_web_asset_id(), "Only web euro can be debited, ${a} sent", ("a", d.to_pretty_string(op.debit_amount)) );
 
     const auto& da_idx = d.get_index_type<daspay_authority_index>().indices().get<by_daspay_user>();
-    FC_ASSERT( da_idx.find(op.account) != da_idx.end(), "Cannot debit user who has not enabled daspay" );
-
     const auto& da_it = da_idx.lower_bound(op.account);
+
+    FC_ASSERT( da_it != da_idx.end(), "Cannot debit user who has not enabled daspay" );
+
     const auto& da_itr_end = da_idx.upper_bound(op.account);
+
     FC_ASSERT( std::find_if(da_it, da_itr_end, [&op](const daspay_authority_object& dao) {
         return dao.payment_provider == op.payment_service_provider_account && dao.daspay_public_key == op.auth_key;
       } ) != da_idx.end(), "Trying to sign debit operation with the key user has not authorized" );
@@ -340,9 +342,14 @@ namespace graphene { namespace chain {
     FC_ASSERT( account.is_wallet(), "Cannot credit vault account ${i}", ("i", op.account) );
 
     const auto& da_idx = d.get_index_type<daspay_authority_index>().indices().get<by_daspay_user>();
-    const auto& da_it = da_idx.find(op.account);
+    const auto& da_it = da_idx.lower_bound(op.account);
 
     FC_ASSERT( da_it != da_idx.end(), "Cannot credit user who has not enabled daspay" );
+
+    const auto& da_itr_end = da_idx.upper_bound(op.account);
+    FC_ASSERT( std::find_if(da_it, da_itr_end, [&op](const daspay_authority_object& dao) {
+      return dao.payment_provider == op.payment_service_provider_account;
+    } ) != da_idx.end(), "Trying to credit ${a} by a payment provider ${p} which is not enabled by the account", ("a", op.account)("p", op.payment_service_provider_account) );
 
     const auto& idx = d.get_index_type<payment_service_provider_index>().indices().get<by_payment_service_provider>();
     const auto& it = idx.find(op.payment_service_provider_account);

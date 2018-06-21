@@ -406,7 +406,7 @@ BOOST_AUTO_TEST_CASE( daspay_debit_test )
 
 BOOST_AUTO_TEST_CASE( daspay_credit_test )
 { try {
-  ACTORS((foo)(clearing)(payment));
+  ACTORS((foo)(clearing)(payment)(payment2));
   VAULT_ACTOR(bar);
 
   tether_accounts(clearing_id, bar_id);
@@ -441,6 +441,7 @@ BOOST_AUTO_TEST_CASE( daspay_credit_test )
   public_key_type pk = public_key_type(generate_private_key("foo").get_public_key());
 
   do_op(create_payment_service_provider_operation(root_id, payment_id, v));
+  do_op(create_payment_service_provider_operation(root_id, payment2_id, v));
   do_op(register_daspay_authority_operation(foo_id, payment_id, pk, {}));
 
   // Fails: clearing account not found:
@@ -469,6 +470,9 @@ BOOST_AUTO_TEST_CASE( daspay_credit_test )
   const auto& credit_amount = asset{credit_amount_with_fee, db.get_web_asset_id()} * dgpo.last_dascoin_price;
 
   BOOST_CHECK_EQUAL( get_reserved_balance(foo_id, get_dascoin_asset_id()), credit_amount.amount.value );
+
+  // Fails: use has not enabled payment2 as a payment provider:
+  GRAPHENE_REQUIRE_THROW( do_op(daspay_credit_account_operation(payment2_id, foo_id, asset{1 * DASCOIN_FIAT_ASSET_PRECISION, db.get_web_asset_id()}, clearing_id, "", {})), fc::exception );
 
 } FC_LOG_AND_RETHROW() }
 

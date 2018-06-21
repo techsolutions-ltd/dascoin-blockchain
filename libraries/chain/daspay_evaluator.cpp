@@ -27,7 +27,7 @@
 
 namespace graphene { namespace chain {
 
-  void_result set_daspay_transaction_ratio_evaluator::do_evaluate(const set_daspay_transaction_ratio_operation& op)
+  void_result set_daspay_transaction_ratio_evaluator::do_evaluate(const operation_type& op)
   { try {
     const auto& d = db();
     const auto& gpo = d.get_global_properties();
@@ -39,7 +39,7 @@ namespace graphene { namespace chain {
 
   } FC_CAPTURE_AND_RETHROW((op)) }
 
-  void_result set_daspay_transaction_ratio_evaluator::do_apply(const set_daspay_transaction_ratio_operation& op)
+  void_result set_daspay_transaction_ratio_evaluator::do_apply(const operation_type& op)
   { try {
     auto& d = db();
 
@@ -179,7 +179,7 @@ namespace graphene { namespace chain {
 
   } FC_CAPTURE_AND_RETHROW((op)) }
 
-  void_result create_payment_service_provider_evaluator::do_evaluate(const create_payment_service_provider_operation& op)
+  void_result create_payment_service_provider_evaluator::do_evaluate(const operation_type& op)
   { try {
     const auto& d = db();
     const auto& gpo = d.get_global_properties();
@@ -202,7 +202,7 @@ namespace graphene { namespace chain {
 
   } FC_CAPTURE_AND_RETHROW((op)) }
 
-  object_id_type create_payment_service_provider_evaluator::do_apply(const create_payment_service_provider_operation& op)
+  object_id_type create_payment_service_provider_evaluator::do_apply(const operation_type& op)
   { try {
      auto& d = db();
 
@@ -213,7 +213,7 @@ namespace graphene { namespace chain {
 
   } FC_CAPTURE_AND_RETHROW((op)) }
 
-  void_result update_payment_service_provider_evaluator::do_evaluate(const update_payment_service_provider_operation& op)
+  void_result update_payment_service_provider_evaluator::do_evaluate(const operation_type& op)
   { try {
     const auto& d = db();
     const auto& gpo = d.get_global_properties();
@@ -238,7 +238,7 @@ namespace graphene { namespace chain {
 
   } FC_CAPTURE_AND_RETHROW((op)) }
 
-  void_result update_payment_service_provider_evaluator::do_apply(const update_payment_service_provider_operation& op)
+  void_result update_payment_service_provider_evaluator::do_apply(const operation_type& op)
   { try {
     auto& d = db();
 
@@ -251,7 +251,7 @@ namespace graphene { namespace chain {
 
   } FC_CAPTURE_AND_RETHROW((op)) }
 
-  void_result delete_payment_service_provider_evaluator::do_evaluate(const delete_payment_service_provider_operation& op)
+  void_result delete_payment_service_provider_evaluator::do_evaluate(const operation_type& op)
   { try {
     const auto& d = db();
     const auto& gpo = d.get_global_properties();
@@ -268,7 +268,7 @@ namespace graphene { namespace chain {
 
   } FC_CAPTURE_AND_RETHROW((op)) }
 
-  void_result delete_payment_service_provider_evaluator::do_apply(const delete_payment_service_provider_operation& op)
+  void_result delete_payment_service_provider_evaluator::do_apply(const operation_type& op)
   { try {
     auto& d = db();
 
@@ -277,7 +277,7 @@ namespace graphene { namespace chain {
     return {};
   } FC_CAPTURE_AND_RETHROW((op)) }
 
-  void_result daspay_debit_account_evaluator::do_evaluate(const daspay_debit_account_operation& op)
+  void_result daspay_debit_account_evaluator::do_evaluate(const operation_type& op)
   { try {
     const auto& d = db();
 
@@ -321,7 +321,7 @@ namespace graphene { namespace chain {
     return {};
   } FC_CAPTURE_AND_RETHROW((op)) }
 
-  operation_result daspay_debit_account_evaluator::do_apply(const daspay_debit_account_operation& op)
+  operation_result daspay_debit_account_evaluator::do_apply(const operation_type& op)
   { try {
     auto& d = db();
 
@@ -382,7 +382,7 @@ namespace graphene { namespace chain {
 
   } FC_CAPTURE_AND_RETHROW((op)) }
 
-  void_result update_daspay_clearing_parameters_evaluator::do_evaluate(const update_daspay_clearing_parameters_operation& op)
+  void_result update_daspay_clearing_parameters_evaluator::do_evaluate(const operation_type& op)
   { try {
     const auto& d = db();
     const auto& gpo = d.get_global_properties();
@@ -406,7 +406,7 @@ namespace graphene { namespace chain {
 
   } FC_CAPTURE_AND_RETHROW((op)) }
 
-  void_result update_daspay_clearing_parameters_evaluator::do_apply(const update_daspay_clearing_parameters_operation& op)
+  void_result update_daspay_clearing_parameters_evaluator::do_apply(const operation_type& op)
   { try {
     auto& d = db();
 
@@ -421,7 +421,7 @@ namespace graphene { namespace chain {
 
   } FC_CAPTURE_AND_RETHROW((op)) }
 
-  void_result update_delayed_operations_resolver_parameters_evaluator::do_evaluate(const update_delayed_operations_resolver_parameters_operation& op)
+  void_result update_delayed_operations_resolver_parameters_evaluator::do_evaluate(const operation_type& op)
   { try {
     const auto& d = db();
     const auto& gpo = d.get_global_properties();
@@ -441,7 +441,7 @@ namespace graphene { namespace chain {
 
   } FC_CAPTURE_AND_RETHROW((op)) }
 
-  void_result update_delayed_operations_resolver_parameters_evaluator::do_apply(const update_delayed_operations_resolver_parameters_operation& op)
+  void_result update_delayed_operations_resolver_parameters_evaluator::do_apply(const operation_type& op)
   { try {
     auto& d = db();
 

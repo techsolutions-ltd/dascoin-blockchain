@@ -187,7 +187,6 @@ namespace graphene { namespace chain {
     const auto& issuer_obj = op.authority(d);
     d.perform_chain_authority_check("daspay authority", gpo.authorities.daspay_administrator, issuer_obj);
 
-    op.payment_service_provider_account(d);
     FC_ASSERT( op.payment_service_provider_account(d).is_wallet(),
                "Account '${name}' must be a wallet account",
                ("name", op.payment_service_provider_account(d).name)

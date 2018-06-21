@@ -1867,11 +1867,12 @@ class wallet_api
       /**
        * Update various delayed operations resolver parameters
        *
+       * @param authority                                               This MUST be root authority.
        * @param delayed_operations_resolver_enabled                     true if delayed operations resolver is enabled
        * @param delayed_operations_resolver_interval_time_seconds       time in seconds between two delayed operations resolver checks
        * @param broadcast                                               true to broadcast the transaction on the network.
        */
-      signed_transaction update_delayed_operations_resolver_parameters(optional<bool> delayed_operations_resolver_enabled,
+      signed_transaction update_delayed_operations_resolver_parameters(const string& authority, optional<bool> delayed_operations_resolver_enabled,
                                                            optional<uint32_t> delayed_operations_resolver_interval_time_seconds,
                                                            bool broadcast) const;
 

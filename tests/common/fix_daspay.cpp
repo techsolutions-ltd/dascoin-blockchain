@@ -33,9 +33,7 @@ namespace graphene { namespace chain {
   vector<payment_service_provider_object> database_fixture::get_payment_service_providers() const
   {
     const auto& idx = db.get_index_type<payment_service_provider_index>().indices().get<by_payment_service_provider>();
-    auto itr = idx.begin();
     vector<payment_service_provider_object> result;
-
     std::copy(idx.begin(), idx.end(), std::back_inserter(result));
 
     return result;

@@ -146,16 +146,16 @@ struct cycle_price
 
 struct dasc_holder
 {
-    account_id_type           holder;
-    uint32_t                  vaults;
-    share_type                amount;
+   account_id_type            holder;
+   uint32_t                   vaults;
+   share_type                 amount;
 };
 
 struct daspay_authority
 {
-    account_id_type           payment_provider;
-    public_key_type           daspay_public_key;
-    optional<string>          memo;
+   account_id_type            payment_provider;
+   public_key_type            daspay_public_key;
+   optional<string>           memo;
 };
 
 

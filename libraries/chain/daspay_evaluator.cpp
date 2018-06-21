@@ -310,7 +310,7 @@ namespace graphene { namespace chain {
     const auto& balance = d.get_balance_object(op.account, d.get_dascoin_asset_id());
     const auto& dgpo = d.get_dynamic_global_properties();
     decltype(op.debit_amount) tmp{op.debit_amount};
-    tmp.amount += tmp.amount * dgpo.daspay_debit_transaction_ratio / 10000;
+    tmp.amount += tmp.amount * dgpo.daspay_debit_transaction_ratio / 10000; // Ratio is percentage, where i.e. 15 represents 1.5%; that's why we divide by 100*100
     _to_debit = tmp * dgpo.last_dascoin_price;
 
     const asset reserved{balance.reserved, d.get_dascoin_asset_id()};
@@ -355,7 +355,7 @@ namespace graphene { namespace chain {
     const auto& balance = d.get_balance(op.clearing_account, d.get_dascoin_asset_id());
     const auto& dgpo = d.get_dynamic_global_properties();
     decltype(op.credit_amount) tmp{op.credit_amount};
-    tmp.amount += tmp.amount * dgpo.daspay_credit_transaction_ratio / 10000;
+    tmp.amount += tmp.amount * dgpo.daspay_credit_transaction_ratio / 10000; // Ratio is percentage, where i.e. 15 represents 1.5%; that's why we divide by 100*100
     _to_credit = tmp * dgpo.last_dascoin_price;
 
     FC_ASSERT( _to_credit <= balance, "Not enough balance on clearing account ${a}, left ${l}, needed ${n}", ("a", op.clearing_account)("l", d.to_pretty_string(balance))("n", d.to_pretty_string(_to_credit)) );

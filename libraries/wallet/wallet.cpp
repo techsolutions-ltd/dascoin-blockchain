@@ -1100,7 +1100,7 @@ public:
       tx.validate();
 
       return sign_transaction(tx, broadcast);
-   } FC_CAPTURE_AND_RETHROW( (account)(payment_provider)(daspay_public_key) ) }
+   } FC_CAPTURE_AND_RETHROW( (account)(payment_provider)(daspay_public_key)(broadcast) ) }
 
    signed_transaction unregister_daspay_authority(const string& account, const string& payment_provider, bool broadcast = false)
    { try {
@@ -1120,7 +1120,7 @@ public:
       tx.validate();
 
       return sign_transaction(tx, broadcast);
-   } FC_CAPTURE_AND_RETHROW( (account)(payment_provider) ) }
+   } FC_CAPTURE_AND_RETHROW( (account)(payment_provider)(broadcast) ) }
 
    signed_transaction reserve_asset_on_account(const string& account, const string& asset_amount, const string& asset_symbol, bool broadcast = false)
    { try {
@@ -1139,7 +1139,7 @@ public:
       tx.validate();
 
       return sign_transaction(tx, broadcast);
-   } FC_CAPTURE_AND_RETHROW( (account)(asset_amount)(asset_symbol) ) }
+   } FC_CAPTURE_AND_RETHROW( (account)(asset_amount)(asset_symbol)(broadcast) ) }
 
    signed_transaction unreserve_asset_on_account(const string& account, const string& asset_amount, const string& asset_symbol, bool broadcast = false)
    { try {
@@ -1158,7 +1158,7 @@ public:
       tx.validate();
 
       return sign_transaction(tx, broadcast);
-   } FC_CAPTURE_AND_RETHROW( (account)(asset_amount)(asset_symbol) ) }
+   } FC_CAPTURE_AND_RETHROW( (account)(asset_amount)(asset_symbol)(broadcast) ) }
 
    signed_transaction daspay_debit_account(const string& payment_service_provider_account,
                                            const public_key_type& auth_key,
@@ -1423,7 +1423,7 @@ public:
       tx.validate();
 
       return sign_transaction(tx, broadcast);
-   } FC_CAPTURE_AND_RETHROW( (vault)(license)(amount_of_cycles_to_transfer)(wallet) ) }
+   } FC_CAPTURE_AND_RETHROW( (vault)(license)(amount_of_cycles_to_transfer)(wallet)(broadcast) ) }
 
    signed_transaction purchase_cycle_asset(string account, string amount_to_sell, string symbol_to_sell, double frequency, double amount_of_cycles_to_receive, bool broadcast = false)
    { try {

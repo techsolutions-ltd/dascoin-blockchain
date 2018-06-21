@@ -117,12 +117,12 @@ namespace graphene { namespace chain {
 
     FC_ASSERT( gpo.delayed_operations_resolver_enabled, "Cannot issue unreserve operation because delayed operations resolver is not running" );
 
+    FC_ASSERT( op.asset_to_unreserve.asset_id == d.get_dascoin_asset_id(), "Only dascoin can be unreserved for daspay" );
+
     const auto& idx = d.get_index_type<delayed_operations_index>().indices().get<by_account>();
     const auto& itr = idx.lower_bound(op.account);
 
     FC_ASSERT( itr == idx.end(), "Cannot issue another unreserve operation while the previous one is pending ${a}", ("a", itr->id) );
-
-    FC_ASSERT( op.asset_to_unreserve.asset_id == d.get_dascoin_asset_id(), "Only dascoin can be unreserved for daspay" );
 
     const auto& balance = d.get_balance_object( op.account, d.get_dascoin_asset_id() );
     const auto& reserved_asset = asset{ balance.reserved, d.get_dascoin_asset_id() };

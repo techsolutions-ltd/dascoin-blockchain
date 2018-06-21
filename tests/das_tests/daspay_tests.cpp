@@ -399,6 +399,9 @@ BOOST_AUTO_TEST_CASE( daspay_debit_test )
   do_op(daspay_debit_account_operation(payment2_id, pk2, foo_id, asset{1 * DASCOIN_FIAT_ASSET_PRECISION, db.get_web_asset_id()}, clearing2_id, "", {}));
   BOOST_CHECK_EQUAL( get_dascoin_balance(clearing2_id), debit_amount.amount.value );
 
+  // Fails: wrong key used (pk2 is registered with payment2_id):
+  GRAPHENE_REQUIRE_THROW( do_op(daspay_debit_account_operation(payment1_id, pk2, foo_id, asset{1 * DASCOIN_FIAT_ASSET_PRECISION, db.get_web_asset_id()}, clearing1_id, "", {})), fc::exception );
+
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_CASE( daspay_credit_test )

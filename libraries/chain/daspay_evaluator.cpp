@@ -295,7 +295,9 @@ namespace graphene { namespace chain {
 
     const auto& da_it = da_idx.lower_bound(op.account);
     const auto& da_itr_end = da_idx.upper_bound(op.account);
-    FC_ASSERT( std::find_if(da_it, da_itr_end, [&op](const daspay_authority_object& dao) { return dao.daspay_public_key == op.auth_key; } ) != da_idx.end(), "Trying to sign debit operation with the key user has not authorized" );
+    FC_ASSERT( std::find_if(da_it, da_itr_end, [&op](const daspay_authority_object& dao) {
+        return dao.payment_provider == op.payment_service_provider_account && dao.daspay_public_key == op.auth_key;
+      } ) != da_idx.end(), "Trying to sign debit operation with the key user has not authorized" );
 
     const auto& psp_idx = d.get_index_type<payment_service_provider_index>().indices().get<by_payment_service_provider>();
     const auto& psp_it = psp_idx.find(op.payment_service_provider_account);

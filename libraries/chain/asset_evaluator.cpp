@@ -40,6 +40,12 @@ void_result asset_create_evaluator::do_evaluate( const asset_create_operation& o
 
    database& d = db();
 
+   // Prevent users from creating assets
+   const auto issuer_id = d.get_chain_authorities().webasset_issuer;
+   const auto& op_issuer_obj = op.issuer(d);
+
+   d.perform_chain_authority_check("asset issuing", issuer_id, op_issuer_obj);
+
    const auto& chain_parameters = d.get_global_properties().parameters;
    FC_ASSERT( op.common_options.whitelist_authorities.size() <= chain_parameters.maximum_asset_whitelist_authorities );
    FC_ASSERT( op.common_options.blacklist_authorities.size() <= chain_parameters.maximum_asset_whitelist_authorities );
@@ -587,6 +593,7 @@ void_result asset_create_issue_request_evaluator::do_evaluate(const asset_create
 
    // Check if we are transferring web assets:
    // NOTE: this check must be modified to apply for every kind of web asset there is.
+   //FC_ASSERT( op.asset_id != d.get_core_asset().id && op.asset_id != d.get_dascoin_asset_id(), "Can not issue core asset and DASC");
    FC_ASSERT( op.asset_id == d.get_web_asset_id() || op.asset_id == d.get_cycle_asset_id(), "Can only issue web or cycle assets" );
 
    //TODO check if account kind is Castodian or wallet account type if asset_id is cycle asset id

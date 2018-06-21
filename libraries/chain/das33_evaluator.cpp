@@ -33,18 +33,13 @@ namespace graphene { namespace chain {
   {
     // check that all prices are for project token and that no price for asset is used multiple times:
     std::map<asset_id_type, int> asset_count;
-    for(auto item : prices)
+    for(const auto& item : prices)
     {
       FC_ASSERT(item.base.asset_id == token || item.quote.asset_id == token, "All prices must be for project token");
-      if (asset_count.find(item.base.asset_id) != asset_count.end())
-        asset_count[item.base.asset_id] += 1;
-      else
-    	asset_count[item.base.asset_id] = 1;
-      if (asset_count.find(item.quote.asset_id) != asset_count.end())
-        asset_count[item.quote.asset_id] += 1;
-      else
-        asset_count[item.quote.asset_id] = 1;
+      asset_count[item.base.asset_id]++;
+      asset_count[item.quote.asset_id]++;
     }
+
     std::map<asset_id_type, int>::iterator itr = asset_count.begin();
     while(itr != asset_count.end())
     {
@@ -63,16 +58,20 @@ namespace graphene { namespace chain {
       const auto& gpo = d.get_global_properties();
 
       const auto& authority_obj = op.authority(d);
-      d.perform_chain_authority_check("root authority", gpo.authorities.root_administrator, authority_obj);
+      d.perform_chain_authority_check("das33 authority", gpo.authorities.das33_administrator, authority_obj);
 
       const auto& idx = d.get_index_type<das33_project_index>().indices().get<by_project_name>();
       FC_ASSERT(idx.find(op.name) == idx.end(), "Das33 project called ${1} already exists.", ("1", op.name));
+
+      // Chcek that token isn't one of the system assets
+      FC_ASSERT(op.token != d.get_core_asset().id && op.token != d.get_web_asset_id()
+		&& op.token != d.get_dascoin_asset_id() && op.token != d.get_cycle_asset_id(), "Can not create project with system assets");
 
       // Check that token is not used by another project
       auto itr = idx.begin();
       while (itr != idx.end())
       {
-	FC_ASSERT(itr->token_id != op.token, "Token with id ${1} is already used by anouther project", ("1", op.token));
+	FC_ASSERT(itr->token_id != op.token, "Token with id ${1} is already used by another project", ("1", op.token));
 	itr++;
       }
 
@@ -106,7 +105,7 @@ namespace graphene { namespace chain {
       const auto& gpo = d.get_global_properties();
 
       const auto& authority_obj = op.authority(d);
-      d.perform_chain_authority_check("root authority", gpo.authorities.root_administrator, authority_obj);
+      d.perform_chain_authority_check("das33 authority", gpo.authorities.das33_administrator, authority_obj);
 
       const auto& idx = d.get_index_type<das33_project_index>().indices().get<by_id>();
       auto project_iterator = idx.find(op.project_id);
@@ -144,7 +143,7 @@ namespace graphene { namespace chain {
       const auto& gpo = d.get_global_properties();
 
       const auto& authority_obj = op.authority(d);
-      d.perform_chain_authority_check("root authority", gpo.authorities.root_administrator, authority_obj);
+      d.perform_chain_authority_check("das33 authority", gpo.authorities.das33_administrator, authority_obj);
 
       const auto& idx = d.get_index_type<das33_project_index>().indices().get<by_id>();
       auto project_iterator = idx.find(op.project_id);

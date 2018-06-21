@@ -176,6 +176,7 @@ FC_REFLECT( graphene::chain::das33_project_update_operation,
 
 FC_REFLECT( graphene::chain::das33_project_delete_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::das33_project_delete_operation,
+	    (fee)
 	    (authority)
 	    (project_id)
 	    (extensions)

@@ -128,7 +128,6 @@ public:
         composite_key<
           das33_pledge_holder_object,
           member< das33_pledge_holder_object, das33_project_id_type, &das33_pledge_holder_object::project_id >,
-          member< das33_pledge_holder_object, account_id_type, &das33_pledge_holder_object::account_id >,
           member< object, object_id_type, &object::id >
         >
       >

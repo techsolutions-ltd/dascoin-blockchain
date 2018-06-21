@@ -356,6 +356,7 @@ struct database_fixture {
    account_id_type get_pi_validator_id() const;
    account_id_type get_wire_out_handler_id() const;
    account_id_type get_daspay_administrator_id() const;
+   account_id_type get_das33_administrator_id() const;
    asset_id_type get_web_asset_id() const;
    asset_id_type get_cycle_asset_id() const;
    asset_id_type get_dascoin_asset_id() const;
@@ -401,6 +402,7 @@ struct database_fixture {
    void set_last_daily_dascoin_price(price val);
    void issue_dascoin(account_id_type account_id, share_type amount);
    void issue_dascoin(account_object& account_obj, share_type amount);
+   asset_id_type create_new_asset(const string& symbol, share_type max_supply, uint8_t precision, const price& core_exchange_rate);
 
    // fix_pi_limits.cpp
    void update_pi_limits(account_id_type account_id, uint8_t level, limits_type new_limits);

@@ -1896,9 +1896,33 @@ class wallet_api
                                             das33_project_id_type project,
                                             bool broadcast = false) const;
 
-      vector<das33_pledge_holder_object> get_das33_pledges() const;
-      vector<das33_pledge_holder_object> get_das33_pledges_by_account(account_id_type account) const;
-      vector<das33_pledge_holder_object> get_das33_pledges_by_project(das33_project_id_type project) const;
+      /**
+       * @brief Return a part of the pledges table.
+       *
+       * @param from            id of the pledge
+       * @param limit           the number of entries to return (starting from the most recent) (max 1000)
+       * @returns               a list of pledge holder objects.
+       */
+      vector<das33_pledge_holder_object> get_das33_pledges(das33_pledge_holder_id_type from, uint32_t limit) const;
+
+      /**
+       * @brief Return a list of pledges for specified account.
+       *
+       * @param account         name or id of the account
+       * @returns               a list of pledge holder objects.
+       */
+      vector<das33_pledge_holder_object> get_das33_pledges_by_account(const string& account) const;
+
+      /**
+       * @brief Return a list of pledges for specified project.
+       *
+       * @param project         name or id of das33 project
+       * @param from            id of the first pledge
+       * @param limit           the number of entries to return (starting from the most recent) (max 1000)
+       * @returns               a list of pledge holder objects.
+       */
+      vector<das33_pledge_holder_object> get_das33_pledges_by_project(const string& project, das33_pledge_holder_id_type from, uint32_t limit) const;
+
       signed_transaction create_das33_project(const string& authority,
 					      const string& name,
 					      const string& owner,

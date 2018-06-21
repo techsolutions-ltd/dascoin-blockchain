@@ -596,7 +596,7 @@ void_result set_chain_authority_evaluator::do_evaluate(const set_chain_authority
     database& d = db();
     d.perform_root_authority_check(op.issuer);
 
-    const auto& account_object = &d.get(op.account);
+    const auto& account_object = &op.account(d);
     FC_ASSERT( account_object->is_special(), "Authority account must be special account" );
     return {};
   } FC_CAPTURE_AND_RETHROW((op))

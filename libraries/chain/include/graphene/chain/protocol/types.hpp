@@ -37,7 +37,6 @@
 #include <fc/uint128.hpp>
 #include <fc/static_variant.hpp>
 #include <fc/smart_ref_fwd.hpp>
-#include <boost/rational.hpp>
 
 #include <memory>
 #include <vector>
@@ -694,6 +693,7 @@ FC_REFLECT_TYPENAME( graphene::chain::frequency_history_record_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::witness_delegate_data_colection_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::wire_out_with_fee_holder_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::payment_service_provider_id_type )
+FC_REFLECT_TYPENAME( graphene::chain::daspay_authority_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::das33_project_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::das33_pledge_holder_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::delayed_operation_id_type )

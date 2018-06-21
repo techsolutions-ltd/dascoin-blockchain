@@ -1070,6 +1070,7 @@ public:
      FC_ASSERT( !self.is_locked() );
 
      delete_payment_service_provider_operation op;
+
      op.authority = get_account(authority).id;
      op.payment_service_provider_account = get_account(payment_service_provider_account).id;
 
@@ -1361,7 +1362,7 @@ public:
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (account)(amount)(license)(project)(broadcast) ) }
 
-   signed_transaction update_delayed_operations_resolver_parameters(optional<bool> delayed_operations_resolver_enabled,
+   signed_transaction update_delayed_operations_resolver_parameters(const string& authority, optional<bool> delayed_operations_resolver_enabled,
                                                         optional<uint32_t> delayed_operations_resolver_interval_time_seconds,
                                                         bool broadcast)
    { try {
@@ -1369,7 +1370,7 @@ public:
 
       update_delayed_operations_resolver_parameters_operation op;
 
-      op.authority = _remote_db->get_global_properties().authorities.root_administrator;
+      op.authority = get_account(authority).id;
       op.delayed_operations_resolver_enabled = delayed_operations_resolver_enabled;
       op.delayed_operations_resolver_interval_time_seconds = delayed_operations_resolver_interval_time_seconds;
 
@@ -5522,11 +5523,11 @@ signed_transaction wallet_api::delete_das33_project(const string& authority,
 				  broadcast);
 }
 
-signed_transaction wallet_api::update_delayed_operations_resolver_parameters(optional<bool> delayed_operations_resolver_enabled,
+signed_transaction wallet_api::update_delayed_operations_resolver_parameters(const string& authority, optional<bool> delayed_operations_resolver_enabled,
                                                                  optional<uint32_t> delayed_operations_resolver_interval_time_seconds,
                                                                  bool broadcast) const
 {
-  return my->update_delayed_operations_resolver_parameters(delayed_operations_resolver_enabled,
+  return my->update_delayed_operations_resolver_parameters(authority, delayed_operations_resolver_enabled,
                                                delayed_operations_resolver_interval_time_seconds,
                                                broadcast);
 }

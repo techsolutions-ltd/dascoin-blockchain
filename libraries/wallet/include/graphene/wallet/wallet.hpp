@@ -1706,7 +1706,11 @@ class wallet_api
       signed_transaction roll_back_public_keys(const string& authority, const string& account, bool broadcast) const;
 
       /**
-      * set chain authority
+      * Set chain authority
+      * @param issuer             Account that is issuing this operation, must be root administrator
+      * @param account            Account that will become authority, must be special account
+      * @param kind               What authority will be set
+      * @param broadcast          True to broadcast the transaction on the network.
       */
       signed_transaction set_chain_authority(const string& issuer, const string& account, const string& kind, bool broadcast) const;
 
@@ -1901,7 +1905,7 @@ class wallet_api
        * @brief Return a part of the pledges table.
        *
        * @param from            id of the pledge
-       * @param limit           the number of entries to return (starting from the most recent) (max 1000)
+       * @param limit           the number of entries to return (starting from the most recent) (max 100)
        * @returns               a list of pledge holder objects.
        */
       vector<das33_pledge_holder_object> get_das33_pledges(das33_pledge_holder_id_type from, uint32_t limit) const;
@@ -1919,29 +1923,69 @@ class wallet_api
        *
        * @param project         name or id of das33 project
        * @param from            id of the first pledge
-       * @param limit           the number of entries to return (starting from the most recent) (max 1000)
+       * @param limit           the number of entries to return (starting from the most recent) (max 100)
        * @returns               a list of pledge holder objects.
        */
       vector<das33_pledge_holder_object> get_das33_pledges_by_project(const string& project, das33_pledge_holder_id_type from, uint32_t limit) const;
 
+      /**
+       * @brief Create new das33 project
+       *
+       * @param authority       authority that is issuing this operation, must be das33_administrator
+       * @param name            name of a project
+       * @param owner           acccount id of project owner
+       * @param token           id of a token that will be issued by this project
+       * @param ratios          array of prices of project token
+       * @param min_to_collect  minimum amount of tokens needed for project to be successful
+       * @param broadcast       true to broadcast transaction to network
+       */
       signed_transaction create_das33_project(const string& authority,
-					      const string& name,
-					      const string& owner,
-					      const string& token,
-					      const vector<pair<string, string>>& ratios,
-					      share_type min_to_collect,
-					      bool broadcast) const;
+                                              const string& name,
+                                              const string& owner,
+                                              const string& token,
+                                              const vector<pair<string, string>>& ratios,
+                                              share_type min_to_collect,
+                                              bool broadcast) const;
+
+      /**
+       * @brief Update exsisting das33 project
+       *
+       * @param authority       authority that is issuing this operation, must be das33_administrator
+       * @param project_id      id of a project to edit
+       * @param name            optional new name of a project
+       * @param owner           optional new project owner
+       * @param ratios          array of prices of project token, empty array if it shouldn't be changed
+       * @param min_to_collect  optional new minimum amount
+       * @param status          optional new status of a project
+       * @param broadcast       true to broadcast transaction to network
+       */
       signed_transaction update_das33_project(const string& authority,
-					      const string& project_id,
-					      optional<string> name,
-					      optional<string> owner,
-					      const vector<pair<string, string>>& ratios,
-					      optional<share_type> min_to_collect,
-      					      optional<uint8_t> status,
-					      bool broadcast) const;
+                                              const string& project_id,
+                                              optional<string> name,
+                                              optional<string> owner,
+                                              const vector<pair<string, string>>& ratios,
+                                              optional<share_type> min_to_collect,
+                                              optional<uint8_t> status,
+                                              bool broadcast) const;
+
+      /**
+       * @brief Delete a das33 project
+       *
+       * @param authority       authority that is issuing this operation, must be das33_administrator
+       * @param project_id      id of a project to delete
+       * @param broadcast       true to broadcast transaction to network
+       */
       signed_transaction delete_das33_project(const string& authority,
-					      const string& project_id,
-					      bool broadcast) const;
+                                              const string& project_id,
+                                              bool broadcast) const;
+
+      /**
+       * @brief Get das33 projects ordered by project name
+       *
+       * @param lower_bound_name name of the first project
+       * @param limit            the number of projects to return (max 1000)
+       * @returns                a list of das33 project objects
+       */
       vector<das33_project_object> get_das33_projects(const string& lower_bound_name, uint32_t limit) const;
 
 

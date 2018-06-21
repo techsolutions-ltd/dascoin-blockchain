@@ -1245,12 +1245,12 @@ public:
    } FC_CAPTURE_AND_RETHROW( (clearing_enabled)(clearing_interval_time_seconds)(collateral_dascoin)(collateral_webeur)(broadcast) ) }
 
    signed_transaction create_das33_project(const string& authority,
-   					   const string& name,
-   					   const string& owner,
-   					   const string& token,
-   					   const vector<pair<string, string>>& ratios,
-   					   share_type min_to_collect,
-					   bool broadcast)
+                                           const string& name,
+                                           const string& owner,
+                                           const string& token,
+                                           const vector<pair<string, string>>& ratios,
+                                           share_type min_to_collect,
+                                           bool broadcast)
    { try {
          FC_ASSERT( !self.is_locked() );
 
@@ -1276,16 +1276,16 @@ public:
          tx.validate();
 
          return sign_transaction(tx, broadcast);
-      } FC_CAPTURE_AND_RETHROW( (authority)(name)(owner)(token)(ratios)(min_to_collect) ) }
+      } FC_CAPTURE_AND_RETHROW( (authority)(name)(owner)(token)(ratios)(min_to_collect)(broadcast) ) }
 
    signed_transaction update_das33_project(const string& authority,
-					   const string& project_id,
-					   optional<string> name,
-					   optional<string> owner,
-					   const vector<pair<string, string>>& ratios,
-					   optional<share_type> min_to_collect,
-   					   optional<uint8_t> status,
-					   bool broadcast)
+                                           const string& project_id,
+                                           optional<string> name,
+                                           optional<string> owner,
+                                           const vector<pair<string, string>>& ratios,
+                                           optional<share_type> min_to_collect,
+                                           optional<uint8_t> status,
+                                           bool broadcast)
    { try {
          FC_ASSERT( !self.is_locked() );
 
@@ -1316,11 +1316,11 @@ public:
          tx.validate();
 
          return sign_transaction(tx, broadcast);
-      } FC_CAPTURE_AND_RETHROW( (authority)(project_id)(name)(owner)(ratios)(min_to_collect)(status) ) }
+      } FC_CAPTURE_AND_RETHROW( (authority)(project_id)(name)(owner)(ratios)(min_to_collect)(status)(broadcast) ) }
 
    signed_transaction delete_das33_project(const string& authority,
-   					   const string& project_id,
-					   bool broadcast)
+                                           const string& project_id,
+                                           bool broadcast)
    { try {
          FC_ASSERT( !self.is_locked() );
 
@@ -1336,7 +1336,7 @@ public:
          tx.validate();
 
          return sign_transaction(tx, broadcast);
-      } FC_CAPTURE_AND_RETHROW( (authority)(project_id) ) }
+      } FC_CAPTURE_AND_RETHROW( (authority)(project_id)(broadcast) ) }
 
    signed_transaction das33_pledge_asset(const string& account,
                                          const string& amount,
@@ -3197,14 +3197,22 @@ public:
 
    signed_transaction set_chain_authority(const string& issuer, const string& account, const string& kind, bool broadcast)
    {
-     set_chain_authority_operation op;
-     op.issuer = get_account(issuer).id;
-     op.account = get_account(account).id;
-     op.kind = kind;
-     signed_transaction tx;
-     tx.operations.push_back(op);
-     set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
-     return sign_transaction(tx, broadcast);
+    try {
+      FC_ASSERT( !self.is_locked() );
+
+      set_chain_authority_operation op;
+
+      op.issuer = get_account(issuer).id;
+      op.account = get_account(account).id;
+      op.kind = kind;
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+    } FC_CAPTURE_AND_RETHROW( (issuer)(account)(kind)(broadcast) )
    }
 
    void dbg_make_uia(string creator, string symbol)
@@ -5479,48 +5487,48 @@ vector<das33_project_object> wallet_api::get_das33_projects(const string& lower_
 }
 
 signed_transaction wallet_api::create_das33_project(const string& authority,
-						    const string& name,
-						    const string& owner,
-						    const string& token,
-						    const vector<pair<string, string>>& ratios,
-						    share_type min_to_collect,
-						    bool broadcast) const
+                                                    const string& name,
+                                                    const string& owner,
+                                                    const string& token,
+                                                    const vector<pair<string, string>>& ratios,
+                                                    share_type min_to_collect,
+                                                    bool broadcast) const
 {
     return my->create_das33_project(authority,
-				    name,
-				    owner,
-				    token,
-				    ratios,
-				    min_to_collect,
-				    broadcast);
+                                    name,
+                                    owner,
+                                    token,
+                                    ratios,
+                                    min_to_collect,
+                                    broadcast);
 }
 
 signed_transaction wallet_api::update_das33_project(const string& authority,
-					            const string& project_id,
-						    optional<string> name,
-						    optional<string> owner,
-						    const vector<pair<string, string>>& ratios,
-						    optional<share_type> min_to_collect,
-						    optional<uint8_t> status,
-						    bool broadcast) const
+                                                    const string& project_id,
+                                                    optional<string> name,
+                                                    optional<string> owner,
+                                                    const vector<pair<string, string>>& ratios,
+                                                    optional<share_type> min_to_collect,
+                                                    optional<uint8_t> status,
+                                                    bool broadcast) const
 {
   return my->update_das33_project(authority,
-				  project_id,
-				  name,
-				  owner,
-				  ratios,
-				  min_to_collect,
-				  status,
-				  broadcast);
+                                  project_id,
+                                  name,
+                                  owner,
+                                  ratios,
+                                  min_to_collect,
+                                  status,
+                                  broadcast);
 }
 
 signed_transaction wallet_api::delete_das33_project(const string& authority,
-					const string& project_id,
-					bool broadcast) const
+                                        const string& project_id,
+                                        bool broadcast) const
 {
   return my->delete_das33_project(authority,
-				  project_id,
-				  broadcast);
+                                  project_id,
+                                  broadcast);
 }
 
 signed_transaction wallet_api::update_delayed_operations_resolver_parameters(const string& authority, optional<bool> delayed_operations_resolver_enabled,

@@ -40,13 +40,9 @@ namespace graphene { namespace chain {
       asset_count[item.quote.asset_id]++;
     }
 
-    std::map<asset_id_type, int>::iterator itr = asset_count.begin();
-    while(itr != asset_count.end())
-    {
-      if (itr->first != token)
-        FC_ASSERT(itr->second == 1, "Each asset can appear only once in ratios");
-      itr++;
-    }
+    const auto& it = std::find_if(asset_count.begin(), asset_count.end(),
+      [token](const std::pair<asset_id_type, int>& m) -> bool { return m.first != token && m.second != 1; });
+    FC_ASSERT(it == asset_count.end(), "Each asset can appear only once in ratios");
   }
 
   // method implementations:
@@ -65,15 +61,12 @@ namespace graphene { namespace chain {
 
       // Chcek that token isn't one of the system assets
       FC_ASSERT(op.token != d.get_core_asset().id && op.token != d.get_web_asset_id()
-		&& op.token != d.get_dascoin_asset_id() && op.token != d.get_cycle_asset_id(), "Can not create project with system assets");
+                && op.token != d.get_dascoin_asset_id() && op.token != d.get_cycle_asset_id(), "Can not create project with system assets");
 
       // Check that token is not used by another project
-      auto itr = idx.begin();
-      while (itr != idx.end())
-      {
-	FC_ASSERT(itr->token_id != op.token, "Token with id ${1} is already used by another project", ("1", op.token));
-	itr++;
-      }
+      const auto& it = std::find_if(idx.begin(), idx.end(),
+            [op](const das33_project_object& m) -> bool { return m.token_id == op.token; });
+      FC_ASSERT(it == idx.end(), "Token with id ${1} is already used by another project", ("1", op.token));
 
       prices_check(op.ratios, op.token);
 

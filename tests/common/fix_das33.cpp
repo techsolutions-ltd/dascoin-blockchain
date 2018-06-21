@@ -33,11 +33,9 @@ namespace graphene { namespace chain {
   vector<das33_project_object> database_fixture::get_das33_projects() const
   {
     const auto& idx = db.get_index_type<das33_project_index>().indices().get<by_project_name>();
-    auto itr = idx.begin();
-    vector<das33_project_object> result;
 
-    while( itr != idx.end() )
-      result.emplace_back(*itr++);
+    vector<das33_project_object> result;
+    std::copy(idx.begin(), idx.end(), std::back_inserter(result));
 
     return result;
   }
@@ -51,6 +49,5 @@ namespace graphene { namespace chain {
 
     return result;
   }
-
 
 } }  // namespace graphene::chain

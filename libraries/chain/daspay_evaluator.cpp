@@ -155,15 +155,13 @@ namespace graphene { namespace chain {
     FC_ASSERT( itr != idx.end(), "Cannot unregister DasPay authority because none has been set" );
 
     const auto& itr_end = idx.upper_bound(op.issuer);
-    while( itr != itr_end )
+    auto it = std::find_if(itr, itr_end, [&op](const daspay_authority_object& dao){
+      return dao.payment_provider == op.payment_provider;
+    });
+
+    if (it != idx.end())
     {
-      if ( itr->payment_provider == op.payment_provider )
-      {
-        const auto& obj = *itr;
-        _daspay_authority_obj = &obj;
-        break;
-      }
-      ++itr;
+      _daspay_authority_obj = &(*it);
     }
 
     FC_ASSERT( _daspay_authority_obj != nullptr, "Cannot unregister DasPay authority ${a} since ${u} is not the owner", ("a", op.payment_provider)("u", op.issuer) );

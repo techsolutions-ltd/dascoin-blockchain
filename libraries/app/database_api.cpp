@@ -2613,12 +2613,11 @@ optional<vector<daspay_authority>> database_api_impl::get_daspay_authority_for_a
     {
         return {};
     }
+
     vector<daspay_authority> ret;
-    while (it != it_end)
-    {
-        ret.emplace_back(daspay_authority{it->payment_provider, it->daspay_public_key, it->memo});
-        ++it;
-    }
+    std::transform(it, it_end, std::back_inserter(ret), [](const daspay_authority_object& dao) -> daspay_authority {
+      return daspay_authority{dao.payment_provider, dao.daspay_public_key, dao.memo};
+    });
 
     return ret;
 }

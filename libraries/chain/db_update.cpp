@@ -663,8 +663,8 @@ void database::daspay_clearing_start()
     if (dasc_balance.amount > params.daspay_parameters.collateral_dascoin)
     {
       auto to_sell = dasc_balance - asset{ params.daspay_parameters.collateral_dascoin, get_dascoin_asset_id() };
-      // we cannot spent the last dasc
-      if (params.daspay_parameters.collateral_dascoin <= 1 * DASCOIN_DEFAULT_ASSET_PRECISION)
+      // we cannot spend the last dasc
+      if (params.daspay_parameters.collateral_dascoin < 1 * DASCOIN_DEFAULT_ASSET_PRECISION)
         to_sell -= asset{ 1 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id() };
       ilog("selling ${a}", ("a", to_pretty_string(to_sell)));
       limit_orders.emplace_back(limit_order_create_operation{ clearing_acc, to_sell, asset{ 1, get_web_asset_id() }, 0, {}, head_block_time() + params.daspay_parameters.clearing_interval_time_seconds });

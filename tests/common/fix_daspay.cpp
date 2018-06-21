@@ -36,8 +36,7 @@ namespace graphene { namespace chain {
     auto itr = idx.begin();
     vector<payment_service_provider_object> result;
 
-    while( itr != idx.end() )
-      result.emplace_back(*itr++);
+    std::copy(idx.begin(), idx.end(), std::back_inserter(result));
 
     return result;
   }

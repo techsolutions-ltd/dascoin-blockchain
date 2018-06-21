@@ -609,7 +609,7 @@ void database::_apply_block( const signed_block& next_block )
      daspay_clearing_start();
 
    if ( global_props.delayed_operations_resolver_enabled )
-     daspay_resolve_delayed_operations();
+     resolve_delayed_operations();
 
    if( !_node_property_object.debug_updates.empty() )
       apply_debug_updates();

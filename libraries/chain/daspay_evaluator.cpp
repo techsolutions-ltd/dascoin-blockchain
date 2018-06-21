@@ -281,14 +281,14 @@ namespace graphene { namespace chain {
   { try {
     const auto& d = db();
 
+    const auto& account = op.account(d);
+    FC_ASSERT( account.is_wallet(), "Cannot debit vault account ${i}", ("i", op.account) );
+
     const auto& delayed_unreserve_idx = d.get_index_type<delayed_operations_index>().indices().get<by_account>();
     auto delayed_unreserve_iterator = delayed_unreserve_idx.find(op.account);
     FC_ASSERT( delayed_unreserve_iterator == delayed_unreserve_idx.end(), "Account ${1} initiated delayed unreserve operation.", ("1", op.account) );
 
     FC_ASSERT( op.debit_amount.asset_id == d.get_web_asset_id(), "Only web euro can be debited, ${a} sent", ("a", d.to_pretty_string(op.debit_amount)) );
-
-    const auto& account = op.account(d);
-    FC_ASSERT( account.is_wallet(), "Cannot debit vault account ${i}", ("i", op.account) );
 
     const auto& da_idx = d.get_index_type<daspay_authority_index>().indices().get<by_daspay_user>();
     FC_ASSERT( da_idx.find(op.account) != da_idx.end(), "Cannot debit user who has not enabled daspay" );

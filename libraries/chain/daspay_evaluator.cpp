@@ -232,7 +232,7 @@ namespace graphene { namespace chain {
     const auto& idx = d.get_index_type<payment_service_provider_index>().indices().get<by_payment_service_provider>();
     auto psp_iterator = idx.find(op.payment_service_provider_account);
     FC_ASSERT( psp_iterator != idx.end(), "Payment service provider with account ${1} doesn't exists.", ("1", op.payment_service_provider_account));
-    pspo_to_update = &(*psp_iterator);
+    _pspo_to_update = &(*psp_iterator);
 
     return {};
 
@@ -242,7 +242,7 @@ namespace graphene { namespace chain {
   { try {
     auto& d = db();
 
-    d.modify(*pspo_to_update, [&](payment_service_provider_object& pspo) {
+    d.modify(*_pspo_to_update, [&](payment_service_provider_object& pspo) {
       pspo.payment_service_provider_account = op.payment_service_provider_account;
       pspo.payment_service_provider_clearing_accounts = op.payment_service_provider_clearing_accounts;
     });
@@ -262,7 +262,7 @@ namespace graphene { namespace chain {
     const auto& idx = d.get_index_type<payment_service_provider_index>().indices().get<by_payment_service_provider>();
     auto psp_iterator = idx.find(op.payment_service_provider_account);
     FC_ASSERT( psp_iterator != idx.end(), "Payment service provider with account ${1} doesn't exists.", ("1", op.payment_service_provider_account));
-    pspo_to_delete = &(*psp_iterator);
+    _pspo_to_delete = &(*psp_iterator);
 
     return {};
 
@@ -272,7 +272,7 @@ namespace graphene { namespace chain {
   { try {
     auto& d = db();
 
-    d.remove(*pspo_to_delete);
+    d.remove(*_pspo_to_delete);
 
     return {};
   } FC_CAPTURE_AND_RETHROW((op)) }
@@ -309,10 +309,10 @@ namespace graphene { namespace chain {
     const auto& dgpo = d.get_dynamic_global_properties();
     decltype(op.debit_amount) tmp{op.debit_amount};
     tmp.amount += tmp.amount * dgpo.daspay_debit_transaction_ratio / 10000;
-    to_debit = tmp * dgpo.last_dascoin_price;
+    _to_debit = tmp * dgpo.last_dascoin_price;
 
     const asset reserved{balance.reserved, d.get_dascoin_asset_id()};
-    FC_ASSERT( to_debit <= reserved, "Not enough reserved balance on user account ${a}, left ${l}, needed ${n}", ("a", op.account)("l", d.to_pretty_string(reserved))("n", d.to_pretty_string(to_debit)) );
+    FC_ASSERT( _to_debit <= reserved, "Not enough reserved balance on user account ${a}, left ${l}, needed ${n}", ("a", op.account)("l", d.to_pretty_string(reserved))("n", d.to_pretty_string(_to_debit)) );
 
     return {};
   } FC_CAPTURE_AND_RETHROW((op)) }
@@ -321,10 +321,10 @@ namespace graphene { namespace chain {
   { try {
     auto& d = db();
 
-    d.adjust_balance(op.account, asset{0, to_debit.asset_id}, -to_debit.amount);
-    d.adjust_balance(op.clearing_account, to_debit, 0);
+    d.adjust_balance(op.account, asset{0, _to_debit.asset_id}, -_to_debit.amount);
+    d.adjust_balance(op.clearing_account, _to_debit, 0);
 
-    return to_debit;
+    return _to_debit;
 
   } FC_CAPTURE_AND_RETHROW((op)) }
 
@@ -354,9 +354,9 @@ namespace graphene { namespace chain {
     const auto& dgpo = d.get_dynamic_global_properties();
     decltype(op.credit_amount) tmp{op.credit_amount};
     tmp.amount += tmp.amount * dgpo.daspay_credit_transaction_ratio / 10000;
-    to_credit = tmp * dgpo.last_dascoin_price;
+    _to_credit = tmp * dgpo.last_dascoin_price;
 
-    FC_ASSERT( to_credit <= balance, "Not enough balance on clearing account ${a}, left ${l}, needed ${n}", ("a", op.clearing_account)("l", d.to_pretty_string(balance))("n", d.to_pretty_string(to_credit)) );
+    FC_ASSERT( _to_credit <= balance, "Not enough balance on clearing account ${a}, left ${l}, needed ${n}", ("a", op.clearing_account)("l", d.to_pretty_string(balance))("n", d.to_pretty_string(_to_credit)) );
 
     return {};
 
@@ -366,10 +366,10 @@ namespace graphene { namespace chain {
   { try {
     auto& d = db();
 
-    d.adjust_balance(op.clearing_account, asset{-to_credit.amount, to_credit.asset_id}, 0);
-    d.adjust_balance(op.account, asset{0, to_credit.asset_id}, to_credit.amount);
+    d.adjust_balance(op.clearing_account, asset{-_to_credit.amount, _to_credit.asset_id}, 0);
+    d.adjust_balance(op.account, asset{0, _to_credit.asset_id}, _to_credit.amount);
 
-    return to_credit;
+    return _to_credit;
 
   } FC_CAPTURE_AND_RETHROW((op)) }
 

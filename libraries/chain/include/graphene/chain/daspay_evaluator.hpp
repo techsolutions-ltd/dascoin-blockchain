@@ -96,7 +96,7 @@ namespace graphene { namespace chain {
     void_result do_apply(const update_payment_service_provider_operation& op);
 
   private:
-    const payment_service_provider_object* pspo_to_update = nullptr;
+    const payment_service_provider_object* _pspo_to_update = nullptr;
   };
 
   class delete_payment_service_provider_evaluator : public evaluator<delete_payment_service_provider_evaluator>
@@ -108,7 +108,7 @@ namespace graphene { namespace chain {
     void_result do_apply(const delete_payment_service_provider_operation& op);
 
   private:
-    const payment_service_provider_object* pspo_to_delete = nullptr;
+    const payment_service_provider_object* _pspo_to_delete = nullptr;
   };
 
   class daspay_debit_account_evaluator : public evaluator<daspay_debit_account_evaluator>
@@ -120,7 +120,7 @@ namespace graphene { namespace chain {
     operation_result do_apply( const daspay_debit_account_operation& op );
 
   private:
-    asset to_debit;
+    asset _to_debit;
   };
 
   class daspay_credit_account_evaluator : public evaluator<daspay_credit_account_evaluator>
@@ -132,7 +132,7 @@ namespace graphene { namespace chain {
     operation_result do_apply(const operation_type &op);
 
   private:
-    asset to_credit;
+    asset _to_credit;
   };
 
   class update_daspay_clearing_parameters_evaluator : public evaluator<update_daspay_clearing_parameters_evaluator>

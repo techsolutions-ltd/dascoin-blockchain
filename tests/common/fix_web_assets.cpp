@@ -65,51 +65,41 @@ asset database_fixture::web_asset(share_type amount)
   return asset(amount, get_web_asset_id());
 }
 
+const issued_asset_record_object* database_fixture::issue_asset(const string& unique_id, account_id_type receiver_id,
+                                                                share_type cash, share_type reserved,
+                                                                asset_id_type asset, account_id_type issuer, string comment)
+{ try {
+  asset_create_issue_request_operation op;
+  op.unique_id = unique_id;
+  op.issuer = issuer;
+  op.receiver = receiver_id;
+  op.amount = cash;
+  op.asset_id =  asset;
+  op.reserved_amount = reserved;
+  op.comment = comment;
+
+  signed_transaction tx;
+  set_expiration(db, tx);
+  tx.operations.push_back(op);
+  tx.validate();
+  processed_transaction ptx = db.push_transaction(tx, ~0);
+  tx.clear();
+
+  return db.find<issued_asset_record_object>(ptx.operation_results[0].get<object_id_type>());
+
+} FC_LOG_AND_RETHROW() }
+
 const issued_asset_record_object* database_fixture::issue_webasset(const string& unique_id, account_id_type receiver_id,
                                                                    share_type cash, share_type reserved)
-{ try {
-  asset_create_issue_request_operation op;
-  op.unique_id = unique_id;
-  op.issuer = get_webasset_issuer_id();
-  op.receiver = receiver_id;
-  op.amount = cash;
-  op.asset_id =  get_web_asset_id();
-  op.reserved_amount = reserved;
-  op.comment = "TEST_ISSUE_WEB_ASSET";
-
-  signed_transaction tx;
-  set_expiration(db, tx);
-  tx.operations.push_back(op);
-  tx.validate();
-  processed_transaction ptx = db.push_transaction(tx, ~0);
-  tx.clear();
-
-  return db.find<issued_asset_record_object>(ptx.operation_results[0].get<object_id_type>());
-
-} FC_LOG_AND_RETHROW() }
+{
+  return issue_asset(unique_id, receiver_id, cash, reserved, get_web_asset_id(), get_webasset_issuer_id(), "TEST_ISSUE_WEB_ASSET");
+}
 
 const issued_asset_record_object* database_fixture::issue_cycleasset(const string& unique_id, account_id_type receiver_id,
-                                                                   share_type cash, share_type reserved)
-{ try {
-  asset_create_issue_request_operation op;
-  op.unique_id = unique_id;
-  op.issuer = get_webasset_issuer_id();
-  op.receiver = receiver_id;
-  op.amount = cash;
-  op.asset_id =  get_cycle_asset_id();
-  op.reserved_amount = reserved;
-  op.comment = "TEST_ISSUE_CYCLE_ASSET";
-
-  signed_transaction tx;
-  set_expiration(db, tx);
-  tx.operations.push_back(op);
-  tx.validate();
-  processed_transaction ptx = db.push_transaction(tx, ~0);
-  tx.clear();
-
-  return db.find<issued_asset_record_object>(ptx.operation_results[0].get<object_id_type>());
-
-} FC_LOG_AND_RETHROW() }
+                                                                     share_type cash, share_type reserved)
+{
+  return issue_asset(unique_id, receiver_id, cash, reserved, get_cycle_asset_id(), get_webasset_issuer_id(), "TEST_ISSUE_CYCLE_ASSET");
+}
 
 std::pair<share_type, share_type> database_fixture::get_web_asset_amounts(account_id_type owner_id)
 {
@@ -260,7 +250,7 @@ void database_fixture::issue_dascoin(account_id_type account_id, share_type amou
 { try {
 
   db.issue_asset(account_id, amount, get_dascoin_asset_id(), 0);
-  
+
 } FC_LOG_AND_RETHROW() }
 
 } }  // namespace graphene::chain

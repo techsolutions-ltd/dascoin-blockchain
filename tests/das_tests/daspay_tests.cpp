@@ -558,17 +558,20 @@ BOOST_AUTO_TEST_CASE( daspay_clearing_test )
   // Wait for the next clearing interval:
   generate_blocks(db.head_block_time() + fc::seconds(18));
 
-  // At this point there should be one limit order:
-  BOOST_CHECK_EQUAL( limit_price_idx.size(), 1 );
+  // Still no limit orders because there are no buy orders:
+  BOOST_CHECK_EQUAL( limit_price_idx.size(), 0 );
 
-  const auto& loo = *(limit_price_idx.begin());
+  issue_webasset("1", foo_id, 100 * DASCOIN_FIAT_ASSET_PRECISION, 0);
+  do_op(limit_order_create_operation(foo_id, asset{10 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()}, asset{100 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, 0, {}, db.head_block_time() + fc::seconds(600)));
 
-  BOOST_CHECK( loo.seller == clearing_id );
+  // Wait for the next clearing interval:
+  generate_blocks(db.head_block_time() + fc::seconds(18));
 
-  // Since collateral is set to 0, we sell all but the last coin:
-  share_type tmp = share_type{301 * DASCOIN_DEFAULT_ASSET_PRECISION};
-  BOOST_CHECK_EQUAL( loo.sell_price.base.amount.value, tmp.value );
-  BOOST_CHECK_EQUAL( loo.sell_price.quote.amount.value, 1 );
+  auto history = get_operation_history(foo_id);
+  BOOST_CHECK( !history.empty() );
+  fill_order_operation fo = history[0].op.get<fill_order_operation>();
+  BOOST_CHECK( fo.account_id == foo_id );
+  BOOST_CHECK( fo.fill_price == price(asset(10 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()), asset(100 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id())));
 
 } FC_LOG_AND_RETHROW() }
 

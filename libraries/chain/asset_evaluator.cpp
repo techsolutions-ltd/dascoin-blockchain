@@ -591,10 +591,7 @@ void_result asset_create_issue_request_evaluator::do_evaluate(const asset_create
       }
    }
 
-   // Check if we are transferring web assets:
-   // NOTE: this check must be modified to apply for every kind of web asset there is.
-   //FC_ASSERT( op.asset_id != d.get_core_asset().id && op.asset_id != d.get_dascoin_asset_id(), "Can not issue core asset and DASC");
-   FC_ASSERT( op.asset_id == d.get_web_asset_id() || op.asset_id == d.get_cycle_asset_id(), "Can only issue web or cycle assets" );
+   FC_ASSERT( op.asset_id != d.get_dascoin_asset_id(), "Can not issue DASC");
 
    //TODO check if account kind is Castodian or wallet account type if asset_id is cycle asset id
    auto& receiver_account_obj = op.receiver(d);
@@ -603,10 +600,6 @@ void_result asset_create_issue_request_evaluator::do_evaluate(const asset_create
 			   "Can only issue cycle assets to wallet or custodian account kind." );
 
    const auto& a = op.asset_id(d);
-   FC_ASSERT( a.is_dual_auth_issue(),
-              "Cannot do a dual authority issue on a single issuer based asset '{asset_id}'.",
-              ("asset_id", a.id) 
-            );
 
    const auto issuer_id = d.get_chain_authorities().webasset_issuer;
    const auto& op_issuer_obj = op.issuer(d);
@@ -618,12 +611,8 @@ void_result asset_create_issue_request_evaluator::do_evaluate(const asset_create
    const account_object& reciever = op.receiver(d);
    FC_ASSERT( is_authorized_asset( d, reciever, a ) );
 
-   // if we do not have cycle asset balance we have to create it
-   if(op.asset_id == d.get_cycle_asset_id())
-   {
-      if(!d.check_if_balance_object_exists(op.receiver, op.asset_id))
-         _create_new_balance_object_for_cycles = true;
-   }
+   if(!d.check_if_balance_object_exists(op.receiver, op.asset_id))
+     _create_new_balance_object = true;
 
    const auto& asset_dyn_data = a.dynamic_asset_data_id(d);
    FC_ASSERT( (asset_dyn_data.current_supply + op.amount) <= a.options.max_supply );
@@ -650,7 +639,7 @@ object_id_type asset_create_issue_request_evaluator::do_apply(const asset_create
       }
    }
 
-   if(_create_new_balance_object_for_cycles)
+   if(_create_new_balance_object)
       d.create_empty_balance(op.receiver, op.asset_id);
 
    d.issue_asset(op.receiver, op.amount, op.asset_id, op.reserved_amount);

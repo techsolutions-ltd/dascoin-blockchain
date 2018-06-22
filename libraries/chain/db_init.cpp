@@ -610,6 +610,10 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       remove( asset_obj );
    }
 
+   // Create null das33 project and pledge
+   create<das33_project_object>( [&](das33_project_object& a){});
+   create<das33_pledge_holder_object>( [&](das33_pledge_holder_object& a){});
+
    chain_id_type chain_id = genesis_state.compute_chain_id();
 
    // Create global properties

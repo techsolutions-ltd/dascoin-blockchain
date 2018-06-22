@@ -2649,9 +2649,12 @@ vector<das33_pledge_holder_object> database_api_impl::get_das33_pledges(das33_pl
     FC_ASSERT( limit <= 100 );
     vector<das33_pledge_holder_object> result;
 
+    auto default_pledge_id = das33_pledge_holder_id_type();
+
     const auto& pledges = _db.get_index_type<das33_pledge_holder_index>().indices().get<by_id>();
     for( auto itr = pledges.lower_bound(from); limit-- && itr != pledges.end(); ++itr )
     {
+      if (itr->id != default_pledge_id)
         result.emplace_back(*itr);
     }
 
@@ -2673,10 +2676,13 @@ vector<das33_pledge_holder_object> database_api_impl::get_das33_pledges_by_proje
     FC_ASSERT( limit <= 100 );
     vector<das33_pledge_holder_object> result;
 
+    auto default_pledge_id = das33_pledge_holder_id_type();
+
     const auto& pledges = _db.get_index_type<das33_pledge_holder_index>().indices().get<by_project>();
     for( auto itr = pledges.lower_bound(make_tuple(project, from)); limit-- && itr->project_id == project && itr != pledges.end(); ++itr )
     {
-        result.emplace_back(*itr);
+       if (itr->id != default_pledge_id)
+          result.emplace_back(*itr);
     }
 
     return result;
@@ -2695,11 +2701,14 @@ vector<das33_project_object> database_api_impl::get_das33_projects(const string&
   const auto& projects_by_name = _db.get_index_type<das33_project_index>().indices().get<by_project_name>();
   vector<das33_project_object> result;
 
+  auto default_project_id = das33_project_id_type();
+
   for( auto itr = projects_by_name.lower_bound(lower_bound_name);
        limit-- && itr != projects_by_name.end();
        ++itr )
   {
-     result.emplace_back(*itr);
+     if (itr->id != default_project_id)
+       result.emplace_back(*itr);
   }
 
   return result;

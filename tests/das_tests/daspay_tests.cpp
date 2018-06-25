@@ -313,6 +313,12 @@ BOOST_AUTO_TEST_CASE( unreserve_asset_on_account_test )
   // Wait for delayed operations resolver to kick in:
   generate_blocks(db.head_block_time() + fc::seconds(660));
 
+  auto history = get_operation_history( foo_id );
+  BOOST_CHECK( !history.empty() );
+  // unreserve_completed should be on top:
+  unreserve_completed_operation op = history[0].op.get<unreserve_completed_operation>();
+  BOOST_CHECK_EQUAL ( op.asset_to_unreserve.amount.value,  asset( 10 * DASCOIN_DEFAULT_ASSET_PRECISION, db.get_dascoin_asset_id() ).amount.value );
+
   BOOST_CHECK_EQUAL( get_balance(foo_id, get_dascoin_asset_id()), 60 * DASCOIN_DEFAULT_ASSET_PRECISION );
   BOOST_CHECK_EQUAL( get_reserved_balance(foo_id, get_dascoin_asset_id()), 40 * DASCOIN_DEFAULT_ASSET_PRECISION );
 

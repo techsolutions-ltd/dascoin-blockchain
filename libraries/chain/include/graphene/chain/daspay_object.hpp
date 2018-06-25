@@ -121,6 +121,7 @@ namespace graphene { namespace chain {
     {
       ilog("unreserving ${d}", ("d", _db.to_pretty_string(op.asset_to_unreserve)));
       _db.adjust_balance( op.account, asset{ op.asset_to_unreserve.amount, _db.get_dascoin_asset_id() }, -op.asset_to_unreserve.amount );
+      _db.push_applied_operation(unreserve_completed_operation{op.account, op.asset_to_unreserve});
     }
   };
 

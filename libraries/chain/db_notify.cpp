@@ -36,7 +36,7 @@ struct get_impacted_account_visitor
       _impacted.insert( op.to );
    }
 
-   void operator()( const asset_claim_fees_operation& op ){}
+   void operator()( const asset_claim_fees_operation& op ) {}
    void operator()( const limit_order_create_operation& op ) {}
    void operator()( const limit_order_cancel_operation& op )
    {
@@ -461,68 +461,73 @@ struct get_impacted_account_visitor
       _impacted.insert( op.wallet_id );
    }
 
-   void operator() (const set_starting_cycle_asset_amount_operation& op)
+   void operator() ( const set_starting_cycle_asset_amount_operation& op )
    {
       _impacted.insert(op.issuer);
    }
 
-   void operator() (const register_daspay_authority_operation& op)
+   void operator() ( const register_daspay_authority_operation& op )
    {
       _impacted.insert(op.issuer);
    }
 
-   void operator() (const unregister_daspay_authority_operation& op)
+   void operator() ( const unregister_daspay_authority_operation& op )
    {
       _impacted.insert(op.issuer);
    }
 
-   void operator() (const reserve_asset_on_account_operation& op)
+   void operator() ( const reserve_asset_on_account_operation& op )
    {
       _impacted.insert(op.account);
    }
 
-   void operator() (const unreserve_asset_on_account_operation& op)
+   void operator() ( const unreserve_asset_on_account_operation& op )
    {
       _impacted.insert(op.account);
    }
 
-   void operator() (const daspay_debit_account_operation& op)
+   void operator() ( const unreserve_completed_operation& op )
+   {
+      _impacted.insert(op.account);
+   }
+
+   void operator() ( const daspay_debit_account_operation& op )
    {
       _impacted.insert(op.payment_service_provider_account);
       _impacted.insert(op.account);
       _impacted.insert(op.clearing_account);
    }
 
-   void operator() (const daspay_credit_account_operation& op)
+   void operator() ( const daspay_credit_account_operation& op )
    {
       _impacted.insert(op.payment_service_provider_account);
       _impacted.insert(op.account);
       _impacted.insert(op.clearing_account);
    }
 
-   void operator() (const set_chain_authority_operation& op)
+   void operator() ( const set_chain_authority_operation& op )
    {
      _impacted.insert(op.issuer);
      _impacted.insert(op.account);
    }
 
-   void operator() (const das33_pledge_asset_operation& op)
+   void operator() ( const das33_pledge_asset_operation& op )
    {
      _impacted.insert(op.account_id);
    }
 
-   void operator() (const das33_project_create_operation& op)
+   void operator() ( const das33_project_create_operation& op )
    {
      _impacted.insert(op.authority);
      _impacted.insert(op.owner);
    }
 
-   void operator() (const das33_project_update_operation& op)
+   void operator() ( const das33_project_update_operation& op )
    {
      _impacted.insert(op.authority);
    }
 
-   void operator() (const das33_project_delete_operation& op)
+   void operator() ( const das33_project_delete_operation& op )
    {
      _impacted.insert(op.authority);
    }

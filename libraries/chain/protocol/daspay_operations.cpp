@@ -56,6 +56,10 @@ namespace graphene { namespace chain {
     FC_ASSERT( asset_to_unreserve.amount > 0, "Cannot unreserve 0 amount" );
   }
 
+  void unreserve_completed_operation::validate() const
+  {
+  }
+
   void create_payment_service_provider_operation::validate() const
   {
     FC_ASSERT( fee.amount >= 0 );
@@ -125,8 +129,6 @@ namespace graphene { namespace chain {
       FC_ASSERT( *delayed_operations_resolver_interval_time_seconds > GRAPHENE_MIN_BLOCK_INTERVAL,
                  "Must be greater than the minimal block interval"
       );
-
   }
-
 
 } } // namespace graphene::chain

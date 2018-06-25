@@ -584,10 +584,10 @@ REFLECT_ENUM_CHECK( graphene::chain::cycle_origin_kind,
                   )
 
 REFLECT_ENUM_CHECK( graphene::chain::das33_project_status,
-		    (inactive)
-		    (active)
-		    (DAS33_PROJECT_STATUS_COUNT)
-		  )
+                    (inactive)
+                    (active)
+                    (DAS33_PROJECT_STATUS_COUNT)
+                  )
 
 FC_REFLECT( graphene::chain::public_key_type, (key_data) )
 FC_REFLECT( graphene::chain::public_key_type::binary_key, (data)(check) )

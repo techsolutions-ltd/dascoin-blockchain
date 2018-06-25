@@ -53,13 +53,12 @@ public:
     das33_project_object() = default;
     explicit das33_project_object(string name, account_id_type owner, asset_id_type token, share_type min_to_collect, vector<price> ratios)
              : name(name),
-	       owner(owner),
-	       token_id(token),
-	       min_to_collect(min_to_collect),
-	       collected(0),
-	       token_prices(ratios),
-	       status(das33_project_status::inactive)
-    {}
+               owner(owner),
+               token_id(token),
+               min_to_collect(min_to_collect),
+               collected(0),
+               token_prices(ratios),
+               status(das33_project_status::inactive) {}
   };
 
   class das33_pledge_holder_object : public abstract_object<das33_pledge_holder_object>
@@ -166,14 +165,14 @@ FC_REFLECT_DERIVED( graphene::chain::das33_pledge_holder_object, (graphene::db::
                     (license_id)
                     (project_id)
                     (timestamp)
-)
+                  )
 
 FC_REFLECT_DERIVED( graphene::chain::das33_project_object, (graphene::db::object),
                     (name)
                     (owner)
-		    (token_id)
-		    (min_to_collect)
-		    (collected)
-		    (token_prices)
-		    (status)
+                    (token_id)
+                    (min_to_collect)
+                    (collected)
+                    (token_prices)
+                    (status)
                   )

@@ -428,7 +428,7 @@ struct get_impacted_account_visitor
       _impacted.insert( op.wallet_id );
    }
 
-   void operator() (const set_starting_cycle_asset_amount_operation& op)
+   void operator() ( const set_starting_cycle_asset_amount_operation& op )
    {
       _impacted.insert(op.issuer);
    }
@@ -478,6 +478,11 @@ struct get_impacted_account_visitor
    void operator() ( const unreserve_asset_on_account_operation& op )
    {
       _impacted.insert( op.account );
+   }
+
+   void operator() ( const unreserve_completed_operation& op )
+   {
+      _impacted.insert(op.account);
    }
 
    void operator() ( const daspay_debit_account_operation& op )

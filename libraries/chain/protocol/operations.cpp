@@ -29,13 +29,12 @@ operation operation_type_limits::first_virtual_operation = operation(record_subm
 
 bool operation_type_limits::is_virtual_operation(const operation& op)
 {
-
    return op.which() >= first_virtual_operation.which() && op.which() < operation::count();
 }
 
 bool operation_type_limits::is_virtual_operation(const unsigned uop)
 {
-   return uop >= first_virtual_operation.which() && uop < operation::count();
+   return uop >= static_cast<unsigned>( first_virtual_operation.which() ) && uop < static_cast<unsigned>( operation::count() );
 }
 
 uint64_t base_operation::calculate_data_fee( uint64_t bytes, uint64_t price_per_kbyte )

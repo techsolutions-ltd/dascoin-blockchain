@@ -191,9 +191,9 @@ namespace graphene { namespace chain {
             update_daspay_clearing_parameters_operation,
             update_delayed_operations_resolver_parameters_operation,
 
-	    das33_project_create_operation,
-	    das33_project_update_operation,
-	    das33_project_delete_operation,
+            das33_project_create_operation,
+            das33_project_update_operation,
+            das33_project_delete_operation,
             das33_pledge_asset_operation,
 
             // Virtual operations below this point:
@@ -210,7 +210,8 @@ namespace graphene { namespace chain {
             asset_settle_cancel_operation,
             fill_order_operation,
             wire_out_result_operation,
-            wire_out_with_fee_result_operation
+            wire_out_with_fee_result_operation,
+            unreserve_completed_operation
    > operation;
 
    /// @} // operations group

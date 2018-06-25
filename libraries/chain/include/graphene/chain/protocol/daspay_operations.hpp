@@ -147,6 +147,28 @@ namespace graphene { namespace chain {
       share_type calculate_fee(const fee_parameters_type&) const { return 0; }
     };
 
+    struct unreserve_completed_operation : public base_operation
+    {
+      struct fee_parameters_type {};
+      asset fee;
+
+      account_id_type account;
+      asset asset_to_unreserve;
+
+      extensions_type extensions;
+
+      unreserve_completed_operation() = default;
+      explicit unreserve_completed_operation(
+              const account_id_type& account,
+              asset asset_to_unreserve)
+              : account(account)
+              , asset_to_unreserve(asset_to_unreserve) {}
+
+      account_id_type fee_payer() const { return account; }
+      void validate() const;
+      share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+    };
+
     struct create_payment_service_provider_operation : public base_operation
     {
       struct fee_parameters_type {};
@@ -390,6 +412,13 @@ FC_REFLECT( graphene::chain::reserve_asset_on_account_operation,
 
 FC_REFLECT( graphene::chain::unreserve_asset_on_account_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::unreserve_asset_on_account_operation,
+            (fee)
+            (account)
+            (asset_to_unreserve)
+          )
+
+FC_REFLECT( graphene::chain::unreserve_completed_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::unreserve_completed_operation,
             (fee)
             (account)
             (asset_to_unreserve)

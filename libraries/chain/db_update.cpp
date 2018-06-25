@@ -640,7 +640,13 @@ void database::daspay_clearing_start()
     signed_transaction trx;
     trx.set_reference_block(head_block_id());
     trx.set_expiration( head_block_time() + fc::seconds( params.parameters.block_interval * (params.parameters.maintenance_skip_slots + 1) * 3 ) );
+
     std::copy(ops.begin(), ops.end(), std::back_inserter(trx.operations));
+
+    const fee_schedule& current_fees = get_global_properties().parameters.current_fees;
+    for( auto& op : trx.operations )
+      current_fees.set_fee(op);
+
     apply_transaction(trx, ~0);
     if (!was_undo_db_enabled)
       _undo_db.disable();
@@ -658,6 +664,15 @@ void database::daspay_clearing_start()
 
   for (const auto& clearing_acc : clearing_accounts)
   {
+    const fee_schedule& current_fees = get_global_properties().parameters.current_fees;
+    const auto& cycle_balance = get_balance(clearing_acc, get_cycle_asset_id());
+    const auto& fee = current_fees.calculate_fee(limit_order_create_operation());
+    if (fee > cycle_balance)
+    {
+      wlog("Clearing account ${a} has insufficient balance to pay fee (Balance: ${b}, Fee: ${c})", ("a", clearing_acc)("b", to_pretty_string(cycle_balance))("c", to_pretty_string(fee)));
+      continue;
+    }
+
     const auto& dasc_balance = get_balance(clearing_acc, get_dascoin_asset_id());
     const auto& webeur_balance = get_balance(clearing_acc, get_web_asset_id());
 

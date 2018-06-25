@@ -241,15 +241,18 @@ void database_fixture::set_last_daily_dascoin_price(price val)
 
 } FC_LOG_AND_RETHROW() }
 
-void database_fixture::issue_dascoin(account_object& account_obj, share_type amount)
+void database_fixture::issue_dascoin(account_object& vault_obj, share_type amount)
 { try {
-  issue_dascoin(account_obj.id, amount);
+  issue_dascoin(vault_obj.id, amount);
 } FC_LOG_AND_RETHROW() }
 
-void database_fixture::issue_dascoin(account_id_type account_id, share_type amount)
-{ try {
+void database_fixture::issue_dascoin(account_id_type vault_id, share_type amount)
+{ try {  
+  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), vault_id, amount, 100, ""));
+  toggle_reward_queue(true);
 
-  db.issue_asset(account_id, amount, get_dascoin_asset_id(), 0);
+  auto num_intervals = (amount * DASCOIN_DEFAULT_ASSET_PRECISION) / get_global_properties().parameters.dascoin_reward_amount + 1;
+  generate_blocks(db.head_block_time() + fc::seconds(get_global_properties().parameters.reward_interval_time_seconds * num_intervals.value), false);
 
 } FC_LOG_AND_RETHROW() }
 

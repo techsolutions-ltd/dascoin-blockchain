@@ -92,8 +92,10 @@ BOOST_AUTO_TEST_CASE( transfer_custodian )
     tether_accounts(alice_id, alicev_id);
 
     // Issue a bunch of assets
-    issue_dascoin(alicev_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
-    issue_dascoin(alice_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+    issue_dascoin(alicev_id, 200);
+    disable_vault_to_wallet_limit(alicev_id);
+    transfer_dascoin_vault_to_wallet(alicev_id, alice_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+    enable_vault_to_wallet_limit(alicev_id);
     issue_webasset("1", alice_id, 100, 100);
     BOOST_CHECK_EQUAL( get_balance(alicev_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
     BOOST_CHECK_EQUAL( get_balance(alice_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );

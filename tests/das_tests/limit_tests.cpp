@@ -318,7 +318,7 @@ BOOST_AUTO_TEST_CASE( toggle_limit_dascoin_test )
   BOOST_CHECK( !sender.disable_vault_to_wallet_limit );
 
   // Give this account a bunch of dascoin and disable sending limit:
-  issue_dascoin(sender_id, 10000 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  issue_dascoin(sender_id, 10000);
   BOOST_CHECK_EQUAL( get_balance(sender_id, get_dascoin_asset_id()), 10000 * DASCOIN_DEFAULT_ASSET_PRECISION );
   disable_vault_to_wallet_limit(sender_id);
   BOOST_CHECK( sender.disable_vault_to_wallet_limit );
@@ -326,7 +326,7 @@ BOOST_AUTO_TEST_CASE( toggle_limit_dascoin_test )
   transfer_dascoin_vault_to_wallet(sender_id, receiver_id, 10000 * DASCOIN_DEFAULT_ASSET_PRECISION);
   BOOST_CHECK_EQUAL( get_dascoin_balance(receiver_id), 10000 * DASCOIN_DEFAULT_ASSET_PRECISION );
 
-  issue_dascoin(sender_id, 10000 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  issue_dascoin(sender_id, 10000);
   BOOST_CHECK_EQUAL( get_balance(sender_id, get_dascoin_asset_id()), 10000 * DASCOIN_DEFAULT_ASSET_PRECISION );
   enable_vault_to_wallet_limit(sender_id);
   BOOST_CHECK( !sender.disable_vault_to_wallet_limit );
@@ -342,7 +342,7 @@ BOOST_AUTO_TEST_CASE( update_euro_limit_operation_test )
   ACTOR(receiver);
 
   tether_accounts(receiver_id, sender_id);
-  issue_dascoin(sender_id, 10000 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  issue_dascoin(sender_id, 10000);
 
   BOOST_CHECK_EQUAL( get_dascoin_balance(sender_id), 10000 * DASCOIN_DEFAULT_ASSET_PRECISION );
   BOOST_CHECK( !sender.disable_vault_to_wallet_limit );

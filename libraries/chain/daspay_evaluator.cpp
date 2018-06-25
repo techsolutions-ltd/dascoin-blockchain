@@ -171,68 +171,45 @@ namespace graphene { namespace chain {
 
   void_result unregister_daspay_authority_evaluator::do_apply(const operation_type& op)
   { try {
-      auto& d = db();
+    auto& d = db();
 
-      d.remove(*_daspay_authority_obj);
+    d.remove(*_daspay_authority_obj);
 
-      return {};
+    return {};
 
   } FC_CAPTURE_AND_RETHROW((op)) }
 
   void_result create_payment_service_provider_evaluator::do_evaluate(const operation_type& op)
   { try {
     const auto& d = db();
-    const auto& gpo = d.get_global_properties();
+    payment_service_provider_evaluator_helper psp{d};
 
-    const auto& issuer_obj = op.authority(d);
-    d.perform_chain_authority_check("daspay authority", gpo.authorities.daspay_administrator, issuer_obj);
+    const auto tmp = psp.do_evaluate<operation_type>(op);
+    FC_ASSERT( tmp == nullptr, "Payment service provider with account ${1} already exists.", ("1", op.payment_service_provider_account) );
 
-    FC_ASSERT( op.payment_service_provider_account(d).is_wallet(),
-               "Account '${name}' must be a wallet account",
-               ("name", op.payment_service_provider_account(d).name)
-    );
-
-    for (const auto& clearing_acc : op.payment_service_provider_clearing_accounts)
-      clearing_acc(d);
-
-     const auto& idx = d.get_index_type<payment_service_provider_index>().indices().get<by_payment_service_provider>();
-     FC_ASSERT(idx.find(op.payment_service_provider_account) == idx.end(), "Payment service provider with account ${1} already exists.", ("1", op.payment_service_provider_account));
-
-     return {};
+    return {};
 
   } FC_CAPTURE_AND_RETHROW((op)) }
 
   object_id_type create_payment_service_provider_evaluator::do_apply(const operation_type& op)
   { try {
-     auto& d = db();
+    auto& d = db();
 
-     return d.create<payment_service_provider_object>([&](payment_service_provider_object& pspo){
-       pspo.payment_service_provider_account = op.payment_service_provider_account;
-       pspo.payment_service_provider_clearing_accounts = op.payment_service_provider_clearing_accounts;
-     }).id;
+    return d.create<payment_service_provider_object>([&](payment_service_provider_object& pspo){
+      pspo.payment_service_provider_account = op.payment_service_provider_account;
+      pspo.payment_service_provider_clearing_accounts = op.payment_service_provider_clearing_accounts;
+    }).id;
 
   } FC_CAPTURE_AND_RETHROW((op)) }
 
   void_result update_payment_service_provider_evaluator::do_evaluate(const operation_type& op)
   { try {
     const auto& d = db();
-    const auto& gpo = d.get_global_properties();
+    payment_service_provider_evaluator_helper psp{d};
 
-    const auto& issuer_obj = op.authority(d);
-    d.perform_chain_authority_check("daspay authority", gpo.authorities.daspay_administrator, issuer_obj);
+    _pspo_to_update = psp.do_evaluate<operation_type>(op);
 
-    FC_ASSERT( op.payment_service_provider_account(d).is_wallet(),
-               "Account '${name}' must be a wallet account",
-               ("name", op.payment_service_provider_account(d).name)
-    );
-
-    for (const auto& clearing_acc : op.payment_service_provider_clearing_accounts)
-      clearing_acc(d);
-
-    const auto& idx = d.get_index_type<payment_service_provider_index>().indices().get<by_payment_service_provider>();
-    auto psp_iterator = idx.find(op.payment_service_provider_account);
-    FC_ASSERT( psp_iterator != idx.end(), "Payment service provider with account ${1} doesn't exists.", ("1", op.payment_service_provider_account));
-    _pspo_to_update = &(*psp_iterator);
+    FC_ASSERT( _pspo_to_update != nullptr, "Payment service provider with account ${1} doesn't exists.", ("1", op.payment_service_provider_account));
 
     return {};
 

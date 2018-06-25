@@ -27,6 +27,7 @@
 #include <graphene/chain/evaluator.hpp>
 #include <graphene/chain/protocol/daspay_operations.hpp>
 #include <graphene/chain/daspay_object.hpp>
+#include <fc/noncopyable.hpp>
 
 namespace graphene { namespace chain {
 
@@ -97,6 +98,39 @@ namespace graphene { namespace chain {
 
   private:
     const payment_service_provider_object* _pspo_to_update = nullptr;
+  };
+
+  class payment_service_provider_evaluator_helper : fc::noncopyable
+  {
+  public:
+    explicit payment_service_provider_evaluator_helper(const database& db)
+      : _db(db) {}
+
+    template<typename OperationType>
+    const payment_service_provider_object* do_evaluate(OperationType op)
+    {
+      const auto& gpo = _db.get_global_properties();
+
+      const auto& issuer_obj = op.authority(_db);
+      _db.perform_chain_authority_check("daspay authority", gpo.authorities.daspay_administrator, issuer_obj);
+
+      FC_ASSERT( op.payment_service_provider_account(_db).is_wallet(),
+                 "Account '${name}' must be a wallet account",
+                 ("name", op.payment_service_provider_account(_db).name)
+      );
+
+      for (const auto& clearing_acc : op.payment_service_provider_clearing_accounts)
+        clearing_acc(_db);
+
+      const auto& idx = _db.get_index_type<payment_service_provider_index>().indices().get<by_payment_service_provider>();
+      auto psp_iterator = idx.find(op.payment_service_provider_account);
+      if( psp_iterator != idx.end() )
+        return &(*psp_iterator);
+      return nullptr;
+    }
+
+  private:
+    const database& _db;
   };
 
   class delete_payment_service_provider_evaluator : public evaluator<delete_payment_service_provider_evaluator>

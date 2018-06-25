@@ -256,4 +256,33 @@ void database_fixture::issue_dascoin(account_id_type vault_id, share_type amount
 
 } FC_LOG_AND_RETHROW() }
 
+void database_fixture::mint_all_dascoin_from_license(license_type_id_type license, account_id_type vault_id, account_id_type wallet_id,
+                                                          share_type bonus, share_type frequency_lock)
+{ try {
+  do_op(issue_license_operation(get_license_issuer_id(), vault_id, license, bonus, frequency_lock, db.head_block_time()));
+  auto license_information = db.get_license_information(vault_id);
+
+  if (license_information.valid())
+  {
+    toggle_reward_queue(true);
+    auto last_issued_license = license_information->history.back();
+    if (license_information->is_manual_submit())
+    {
+      do_op(submit_cycles_to_queue_by_license_operation(vault_id, last_issued_license.amount, license, frequency_lock, "TEST"));
+    }
+    auto num_intervals = (last_issued_license.amount * DASCOIN_DEFAULT_ASSET_PRECISION) / get_global_properties().parameters.dascoin_reward_amount + 1;
+    generate_blocks(db.head_block_time() + fc::seconds(get_global_properties().parameters.reward_interval_time_seconds * num_intervals.value), false);
+
+    if (wallet_id != account_id_type())
+    {
+      tether_accounts(wallet_id, vault_id);
+      disable_vault_to_wallet_limit(vault_id);
+      transfer_dascoin_vault_to_wallet(vault_id, wallet_id, db.cycles_to_dascoin(last_issued_license.amount, frequency_lock));
+      enable_vault_to_wallet_limit(vault_id);
+    }
+    toggle_reward_queue(false);
+  }
+
+} FC_LOG_AND_RETHROW() }
+
 } }  // namespace graphene::chain

@@ -393,6 +393,8 @@ struct database_fixture {
    void set_last_daily_dascoin_price(price val);
    void issue_dascoin(account_id_type vault_id, share_type amount);
    void issue_dascoin(account_object& vault_obj, share_type amount);
+   void mint_all_dascoin_from_license(license_type_id_type license, account_id_type vault_id, account_id_type wallet_id = account_id_type(),
+                                      share_type bonus = 10, share_type frequency_lock = 200);
 
    // fix_pi_limits.cpp
    void update_pi_limits(account_id_type account_id, uint8_t level, limits_type new_limits);

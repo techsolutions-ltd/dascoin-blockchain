@@ -275,14 +275,7 @@ BOOST_AUTO_TEST_CASE( obey_limit_test )
 
   BOOST_CHECK( !vault.disable_vault_to_wallet_limit );
 
-  adjust_dascoin_reward(500 * DASCOIN_DEFAULT_ASSET_PRECISION);
-  adjust_frequency(200);
-
-  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), vault_id, 200, 200, ""));
-  toggle_reward_queue(true);
-
-  // Wait for the cycles to be distributed:
-  generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
+  issue_dascoin(vault_id, 100);
 
   // Set limit to 10 dascoin
   db.adjust_balance_limit(vault, get_dascoin_asset_id(), 10 * DASCOIN_DEFAULT_ASSET_PRECISION);

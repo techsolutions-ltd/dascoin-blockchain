@@ -57,11 +57,7 @@ BOOST_AUTO_TEST_CASE( successful_orders_test )
 
     set_expiration( db, trx );
 
-    do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), bob_id, 200, 200, ""));
-    toggle_reward_queue(true);
-
-    // Wait for the cycles to be distributed:
-    generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
+    issue_dascoin(bob_id, 100);
 
     BOOST_CHECK_EQUAL( get_balance(bob_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
 
@@ -237,15 +233,8 @@ BOOST_AUTO_TEST_CASE( exchange_test )
     {
         set_expiration( db, trx );
         issue_webasset("1", alice_id, web_assets, web_assets_reserved);
+        issue_dascoin(bob_id, 100);
 
-        adjust_dascoin_reward(500 * DASCOIN_DEFAULT_ASSET_PRECISION);
-        adjust_frequency(200);
-
-        do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), bob_id, 200, 200, ""));
-        toggle_reward_queue(true);
-
-        // Wait for the cycles to be distributed:
-        generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
         check_balances(alice, expected_web_assets, web_assets_reserved_expected);
         BOOST_CHECK_EQUAL( get_balance(bob_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
     };
@@ -312,11 +301,7 @@ BOOST_AUTO_TEST_CASE( account_to_credit_test )
     tether_accounts(alice_id, alicev_id);
     tether_accounts(bob_id, bobv_id);
 
-    do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), bobv_id, 200, 200, ""));
-    toggle_reward_queue(true);
-
-    // Wait for the cycles to be distributed:
-    generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
+    issue_dascoin(bobv_id, 100);
 
     // Set limit to 100 dascoin
     db.adjust_balance_limit(bobv, get_dascoin_asset_id(), 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
@@ -375,11 +360,7 @@ BOOST_AUTO_TEST_CASE( minimum_balance_test )
 
     set_expiration( db, trx );
 
-    do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), bob_id, 200, 200, ""));
-    toggle_reward_queue(true);
-
-    // Wait for the cycles to be distributed:
-    generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
+    issue_dascoin(bob_id, 100);
 
     BOOST_CHECK_EQUAL( get_balance(bob_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
 

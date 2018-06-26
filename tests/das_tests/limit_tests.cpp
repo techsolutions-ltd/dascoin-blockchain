@@ -275,14 +275,7 @@ BOOST_AUTO_TEST_CASE( obey_limit_test )
 
   BOOST_CHECK( !vault.disable_vault_to_wallet_limit );
 
-  adjust_dascoin_reward(500 * DASCOIN_DEFAULT_ASSET_PRECISION);
-  adjust_frequency(200);
-
-  do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), vault_id, 200, 200, ""));
-  toggle_reward_queue(true);
-
-  // Wait for the cycles to be distributed:
-  generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
+  issue_dascoin(vault_id, 100);
 
   // Set limit to 10 dascoin
   db.adjust_balance_limit(vault, get_dascoin_asset_id(), 10 * DASCOIN_DEFAULT_ASSET_PRECISION);
@@ -318,7 +311,7 @@ BOOST_AUTO_TEST_CASE( toggle_limit_dascoin_test )
   BOOST_CHECK( !sender.disable_vault_to_wallet_limit );
 
   // Give this account a bunch of dascoin and disable sending limit:
-  issue_dascoin(sender_id, 10000 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  issue_dascoin(sender_id, 10000);
   BOOST_CHECK_EQUAL( get_balance(sender_id, get_dascoin_asset_id()), 10000 * DASCOIN_DEFAULT_ASSET_PRECISION );
   disable_vault_to_wallet_limit(sender_id);
   BOOST_CHECK( sender.disable_vault_to_wallet_limit );
@@ -326,7 +319,7 @@ BOOST_AUTO_TEST_CASE( toggle_limit_dascoin_test )
   transfer_dascoin_vault_to_wallet(sender_id, receiver_id, 10000 * DASCOIN_DEFAULT_ASSET_PRECISION);
   BOOST_CHECK_EQUAL( get_dascoin_balance(receiver_id), 10000 * DASCOIN_DEFAULT_ASSET_PRECISION );
 
-  issue_dascoin(sender_id, 10000 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  issue_dascoin(sender_id, 10000);
   BOOST_CHECK_EQUAL( get_balance(sender_id, get_dascoin_asset_id()), 10000 * DASCOIN_DEFAULT_ASSET_PRECISION );
   enable_vault_to_wallet_limit(sender_id);
   BOOST_CHECK( !sender.disable_vault_to_wallet_limit );
@@ -342,7 +335,7 @@ BOOST_AUTO_TEST_CASE( update_euro_limit_operation_test )
   ACTOR(receiver);
 
   tether_accounts(receiver_id, sender_id);
-  issue_dascoin(sender_id, 10000 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  issue_dascoin(sender_id, 10000);
 
   BOOST_CHECK_EQUAL( get_dascoin_balance(sender_id), 10000 * DASCOIN_DEFAULT_ASSET_PRECISION );
   BOOST_CHECK( !sender.disable_vault_to_wallet_limit );

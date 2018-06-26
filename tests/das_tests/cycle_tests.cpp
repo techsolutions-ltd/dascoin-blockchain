@@ -100,17 +100,13 @@ BOOST_AUTO_TEST_CASE( issue_cycles_to_license_test )
   // But in fact non_upgradeable_amount is 200:
   BOOST_CHECK_EQUAL( license_record2.non_upgradeable_amount.value, 200 );
 
-  do_op(issue_license_operation(get_license_issuer_id(), charter_id, lic_typ.id,
-                                10, 200, db.head_block_time()));
-
-  toggle_reward_queue(true);
-
-  generate_blocks(db.head_block_time() + fc::hours(24));
+  mint_all_dascoin_from_license(lic_typ.id, charter_id);
 
   BOOST_CHECK_EQUAL( get_balance(charter_id, get_dascoin_asset_id()), 605 * DASCOIN_DEFAULT_ASSET_PRECISION );
 
   // Issue 200 cycles to charter vault:
   do_op(issue_cycles_to_license_operation(get_cycle_issuer_id(), charter_id, lic_typ.id, 200, "foo", "bar"));
+  toggle_reward_queue(true);
 
   auto result_vec = *_dal.get_queue_submissions_with_pos(charter_id).result;
   BOOST_CHECK_EQUAL( result_vec.size(), 1 );
@@ -156,14 +152,7 @@ BOOST_AUTO_TEST_CASE( purchase_cycle_asset_test )
   // No dascoin on the balance, so purchase fails:
   GRAPHENE_REQUIRE_THROW( do_op(purchase_cycle_asset_operation(wallet_id, dsc, 2 * DASCOIN_FREQUENCY_PRECISION, 20)), fc::exception );
 
-  auto president_charter = *(_dal.get_license_type("president_charter"));
-
-  adjust_dascoin_reward(500 * DASCOIN_DEFAULT_ASSET_PRECISION);
-  adjust_frequency(200);
-
-  do_op(issue_license_operation(get_license_issuer_id(), vault_id, president_charter.id, 10, 2, db.head_block_time()));
-  toggle_reward_queue(true);
-  generate_blocks(db.head_block_time() + fc::hours(24));
+  issue_dascoin(vault_id, 4000);
 
   BOOST_CHECK_EQUAL( get_balance(vault_id, get_dascoin_asset_id()), 4000 * DASCOIN_DEFAULT_ASSET_PRECISION );
 

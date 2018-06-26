@@ -717,7 +717,9 @@ void database::daspay_clearing_start()
   }
 
   if (!limit_orders.empty())
+  { try {
     apply_tx(limit_orders);
+  } FC_CAPTURE_AND_LOG( (limit_orders) ) }
 
   modify(dgpo, [&](dynamic_global_property_object& dgpo){
     dgpo.daspay_next_clearing_time = head_block_time() + params.daspay_parameters.clearing_interval_time_seconds;

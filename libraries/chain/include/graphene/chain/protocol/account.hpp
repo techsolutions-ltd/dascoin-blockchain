@@ -554,4 +554,5 @@ FC_REFLECT( graphene::chain::set_chain_authority_operation,
             (issuer)
             (account)
             (kind)
+            (extensions)
           )

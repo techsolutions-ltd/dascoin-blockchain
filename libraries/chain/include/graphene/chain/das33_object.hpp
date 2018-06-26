@@ -38,7 +38,7 @@ namespace graphene { namespace chain {
 
   class das33_project_object : public graphene::db::abstract_object<das33_project_object>
   {
-public:
+  public:
     static const uint8_t space_id = implementation_ids;
     static const uint8_t type_id  = impl_das33_project_object_type;
 
@@ -140,13 +140,13 @@ public:
       das33_project_object,
       indexed_by<
         ordered_unique<
-	  tag<by_id>,
-	  member<object, object_id_type, &object::id>
+          tag<by_id>,
+          member<object, object_id_type, &object::id>
         >,
-	ordered_unique<
-	  tag<by_project_name>,
-	  member<das33_project_object, string, &das33_project_object::name>
-	>
+        ordered_unique<
+          tag<by_project_name>,
+          member<das33_project_object, string, &das33_project_object::name>
+        >
      >
   > das33_project_multi_index_type;
 

@@ -45,17 +45,17 @@ namespace graphene { namespace chain {
     das33_project_create_operation() = default;
 
     explicit das33_project_create_operation(const account_id_type& authority,
-					    const string& name,
-					    const account_id_type& owner,
-					    const asset_id_type& token,
-					    const vector<price>& ratios,
-					    share_type min_to_collect)
-	      : authority(authority)
+                                            const string& name,
+                                            const account_id_type& owner,
+                                            const asset_id_type& token,
+                                            const vector<price>& ratios,
+                                            share_type min_to_collect)
+              : authority(authority)
               , name(name)
-	      , owner(owner)
-	      , token(token)
-	      , ratios(ratios)
-	      , min_to_collect(min_to_collect) {}
+              , owner(owner)
+              , token(token)
+              , ratios(ratios)
+              , min_to_collect(min_to_collect) {}
 
     account_id_type fee_payer() const { return authority; }
     void validate() const;
@@ -84,54 +84,51 @@ namespace graphene { namespace chain {
   };
 
   struct das33_project_delete_operation : public base_operation
-    {
-      struct fee_parameters_type {};
-      asset fee;
+  {
+    struct fee_parameters_type {};
+    asset fee;
 
-      account_id_type       authority;
-      das33_project_id_type project_id;
-      extensions_type       extensions;
+    account_id_type       authority;
+    das33_project_id_type project_id;
+    extensions_type       extensions;
 
-      das33_project_delete_operation() = default;
+    das33_project_delete_operation() = default;
 
-      explicit das33_project_delete_operation(const account_id_type& authority, const das33_project_id_type& project_id)
-  	      : authority(authority)
-  	      , project_id(project_id) {}
+    explicit das33_project_delete_operation(const account_id_type& authority, const das33_project_id_type& project_id)
+             : authority(authority)
+             , project_id(project_id) {}
 
-      account_id_type fee_payer() const
-      {
-	return authority;
-      }
-      void validate() const;
-      share_type calculate_fee(const fee_parameters_type&) const { return 0; }
-    };
+    account_id_type fee_payer() const { return authority; }
+    void validate() const;
+    share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+  };
 
-    struct das33_pledge_asset_operation : public base_operation
-    {
-      struct fee_parameters_type {};
-      asset fee;
+  struct das33_pledge_asset_operation : public base_operation
+  {
+    struct fee_parameters_type {};
+    asset fee;
 
-      account_id_type                 account_id;
-      asset                           pledged;
-      optional<license_type_id_type>  license_id;
-      das33_project_id_type           project_id;
-      extensions_type                 extensions;
+    account_id_type                 account_id;
+    asset                           pledged;
+    optional<license_type_id_type>  license_id;
+    das33_project_id_type           project_id;
+    extensions_type                 extensions;
 
-      das33_pledge_asset_operation() = default;
+    das33_pledge_asset_operation() = default;
 
-      explicit das33_pledge_asset_operation(const account_id_type& account_id,
-                                            const asset& pledged,
-                                            optional<license_type_id_type> license_id,
-                                            const das33_project_id_type& project_id)
-              : account_id(account_id)
-              , pledged(pledged)
-              , license_id(license_id)
-              , project_id(project_id) {}
+    explicit das33_pledge_asset_operation(const account_id_type& account_id,
+                                          const asset& pledged,
+                                          optional<license_type_id_type> license_id,
+                                          const das33_project_id_type& project_id)
+            : account_id(account_id)
+            , pledged(pledged)
+            , license_id(license_id)
+            , project_id(project_id) {}
 
-      account_id_type fee_payer() const { return account_id; }
-      void validate() const;
-      share_type calculate_fee(const fee_parameters_type&) const { return 0; }
-    };
+    account_id_type fee_payer() const { return account_id; }
+    void validate() const;
+    share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+  };
 
 } }  // namespace graphene::chain
 
@@ -151,33 +148,33 @@ FC_REFLECT( graphene::chain::das33_pledge_asset_operation,
 
 FC_REFLECT( graphene::chain::das33_project_create_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::das33_project_create_operation,
-	    (fee)
-	    (authority)
-	    (name)
-	    (owner)
-	    (token)
-	    (ratios)
-	    (min_to_collect)
-	    (extensions)
-	  )
+            (fee)
+            (authority)
+            (name)
+            (owner)
+            (token)
+            (ratios)
+            (min_to_collect)
+            (extensions)
+          )
 
 FC_REFLECT( graphene::chain::das33_project_update_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::das33_project_update_operation,
-	    (fee)
-	    (authority)
-	    (project_id)
-	    (name)
-	    (owner)
-	    (ratios)
-	    (min_to_collect)
-	    (status)
-	    (extensions)
-	  )
+            (fee)
+            (authority)
+            (project_id)
+            (name)
+            (owner)
+            (ratios)
+            (min_to_collect)
+            (status)
+            (extensions)
+          )
 
 FC_REFLECT( graphene::chain::das33_project_delete_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::das33_project_delete_operation,
-	    (fee)
-	    (authority)
-	    (project_id)
-	    (extensions)
-	  )
+            (fee)
+            (authority)
+            (project_id)
+            (extensions)
+          )

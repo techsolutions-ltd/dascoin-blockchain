@@ -80,14 +80,14 @@ namespace graphene { namespace chain {
       auto& d = db();
 
       return d.create<das33_project_object>([&](das33_project_object& dpo){
-	     dpo.name = op.name;
-	     dpo.owner = op.owner;
-	     dpo.token_id = op.token;
-	     dpo.min_to_collect = op.min_to_collect;
-	     dpo.collected = 0;
-	     dpo.token_prices = op.ratios;
-	     dpo.status = das33_project_status::inactive;
-	   }).id;
+             dpo.name = op.name;
+             dpo.owner = op.owner;
+             dpo.token_id = op.token;
+             dpo.min_to_collect = op.min_to_collect;
+             dpo.collected = 0;
+             dpo.token_prices = op.ratios;
+             dpo.status = das33_project_status::inactive;
+           }).id;
     } FC_CAPTURE_AND_RETHROW((op))
   }
 
@@ -118,11 +118,11 @@ namespace graphene { namespace chain {
       auto& d = db();
 
       d.modify<das33_project_object>(*project_to_update, [&](das33_project_object& dpo){
-	if (op.name) dpo.name = *op.name;
-	if (op.owner) dpo.owner = *op.owner;
-	if (op.min_to_collect) dpo.min_to_collect = op.min_to_collect;
-	if (op.ratios.size() > 0) dpo.token_prices = op.ratios;
-	if (op.status) dpo.status = static_cast<das33_project_status>(*op.status);
+        if (op.name) dpo.name = *op.name;
+        if (op.owner) dpo.owner = *op.owner;
+        if (op.min_to_collect) dpo.min_to_collect = op.min_to_collect;
+        if (op.ratios.size() > 0) dpo.token_prices = op.ratios;
+        if (op.status) dpo.status = static_cast<das33_project_status>(*op.status);
       });
 
       return {};
@@ -239,7 +239,7 @@ namespace graphene { namespace chain {
     // Update project
     const auto& project_obj = op.project_id(d);
     d.modify(project_obj, [&](das33_project_object& p){
-        p.collected -= expected.amount;
+        p.collected += expected.amount;
     });
 
     // Create the holder object and return its ID:
@@ -330,6 +330,7 @@ namespace graphene { namespace chain {
       from.spent += op.pledged.amount;
     });
 
+    //TODO: I think we shouldn't do this here
     // Decrease asset supply:
     const auto& asset_obj = op.pledged.asset_id(d);
     d.modify(asset_obj.dynamic_asset_data_id(d), [&](asset_dynamic_data_object& data){

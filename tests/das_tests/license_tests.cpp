@@ -1105,12 +1105,9 @@ BOOST_AUTO_TEST_CASE( upgrade_executed_with_ultility_licences_test )
   generate_blocks(dgpo.next_maintenance_time);
 
   auto queue1 = _dal.get_reward_queue();
-  BOOST_CHECK_EQUAL(queue1[11].amount.value, 2 * DASCOIN_BASE_MANAGER_CYCLES);
-  BOOST_CHECK_EQUAL(queue1[12].amount.value, DASCOIN_BASE_PRESIDENT_CYCLES);
-  BOOST_CHECK_EQUAL(queue1[13].amount.value, 2 * DASCOIN_BASE_EXECUTIVE_CYCLES_NEW_VALUE);
-  BOOST_CHECK_EQUAL(queue1[14].amount.value, 2 * DASCOIN_BASE_STANDARD_CYCLES);
-  BOOST_CHECK_EQUAL(queue1[15].amount.value, 2 * DASCOIN_BASE_PRO_CYCLES);
-  BOOST_CHECK_EQUAL(queue1[16].amount.value, 2 * DASCOIN_BASE_VICE_PRESIDENT_CYCLES_NEW_VALUE);
+  BOOST_CHECK_EQUAL(queue1[11].amount.value, DASCOIN_BASE_PRESIDENT_CYCLES);
+  BOOST_CHECK_EQUAL(queue1[12].amount.value, 2 * DASCOIN_BASE_EXECUTIVE_CYCLES_NEW_VALUE);
+  BOOST_CHECK_EQUAL(queue1[13].amount.value, 2 * DASCOIN_BASE_VICE_PRESIDENT_CYCLES_NEW_VALUE);
 
   generate_blocks(dgpo.next_maintenance_time + 7 * gpo.parameters.maintenance_interval);
 
@@ -1123,7 +1120,7 @@ BOOST_AUTO_TEST_CASE( upgrade_executed_with_ultility_licences_test )
    generate_blocks(dgpo.next_maintenance_time);
 
    auto queue2 = _dal.get_reward_queue();
-   BOOST_CHECK_EQUAL(queue2[17].amount.value, 2 * DASCOIN_BASE_PRESIDENT_CYCLES);
+   BOOST_CHECK_EQUAL(queue2[14].amount.value, 2 * DASCOIN_BASE_PRESIDENT_CYCLES);
 
 
    generate_blocks(dgpo.next_maintenance_time + 3 * gpo.parameters.maintenance_interval);
@@ -1135,9 +1132,8 @@ BOOST_AUTO_TEST_CASE( upgrade_executed_with_ultility_licences_test )
                                             {dgpo.next_maintenance_time + 3 * gpo.parameters.maintenance_interval}}, "foo3_upgrae"));
 
    generate_blocks(dgpo.next_maintenance_time);
-
    auto queue3 = _dal.get_reward_queue();
-   BOOST_CHECK_EQUAL(queue3[18].amount.value, 4 * DASCOIN_BASE_PRESIDENT_CYCLES);
+   BOOST_CHECK_EQUAL(queue3[15].amount.value, 4 * DASCOIN_BASE_PRESIDENT_CYCLES);
 
 } FC_LOG_AND_RETHROW() }
 

@@ -124,7 +124,7 @@ FC_REFLECT( graphene::chain::chain_parameters,
             (web_asset_request_expiration_time_seconds)
             (reward_interval_time_seconds)
             (dascoin_reward_amount)
-	    (starting_cycle_asset_amount)
+            (starting_cycle_asset_amount)
             (enable_cycle_issuing)
             (enable_dascoin_queue)
             (extensions)

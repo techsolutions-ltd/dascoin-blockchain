@@ -1624,6 +1624,18 @@ class wallet_api
       acc_id_share_t_res get_dascoin_balance(const string& account) const;
 
       /**
+       * Transfer cycles from license to wallet.
+       * @param vault Vault - account name or id
+       * @param license License to transfer cycles from
+       * @param amount_of_cycles_to_transfer Symbol of asset to sell
+       * @param wallet Wallet - account name or id
+       */
+      signed_transaction transfer_cycles_from_licence_to_wallet(string vault,
+                                              license_type_id_type license,
+                                              share_type amount_of_cycles_to_transfer,
+                                              string wallet,
+                                              bool broadcast = false);
+      /**
        * Purchase cycles.
        * @param account Account name or id
        * @param amount_to_sell Amount of asset to sell
@@ -1699,6 +1711,291 @@ class wallet_api
       */
       signed_transaction roll_back_public_keys(const string& authority, const string& account, bool broadcast) const;
 
+      /**
+      * Set chain authority
+      * @param issuer             Account that is issuing this operation, must be root administrator
+      * @param account            Account that will become authority, must be special account
+      * @param kind               What authority will be set
+      * @param broadcast          True to broadcast the transaction on the network.
+      */
+      signed_transaction set_chain_authority(const string& issuer, const string& account, const string& kind, bool broadcast) const;
+
+      ///////////////////////////////
+      /// DASPAY:                 ///
+      ///////////////////////////////
+
+      /**
+      * Set DasPay Transaction Ratio.
+      * @param authority           This MUST be daspay authority.
+      * @param debit_ratio         New ratio for DEBIT transactions.
+      * @param credit_ratio        New ratio for CREDIT transactions.
+      * @param broadcast           True to broadcast the transaction on the network.
+      */
+      signed_transaction set_daspay_transaction_ratio(const string& authority, share_type debit_ratio, share_type credit_ratio, bool broadcast = false) const;
+      //////////////////////////
+
+      /**
+      * Create payment service provider.
+      * @param authority                                               This MUST be daspay authority.
+      * @param payment_service_provider_account                        Account used to identify payment_service_provider.
+      * @param payment_service_provider_clearing_accounts              List of clearing accounts for payment_service_provider_account.
+      * @param broadcast                                               True to broadcast the transaction on the network.
+      */
+      signed_transaction create_payment_service_provider(const string& authority, const string& payment_service_provider_account, const vector<string>& payment_service_provider_clearing_accounts, bool broadcast = false) const;
+      //////////////////////////
+
+      /**
+      * Update payment service provider.
+      * @param authority                                               This MUST be daspay authority.
+      * @param payment_service_provider_account                        Account used to identify payment_service_provider.
+      * @param payment_service_provider_clearing_accounts              List of clearing accounts for payment_service_provider_account.
+      * @param broadcast                                               True to broadcast the transaction on the network.
+      */
+       signed_transaction update_payment_service_provider(const string& authority, const string& payment_service_provider_account, const vector<string>& payment_service_provider_clearing_accounts, bool broadcast = false) const;
+      //////////////////////////
+
+      /**
+      * Delete payment service provider.
+      * @param authority                                               This MUST be daspay authority.
+      * @param payment_service_provider_account                        Account used to identify payment_service_provider.
+      * @param broadcast                                               True to broadcast the transaction on the network.
+      */
+      signed_transaction delete_payment_service_provider(const string& authority, const string& payment_service_provider_account, bool broadcast = false) const;
+
+      /**
+      * @brief Get all clearing accounts for all payment service providers.
+      * @return List of payment service provider accounts with their respective clearing accounts.
+      */
+      vector<payment_service_provider_object> get_payment_service_providers() const;
+
+      /**
+       * Register daspay authority.
+       * @param account                                                 Account ID.
+       * @param payment_provider                                        Account of payment provider.
+       * @param public_key_type                                         Public key to register to this Account.
+       * @param broadcast                                               True to broadcast the transaction on the network.
+       */
+      signed_transaction register_daspay_authority(const string& account, const string& payment_provider, public_key_type daspay_public_key, bool broadcast = false) const;
+
+      /**
+       * Unregister daspay authority.
+       * @param account                                                 Account ID.
+       * @param payment_provider                                        Account of payment provider.
+       * @param broadcast                                               True to broadcast the transaction on the network.
+       */
+      signed_transaction unregister_daspay_authority(const string& account, const string& payment_provider, bool broadcast = false) const;
+
+      /**
+       * Reserve asset on account.
+       * @param account                                                 Account ID.
+       * @param asset_amount                                            Asset amount
+       * @param asset_symbol                                            Asset symbol
+       * @param broadcast                                               True to broadcast the transaction on the network.
+       */
+      signed_transaction reserve_asset_on_account(const string& account, const string& asset_amount, const string& asset_symbol, bool broadcast = false) const;
+
+      /**
+       * Unreserve asset on account.
+       * @param account                                                 Account ID.
+       * @param asset_amount                                            Asset amount
+       * @param asset_symbol                                            Asset symbol
+       * @param broadcast                                               True to broadcast the transaction on the network.
+       */
+      signed_transaction unreserve_asset_on_account(const string& account, const string& asset_amount, const string& asset_symbol, bool broadcast = false) const;
+
+      /**
+       * DasPay debit user account.
+       * @param payment_service_provider_account                        Account of payment service provider.
+       * @param auth_key                                                Public key authorized for reserved assets on user account.
+       * @param user_account                                            User account to debit.
+       * @param asset_amount                                            Amount to debit (ie 12.50).
+       * @param asset_symbol                                            Symbol or id of the asset to debit.
+       * @param clearing_account                                        Payment service provider clearing account.
+       * @param transaction_id                                          Payment service provider transaction id.
+       * @param details                                                 Transaction details (optional).
+       * @param broadcast                                               True to broadcast the transaction on the network.
+       */
+      signed_transaction daspay_debit_account(const string& payment_service_provider_account,
+                                              const public_key_type& auth_key,
+                                              const string& user_account,
+                                              const string& asset_amount,
+                                              const string& asset_symbol,
+                                              const string& clearing_account,
+                                              const string& transaction_id,
+                                              optional<string> details,
+                                              bool broadcast = false) const;
+
+      /**
+       * DasPay credit user account.
+       * @param payment_service_provider_account                        Account of payment service provider.
+       * @param user_account                                            User account to debit.
+       * @param asset_amount                                            Amount to debit (ie 12.50).
+       * @param asset_symbol                                            Symbol or id of the asset to debit.
+       * @param clearing_account                                        Payment service provider clearing account.
+       * @param transaction_id                                          Payment service provider transaction id.
+       * @param details                                                 Transaction details (optional).
+       * @param broadcast                                               True to broadcast the transaction on the network.
+       */
+      signed_transaction daspay_credit_account(const string& payment_service_provider_account,
+                                               const string& user_account,
+                                               const string& asset_amount,
+                                               const string& asset_symbol,
+                                               const string& clearing_account,
+                                               const string& transaction_id,
+                                               optional<string> details,
+                                               bool broadcast = false) const;
+
+      /**
+       * Retrieve DasPay data for account
+       * @param account                                                 Account ID.
+       * @return An object containing daspay data of an account
+       */
+      optional<vector<daspay_authority>> get_daspay_authority_for_account(const string& account) const;
+
+      /**
+       * Update various daspay clearing parameters
+       * 
+       * @param authority                                               This MUST be daspay authority.
+       * @param clearing_enabled                                        true if clearing is enabled
+       * @param clearing_interval_time_seconds                          time in seconds between DasPay clearing events
+       * @param collateral_dascoin                                      the amount of DasCoins for credit transactions collateral
+       * @param collateral_webeur                                       the amount of WebEur for clearing collateral
+       * @param broadcast                                               true to broadcast the transaction on the network.
+       */
+      signed_transaction update_daspay_clearing_parameters(const string& authority,
+                                                           optional<bool> clearing_enabled,
+                                                           optional<uint32_t> clearing_interval_time_seconds,
+                                                           optional<share_type> collateral_dascoin,
+                                                           optional<share_type> collateral_webeur,
+                                                           bool broadcast) const;
+
+
+      ///////////////////////////////
+      /// DELAYED OPERATIONS:     ///
+      ///////////////////////////////
+
+      /**
+       * Update various delayed operations resolver parameters
+       *
+       * @param authority                                               This MUST be root authority.
+       * @param delayed_operations_resolver_enabled                     true if delayed operations resolver is enabled
+       * @param delayed_operations_resolver_interval_time_seconds       time in seconds between two delayed operations resolver checks
+       * @param broadcast                                               true to broadcast the transaction on the network.
+       */
+      signed_transaction update_delayed_operations_resolver_parameters(const string& authority, optional<bool> delayed_operations_resolver_enabled,
+                                                           optional<uint32_t> delayed_operations_resolver_interval_time_seconds,
+                                                           bool broadcast) const;
+
+
+      //////////////////////////
+      // DAS33:               //
+      //////////////////////////
+
+      /**
+       * Pledge some asset to das33 project
+       * @param account         Account name or id
+       * @param amount          Amount of asset to pledge
+       * @param symbol          Symbol of asset to pledge
+       * @param license         License to transfer asset from (Optional - Not null when pledging cycles, null otherwise)
+       * @param project         Project id
+       * @param broadcast       True to broadcast the transaction on the network.
+       */
+      signed_transaction das33_pledge_asset(const string& account,
+                                            const string& amount,
+                                            const string& symbol,
+                                            optional<license_type_id_type> license,
+                                            das33_project_id_type project,
+                                            bool broadcast = false) const;
+
+      /**
+       * @brief Return a part of the pledges table.
+       *
+       * @param from            id of the pledge
+       * @param limit           the number of entries to return (starting from the most recent) (max 100)
+       * @returns               a list of pledge holder objects.
+       */
+      vector<das33_pledge_holder_object> get_das33_pledges(das33_pledge_holder_id_type from, uint32_t limit) const;
+
+      /**
+       * @brief Return a list of pledges for specified account.
+       *
+       * @param account         name or id of the account
+       * @returns               a list of pledge holder objects.
+       */
+      vector<das33_pledge_holder_object> get_das33_pledges_by_account(const string& account) const;
+
+      /**
+       * @brief Return a list of pledges for specified project.
+       *
+       * @param project         name or id of das33 project
+       * @param from            id of the first pledge
+       * @param limit           the number of entries to return (starting from the most recent) (max 100)
+       * @returns               a list of pledge holder objects.
+       */
+      vector<das33_pledge_holder_object> get_das33_pledges_by_project(const string& project, das33_pledge_holder_id_type from, uint32_t limit) const;
+
+      /**
+       * @brief Create new das33 project
+       *
+       * @param authority       authority that is issuing this operation, must be das33_administrator
+       * @param name            name of a project
+       * @param owner           acccount id of project owner
+       * @param token           id of a token that will be issued by this project
+       * @param ratios          array of prices of project token
+       * @param min_to_collect  minimum amount of tokens needed for project to be successful
+       * @param broadcast       true to broadcast transaction to network
+       */
+      signed_transaction create_das33_project(const string& authority,
+                                              const string& name,
+                                              const string& owner,
+                                              const string& token,
+                                              const vector<pair<string, string>>& ratios,
+                                              share_type min_to_collect,
+                                              bool broadcast) const;
+
+      /**
+       * @brief Update exsisting das33 project
+       *
+       * @param authority       authority that is issuing this operation, must be das33_administrator
+       * @param project_id      id of a project to edit
+       * @param name            optional new name of a project
+       * @param owner           optional new project owner
+       * @param ratios          array of prices of project token, empty array if it shouldn't be changed
+       * @param min_to_collect  optional new minimum amount
+       * @param status          optional new status of a project
+       * @param broadcast       true to broadcast transaction to network
+       */
+      signed_transaction update_das33_project(const string& authority,
+                                              const string& project_id,
+                                              optional<string> name,
+                                              optional<string> owner,
+                                              const vector<pair<string, string>>& ratios,
+                                              optional<share_type> min_to_collect,
+                                              optional<uint8_t> status,
+                                              bool broadcast) const;
+
+      /**
+       * @brief Delete a das33 project
+       *
+       * @param authority       authority that is issuing this operation, must be das33_administrator
+       * @param project_id      id of a project to delete
+       * @param broadcast       true to broadcast transaction to network
+       */
+      signed_transaction delete_das33_project(const string& authority,
+                                              const string& project_id,
+                                              bool broadcast) const;
+
+      /**
+       * @brief Get das33 projects ordered by project name
+       *
+       * @param lower_bound_name name of the first project
+       * @param limit            the number of projects to return (max 1000)
+       * @returns                a list of das33 project objects
+       */
+      vector<das33_project_object> get_das33_projects(const string& lower_bound_name, uint32_t limit) const;
+
+
+
       //////////////////////////
       // REQUESTS:            //
       //////////////////////////
@@ -1724,7 +2021,7 @@ class wallet_api
       /**
       * @brief Get all wire out holder objects.
       * @return Vector of wire out holder objects.
-      */
+       */
       vector<wire_out_with_fee_holder_object> get_all_wire_out_with_fee_holders() const;
 
       /**
@@ -1733,19 +2030,19 @@ class wallet_api
        */
       vector<reward_queue_object> get_reward_queue() const;
 
-    /**
-     * @brief Return a part of the reward queue.
-     * @return Vector of reward queue objects.
-     */
-    vector<reward_queue_object> get_reward_queue_by_page(uint32_t from, uint32_t amount) const;
+      /**
+       * @brief Return a part of the reward queue.
+       * @return Vector of reward queue objects.
+       */
+      vector<reward_queue_object> get_reward_queue_by_page(uint32_t from, uint32_t amount) const;
 
-    /**
-     * Get all current submissions to reward queue by account id.
-     *
-     * @param account_id Id of account whose submissions should be returned.
-     * @return           All elements on DasCoin reward queue submitted by given account.
-     */
-    acc_id_queue_subs_w_pos_res get_queue_submissions_with_pos(account_id_type account_id) const;
+      /**
+       * Get all current submissions to reward queue by account id.
+       *
+       * @param account_id Id of account whose submissions should be returned.
+       * @return           All elements on DasCoin reward queue submitted by given account.
+       */
+      acc_id_queue_subs_w_pos_res get_queue_submissions_with_pos(account_id_type account_id) const;
 
       void dbg_make_uia(string creator, string symbol);
       void dbg_make_mia(string creator, string symbol);
@@ -1756,7 +2053,9 @@ class wallet_api
 
       void flood_network(string prefix, uint32_t number_of_transactions);
 
-      /**
+
+
+  /**
        * Connect to a new peer
        *
        * @param nodes List of the IP addresses and ports of new nodes
@@ -1979,8 +2278,38 @@ FC_API( graphene::wallet::wallet_api,
         (get_order_book)
         (update_queue_parameters)
         (wire_out)
+        (transfer_cycles_from_licence_to_wallet)
         (purchase_cycle_asset)
         (calculate_cycle_price)
+
+        // DasPay:
+        (set_daspay_transaction_ratio)
+        (create_payment_service_provider)
+        (update_payment_service_provider)
+        (delete_payment_service_provider)
+        (get_payment_service_providers)
+        (register_daspay_authority)
+        (unregister_daspay_authority)
+        (reserve_asset_on_account)
+        (unreserve_asset_on_account)
+        (daspay_debit_account)
+        (daspay_credit_account)
+        (get_daspay_authority_for_account)
+        (update_daspay_clearing_parameters)
+
+        // Das33
+        (das33_pledge_asset)
+        (get_das33_pledges)
+        (get_das33_pledges_by_account)
+        (get_das33_pledges_by_project)
+        (create_das33_project)
+        (update_das33_project)
+        (delete_das33_project)
+        (get_das33_projects)
+
+        // Delayed operations resolver:
+        (update_delayed_operations_resolver_parameters)
+
         // Requests:
         (get_all_webasset_issue_requests)
         (get_all_wire_out_holders)
@@ -1989,4 +2318,6 @@ FC_API( graphene::wallet::wallet_api,
         (get_reward_queue_by_page)
         (get_reward_queue_size)
         (get_queue_submissions_with_pos)
+
+        (set_chain_authority)
       )

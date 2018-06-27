@@ -285,4 +285,21 @@ void database_fixture::mint_all_dascoin_from_license(license_type_id_type licens
 
 } FC_LOG_AND_RETHROW() }
 
+asset_id_type database_fixture::create_new_asset(const string& symbol, share_type max_supply, uint8_t precision, const price& core_exchange_rate)
+{ try {
+
+    auto issuer_id = db.get_global_properties().authorities.webasset_issuer;
+
+    asset_id_type test_asset_id = db.get_index<asset_object>().get_next_id();
+    asset_create_operation creator;
+    creator.issuer = issuer_id;
+    creator.symbol = symbol;
+    creator.common_options.max_supply = max_supply;
+    creator.precision = precision;
+    creator.common_options.core_exchange_rate = core_exchange_rate;
+    do_op(creator);
+
+    return test_asset_id;
+} FC_LOG_AND_RETHROW() }
+
 } }  // namespace graphene::chain

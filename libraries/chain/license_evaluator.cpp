@@ -191,15 +191,18 @@ object_id_type issue_license_evaluator::do_apply(const issue_license_operation& 
   {
      amount = _new_license_obj->amount;
      share_type bonus = amount * op.bonus_percentage / 100;
-     auto origin = fc::reflector<dascoin_origin_kind>::to_string(dascoin_origin_kind::utility_license);
-     std::ostringstream comment;
-     comment << "Bonus "
-             << bonus.value
-             << ".";
-     d.push_queue_submission(origin, op.license, op.account, bonus, op.frequency_lock, comment.str());
-     d.push_applied_operation(
-          record_submit_charter_license_cycles_operation(d.get_chain_authorities().license_issuer, op.account, bonus, op.frequency_lock)
-     );
+     if(bonus > 0)
+     {
+        auto origin = fc::reflector<dascoin_origin_kind>::to_string(dascoin_origin_kind::utility_license);
+        std::ostringstream comment;
+        comment << "Bonus "
+                << bonus.value
+                << ".";
+        d.push_queue_submission(origin, op.license, op.account, bonus, op.frequency_lock, comment.str());
+        d.push_applied_operation(
+             record_submit_charter_license_cycles_operation(d.get_chain_authorities().license_issuer, op.account, bonus, op.frequency_lock)
+        );
+     }
   }
   else
   {

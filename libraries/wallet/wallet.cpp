@@ -726,6 +726,12 @@ public:
       std::copy(owner_keys.begin(), owner_keys.end(), std::inserter(all_keys_for_account, all_keys_for_account.end()));
       all_keys_for_account.insert(account.options.memo_key);
 
+      optional<vector<daspay_authority>> daspay_auth = _remote_db->get_daspay_authority_for_account( account.id );
+      if (daspay_auth.valid())
+      {
+          std::transform(daspay_auth->begin(), daspay_auth->end(), std::inserter(all_keys_for_account, all_keys_for_account.end()), [](const daspay_authority& da) { return da.daspay_public_key; });
+      }
+
       _keys[wif_pub_key] = wif_key;
 
       _wallet.update_account(account);
@@ -1003,6 +1009,379 @@ public:
       return tx;
    } FC_CAPTURE_AND_RETHROW( (name)(owner)(active)(broadcast) ) }
 
+   signed_transaction set_daspay_transaction_ratio(const string& authority, share_type debit_ratio, share_type credit_ratio, bool broadcast = false)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      set_daspay_transaction_ratio_operation op;
+
+      op.authority = get_account(authority).id;
+      op.debit_ratio = debit_ratio;
+      op.debit_ratio = credit_ratio;
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (authority)(debit_ratio)(credit_ratio)(broadcast) ) }
+
+   signed_transaction create_payment_service_provider(const string& authority, const string& payment_service_provider_account, const vector<string>& payment_service_provider_clearing_accounts, bool broadcast = false)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      create_payment_service_provider_operation op;
+
+      op.authority = get_account(authority).id;
+      op.payment_service_provider_account = get_account(payment_service_provider_account).id;
+      for (const auto& acc : payment_service_provider_clearing_accounts)
+        op.payment_service_provider_clearing_accounts.emplace_back(get_account(acc).id);
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (authority)(payment_service_provider_account)(payment_service_provider_clearing_accounts)(broadcast) ) }
+
+   signed_transaction update_payment_service_provider(const string& authority, const string& payment_service_provider_account, const vector<string>& payment_service_provider_clearing_accounts, bool broadcast = false)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      update_payment_service_provider_operation op;
+
+      op.authority = get_account(authority).id;
+      op.payment_service_provider_account = get_account(payment_service_provider_account).id;
+      for (const auto& acc : payment_service_provider_clearing_accounts)
+        op.payment_service_provider_clearing_accounts.emplace_back(get_account(acc).id);
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (authority)(payment_service_provider_account)(payment_service_provider_clearing_accounts)(broadcast) ) }
+
+   signed_transaction delete_payment_service_provider(const string& authority, const string& payment_service_provider_account, bool broadcast = false)
+   { try {
+     FC_ASSERT( !self.is_locked() );
+
+     delete_payment_service_provider_operation op;
+
+     op.authority = get_account(authority).id;
+     op.payment_service_provider_account = get_account(payment_service_provider_account).id;
+
+     signed_transaction tx;
+     tx.operations.push_back(op);
+     set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+     tx.validate();
+
+     return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (authority)(payment_service_provider_account)(broadcast) ) }
+
+   signed_transaction register_daspay_authority(const string& account, const string& payment_provider, public_key_type daspay_public_key, bool broadcast = false)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      account_id_type account_id = get_account(account).id;
+      account_id_type payment_provider_id = get_account(payment_provider).id;
+
+      register_daspay_authority_operation rda_op;
+
+      rda_op.issuer = account_id;
+      rda_op.payment_provider = payment_provider_id;
+      rda_op.daspay_public_key = daspay_public_key;
+
+      signed_transaction tx;
+      tx.operations.push_back(rda_op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (account)(payment_provider)(daspay_public_key)(broadcast) ) }
+
+   signed_transaction unregister_daspay_authority(const string& account, const string& payment_provider, bool broadcast = false)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      account_id_type account_id = get_account(account).id;
+      account_id_type payment_provider_id = get_account(payment_provider).id;
+
+      unregister_daspay_authority_operation urda_op;
+
+      urda_op.issuer = account_id;
+      urda_op.payment_provider = payment_provider_id;
+
+      signed_transaction tx;
+      tx.operations.push_back(urda_op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (account)(payment_provider)(broadcast) ) }
+
+   signed_transaction reserve_asset_on_account(const string& account, const string& asset_amount, const string& asset_symbol, bool broadcast = false)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      account_id_type account_id = get_account(account).id;
+
+      reserve_asset_on_account_operation reserve_op;
+
+      reserve_op.account = account_id;
+      reserve_op.asset_to_reserve = get_asset(asset_symbol).amount_from_string(asset_amount);
+
+      signed_transaction tx;
+      tx.operations.push_back(reserve_op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (account)(asset_amount)(asset_symbol)(broadcast) ) }
+
+   signed_transaction unreserve_asset_on_account(const string& account, const string& asset_amount, const string& asset_symbol, bool broadcast = false)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      account_id_type account_id = get_account(account).id;
+
+      unreserve_asset_on_account_operation unreserve_op;
+
+      unreserve_op.account = account_id;
+      unreserve_op.asset_to_unreserve = get_asset(asset_symbol).amount_from_string(asset_amount);
+
+      signed_transaction tx;
+      tx.operations.push_back(unreserve_op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (account)(asset_amount)(asset_symbol)(broadcast) ) }
+
+   signed_transaction daspay_debit_account(const string& payment_service_provider_account,
+                                           const public_key_type& auth_key,
+                                           const string& user_account,
+                                           const string& asset_amount,
+                                           const string& asset_symbol,
+                                           const string& clearing_account,
+                                           const string& transaction_id,
+                                           optional<string> details,
+                                           bool broadcast = false)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      daspay_debit_account_operation op;
+
+      op.payment_service_provider_account = get_account(payment_service_provider_account).id;
+      op.auth_key = auth_key;
+      op.account = get_account(user_account).id;
+      op.debit_amount = get_asset(asset_symbol).amount_from_string(asset_amount);
+      op.clearing_account = get_account(clearing_account).id;
+      op.transaction_id = transaction_id;
+      op.details = details;
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (payment_service_provider_account)(auth_key)(user_account)(asset_amount)(asset_symbol)(clearing_account)(transaction_id)(details)(broadcast) ) }
+
+   signed_transaction daspay_credit_account(const string& payment_service_provider_account,
+                                            const string& user_account,
+                                            const string& asset_amount,
+                                            const string& asset_symbol,
+                                            const string& clearing_account,
+                                            const string& transaction_id,
+                                            optional<string> details,
+                                            bool broadcast = false)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      daspay_credit_account_operation op;
+
+      op.payment_service_provider_account = get_account(payment_service_provider_account).id;
+      op.account = get_account(user_account).id;
+      op.credit_amount = get_asset(asset_symbol).amount_from_string(asset_amount);
+      op.clearing_account = get_account(clearing_account).id;
+      op.transaction_id = transaction_id;
+      op.details = details;
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (payment_service_provider_account)(user_account)(asset_amount)(asset_symbol)(clearing_account)(transaction_id)(details)(broadcast) ) }
+
+   signed_transaction update_daspay_clearing_parameters(const string& authority,
+                                                        optional<bool> clearing_enabled,
+                                                        optional<uint32_t> clearing_interval_time_seconds,
+                                                        optional<share_type> collateral_dascoin,
+                                                        optional<share_type> collateral_webeur,
+                                                        bool broadcast)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      update_daspay_clearing_parameters_operation op;
+
+      op.authority = get_account(authority).id;
+      op.clearing_enabled = clearing_enabled;
+      op.clearing_interval_time_seconds = clearing_interval_time_seconds;
+      op.collateral_dascoin = collateral_dascoin;
+      op.collateral_webeur = collateral_webeur;
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (clearing_enabled)(clearing_interval_time_seconds)(collateral_dascoin)(collateral_webeur)(broadcast) ) }
+
+   signed_transaction create_das33_project(const string& authority,
+                                           const string& name,
+                                           const string& owner,
+                                           const string& token,
+                                           const vector<pair<string, string>>& ratios,
+                                           share_type min_to_collect,
+                                           bool broadcast)
+   { try {
+         FC_ASSERT( !self.is_locked() );
+
+         das33_project_create_operation op;
+
+         op.authority = get_account(authority).id;
+         op.name = name;
+         op.owner = get_account(owner).id;
+         op.token = get_asset_id(token);
+         op.min_to_collect = min_to_collect;
+
+         FC_ASSERT(ratios.size() % 2 == 0, "Must have even number of assets in ratios");
+         vector<price> prices;
+         for(uint32_t i=0; i<ratios.size(); i+=2)
+         {
+             prices.emplace_back(get_asset(ratios[i].second).amount_from_string(ratios[i].first), get_asset(ratios[i+1].second).amount_from_string(ratios[i+1].first));
+         }
+         op.ratios = prices;
+
+         signed_transaction tx;
+         tx.operations.push_back(op);
+         set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+         tx.validate();
+
+         return sign_transaction(tx, broadcast);
+      } FC_CAPTURE_AND_RETHROW( (authority)(name)(owner)(token)(ratios)(min_to_collect)(broadcast) ) }
+
+   signed_transaction update_das33_project(const string& authority,
+                                           const string& project_id,
+                                           optional<string> name,
+                                           optional<string> owner,
+                                           const vector<pair<string, string>>& ratios,
+                                           optional<share_type> min_to_collect,
+                                           optional<uint8_t> status,
+                                           bool broadcast)
+   { try {
+         FC_ASSERT( !self.is_locked() );
+
+         das33_project_update_operation op;
+
+         op.authority = get_account(authority).id;
+         auto id = maybe_id<das33_project_id_type>(project_id);
+         op.project_id = *id;
+         if (name) op.name = name;
+         if (owner) op.owner = get_account(*owner).id;
+         if (min_to_collect) op.min_to_collect = *min_to_collect;
+         if (status) op.status = *status;
+
+         if (ratios.size() > 0)
+         {
+	   FC_ASSERT(ratios.size() % 2 == 0, "Must have even number of assets in ratios");
+	   vector<price> prices;
+	   for(uint32_t i=0; i<ratios.size(); i+=2)
+	   {
+	       prices.emplace_back(get_asset(ratios[i].second).amount_from_string(ratios[i].first), get_asset(ratios[i+1].second).amount_from_string(ratios[i+1].first));
+	   }
+	   op.ratios = prices;
+         }
+
+         signed_transaction tx;
+         tx.operations.push_back(op);
+         set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+         tx.validate();
+
+         return sign_transaction(tx, broadcast);
+      } FC_CAPTURE_AND_RETHROW( (authority)(project_id)(name)(owner)(ratios)(min_to_collect)(status)(broadcast) ) }
+
+   signed_transaction delete_das33_project(const string& authority,
+                                           const string& project_id,
+                                           bool broadcast)
+   { try {
+         FC_ASSERT( !self.is_locked() );
+
+         das33_project_delete_operation op;
+
+         op.authority = get_account(authority).id;
+         auto id = maybe_id<das33_project_id_type>(project_id);
+         op.project_id = *id;
+
+         signed_transaction tx;
+         tx.operations.push_back(op);
+         set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+         tx.validate();
+
+         return sign_transaction(tx, broadcast);
+      } FC_CAPTURE_AND_RETHROW( (authority)(project_id)(broadcast) ) }
+
+   signed_transaction das33_pledge_asset(const string& account,
+                                         const string& amount,
+                                         const string& symbol,
+                                         optional<license_type_id_type> license,
+                                         das33_project_id_type project,
+                                         bool broadcast)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      das33_pledge_asset_operation op;
+
+      op.account_id = get_account(account).id;
+      op.pledged = get_asset(symbol).amount_from_string(amount);
+      op.license_id = license;
+      op.project_id = project;
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (account)(amount)(license)(project)(broadcast) ) }
+
+   signed_transaction update_delayed_operations_resolver_parameters(const string& authority, optional<bool> delayed_operations_resolver_enabled,
+                                                        optional<uint32_t> delayed_operations_resolver_interval_time_seconds,
+                                                        bool broadcast)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      update_delayed_operations_resolver_parameters_operation op;
+
+      op.authority = get_account(authority).id;
+      op.delayed_operations_resolver_enabled = delayed_operations_resolver_enabled;
+      op.delayed_operations_resolver_interval_time_seconds = delayed_operations_resolver_interval_time_seconds;
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (delayed_operations_resolver_enabled)(delayed_operations_resolver_interval_time_seconds)(broadcast) ) }
+
    signed_transaction tether_accounts(string wallet, string vault, bool broadcast = false)
    { try {
       FC_ASSERT( !self.is_locked() );
@@ -1024,6 +1403,28 @@ public:
 
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (wallet)(vault)(broadcast) ) }
+
+   signed_transaction transfer_cycles_from_licence_to_wallet(string vault, license_type_id_type license, share_type amount_of_cycles_to_transfer, string wallet, bool broadcast = false)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      account_object vault_account = get_account(vault);
+      account_object wallet_account = get_account(wallet);
+
+      transfer_cycles_from_licence_to_wallet_operation transfer_op;
+
+      transfer_op.vault_id = vault_account.id;
+      transfer_op.wallet_id = wallet_account.id;
+      transfer_op.license_id = license;
+      transfer_op.amount = amount_of_cycles_to_transfer;
+
+      signed_transaction tx;
+      tx.operations.push_back(transfer_op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (vault)(license)(amount_of_cycles_to_transfer)(wallet)(broadcast) ) }
 
    signed_transaction purchase_cycle_asset(string account, string amount_to_sell, string symbol_to_sell, double frequency, double amount_of_cycles_to_receive, bool broadcast = false)
    { try {
@@ -2794,6 +3195,26 @@ public:
      return sign_transaction(tx, broadcast);
    }
 
+   signed_transaction set_chain_authority(const string& issuer, const string& account, const string& kind, bool broadcast)
+   {
+    try {
+      FC_ASSERT( !self.is_locked() );
+
+      set_chain_authority_operation op;
+
+      op.issuer = get_account(issuer).id;
+      op.account = get_account(account).id;
+      op.kind = kind;
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees(tx, _remote_db->get_global_properties().parameters.current_fees);
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+    } FC_CAPTURE_AND_RETHROW( (issuer)(account)(kind)(broadcast) )
+   }
+
    void dbg_make_uia(string creator, string symbol)
    {
       asset_options opts;
@@ -3957,6 +4378,13 @@ string wallet_api::gethelp(const string& method)const
       ss << "\n";
       ss << "Use this method to tether a wallet account to a vault account.";
    }
+   else if( method == "transfer_cycles_from_licence_to_wallet" )
+   {
+      ss << "usage: transfer_cycles_from_licence_to_wallet VAULT_ACCOUNT_NAME LICENSE CYCLES_TO_TRANSFER WALLET_ACCOUNT_NAME\n\n";
+      ss << "example: transfer_cycles_from_licence_to_wallet \"vault\" 1.16.15 200 \"wallet\" true\n";
+      ss << "\n";
+      ss << "Use this method to transfer a certain amount of cycles from a license to a wallet";
+   }
    else if( method == "purchase_cycle_asset" )
    {
       ss << "usage: purchase_cycle_asset ACCOUNT_NAME AMOUNT SYMBOL FREQUENCY CYCLES_TO_RECEIVE\n\n";
@@ -4828,6 +5256,11 @@ acc_id_vec_cycle_agreement_res wallet_api::get_full_cycle_balances(const string&
    return my->_remote_db->get_all_cycle_balances(get_account(name_or_id).id);
 }
 
+signed_transaction wallet_api::transfer_cycles_from_licence_to_wallet(string vault, license_type_id_type license, share_type amount_of_cycles_to_transfer, string wallet, bool broadcast)
+{
+    return my->transfer_cycles_from_licence_to_wallet(vault, license, amount_of_cycles_to_transfer, wallet, broadcast);
+}
+
 signed_transaction wallet_api::purchase_cycle_asset(string account, string amount_to_sell, string symbol_to_sell, double frequency, double amount_of_cycles_to_receive, bool broadcast)
 {
     return my->purchase_cycle_asset(account, amount_to_sell, symbol_to_sell, frequency, amount_of_cycles_to_receive, broadcast);
@@ -4872,6 +5305,11 @@ signed_transaction wallet_api::roll_back_public_keys(const string& authority, co
   return my->roll_back_public_keys(authority, account, broadcast);
 }
 
+signed_transaction wallet_api::set_chain_authority(const string& issuer, const string& account, const string& kind, bool broadcast) const
+{
+  return my->set_chain_authority(issuer, account, kind, broadcast);
+}
+
 vector<issue_asset_request_object> wallet_api::get_all_webasset_issue_requests() const
 {
    return my->_remote_db->get_all_webasset_issue_requests();
@@ -4905,6 +5343,206 @@ acc_id_queue_subs_w_pos_res wallet_api::get_queue_submissions_with_pos(account_i
 order_book wallet_api::get_order_book( const string& base, const string& quote, unsigned limit )
 {
    return( my->_remote_db->get_order_book( base, quote, limit ) );
+}
+
+signed_transaction wallet_api::set_daspay_transaction_ratio(const string& authority,
+                                               share_type debit_ratio,
+                                               share_type credit_ratio,
+                                               bool broadcast) const
+{
+   return my->set_daspay_transaction_ratio( authority, debit_ratio, credit_ratio, broadcast );
+}
+
+signed_transaction wallet_api::create_payment_service_provider(const string& authority,
+                                               const string& payment_service_provider_account,
+                                               const vector<string>& payment_service_provider_clearing_accounts,
+                                               bool broadcast) const
+{
+   return my->create_payment_service_provider( authority, payment_service_provider_account, payment_service_provider_clearing_accounts, broadcast );
+}
+
+signed_transaction wallet_api::update_payment_service_provider(const string& authority,
+                                               const string& payment_service_provider_account,
+                                               const vector<string>& payment_service_provider_clearing_accounts,
+                                               bool broadcast) const
+{
+   return my->update_payment_service_provider( authority, payment_service_provider_account, payment_service_provider_clearing_accounts, broadcast );
+}
+
+signed_transaction wallet_api::delete_payment_service_provider(const string& authority,
+                                               const string& payment_service_provider_account,
+                                               bool broadcast) const
+{
+   return my->delete_payment_service_provider( authority, payment_service_provider_account, broadcast );
+}
+
+vector<payment_service_provider_object> wallet_api::get_payment_service_providers() const
+{
+   return my->_remote_db->get_payment_service_providers();
+}
+
+signed_transaction wallet_api::register_daspay_authority(const string& account,
+                                                         const string& payment_provider,
+                                                         public_key_type daspay_public_key,
+                                                         bool broadcast) const
+{
+   return my->register_daspay_authority( account, payment_provider, daspay_public_key, broadcast );
+}
+
+signed_transaction wallet_api::unregister_daspay_authority(const string& account,
+                                                           const string& payment_provider,
+                                                           bool broadcast) const
+{
+   return my->unregister_daspay_authority( account, payment_provider, broadcast );
+}
+
+signed_transaction wallet_api::reserve_asset_on_account(const string& account,
+                                                        const string& asset_amount,
+                                                        const string& asset_symbol,
+                                                        bool broadcast) const
+{
+   return my->reserve_asset_on_account( account, asset_amount, asset_symbol, broadcast );
+}
+
+signed_transaction wallet_api::unreserve_asset_on_account(const string& account,
+                                                          const string& asset_amount,
+                                                          const string& asset_symbol,
+                                                          bool broadcast) const
+{
+   return my->unreserve_asset_on_account( account, asset_amount, asset_symbol, broadcast );
+}
+
+signed_transaction wallet_api::daspay_debit_account(const string& payment_service_provider_account,
+                                                    const public_key_type& auth_key,
+                                                    const string& user_account,
+                                                    const string& asset_amount,
+                                                    const string& asset_symbol,
+                                                    const string& clearing_account,
+                                                    const string& transaction_id,
+                                                    optional<string> details,
+                                                    bool broadcast) const
+{
+   return my->daspay_debit_account( payment_service_provider_account, auth_key, user_account, asset_amount, asset_symbol, clearing_account, transaction_id, details, broadcast );
+}
+
+signed_transaction wallet_api::daspay_credit_account(const string& payment_service_provider_account,
+                                                     const string& user_account,
+                                                     const string& asset_amount,
+                                                     const string& asset_symbol,
+                                                     const string& clearing_account,
+                                                     const string& transaction_id,
+                                                     optional<string> details,
+                                                     bool broadcast) const
+{
+   return my->daspay_credit_account( payment_service_provider_account, user_account, asset_amount, asset_symbol, clearing_account, transaction_id, details, broadcast );
+}
+
+optional<vector<daspay_authority>> wallet_api::get_daspay_authority_for_account(const string& account) const
+{
+    account_object account_obj = my->get_account(account);
+    return my->_remote_db->get_daspay_authority_for_account(account_obj.id);
+}
+
+signed_transaction wallet_api::update_daspay_clearing_parameters(const string& authority,
+                                                                 optional<bool> clearing_enabled,
+                                                                 optional<uint32_t> clearing_interval_time_seconds,
+                                                                 optional<share_type> collateral_dascoin,
+                                                                 optional<share_type> collateral_webeur,
+                                                                 bool broadcast) const
+{
+  return my->update_daspay_clearing_parameters(authority,
+                                               clearing_enabled,
+                                               clearing_interval_time_seconds,
+                                               collateral_dascoin,
+                                               collateral_webeur,
+                                               broadcast);
+}
+
+signed_transaction wallet_api::das33_pledge_asset(const string& account,
+                                                  const string& amount,
+                                                  const string& symbol,
+                                                  optional<license_type_id_type> license,
+                                                  das33_project_id_type project,
+                                                  bool broadcast) const
+{
+   return my->das33_pledge_asset( account, amount, symbol, license, project, broadcast );
+}
+
+vector<das33_pledge_holder_object> wallet_api::get_das33_pledges(das33_pledge_holder_id_type from, uint32_t limit) const
+{
+    return my->_remote_db->get_das33_pledges(from, limit);
+}
+
+vector<das33_pledge_holder_object> wallet_api::get_das33_pledges_by_account(const string& account) const
+{
+   account_object account_obj = my->get_account(account);
+   return my->_remote_db->get_das33_pledges_by_account(account_obj.id);
+}
+
+vector<das33_pledge_holder_object> wallet_api::get_das33_pledges_by_project(const string& project, das33_pledge_holder_id_type from, uint32_t limit) const
+{
+  das33_project_object project_obj = my->_remote_db->get_das33_projects(project, 1)[0];
+    return my->_remote_db->get_das33_pledges_by_project(project_obj.id, from, limit);
+}
+
+
+vector<das33_project_object> wallet_api::get_das33_projects(const string& lower_bound_name, uint32_t limit) const
+{
+    return my->_remote_db->get_das33_projects(lower_bound_name, limit);
+}
+
+signed_transaction wallet_api::create_das33_project(const string& authority,
+                                                    const string& name,
+                                                    const string& owner,
+                                                    const string& token,
+                                                    const vector<pair<string, string>>& ratios,
+                                                    share_type min_to_collect,
+                                                    bool broadcast) const
+{
+    return my->create_das33_project(authority,
+                                    name,
+                                    owner,
+                                    token,
+                                    ratios,
+                                    min_to_collect,
+                                    broadcast);
+}
+
+signed_transaction wallet_api::update_das33_project(const string& authority,
+                                                    const string& project_id,
+                                                    optional<string> name,
+                                                    optional<string> owner,
+                                                    const vector<pair<string, string>>& ratios,
+                                                    optional<share_type> min_to_collect,
+                                                    optional<uint8_t> status,
+                                                    bool broadcast) const
+{
+  return my->update_das33_project(authority,
+                                  project_id,
+                                  name,
+                                  owner,
+                                  ratios,
+                                  min_to_collect,
+                                  status,
+                                  broadcast);
+}
+
+signed_transaction wallet_api::delete_das33_project(const string& authority,
+                                        const string& project_id,
+                                        bool broadcast) const
+{
+  return my->delete_das33_project(authority,
+                                  project_id,
+                                  broadcast);
+}
+
+signed_transaction wallet_api::update_delayed_operations_resolver_parameters(const string& authority, optional<bool> delayed_operations_resolver_enabled,
+                                                                 optional<uint32_t> delayed_operations_resolver_interval_time_seconds,
+                                                                 bool broadcast) const
+{
+  return my->update_delayed_operations_resolver_parameters(authority, delayed_operations_resolver_enabled,
+                                               delayed_operations_resolver_interval_time_seconds,
+                                               broadcast);
 }
 
 signed_block_with_info::signed_block_with_info( const signed_block& block )

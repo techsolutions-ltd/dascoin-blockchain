@@ -314,6 +314,7 @@ struct database_fixture {
    void print_joint_market( const string& syma, const string& symb )const;
    int64_t get_balance( account_id_type account, asset_id_type a )const;
    int64_t get_balance( const account_object& account, const asset_object& a )const;
+   int64_t get_reserved_balance( account_id_type account, asset_id_type a )const;
    int64_t get_dascoin_balance( account_id_type account ) const { return get_balance(account, get_dascoin_asset_id()); }
    vector< operation_history_object > get_operation_history( account_id_type account_id )const;
 
@@ -354,10 +355,13 @@ struct database_fixture {
    account_id_type get_registrar_id() const;
    account_id_type get_pi_validator_id() const;
    account_id_type get_wire_out_handler_id() const;
+   account_id_type get_daspay_administrator_id() const;
+   account_id_type get_das33_administrator_id() const;
    asset_id_type get_web_asset_id() const;
    asset_id_type get_cycle_asset_id() const;
    asset_id_type get_dascoin_asset_id() const;
    frequency_type get_global_frequency() const;
+   const global_property_object::daspay& get_daspay_parameters() const;
 
    // fix_accounts.cpp
    void tether_accounts(account_id_type wallet, account_id_type vault);
@@ -367,6 +371,14 @@ struct database_fixture {
    void disable_vault_to_wallet_limit(account_id_type account_id);
    void set_roll_back_enabled(account_id_type account_id, bool roll_back_enabled);
    void roll_back_public_keys(account_id_type authority, account_id_type account_id);
+
+   // fix_daspay.cpp
+   vector<payment_service_provider_object> get_payment_service_providers() const;
+   void set_daspay_clearing_enabled(bool state);
+
+   // fix_das33.cpp
+   vector<das33_project_object> get_das33_projects() const;
+   vector<das33_pledge_holder_object> get_das33_pledges() const;
 
    // fix_web_assets.cpp
    asset web_asset(share_type amount);
@@ -395,6 +407,7 @@ struct database_fixture {
    void issue_dascoin(account_object& vault_obj, share_type amount);
    void mint_all_dascoin_from_license(license_type_id_type license, account_id_type vault_id, account_id_type wallet_id = account_id_type(),
                                       share_type bonus = 10, share_type frequency_lock = 200);
+   asset_id_type create_new_asset(const string& symbol, share_type max_supply, uint8_t precision, const price& core_exchange_rate);
 
    // fix_pi_limits.cpp
    void update_pi_limits(account_id_type account_id, uint8_t level, limits_type new_limits);

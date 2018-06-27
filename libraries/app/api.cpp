@@ -390,11 +390,21 @@ namespace graphene { namespace app {
                   break;
                  case impl_wire_out_with_fee_holder_object_type:
                   break;
+                 case impl_payment_service_provider_object_type:
+                  break;
+                 case impl_daspay_authority_object_type:
+                  break;
+                 case impl_delayed_operation_object_type:
+                  break;
                  case impl_reward_queue_object_type:
                   break;
                  case impl_frequency_history_record_object_type:
                   break;
                  case impl_witness_delegate_data_colection_object_type:
+                  break;
+                 case impl_das33_project_object_type:
+                  break;
+                 case impl_das33_pledge_holder_object_type:
                   break;
           }
        }

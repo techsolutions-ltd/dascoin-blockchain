@@ -57,6 +57,8 @@ namespace graphene { namespace chain {
           return policy_class::get_amount_to_upgrade(upgradeable);
         else if (p == utility_president)
           return policy_class::get_amount_to_upgrade_utility_president(upgradeable);
+        else
+           FC_THROW("Undefined upgrade policy!");
       }
 
     private:
@@ -98,11 +100,11 @@ namespace graphene { namespace chain {
         time_point_sec issued_on_blockchain;
         upgrade_type balance_upgrade;
         vector<pair<upgrade_event_id_type, time_point_sec>> upgrades;
-        share_type shadow_amount;
 
         using upgrade_policy = detail::policy;
 
         upgrade_policy up_policy;
+        share_type shadow_amount;
 
         license_history_record() = default;
         explicit license_history_record(license_type_id_type license,

@@ -594,5 +594,163 @@ void database::mint_dascoin_rewards()
 
 } FC_CAPTURE_AND_RETHROW() }
 
+void database::daspay_clearing_start()
+{ try {
+  const auto& params = get_global_properties();
+  const auto& dgpo = get_dynamic_global_properties();
+
+  if ( dgpo.daspay_next_clearing_time > head_block_time() )
+    return;
+
+  ilog("clearing smart contract running");
+  const auto& idx = get_index_type<payment_service_provider_index>().indices().get<by_payment_service_provider>();
+  flat_set<account_id_type> clearing_accounts;
+  for (auto it = idx.cbegin(); it != idx.cend(); ++it)
+  {
+    std::copy(it->payment_service_provider_clearing_accounts.begin(), it->payment_service_provider_clearing_accounts.end(), std::inserter(clearing_accounts, clearing_accounts.end()));
+  }
+  ilog("${a} clearing accounts", ("a", clearing_accounts.size()));
+
+  if (clearing_accounts.empty())
+    return;
+
+  const auto& get_limit_orders_prices = [this](const asset_id_type& a, const asset_id_type& b, flat_set<share_type>& prices, bool ascending, uint32_t max_prices) {
+    const auto& limit_order_idx = get_index_type<limit_order_index>();
+    const auto& limit_price_idx = limit_order_idx.indices().get<by_price>();
+    auto limit_itr = limit_price_idx.lower_bound(price::max(a, b));
+    auto limit_end = limit_price_idx.upper_bound(price::min(a, b));
+    auto& asset_a = get(a);
+    auto& asset_b = get(b);
+    double coefficient = asset::scaled_precision(asset_a.precision).value * 1.0 / asset::scaled_precision(asset_b.precision).value;
+    while(limit_itr != limit_end) {
+      double price = ascending ? 1 / limit_itr->sell_price.to_real() : limit_itr->sell_price.to_real();
+      auto p = round((ascending ? price * coefficient : price / coefficient) * DASCOIN_FIAT_ASSET_PRECISION);
+      ilog("p ${a} r ${b}",("a", price)("b", p));
+      prices.insert(static_cast<share_type>(p));
+      if (prices.size() >= max_prices)
+        return;
+      ++limit_itr;
+    }
+  };
+
+  const auto& apply_tx = [this, &params](const vector<limit_order_create_operation>& ops) {
+    bool was_undo_db_enabled = _undo_db.enabled();
+    if (!was_undo_db_enabled)
+      _undo_db.enable();
+    signed_transaction trx;
+    trx.set_reference_block(head_block_id());
+    trx.set_expiration( head_block_time() + fc::seconds( params.parameters.block_interval * (params.parameters.maintenance_skip_slots + 1) * 3 ) );
+
+    std::copy(ops.begin(), ops.end(), std::back_inserter(trx.operations));
+
+    const fee_schedule& current_fees = get_global_properties().parameters.current_fees;
+    for( auto& op : trx.operations )
+      current_fees.set_fee(op);
+
+    apply_transaction(trx, ~0);
+    if (!was_undo_db_enabled)
+      _undo_db.disable();
+  };
+
+  vector<limit_order_create_operation> limit_orders;
+  flat_set<share_type> sell_prices;
+  flat_set<share_type> buy_prices;
+  const auto& das_id = get_dascoin_asset_id();
+  const auto& web_id = get_web_asset_id();
+  get_limit_orders_prices(das_id, web_id, sell_prices, true, 2);
+  get_limit_orders_prices(web_id, das_id, buy_prices, false, 2);
+
+  ilog("${s} sell prices, ${b} buy prices", ("s", sell_prices.size())("b", buy_prices.size()));
+
+  for (const auto& clearing_acc : clearing_accounts)
+  {
+    const fee_schedule& current_fees = get_global_properties().parameters.current_fees;
+    const auto& cycle_balance = get_balance(clearing_acc, get_cycle_asset_id());
+    const auto& fee = current_fees.calculate_fee(limit_order_create_operation());
+    if (fee > cycle_balance)
+    {
+      wlog("Clearing account ${a} has insufficient balance to pay fee (Balance: ${b}, Fee: ${c})", ("a", clearing_acc)("b", to_pretty_string(cycle_balance))("c", to_pretty_string(fee)));
+      continue;
+    }
+
+    const auto& dasc_balance = get_balance(clearing_acc, get_dascoin_asset_id());
+    const auto& webeur_balance = get_balance(clearing_acc, get_web_asset_id());
+
+    if (dasc_balance.amount > params.daspay_parameters.collateral_dascoin)
+    {
+      // If there are no buy orders, do nothing
+      if (buy_prices.empty())
+        continue;
+
+      auto to_sell = dasc_balance - asset{ params.daspay_parameters.collateral_dascoin, get_dascoin_asset_id() };
+      auto price_it = buy_prices.begin();
+      std::advance(price_it, buy_prices.size() - 1); // Use the second price if available
+      share_type buy_price = *price_it;
+
+      // we cannot spend the last dasc
+      if (params.daspay_parameters.collateral_dascoin < 1 * DASCOIN_DEFAULT_ASSET_PRECISION)
+        to_sell -= asset{ 1 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id() };
+
+      const auto& to_buy = asset{ to_sell.amount * buy_price / DASCOIN_DEFAULT_ASSET_PRECISION, get_web_asset_id() };
+
+      ilog("${c} selling ${a} for ${b}", ("c", clearing_acc)("a", to_pretty_string(to_sell))("b", to_pretty_string(to_buy)));
+      limit_orders.emplace_back(limit_order_create_operation{ clearing_acc, to_sell, to_buy, 0, {}, head_block_time() + params.daspay_parameters.clearing_interval_time_seconds });
+    }
+    else if (webeur_balance.amount >= params.daspay_parameters.collateral_webeur && dasc_balance.amount < params.daspay_parameters.collateral_dascoin)
+    {
+      // If there are no sell orders, do nothing
+      if (sell_prices.empty())
+        continue;
+
+      const auto& to_buy = asset{ params.daspay_parameters.collateral_dascoin, get_dascoin_asset_id() } - dasc_balance;
+      auto price_it = sell_prices.begin();
+      std::advance(price_it, sell_prices.size() - 1); // Use the second price if available
+      share_type buy_price = *price_it;
+
+      const auto& to_sell = asset{ to_buy.amount * buy_price / DASCOIN_DEFAULT_ASSET_PRECISION, get_web_asset_id() };
+      ilog("${c} buying ${t} for ${s}",("c", clearing_acc)("t", to_pretty_string(to_buy))("s", to_pretty_string(to_sell)));
+      if (webeur_balance >= to_sell)
+        limit_orders.emplace_back(limit_order_create_operation{ clearing_acc, to_sell, to_buy, 0, {}, head_block_time() + params.daspay_parameters.clearing_interval_time_seconds });
+      else
+        wlog("Clearing account ${a} has insufficient balance ${b}", ("a", clearing_acc)("b", to_pretty_string(webeur_balance)));
+    }
+  }
+
+  if (!limit_orders.empty())
+  { try {
+    apply_tx(limit_orders);
+  } FC_CAPTURE_AND_LOG( (limit_orders) ) }
+
+  modify(dgpo, [&](dynamic_global_property_object& dgpo){
+    dgpo.daspay_next_clearing_time = head_block_time() + params.daspay_parameters.clearing_interval_time_seconds;
+  });
+
+} FC_CAPTURE_AND_RETHROW() }
+
+void database::resolve_delayed_operations()
+{ try {
+  const auto& params = get_global_properties();
+  const auto& dgpo = get_dynamic_global_properties();
+
+  if ( dgpo.next_delayed_operations_resolver_time > head_block_time() )
+    return;
+
+  ilog("resolve delayed operations smart contract running");
+  const auto& idx = get_index_type<delayed_operations_index>().indices().get<by_account>();
+  for (auto it = idx.cbegin(); it != idx.cend(); ++it)
+  {
+    ilog("issued_time ${i}, skip ${s}, h ${h}", ("i", it->issued_time)("s", it->skip)("h", head_block_time()));
+    if (it->issued_time + it->skip <= head_block_time())
+    {
+      it->op.visit(op_visitor(*this));
+      remove(*it);
+    }
+  }
+
+  modify(dgpo, [&](dynamic_global_property_object& dgpo){
+    dgpo.next_delayed_operations_resolver_time = head_block_time() + params.delayed_operations_resolver_interval_time_seconds;
+  });
+
+} FC_CAPTURE_AND_RETHROW() }
 
 } }  // namespace database::chain

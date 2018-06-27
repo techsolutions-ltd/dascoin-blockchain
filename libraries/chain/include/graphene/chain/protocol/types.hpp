@@ -123,6 +123,8 @@ namespace graphene { namespace chain {
       pi_validator = 9,
       wire_out_handler = 10,
       root_administrator = 11,
+      daspay_administrator = 12,
+      das33_administrator = 13,
       CHAIN_AUTHORITY_KIND_COUNT
    };
 
@@ -141,6 +143,13 @@ namespace graphene { namespace chain {
      admin = 1,
      unknown = 2,
      CYCLE_ORIGIN_KIND_COUNT
+   };
+
+   enum das33_project_status
+   {
+     inactive = 0,
+     active = 1,
+     DAS33_PROJECT_STATUS_COUNT
    };
 
    enum asset_issuer_permission_flags
@@ -260,6 +269,11 @@ namespace graphene { namespace chain {
       impl_frequency_history_record_object_type,
       impl_witness_delegate_data_colection_object_type,
       impl_wire_out_with_fee_holder_object_type,
+      impl_daspay_authority_object_type,
+      impl_payment_service_provider_object_type,
+      impl_das33_project_object_type,
+      impl_das33_pledge_holder_object_type,
+      impl_delayed_operation_object_type
    };
 
    //typedef fc::unsigned_int            object_id_type;
@@ -325,6 +339,11 @@ namespace graphene { namespace chain {
    class frequency_history_record_object;
    class witness_delegate_data_colection_type;
    class wire_out_with_fee_holder_object;
+   class daspay_authority_object;
+   class payment_service_provider_object;
+   class das33_project_object;
+   class das33_pledge_holder_object;
+   class delayed_operation_object;
 
    typedef object_id< implementation_ids, impl_global_property_object_type,  global_property_object>                    global_property_id_type;
    typedef object_id< implementation_ids, impl_dynamic_global_property_object_type,  dynamic_global_property_object>    dynamic_global_property_id_type;
@@ -362,7 +381,19 @@ namespace graphene { namespace chain {
        implementation_ids, impl_wire_out_with_fee_holder_object_type, wire_out_with_fee_holder_object
     > wire_out_with_fee_holder_id_type;
 
-   typedef object_id<
+    typedef object_id<
+            implementation_ids, impl_payment_service_provider_object_type, payment_service_provider_object
+    > payment_service_provider_id_type;
+
+    typedef object_id<
+            implementation_ids, impl_daspay_authority_object_type, daspay_authority_object
+    > daspay_authority_id_type;
+
+    typedef object_id<
+            implementation_ids, impl_delayed_operation_object_type, delayed_operation_object
+    > delayed_operation_id_type;
+
+    typedef object_id<
       implementation_ids, impl_reward_queue_object_type, reward_queue_object
    > reward_queue_id_type;
 
@@ -381,6 +412,14 @@ namespace graphene { namespace chain {
    typedef object_id<
          implementation_ids, impl_witness_delegate_data_colection_object_type, witness_delegate_data_colection_type
       > witness_delegate_data_colection_id_type;
+
+   typedef object_id<
+         implementation_ids, impl_das33_project_object_type, das33_project_object
+      > das33_project_id_type;
+
+   typedef object_id<
+         implementation_ids, impl_das33_pledge_holder_object_type, das33_pledge_holder_object
+      > das33_pledge_holder_id_type;
 
    typedef fc::array<char, GRAPHENE_MAX_ASSET_SYMBOL_LENGTH>    symbol_type;
    typedef fc::ripemd160                                        block_id_type;
@@ -524,6 +563,8 @@ REFLECT_ENUM_CHECK( graphene::chain::chain_authority_kind,
                     (pi_validator)
                     (wire_out_handler)
                     (root_administrator)
+                    (daspay_administrator)
+                    (das33_administrator)
                     (CHAIN_AUTHORITY_KIND_COUNT)
                   )
 
@@ -540,6 +581,12 @@ REFLECT_ENUM_CHECK( graphene::chain::cycle_origin_kind,
                     (admin)
                     (unknown)
                     (CYCLE_ORIGIN_KIND_COUNT)
+                  )
+
+REFLECT_ENUM_CHECK( graphene::chain::das33_project_status,
+                    (inactive)
+                    (active)
+                    (DAS33_PROJECT_STATUS_COUNT)
                   )
 
 FC_REFLECT( graphene::chain::public_key_type, (key_data) )
@@ -597,6 +644,11 @@ FC_REFLECT_ENUM( graphene::chain::impl_object_type,
                  (impl_frequency_history_record_object_type)
                  (impl_witness_delegate_data_colection_object_type)
                  (impl_wire_out_with_fee_holder_object_type)
+                 (impl_daspay_authority_object_type)
+                 (impl_payment_service_provider_object_type)
+                 (impl_das33_project_object_type)
+                 (impl_das33_pledge_holder_object_type)
+                 (impl_delayed_operation_object_type)
                )
 
 FC_REFLECT_TYPENAME( graphene::chain::share_type )
@@ -640,6 +692,11 @@ FC_REFLECT_TYPENAME( graphene::chain::issued_asset_record_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::frequency_history_record_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::witness_delegate_data_colection_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::wire_out_with_fee_holder_id_type )
+FC_REFLECT_TYPENAME( graphene::chain::payment_service_provider_id_type )
+FC_REFLECT_TYPENAME( graphene::chain::daspay_authority_id_type )
+FC_REFLECT_TYPENAME( graphene::chain::das33_project_id_type )
+FC_REFLECT_TYPENAME( graphene::chain::das33_pledge_holder_id_type )
+FC_REFLECT_TYPENAME( graphene::chain::delayed_operation_id_type )
 
 FC_REFLECT( graphene::chain::void_t, )
 

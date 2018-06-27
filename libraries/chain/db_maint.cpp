@@ -730,9 +730,9 @@ void database::perform_upgrades(const account_object& account, const upgrade_eve
          return "Manager";
       else if (amount == DASCOIN_BASE_PRO_CYCLES)
          return "Pro";
-      else if (amount == DASCOIN_BASE_EXECUTIVE_CYCLES)
+      else if (amount == DASCOIN_BASE_EXECUTIVE_CYCLES || amount == DASCOIN_BASE_EXECUTIVE_CYCLES_NEW_VALUE)
          return "Executive";
-      else if (amount == DASCOIN_BASE_VICE_PRESIDENT_CYCLES)
+      else if (amount == DASCOIN_BASE_VICE_PRESIDENT_CYCLES || amount == DASCOIN_BASE_VICE_PRESIDENT_CYCLES_NEW_VALUE)
          return "Vice-President";
       return "President";
    };

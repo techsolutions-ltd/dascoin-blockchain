@@ -255,8 +255,13 @@ BOOST_AUTO_TEST_CASE( das33_pledge_dasc_test )
     ACTOR(user);
     VAULT_ACTOR(owner);
 
+    tether_accounts(user_id, owner_id);
+
     // Issue a bunch of assets
-    issue_dascoin(user_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+    issue_dascoin(owner_id, 100);
+    disable_vault_to_wallet_limit(owner_id);
+    transfer_dascoin_vault_to_wallet(owner_id, user_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
     BOOST_CHECK_EQUAL( get_balance(user_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
 
     // Create a das33 project
@@ -307,8 +312,13 @@ BOOST_AUTO_TEST_CASE( das33_pledge_test )
     ACTOR(user);
     VAULT_ACTOR(owner);
 
+    tether_accounts(user_id, owner_id);
+
     // Issue asset
-    issue_dascoin(user_id, 200000);
+    issue_dascoin(owner_id, 2);
+    disable_vault_to_wallet_limit(owner_id);
+    transfer_dascoin_vault_to_wallet(owner_id, user_id, 2 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
     BOOST_CHECK_EQUAL( get_balance(user_id, get_dascoin_asset_id()), 200000 );
 
     // Should Fail: bad project id

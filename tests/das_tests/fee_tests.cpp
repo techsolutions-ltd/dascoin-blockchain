@@ -86,11 +86,7 @@ BOOST_AUTO_TEST_CASE( successful_fee_change_and_fee_charge_with_fee_burn_test )
    tether_accounts(alice_id, alicev_id);
    tether_accounts(bob_id, bobv_id);
 
-   do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), bobv_id, 200, 200, ""));
-   toggle_reward_queue(true);
-
-   // Wait for the cycles to be distributed:
-   generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
+   issue_dascoin(bobv_id, 100);
 
    // Set limit to 100 dascoin
    db.adjust_balance_limit(bobv, get_dascoin_asset_id(), 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
@@ -157,11 +153,7 @@ BOOST_AUTO_TEST_CASE( successful_pool_account_change_and_fee_charge_test )
    tether_accounts(alice_id, alicev_id);
    tether_accounts(bob_id, bobv_id);
 
-   do_op(submit_reserve_cycles_to_queue_operation(get_cycle_issuer_id(), bobv_id, 200, 200, ""));
-   toggle_reward_queue(true);
-
-   // Wait for the cycles to be distributed:
-   generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
+   issue_dascoin(bobv_id, 100);
 
    // Set limit to 100 dascoin
    db.adjust_balance_limit(bobv, get_dascoin_asset_id(), 100 * DASCOIN_DEFAULT_ASSET_PRECISION);

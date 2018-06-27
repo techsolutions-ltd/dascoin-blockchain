@@ -149,6 +149,11 @@ namespace graphene { namespace chain {
       upgrade_type requeue_upgrade;
       upgrade_type return_upgrade;
 
+      bool is_manual_submit()
+      {
+        return (vault_license_kind == license_kind::locked_frequency || vault_license_kind == license_kind::utility);
+      }
+
       void add_license(license_type_id_type license_id, share_type amount, share_type base_amount,
                        share_type bonus_percentage, frequency_type f_lock,
                        time_point_sec activated_at,

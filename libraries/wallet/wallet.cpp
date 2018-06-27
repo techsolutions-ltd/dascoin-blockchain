@@ -5237,6 +5237,11 @@ vector<optional<license_information_object>> wallet_api::get_license_information
    return my->_remote_db->get_license_information(account_ids);
 }
 
+optional<total_cycles_res> wallet_api::get_total_cycles() const
+{
+    return my->_remote_db->get_total_cycles();
+}
+
 acc_id_share_t_res wallet_api::get_account_cycle_balance(const string& name_or_id) const
 {
    if( auto real_id = detail::maybe_id<account_id_type>(name_or_id) )

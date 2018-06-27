@@ -599,8 +599,11 @@ BOOST_AUTO_TEST_CASE( daspay_clearing2_test )
   db.adjust_balance_limit(bar, get_dascoin_asset_id(), 1000 * DASCOIN_DEFAULT_ASSET_PRECISION);
   db.adjust_balance_limit(foobar, get_dascoin_asset_id(), 1000 * DASCOIN_DEFAULT_ASSET_PRECISION);
 
-  issue_dascoin(foo_id, 1000 * DASCOIN_DEFAULT_ASSET_PRECISION);
-  issue_dascoin(clearing_id, 500 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  issue_dascoin(bar_id, 1000);
+  issue_dascoin(foobar_id, 500);
+
+  transfer_dascoin_vault_to_wallet(bar_id, foo_id, 1000 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  transfer_dascoin_vault_to_wallet(foobar_id, clearing_id, 500 * DASCOIN_DEFAULT_ASSET_PRECISION);
 
   issue_webasset("1", clearing_id, 100 * DASCOIN_FIAT_ASSET_PRECISION, 0);
 

@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE( get_dascoin_balances )
 { try {
   VAULT_ACTOR(vault)
 
-  db.issue_asset(vault_id, 1000 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id(), 0);
+  issue_dascoin(vault_id, 1000);
 
   auto res = _dal.get_dascoin_balance(vault_id);
   BOOST_CHECK( res.account_id == vault_id );

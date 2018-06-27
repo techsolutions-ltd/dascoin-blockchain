@@ -84,6 +84,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       fc::variant_object get_config()const;
       chain_id_type get_chain_id()const;
       dynamic_global_property_object get_dynamic_global_properties()const;
+      optional<total_cycles_res> get_total_cycles() const;
 
       // Keys
       vector<vector<account_id_type>> get_key_references( vector<public_key_type> key )const;
@@ -639,6 +640,29 @@ dynamic_global_property_object database_api::get_dynamic_global_properties()cons
 dynamic_global_property_object database_api_impl::get_dynamic_global_properties()const
 {
    return _db.get(dynamic_global_property_id_type());
+}
+
+optional<total_cycles_res> database_api::get_total_cycles() const {
+    return my->get_total_cycles();
+}
+
+optional<total_cycles_res> database_api_impl::get_total_cycles() const {
+    total_cycles_res result;
+    const auto& accounts = _db.get_index_type<account_index>().indices().get<by_id>();
+
+    for (const account_object& acc : accounts)
+    {
+        if (acc.is_vault())
+        {
+            optional<total_cycles_res> vaultCycles = _dal.get_total_cycles(acc.get_id());     
+            if (vaultCycles.valid())
+            {
+                result.total_cycles += vaultCycles->total_cycles;
+                result.total_dascoin += vaultCycles->total_dascoin;
+            }
+        }
+    }
+    return result;
 }
 
 //////////////////////////////////////////////////////////////////////

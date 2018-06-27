@@ -4,6 +4,55 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.4.0] - 2018-06-27
+### Added
+ - New operation: set daspay transaction ratio
+ - New operation: register daspay authority
+ - New operation: unregister daspay authority
+ - New operation: reserve asset on account
+ - New operation: unreserve asset on account
+ - New operation: create payment service provider
+ - New operation: update payment service provider
+ - New operation: delete payment service provider
+ - New operation: daspay debit account
+ - New operation: daspay credit account
+ - New operation: update daspay clearing parameters
+ - New operation: update delayed operations resolver parameters
+ - New operation: das33 pledge asset
+ - New operation: das33 project create
+ - New operation: das33 project update
+ - New operation: das33 project delete
+ - New operation: set chain authority
+ - Clearing smart contract
+ - Delayed operations resolver smart contract
+ - New license kind: utility
+ - New authorities: daspay_administrator and das33_administrator
+ - New query: get total cycles
+ - New query: get daspay authority for account
+ - New query: get payment service providers
+ - New query: get das33 projects
+ - New query: get das33 pledges
+ - New query: get das33 pledges by account
+ - New query: get das33 pledges by project
+ - Cli Wallet: new method set daspay transaction ratio
+ - Cli Wallet: new methods to create, update and delete payment service provide
+ - Cli Wallet: new methods to register and unregister daspay authority
+ - Cli Wallet: new methods to reserve and unreserve asset on account
+ - Cli Wallet: new method daspay debit
+ - Cli Wallet: new method daspay credit
+ - Cli Wallet: new method update clearing parameters
+ - Cli Wallet: new method update delayed operations resolver parameters
+ - Cli Wallet: new method get daspay authority for account
+ - Cli Wallet: new method das33 pledge asset
+ - Cli Wallet: new method get das33 pledges
+ - Cli Wallet: new method get das33 pledges by account
+ - Cli Wallet: new method get das33 pledges by project
+ - Cli Wallet: new methods to create, update and delete project
+ - Cli Wallet: new method get das33 projects
+
+### Updated
+ - License upgrade system updated to handle utility licences
+
 ## [0.3.2] - 2018-05-31
 ### Added
  - New operations: roll back public key, set enable rollback

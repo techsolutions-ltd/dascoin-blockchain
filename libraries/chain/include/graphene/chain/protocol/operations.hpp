@@ -44,6 +44,8 @@
 #include <graphene/chain/protocol/witness.hpp>
 #include <graphene/chain/protocol/worker.hpp>
 #include <graphene/chain/protocol/fee_operations.hpp>
+#include <graphene/chain/protocol/daspay_operations.hpp>
+#include <graphene/chain/protocol/das33_operations.hpp>
 
 namespace graphene { namespace chain {
 
@@ -175,7 +177,26 @@ namespace graphene { namespace chain {
 
             fee_pool_cycles_submit_operation,
 
-           // Virtual operations below this point:
+            set_chain_authority_operation,
+            register_daspay_authority_operation,
+            unregister_daspay_authority_operation,
+            set_daspay_transaction_ratio_operation,
+            create_payment_service_provider_operation,
+            update_payment_service_provider_operation,
+            delete_payment_service_provider_operation,
+            reserve_asset_on_account_operation,
+            unreserve_asset_on_account_operation,
+            daspay_debit_account_operation,
+            daspay_credit_account_operation,
+            update_daspay_clearing_parameters_operation,
+            update_delayed_operations_resolver_parameters_operation,
+
+            das33_project_create_operation,
+            das33_project_update_operation,
+            das33_project_delete_operation,
+            das33_pledge_asset_operation,
+
+            // Virtual operations below this point:
 
             record_submit_reserve_cycles_to_queue_operation,  // TODO: should we keep this op?
             record_submit_charter_license_cycles_operation,  // TODO: should we keep this op?
@@ -189,7 +210,8 @@ namespace graphene { namespace chain {
             asset_settle_cancel_operation,
             fill_order_operation,
             wire_out_result_operation,
-            wire_out_with_fee_result_operation
+            wire_out_with_fee_result_operation,
+            unreserve_completed_operation
    > operation;
 
    /// @} // operations group

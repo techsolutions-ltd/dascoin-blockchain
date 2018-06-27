@@ -47,6 +47,8 @@
 #include <graphene/chain/wire_object.hpp>
 #include <graphene/chain/wire_out_with_fee_object.hpp>
 #include <graphene/chain/witness_object.hpp>
+#include <graphene/chain/daspay_object.hpp>
+#include <graphene/chain/das33_object.hpp>
 
 #include <graphene/market_history/market_history_plugin.hpp>
 
@@ -144,10 +146,18 @@ struct cycle_price
 
 struct dasc_holder
 {
-    account_id_type           holder;
-    uint32_t                  vaults;
-    share_type                amount;
+   account_id_type            holder;
+   uint32_t                   vaults;
+   share_type                 amount;
 };
+
+struct daspay_authority
+{
+   account_id_type            payment_provider;
+   public_key_type            daspay_public_key;
+   optional<string>           memo;
+};
+
 
 /**
  * @brief The database_api class implements the RPC API for the chain database.
@@ -265,6 +275,11 @@ class database_api
        * @brief Retrieve the current @ref dynamic_global_property_object
        */
       dynamic_global_property_object get_dynamic_global_properties() const;
+
+      /**
+       * @brief Get the total amount of cycles and total potential amount of dascoin
+       */
+      optional<total_cycles_res> get_total_cycles() const;
 
       //////////
       // Keys //
@@ -861,7 +876,59 @@ class database_api
        */
       vector<dasc_holder> get_top_dasc_holders() const;
 
-   private:
+      //////////////////////////
+      // DASPAY:              //
+      //////////////////////////
+
+      /**
+       * @brief Get all clearing accounts for all payment service providers.
+       * @return List of payment service provider accounts with their respective clearing accounts.
+       */
+      vector<payment_service_provider_object> get_payment_service_providers() const;
+
+      /**
+       * @brief Get daspay authority data for a specified account
+       * @return daspay_authority structure (optional)
+       */
+      optional<vector<daspay_authority>> get_daspay_authority_for_account(account_id_type account) const;
+
+      //////////////////////////
+      // DAS33:               //
+      //////////////////////////
+
+      /**
+       * @brief Get all das33 pledges
+       * @params from pledges starting with this id will be returned
+       * @params limit number of pledges to return, max 100
+       * @return vector of das33 pledge objects
+       */
+      vector<das33_pledge_holder_object> get_das33_pledges(das33_pledge_holder_id_type from, uint32_t limit) const;
+
+      /**
+      * @brief Get all das33 pledges made by an account
+      * @params account id of account
+      * @return vector of das33 pledge objects
+      */
+      vector<das33_pledge_holder_object> get_das33_pledges_by_account(account_id_type account) const;
+
+      /**
+      * @brief Get das33 pledges for a project
+      * @params project id of a project
+      * @params from pledges starting with this id will be returned
+      * @params limit number of pledges to return, max 100
+      * @return vector of das33 pledge objects
+      */
+      vector<das33_pledge_holder_object> get_das33_pledges_by_project(das33_project_id_type project, das33_pledge_holder_id_type from, uint32_t limit) const;
+
+      /**
+      * @brief Get all das33 projects
+      * @params lower_bound_name projects starting with this name will be returned
+      * @params limit number of projects to return, max 100
+      * @return vector of das33 project objects
+      */
+      vector<das33_project_object> get_das33_projects(const string& lower_bound_name, uint32_t limit)const;
+
+private:
       std::shared_ptr< database_api_impl > my;
 };
 
@@ -876,6 +943,7 @@ FC_REFLECT( graphene::app::agregated_limit_orders_with_same_price, (price)(base_
 FC_REFLECT( graphene::app::limit_orders_grouped_by_price, (buy)(sell) );
 FC_REFLECT( graphene::app::cycle_price, (cycle_amount)(asset_amount)(frequency) );
 FC_REFLECT( graphene::app::dasc_holder, (holder)(vaults)(amount) );
+FC_REFLECT( graphene::app::daspay_authority, (payment_provider)(daspay_public_key)(memo) );
 
 FC_API( graphene::app::database_api,
    // Objects
@@ -901,6 +969,7 @@ FC_API( graphene::app::database_api,
    (get_config)
    (get_chain_id)
    (get_dynamic_global_properties)
+   (get_total_cycles)
 
    // Keys
    (get_key_references)
@@ -1015,4 +1084,14 @@ FC_API( graphene::app::database_api,
 
    // Top dascoin holders
    (get_top_dasc_holders)
+
+   // DasPay
+   (get_payment_service_providers)
+   (get_daspay_authority_for_account)
+
+   // Das33
+   (get_das33_pledges)
+   (get_das33_pledges_by_account)
+   (get_das33_pledges_by_project)
+   (get_das33_projects)
 )

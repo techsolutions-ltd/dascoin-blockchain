@@ -1124,6 +1124,11 @@ int64_t database_fixture::get_balance( const account_object& account, const asse
   return db.get_balance(account.get_id(), a.get_id()).amount.value;
 }
 
+int64_t database_fixture::get_reserved_balance( account_id_type account, asset_id_type a )const
+{
+  return db.get_balance_object(account, a).reserved.value;
+}
+
 vector< operation_history_object > database_fixture::get_operation_history( account_id_type account_id )const
 {
    vector< operation_history_object > result;

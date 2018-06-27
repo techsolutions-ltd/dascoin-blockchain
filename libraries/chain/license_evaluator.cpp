@@ -184,7 +184,31 @@ void_result issue_license_evaluator::do_evaluate(const issue_license_operation& 
 object_id_type issue_license_evaluator::do_apply(const issue_license_operation& op)
 { try {
   auto& d = db();
-  share_type amount = detail::apply_percentage(_new_license_obj->amount, op.bonus_percentage);
+  auto kind = _new_license_obj->kind;
+  share_type amount;
+
+  if ( kind == license_kind::utility )
+  {
+     amount = _new_license_obj->amount;
+     share_type bonus = amount * op.bonus_percentage / 100;
+     if(bonus > 0)
+     {
+        auto origin = fc::reflector<dascoin_origin_kind>::to_string(dascoin_origin_kind::utility_license);
+        std::ostringstream comment;
+        comment << "Bonus "
+                << bonus.value
+                << ".";
+        d.push_queue_submission(origin, op.license, op.account, bonus, op.frequency_lock, comment.str());
+        d.push_applied_operation(
+             record_submit_charter_license_cycles_operation(d.get_chain_authorities().license_issuer, op.account, bonus, op.frequency_lock)
+        );
+     }
+  }
+  else
+  {
+     amount = detail::apply_percentage(_new_license_obj->amount, op.bonus_percentage);
+  }
+
   license_information_id_type lic_info_id;
 
   if ( nullptr == _license_information_obj )
@@ -216,8 +240,7 @@ object_id_type issue_license_evaluator::do_apply(const issue_license_operation& 
     });
   }
 
-  auto kind = _new_license_obj->kind;
-  if ( kind == license_kind::regular || kind == license_kind::locked_frequency )
+  if ( kind == license_kind::regular || kind == license_kind::locked_frequency || kind == license_kind::utility)
   {
     d.issue_cycles(op.account, amount);
   }

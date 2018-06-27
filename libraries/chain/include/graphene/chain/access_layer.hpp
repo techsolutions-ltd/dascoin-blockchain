@@ -62,6 +62,19 @@ struct cycle_agreement {
     frequency_type frequency_lock = 0;
 };
 
+struct total_cycles_res {
+
+    total_cycles_res() = default;
+    total_cycles_res(share_type total_cycles, share_type total_dascoin)
+        : total_cycles(total_cycles)
+        , total_dascoin(total_dascoin)
+    {
+    }
+
+    share_type total_cycles = 0;
+    share_type total_dascoin = 0;
+};
+
 struct acc_id_share_t_res : public acc_id_res {
 
     using result_t = optional<share_type>;
@@ -253,6 +266,7 @@ class database_access_layer {
     acc_id_share_t_res get_free_cycle_balance(account_id_type id) const;
     acc_id_vec_cycle_agreement_res get_all_cycle_balances(account_id_type id) const;
     acc_id_share_t_res get_dascoin_balance(account_id_type id) const;
+    optional<total_cycles_res> get_total_cycles(account_id_type id) const;
 
     vector<acc_id_share_t_res> get_free_cycle_balances_for_accounts(vector<account_id_type> ids) const;
     vector<acc_id_vec_cycle_agreement_res> get_all_cycle_balances_for_accounts(vector<account_id_type> ids) const;
@@ -353,6 +367,7 @@ class database_access_layer {
 }  // namespace graphene::chain
 
 FC_REFLECT(graphene::chain::cycle_agreement, (cycles)(frequency_lock))
+FC_REFLECT(graphene::chain::total_cycles_res, (total_cycles)(total_dascoin))
 
 FC_REFLECT(graphene::chain::acc_id_res, (account_id))
 FC_REFLECT_DERIVED(graphene::chain::acc_id_share_t_res, (graphene::chain::acc_id_res), (result))

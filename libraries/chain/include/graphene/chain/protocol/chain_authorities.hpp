@@ -49,6 +49,10 @@ namespace graphene { namespace chain {
     account_id_type pi_validator;
     // Handling of wire_out payments:
     account_id_type wire_out_handler;
+    // Daspay:
+    account_id_type daspay_administrator;
+    // Das33:
+    account_id_type das33_administrator;
 
     LINK_ENUM_TO_FIELDS( chain_authority_kind,
                          (root_administrator)
@@ -62,6 +66,8 @@ namespace graphene { namespace chain {
                          (registrar)
                          (pi_validator)
                          (wire_out_handler)
+                         (daspay_administrator)
+                         (das33_administrator)
                        );
 
   };
@@ -80,4 +86,6 @@ FC_REFLECT( graphene::chain::chain_authorities,
             (registrar)
             (pi_validator)
             (wire_out_handler)
+            (daspay_administrator)
+            (das33_administrator)
           );

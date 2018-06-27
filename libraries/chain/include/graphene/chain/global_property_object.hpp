@@ -55,6 +55,19 @@ namespace graphene { namespace chain {
          vector<committee_member_id_type>   active_committee_members; // updated once per maintenance interval
          flat_set<witness_id_type>          active_witnesses; // updated once per maintenance interval
          // n.b. witness scheduling is done by witness_schedule object
+
+         struct daspay
+         {
+           bool clearing_enabled = DASPAY_DEFAULT_CLEARING_ENABLED; ///< by default off
+           uint32_t clearing_interval_time_seconds = DASPAY_DEFAULT_CLEARING_INTERVAL_TIME_SECONDS; ///< in seconds
+           share_type collateral_dascoin = DASPAY_DEFAULT_CLEARING_COLLATERAL_DASC; ///< by default set to 0
+           share_type collateral_webeur = DASPAY_DEFAULT_CLEARING_COLLATERAL_WEBEUR; ///< by default set to 0
+         };
+         daspay daspay_parameters;
+
+         bool delayed_operations_resolver_enabled = DASCOIN_DEFAULT_DELAYED_OPERATIONS_RESOLVER_ENABLED; ///< by default off
+         uint32_t delayed_operations_resolver_interval_time_seconds = DASCOIN_DEFAULT_DELAYED_OPERATIONS_RESOLVER_INTERVAL_TIME_SECONDS; ///< in seconds
+
    };
 
    /**
@@ -134,6 +147,18 @@ namespace graphene { namespace chain {
          frequency_type frequency;
 
          /**
+          * DasPay
+          */
+         time_point_sec daspay_next_clearing_time = fc::time_point_sec();
+         share_type daspay_debit_transaction_ratio = 0;
+         share_type daspay_credit_transaction_ratio = 0;
+
+         /**
+          * Delayed operations resolver
+          */
+         time_point_sec next_delayed_operations_resolver_time = fc::time_point_sec();
+
+         /**
           * dynamic_flags specifies chain state properties that can be
           * expressed in one bit.
           */
@@ -209,6 +234,10 @@ FC_REFLECT_DERIVED( graphene::chain::dynamic_global_property_object, (graphene::
                     (last_minted_submission_num)
                     (max_queue_submission_num)
                     (frequency)
+                    (daspay_debit_transaction_ratio)
+                    (daspay_credit_transaction_ratio)
+                    (daspay_next_clearing_time)
+                    (next_delayed_operations_resolver_time)
                     (dynamic_flags)
                     (last_irreversible_block_num)
                     (next_dascoin_reward_time)
@@ -218,6 +247,13 @@ FC_REFLECT_DERIVED( graphene::chain::dynamic_global_property_object, (graphene::
                     (fee_pool_account_id)
                   )
 
+FC_REFLECT( graphene::chain::global_property_object::daspay,
+            (clearing_enabled)
+            (clearing_interval_time_seconds)
+            (collateral_dascoin)
+            (collateral_webeur)
+          )
+
 FC_REFLECT_DERIVED( graphene::chain::global_property_object, (graphene::db::object),
                     (parameters)
                     (pending_parameters)
@@ -225,4 +261,7 @@ FC_REFLECT_DERIVED( graphene::chain::global_property_object, (graphene::db::obje
                     (active_committee_members)
                     (authorities)
                     (active_witnesses)
+                    (daspay_parameters)
+                    (delayed_operations_resolver_enabled)
+                    (delayed_operations_resolver_interval_time_seconds)
                   )

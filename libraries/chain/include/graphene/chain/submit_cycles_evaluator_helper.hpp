@@ -88,7 +88,7 @@ namespace graphene { namespace chain { namespace detail {
                 ("dsc_max_limit", DASCOIN_MAX_DASCOIN_SUPPLY * DASCOIN_DEFAULT_ASSET_PRECISION)
               );
 
-	    return &license_information_obj;
+      return &license_information_obj;
     }
 
     template<typename OperationType>

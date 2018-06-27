@@ -398,8 +398,38 @@ namespace graphene { namespace chain {
 
      set_starting_cycle_asset_amount_operation() = default;
      explicit set_starting_cycle_asset_amount_operation(account_id_type issuer, uint32_t new_amount)
-	 : issuer(issuer)
-	 , new_amount(new_amount) {}
+       : issuer(issuer)
+       , new_amount(new_amount) {}
+
+     account_id_type fee_payer() const { return issuer; }
+     void validate() const {};
+     share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+   };
+
+   /**
+    *
+    */
+   struct set_chain_authority_operation : public base_operation
+   {
+     struct fee_parameters_type {};
+     asset fee;
+
+     /// Operation issuer, must be root authority
+     account_id_type issuer;
+
+     /// Account to assign authority role to
+     account_id_type account;
+
+     /// Kind of chain authority that will be assigned
+     string kind;
+
+     extensions_type extensions;
+
+     set_chain_authority_operation() = default;
+     explicit set_chain_authority_operation(account_id_type issuer, account_id_type account, string kind)
+       : issuer(issuer)
+       , account(account)
+       , kind(kind) {}
 
      account_id_type fee_payer() const { return issuer; }
      void validate() const {};
@@ -500,7 +530,7 @@ FC_REFLECT( graphene::chain::set_roll_back_enabled_operation,
             (account)
             (roll_back_enabled)
             (extensions)
-)
+          )
 
 FC_REFLECT( graphene::chain::roll_back_public_keys_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::roll_back_public_keys_operation,
@@ -508,12 +538,21 @@ FC_REFLECT( graphene::chain::roll_back_public_keys_operation,
             (authority)
             (account)
             (extensions)
-)
+          )
 
 FC_REFLECT( graphene::chain::set_starting_cycle_asset_amount_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::set_starting_cycle_asset_amount_operation,
-	    (fee)
-	    (issuer)
-	    (new_amount)
-	    (extensions)
-	  )
+            (fee)
+            (issuer)
+            (new_amount)
+            (extensions)
+          )
+
+FC_REFLECT( graphene::chain::set_chain_authority_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::set_chain_authority_operation,
+            (fee)
+            (issuer)
+            (account)
+            (kind)
+            (extensions)
+          )

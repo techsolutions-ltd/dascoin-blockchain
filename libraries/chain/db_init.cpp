@@ -53,6 +53,8 @@
 #include <graphene/chain/witness_object.hpp>
 #include <graphene/chain/witness_schedule_object.hpp>
 #include <graphene/chain/worker_object.hpp>
+#include <graphene/chain/daspay_object.hpp>
+#include <graphene/chain/das33_object.hpp>
 
 #include <graphene/chain/account_evaluator.hpp>
 #include <graphene/chain/asset_evaluator.hpp>
@@ -74,6 +76,8 @@
 #include <graphene/chain/witness_evaluator.hpp>
 #include <graphene/chain/worker_evaluator.hpp>
 #include <graphene/chain/change_fee_evaluator.hpp>
+#include <graphene/chain/daspay_evaluator.hpp>
+#include <graphene/chain/das33_evaluator.hpp>
 
 #include <graphene/chain/protocol/fee_schedule.hpp>
 
@@ -155,6 +159,9 @@ const uint8_t wire_out_holder_object::type_id;
 
 const uint8_t wire_out_with_fee_holder_object::space_id;
 const uint8_t wire_out_with_fee_holder_object::type_id;
+
+const uint8_t payment_service_provider_object::space_id;
+const uint8_t payment_service_provider_object::type_id;
 
 const uint8_t reward_queue_object::space_id;
 const uint8_t reward_queue_object::type_id;
@@ -266,6 +273,23 @@ void database::initialize_evaluators()
    register_evaluator<set_roll_back_enabled_evaluator>();
    register_evaluator<roll_back_public_keys_evaluator>();
    register_evaluator<fee_pool_cycles_submit_evaluator>();
+   register_evaluator<set_chain_authority_evaluator>();
+   register_evaluator<register_daspay_authority_evaluator>();
+   register_evaluator<unregister_daspay_authority_evaluator>();
+   register_evaluator<set_daspay_transaction_ratio_evaluator>();
+   register_evaluator<create_payment_service_provider_evaluator>();
+   register_evaluator<update_payment_service_provider_evaluator>();
+   register_evaluator<delete_payment_service_provider_evaluator>();
+   register_evaluator<reserve_asset_on_account_evaluator>();
+   register_evaluator<unreserve_asset_on_account_evaluator>();
+   register_evaluator<daspay_debit_account_evaluator>();
+   register_evaluator<daspay_credit_account_evaluator>();
+   register_evaluator<update_daspay_clearing_parameters_evaluator>();
+   register_evaluator<das33_project_create_evaluator>();
+   register_evaluator<das33_project_update_evaluator>();
+   register_evaluator<das33_project_delete_evaluator>();
+   register_evaluator<das33_pledge_asset_evaluator>();
+   register_evaluator<update_delayed_operations_resolver_parameters_evaluator>();
 }
 
 void database::initialize_indexes()
@@ -323,6 +347,11 @@ void database::initialize_indexes()
    add_index<primary_index<frequency_history_record_index>>();
    add_index<primary_index<witness_delegate_data_index > >();
    add_index<primary_index<wire_out_with_fee_holder_index>>();
+   add_index<primary_index<daspay_authority_index>>();
+   add_index<primary_index<payment_service_provider_index>>();
+   add_index<primary_index<das33_project_index>>();
+   add_index<primary_index<das33_pledge_holder_index>>();
+   add_index<primary_index<delayed_operations_index>>();
 }
 
 account_id_type database::initialize_chain_authority(const string& kind_name, const string& acc_name)
@@ -428,6 +457,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
        a.membership_expiration_date = time_point_sec::maximum();
        a.network_fee_percentage = GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
        a.lifetime_referrer_fee_percentage = GRAPHENE_100_PERCENT - GRAPHENE_DEFAULT_NETWORK_PERCENT_OF_FEE;
+       create_empty_balance(a.id, get_cycle_asset_id());
    }).get_id() == GRAPHENE_TEMP_ACCOUNT);
    FC_ASSERT(create<account_object>([this](account_object& a) {
        a.kind = account_kind::special;
@@ -580,11 +610,24 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       remove( asset_obj );
    }
 
+   // Create null das33 project and pledge
+   create<das33_project_object>( [&](das33_project_object& a){});
+   create<das33_pledge_holder_object>( [&](das33_pledge_holder_object& a){});
+
    chain_id_type chain_id = genesis_state.compute_chain_id();
 
    // Create global properties
    create<global_property_object>([&](global_property_object& p) {
+       auto fee_schedule_temp = fee_schedule::get_default();
        p.parameters = genesis_state.initial_parameters;
+       for(auto param : fee_schedule_temp.parameters)
+       {
+          if( p.parameters.current_fees->parameters.find(param) == p.parameters.current_fees->parameters.end() )
+          {
+             p.parameters.current_fees->parameters.insert(param);
+          }
+       }
+
        // Set fees to zero initially, so that genesis initialization needs not pay them
        // We'll fix it at the end of the function
        p.parameters.current_fees->zero_all_fees();
@@ -838,6 +881,14 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    initialize_chain_authority("registrar", genesis_state.initial_registrar.owner_name);
    initialize_chain_authority("pi_validator", genesis_state.initial_personal_identity_validation_authority.owner_name);
    initialize_chain_authority("wire_out_handler", genesis_state.initial_wire_out_handler.owner_name);
+   if (genesis_state.initial_daspay_administrator_authority.owner_name.length() > 0)
+   {
+     initialize_chain_authority("daspay_administrator", genesis_state.initial_daspay_administrator_authority.owner_name);
+   }
+   if (genesis_state.initial_das33_administrator_authority.owner_name.length() > 0)
+   {
+     initialize_chain_authority("das33_administrator", genesis_state.initial_das33_administrator_authority.owner_name);
+   }
 
    // Set up web asset issuer and authenticator:
    // TODO: refactor this to be handled all at once.
@@ -873,6 +924,13 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       create_license_type(license_kind::locked_frequency, "executive_locked", DASCOIN_BASE_EXECUTIVE_CYCLES, {2,2}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_EXECUTIVE);
       create_license_type(license_kind::locked_frequency, "vice_president_locked", DASCOIN_BASE_VICE_PRESIDENT_CYCLES, {2,2}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_VICE_PRESIDENT);
       create_license_type(license_kind::locked_frequency, "president_locked", DASCOIN_BASE_PRESIDENT_CYCLES, {1,2,4}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_PRESIDENT, license_type_object::upgrade_policy::president);
+
+      create_license_type(license_kind::utility, "standard_utility", DASCOIN_BASE_STANDARD_CYCLES, {1,1}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_STANDARD, license_type_object::upgrade_policy::utility);
+      create_license_type(license_kind::utility, "manager_utility", DASCOIN_BASE_MANAGER_CYCLES, {1,1}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_MANAGER, license_type_object::upgrade_policy::utility);
+      create_license_type(license_kind::utility, "pro_utility", DASCOIN_BASE_PRO_CYCLES, {1,1}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_PRO, license_type_object::upgrade_policy::utility);
+      create_license_type(license_kind::utility, "executive_utility", DASCOIN_BASE_EXECUTIVE_CYCLES_NEW_VALUE, {1,1}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_EXECUTIVE, license_type_object::upgrade_policy::utility);
+      create_license_type(license_kind::utility, "vice_president_utility", DASCOIN_BASE_VICE_PRESIDENT_CYCLES_NEW_VALUE, {1,1}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_VICE_PRESIDENT, license_type_object::upgrade_policy::utility);
+      create_license_type(license_kind::utility, "president_utility", DASCOIN_BASE_PRESIDENT_CYCLES, {1,2,4}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_PRESIDENT, license_type_object::upgrade_policy::utility_president);
    }
 
    // Create historic upgrade events:

@@ -38,7 +38,9 @@ namespace graphene { namespace chain {
     enum policy
     {
       standard,
-      president
+      president,
+      utility,
+      utility_president
     };
 
     class policy_class
@@ -49,7 +51,14 @@ namespace graphene { namespace chain {
       {
         if (p == standard)
           return policy_class::get_amount_to_upgrade(upgradeable);
-        return policy_class::get_amount_to_upgrade_president(upgradeable);
+        else if (p == president)
+          return policy_class::get_amount_to_upgrade_president(upgradeable);
+        else if (p == utility)
+          return policy_class::get_amount_to_upgrade(upgradeable);
+        else if (p == utility_president)
+          return policy_class::get_amount_to_upgrade_utility_president(upgradeable);
+        else
+           FC_THROW("Undefined upgrade policy!");
       }
 
     private:
@@ -63,6 +72,12 @@ namespace graphene { namespace chain {
       static share_type get_amount_to_upgrade_president(const T& upgradeable)
       {
         return upgradeable.base_amount + upgradeable.base_amount * upgradeable.bonus_percent / 100;
+      }
+
+      template<typename T>
+      static share_type get_amount_to_upgrade_utility_president(const T& upgradeable)
+      {
+        return upgradeable.base_amount;
       }
     };
   }
@@ -89,6 +104,7 @@ namespace graphene { namespace chain {
         using upgrade_policy = detail::policy;
 
         upgrade_policy up_policy;
+        share_type shadow_amount;
 
         license_history_record() = default;
         explicit license_history_record(license_type_id_type license,
@@ -108,7 +124,8 @@ namespace graphene { namespace chain {
               activated_at(activated_at),
               issued_on_blockchain(issued_on_blockchain),
               balance_upgrade(balance_upgrade),
-              up_policy(up_policy) {}
+              up_policy(up_policy),
+              shadow_amount(0){}
 
         share_type amount_to_upgrade()
         {
@@ -131,6 +148,11 @@ namespace graphene { namespace chain {
 
       upgrade_type requeue_upgrade;
       upgrade_type return_upgrade;
+
+      bool is_manual_submit()
+      {
+        return (vault_license_kind == license_kind::locked_frequency || vault_license_kind == license_kind::utility);
+      }
 
       void add_license(license_type_id_type license_id, share_type amount, share_type base_amount,
                        share_type bonus_percentage, frequency_type f_lock,

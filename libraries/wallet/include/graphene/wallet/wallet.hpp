@@ -1886,6 +1886,12 @@ class wallet_api
                                                            optional<uint32_t> delayed_operations_resolver_interval_time_seconds,
                                                            bool broadcast) const;
 
+      /**
+       * Retrieve delayed operations for account
+       * @param account                                                 Account ID.
+       * @return A list of delayed operation objects.
+       */
+      vector<delayed_operation_object> get_delayed_operations_for_account(account_id_type account) const;
 
       //////////////////////////
       // DAS33:               //
@@ -2309,6 +2315,7 @@ FC_API( graphene::wallet::wallet_api,
 
         // Delayed operations resolver:
         (update_delayed_operations_resolver_parameters)
+        (get_delayed_operations_for_account)
 
         // Requests:
         (get_all_webasset_issue_requests)

@@ -550,6 +550,9 @@ namespace graphene { namespace chain {
          asset calculate_market_fee(const asset_object& recv_asset, const asset& trade_amount);
          asset pay_market_fees( const asset_object& recv_asset, const asset& receives );
 
+         // helper to get limit orders prices grouped by price
+         void get_groups_of_limit_order_prices(const asset_id_type& a, const asset_id_type& b,
+                                               flat_set<share_type>& prices, bool ascending, uint32_t max_prices) const;
 
          ///@}
          /**

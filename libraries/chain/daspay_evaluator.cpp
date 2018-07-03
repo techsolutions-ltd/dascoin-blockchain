@@ -290,7 +290,16 @@ namespace graphene { namespace chain {
     const auto& dgpo = d.get_dynamic_global_properties();
     decltype(op.debit_amount) tmp{op.debit_amount};
     tmp.amount += tmp.amount * dgpo.daspay_debit_transaction_ratio / 10000; // Ratio is percentage, where i.e. 150 represents 1.5%; that's why we divide by 100*100
-    _to_debit = tmp * dgpo.last_dascoin_price;
+
+    if (d.head_block_time() > HARDFORK_BLC_156_TIME)
+    {
+      flat_set<share_type> buy_prices;
+      d.get_groups_of_limit_order_prices(d.get_web_asset_id(), d.get_dascoin_asset_id(), buy_prices, false, 1);
+      FC_ASSERT( !buy_prices.empty(), "Cannot debit since there are no buy limit orders" );
+      _to_debit = asset{ tmp.amount * DASCOIN_DEFAULT_ASSET_PRECISION / *(buy_prices.begin()), d.get_dascoin_asset_id() };
+    }
+    else
+      _to_debit = tmp * dgpo.last_dascoin_price;
 
     const asset reserved{balance.reserved, d.get_dascoin_asset_id()};
     FC_ASSERT( _to_debit <= reserved, "Not enough reserved balance on user account ${a}, left ${l}, needed ${n}", ("a", op.account)("l", d.to_pretty_string(reserved))("n", d.to_pretty_string(_to_debit)) );
@@ -340,7 +349,16 @@ namespace graphene { namespace chain {
     const auto& dgpo = d.get_dynamic_global_properties();
     decltype(op.credit_amount) tmp{op.credit_amount};
     tmp.amount += tmp.amount * dgpo.daspay_credit_transaction_ratio / 10000; // Ratio is percentage, where i.e. 150 represents 1.5%; that's why we divide by 100*100
-    _to_credit = tmp * dgpo.last_dascoin_price;
+
+    if (d.head_block_time() >= HARDFORK_BLC_156_TIME)
+    {
+      flat_set<share_type> sell_prices;
+      d.get_groups_of_limit_order_prices(d.get_dascoin_asset_id(), d.get_web_asset_id(), sell_prices, true, 1);
+      FC_ASSERT( !sell_prices.empty(), "Cannot credit since there are no sell limit orders ${a}", ("a", sell_prices.size()) );
+      _to_credit = asset { tmp.amount * DASCOIN_DEFAULT_ASSET_PRECISION / *(sell_prices.begin()), d.get_dascoin_asset_id() };
+    }
+    else
+      _to_credit = tmp * dgpo.last_dascoin_price;
 
     FC_ASSERT( _to_credit <= balance, "Not enough balance on clearing account ${a}, left ${l}, needed ${n}", ("a", op.clearing_account)("l", d.to_pretty_string(balance))("n", d.to_pretty_string(_to_credit)) );
 

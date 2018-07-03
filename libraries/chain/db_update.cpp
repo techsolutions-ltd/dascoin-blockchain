@@ -614,25 +614,6 @@ void database::daspay_clearing_start()
   if (clearing_accounts.empty())
     return;
 
-  const auto& get_limit_orders_prices = [this](const asset_id_type& a, const asset_id_type& b, flat_set<share_type>& prices, bool ascending, uint32_t max_prices) {
-    const auto& limit_order_idx = get_index_type<limit_order_index>();
-    const auto& limit_price_idx = limit_order_idx.indices().get<by_price>();
-    auto limit_itr = limit_price_idx.lower_bound(price::max(a, b));
-    auto limit_end = limit_price_idx.upper_bound(price::min(a, b));
-    auto& asset_a = get(a);
-    auto& asset_b = get(b);
-    double coefficient = asset::scaled_precision(asset_a.precision).value * 1.0 / asset::scaled_precision(asset_b.precision).value;
-    while(limit_itr != limit_end) {
-      double price = ascending ? 1 / limit_itr->sell_price.to_real() : limit_itr->sell_price.to_real();
-      auto p = round((ascending ? price * coefficient : price / coefficient) * DASCOIN_FIAT_ASSET_PRECISION);
-      ilog("p ${a} r ${b}",("a", price)("b", p));
-      prices.insert(static_cast<share_type>(p));
-      if (prices.size() >= max_prices)
-        return;
-      ++limit_itr;
-    }
-  };
-
   const auto& apply_tx = [this, &params](const vector<limit_order_create_operation>& ops) {
     bool was_undo_db_enabled = _undo_db.enabled();
     if (!was_undo_db_enabled)
@@ -657,8 +638,8 @@ void database::daspay_clearing_start()
   flat_set<share_type> buy_prices;
   const auto& das_id = get_dascoin_asset_id();
   const auto& web_id = get_web_asset_id();
-  get_limit_orders_prices(das_id, web_id, sell_prices, true, 2);
-  get_limit_orders_prices(web_id, das_id, buy_prices, false, 2);
+  get_groups_of_limit_order_prices(das_id, web_id, sell_prices, true, 2);
+  get_groups_of_limit_order_prices(web_id, das_id, buy_prices, false, 2);
 
   ilog("${s} sell prices, ${b} buy prices", ("s", sell_prices.size())("b", buy_prices.size()));
 

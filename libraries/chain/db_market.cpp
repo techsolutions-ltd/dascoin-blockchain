@@ -651,7 +651,6 @@ void database::get_groups_of_limit_order_prices(const asset_id_type& a, const as
   while(limit_itr != limit_end) {
     double price = ascending ? 1 / limit_itr->sell_price.to_real() : limit_itr->sell_price.to_real();
     auto p = round((ascending ? price * coefficient : price / coefficient) * DASCOIN_FIAT_ASSET_PRECISION);
-    ilog("p ${a} r ${b}",("a", price)("b", p));
     prices.insert(static_cast<share_type>(p));
     if (prices.size() >= max_prices)
       return;

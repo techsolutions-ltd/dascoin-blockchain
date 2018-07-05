@@ -155,13 +155,13 @@ void debug_apply_update( database& db, const fc::variant_object& vo )
          db.modify( db.get_object( oid ), [&]( object& obj )
          {
             idx.object_default( obj );
-            idx.object_from_variant( vo, obj );
+            idx.object_from_variant( vo, obj, GRAPHENE_MAX_NESTED_OBJECTS );
          } );
          break;
       case db_action_update:
          db.modify( db.get_object( oid ), [&]( object& obj )
          {
-            idx.object_from_variant( vo, obj );
+            idx.object_from_variant( vo, obj, GRAPHENE_MAX_NESTED_OBJECTS );
          } );
          break;
       case db_action_delete:

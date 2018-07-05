@@ -5,3 +5,4 @@
 [submodule "libraries/fc"]
 	path = libraries/fc
 	url = ../dascoin-fc/
+        branch = bitshares_codebase

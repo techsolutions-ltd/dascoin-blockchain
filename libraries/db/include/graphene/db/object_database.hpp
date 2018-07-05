@@ -44,7 +44,7 @@ namespace graphene { namespace db {
 
          void reset_indexes() { _index.clear(); _index.resize(255); }
 
-         void open(const fc::path& data_dir);
+         void open(const fc::path& data_dir );
 
          /**
           * Saves the complete state of the object_database to disk, this could take a while
@@ -137,6 +137,12 @@ namespace graphene { namespace db {
             unique_ptr<index> indexptr( new IndexType(*this) );
             _index[ObjectType::space_id][ObjectType::type_id] = std::move(indexptr);
             return static_cast<IndexType*>(_index[ObjectType::space_id][ObjectType::type_id].get());
+         }
+
+         template<typename IndexType, typename SecondaryIndexType, typename... Args>
+         SecondaryIndexType* add_secondary_index( Args... args )
+         {
+            return get_mutable_index_type<IndexType>().template add_secondary_index<SecondaryIndexType, Args...>(args...);
          }
 
          void pop_undo();

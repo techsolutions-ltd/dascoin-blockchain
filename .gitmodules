@@ -2,3 +2,7 @@
     path = docs
     url = https://github.com/cryptonomex/graphene.wiki.git
     ignore = dirty
+[submodule "libraries/fc"]
+	path = libraries/fc
+	url = ../dascoin-fc/
+	branch = bitshares_codebase

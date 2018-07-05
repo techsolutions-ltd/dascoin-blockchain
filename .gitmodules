@@ -5,3 +5,4 @@
 [submodule "libraries/fc"]
 	path = libraries/fc
 	url = git@gitlab.internal.roundglobe.tech:DasCoin/dascoin-fc.git
+	branch = bitshares_codebase

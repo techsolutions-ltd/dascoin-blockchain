@@ -4,5 +4,5 @@
     ignore = dirty
 [submodule "libraries/fc"]
 	path = libraries/fc
-	url = git@gitlab.internal.roundglobe.tech:DasCoin/dascoin-fc.git
+	url = ../dascoin-fc/
 	branch = bitshares_codebase

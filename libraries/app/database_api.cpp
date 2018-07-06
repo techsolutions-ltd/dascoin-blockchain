@@ -240,7 +240,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       template<typename IndexType, typename IndexBy>
       vector<typename IndexType::object_type> list_objects( size_t limit ) const
       {
-         const auto& idx = _db.get_index_type<IndexType>().indices().get<IndexBy>();
+         const auto& idx = _db.get_index_type<IndexType>().indices().template get<IndexBy>();
 
          vector<typename IndexType::object_type> result;
          result.reserve(limit);
@@ -260,7 +260,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
          vector<typename IndexType::object_type> result;
          result.reserve(limit);
 
-         const auto& idx = _db.get_index_type<IndexType>().indices().get<IndexBy>();
+         const auto& idx = _db.get_index_type<IndexType>().indices().template get<IndexBy>();
 
          auto itr = idx.lower_bound(lower_bound);
 
@@ -281,7 +281,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
          vector<typename IndexType::object_type> result;
          result.reserve(limit);
 
-         const auto& idx = _db.get_index_type<IndexType>().indices().get<IndexBy>();
+         const auto& idx = _db.get_index_type<IndexType>().indices().template get<IndexBy>();
 
          auto itr = idx.lower_bound(amount);
 
@@ -297,7 +297,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       template<typename IdType, typename IndexType, typename IndexBy>
       vector<optional<typename IndexType::object_type> > lookup_string_or_id(const vector<string>& str_or_id) const
       {
-         const auto& idx = _db.get_index_type<IndexType>().indices().get<IndexBy>();
+         const auto& idx = _db.get_index_type<IndexType>().indices().template get<IndexBy>();
          vector<optional<typename IndexType::object_type> > result;
          result.reserve(str_or_id.size());
          std::transform(str_or_id.begin(), str_or_id.end(), std::back_inserter(result),
@@ -316,7 +316,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       template<typename IndexType, typename IndexBy>
       vector<typename IndexType::object_type> list_all_objects() const
       {
-         const auto& idx = _db.get_index_type<IndexType>().indices().get<IndexBy>();
+         const auto& idx = _db.get_index_type<IndexType>().indices().template get<IndexBy>();
          auto itr = idx.begin();
          vector<typename IndexType::object_type> result;
 
@@ -329,7 +329,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       template<typename IdType, typename IndexType, typename IndexBy>
       vector<optional<typename IndexType::object_type>> fetch_optionals_from_ids(const vector<IdType>& ids) const
       {
-         const auto& idx = _db.get_index_type<IndexType>().indices().get<IndexBy>();
+         const auto& idx = _db.get_index_type<IndexType>().indices().template get<IndexBy>();
          vector<optional<typename IndexType::object_type> > result;
          result.reserve(ids.size());
          std::transform(ids.begin(), ids.end(), std::back_inserter(result),
@@ -407,7 +407,7 @@ database_api_impl::database_api_impl( graphene::chain::database& db ): _db(db), 
    _applied_block_connection = _db.applied_block.connect([this](const signed_block&){ on_applied_block(); });
 
    _pending_trx_connection = _db.on_pending_transaction.connect([this](const signed_transaction& trx ){
-                         if( _pending_trx_callback ) _pending_trx_callback( fc::variant(trx) );
+                         if( _pending_trx_callback ) _pending_trx_callback( fc::variant(trx, GRAPHENE_MAX_NESTED_OBJECTS) );
                       });
 }
 
@@ -776,7 +776,7 @@ std::map<std::string, full_account> database_api_impl::get_full_accounts( const 
    {
       const account_object* account = nullptr;
       if (std::isdigit(account_name_or_id[0]))
-         account = _db.find(fc::variant(account_name_or_id).as<account_id_type>());
+         account = _db.find(fc::variant(account_name_or_id, 1).as<account_id_type>(1));
       else
       {
          const auto& idx = _db.get_index_type<account_index>().indices().get<by_name>();

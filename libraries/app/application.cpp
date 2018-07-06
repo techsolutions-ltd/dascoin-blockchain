@@ -28,14 +28,11 @@
 
 #include <graphene/chain/protocol/fee_schedule.hpp>
 #include <graphene/chain/protocol/types.hpp>
-#include <graphene/time/time.hpp>
 
 #include <graphene/egenesis/egenesis.hpp>
 
 #include <graphene/net/core_messages.hpp>
 #include <graphene/net/exceptions.hpp>
-
-#include <graphene/time/time.hpp>
 
 #include <graphene/utilities/key_conversion.hpp>
 #include <graphene/chain/worker_evaluator.hpp>
@@ -183,7 +180,7 @@ namespace detail {
          if( _options->count("seed-nodes") )
          {
             auto seeds_str = _options->at("seed-nodes").as<string>();
-            auto seeds = fc::json::from_string(seeds_str).as<vector<string>>();
+            auto seeds = fc::json::from_string(seeds_str).as<vector<string>>(0);
             for( const string& endpoint_string : seeds )
             {
                try {
@@ -844,12 +841,6 @@ namespace detail {
          if( opt_block.valid() ) return opt_block->timestamp;
          return fc::time_point_sec::min();
       } FC_CAPTURE_AND_RETHROW( (block_id) ) }
-
-      /** returns graphene::time::now() */
-      virtual fc::time_point_sec get_blockchain_now() override
-      {
-         return graphene::time::now();
-      }
 
       virtual item_hash_t get_head_block_id() const override
       {

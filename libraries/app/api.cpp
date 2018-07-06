@@ -125,7 +125,10 @@ namespace graphene { namespace app {
              {
                 auto block_num = b.block_num();
                 auto& callback = _callbacks.find(id)->second;
-                fc::async( [capture_this,this,id,block_num,trx_num,trx,callback](){ callback( fc::variant(transaction_confirmation{ id, block_num, trx_num, trx}) ); } );
+                auto v = fc::variant( transaction_confirmation{ id, block_num, trx_num, trx }, GRAPHENE_MAX_NESTED_OBJECTS );
+                fc::async( [capture_this,v,callback]() {
+                   callback(v);
+                } );
              }
           }
        }
@@ -554,25 +557,6 @@ namespace graphene { namespace app {
     }
 
     crypto_api::crypto_api(){};
-
-    blind_signature crypto_api::blind_sign( const extended_private_key_type& key, const blinded_hash& hash, int i )
-    {
-       return fc::ecc::extended_private_key( key ).blind_sign( hash, i );
-    }
-
-    signature_type crypto_api::unblind_signature( const extended_private_key_type& key,
-                                                     const extended_public_key_type& bob,
-                                                     const blind_signature& sig,
-                                                     const fc::sha256& hash,
-                                                     int i )
-    {
-       return fc::ecc::extended_private_key( key ).unblind_signature( extended_public_key( bob ), sig, hash, i );
-    }
-
-    commitment_type crypto_api::blind( const blind_factor_type& blind, uint64_t value )
-    {
-       return fc::ecc::blind( blind, value );
-    }
 
     blind_factor_type crypto_api::blind_sum( const std::vector<blind_factor_type>& blinds_in, uint32_t non_neg )
     {

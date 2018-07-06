@@ -76,7 +76,7 @@ vector<std::reference_wrapper<const typename Index::object_type>> database::sort
 template<typename IndexType, typename IndexBy, class... HelperTypes>
 void database::perform_helpers(std::tuple<HelperTypes...> helpers)
 {
-   const auto& idx = get_index_type<IndexType>().indices().get<IndexBy>();
+   const auto& idx = get_index_type<IndexType>().indices().template get<IndexBy>();
    for( const typename IndexType::object_type& a : idx )
       detail::for_each(helpers, a, detail::gen_seq<sizeof...(HelperTypes)>());
 }

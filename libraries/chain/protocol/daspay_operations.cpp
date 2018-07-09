@@ -86,6 +86,7 @@ namespace graphene { namespace chain {
   void daspay_debit_account_operation::validate() const
   {
     FC_ASSERT( fee.amount >= 0 );
+    FC_ASSERT( debit_amount.amount >= 0, "Cannot debit negative amount" );
     FC_ASSERT( transaction_id.length() <= DASCOIN_MAX_COMMENT_LENGTH );
     if (details.valid())
     {

@@ -169,7 +169,7 @@ struct daspay_authority
 class database_api
 {
    public:
-      database_api(graphene::chain::database& db);
+      database_api( graphene::chain::database& db, const application_options* app_options );
       ~database_api();
 
       /////////////
@@ -209,6 +209,10 @@ class database_api
        * @return header of the referenced block, or null if no matching block was found
        */
       optional<block_header> get_block_header(uint32_t block_num)const;
+
+
+      map<uint32_t, optional<block_header>> get_block_header_batch(const vector<uint32_t> block_nums)const;
+
 
       /**
        * @brief Retrieve a full, signed block
@@ -347,10 +351,10 @@ class database_api
        * @param assets IDs of the assets to get balances of; if empty, get all assets account has a balance in
        * @return Balances of the account
        */
-      vector<asset_reserved> get_account_balances(account_id_type id, const flat_set<asset_id_type>& assets)const;
+      vector<asset> get_account_balances(account_id_type id, const flat_set<asset_id_type>& assets)const;
 
       /// Semantically equivalent to @ref get_account_balances, but takes a name instead of an ID.
-      vector<asset_reserved> get_named_account_balances(const std::string& name, const flat_set<asset_id_type>& assets)const;
+      vector<asset> get_named_account_balances(const std::string& name, const flat_set<asset_id_type>& assets)const;
 
       /** @return all unclaimed balance objects for a set of addresses */
       vector<balance_object> get_balance_objects( const vector<address>& addrs )const;

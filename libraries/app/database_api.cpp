@@ -304,7 +304,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
                         [this, &idx](const string& str_or_id) -> optional<typename IndexType::object_type> {
             if( !str_or_id.empty() && std::isdigit(str_or_id[0]) )
             {
-               auto ptr = _db.find(variant(str_or_id,1).as<IdType>());
+               auto ptr = _db.find(variant(str_or_id).as<IdType>(1));
                return ptr == nullptr ? optional<typename IndexType::object_type>() : *ptr;
             }
             auto itr = idx.find(str_or_id);

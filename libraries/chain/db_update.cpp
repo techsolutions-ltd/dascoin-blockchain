@@ -602,14 +602,12 @@ void database::daspay_clearing_start()
   if ( dgpo.daspay_next_clearing_time > head_block_time() )
     return;
 
-  ilog("clearing smart contract running");
   const auto& idx = get_index_type<payment_service_provider_index>().indices().get<by_payment_service_provider>();
   flat_set<account_id_type> clearing_accounts;
   for (auto it = idx.cbegin(); it != idx.cend(); ++it)
   {
     std::copy(it->payment_service_provider_clearing_accounts.begin(), it->payment_service_provider_clearing_accounts.end(), std::inserter(clearing_accounts, clearing_accounts.end()));
   }
-  ilog("${a} clearing accounts", ("a", clearing_accounts.size()));
 
   if (clearing_accounts.empty())
     return;
@@ -640,8 +638,6 @@ void database::daspay_clearing_start()
   const auto& web_id = get_web_asset_id();
   get_groups_of_limit_order_prices(das_id, web_id, sell_prices, true, 2);
   get_groups_of_limit_order_prices(web_id, das_id, buy_prices, false, 2);
-
-  ilog("${s} sell prices, ${b} buy prices", ("s", sell_prices.size())("b", buy_prices.size()));
 
   for (const auto& clearing_acc : clearing_accounts)
   {
@@ -674,7 +670,6 @@ void database::daspay_clearing_start()
 
       const auto& to_buy = asset{ to_sell.amount * buy_price / DASCOIN_DEFAULT_ASSET_PRECISION, get_web_asset_id() };
 
-      ilog("${c} selling ${a} for ${b}", ("c", clearing_acc)("a", to_pretty_string(to_sell))("b", to_pretty_string(to_buy)));
       limit_orders.emplace_back(limit_order_create_operation{ clearing_acc, to_sell, to_buy, 0, {}, head_block_time() + params.daspay_parameters.clearing_interval_time_seconds });
     }
     else if (webeur_balance.amount >= params.daspay_parameters.collateral_webeur && dasc_balance.amount < params.daspay_parameters.collateral_dascoin)
@@ -689,7 +684,6 @@ void database::daspay_clearing_start()
       share_type buy_price = *price_it;
 
       const auto& to_sell = asset{ to_buy.amount * buy_price / DASCOIN_DEFAULT_ASSET_PRECISION, get_web_asset_id() };
-      ilog("${c} buying ${t} for ${s}",("c", clearing_acc)("t", to_pretty_string(to_buy))("s", to_pretty_string(to_sell)));
       if (webeur_balance >= to_sell)
         limit_orders.emplace_back(limit_order_create_operation{ clearing_acc, to_sell, to_buy, 0, {}, head_block_time() + params.daspay_parameters.clearing_interval_time_seconds });
       else
@@ -716,11 +710,9 @@ void database::resolve_delayed_operations()
   if ( dgpo.next_delayed_operations_resolver_time > head_block_time() )
     return;
 
-  ilog("resolve delayed operations smart contract running");
   const auto& idx = get_index_type<delayed_operations_index>().indices().get<by_account>();
   for (auto it = idx.cbegin(); it != idx.cend(); ++it)
   {
-    ilog("issued_time ${i}, skip ${s}, h ${h}", ("i", it->issued_time)("s", it->skip)("h", head_block_time()));
     if (it->issued_time + it->skip <= head_block_time())
     {
       it->op.visit(op_visitor(*this));

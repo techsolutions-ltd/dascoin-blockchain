@@ -602,36 +602,15 @@ void database::daspay_clearing_start()
   if ( dgpo.daspay_next_clearing_time > head_block_time() )
     return;
 
-  ilog("clearing smart contract running");
   const auto& idx = get_index_type<payment_service_provider_index>().indices().get<by_payment_service_provider>();
   flat_set<account_id_type> clearing_accounts;
   for (auto it = idx.cbegin(); it != idx.cend(); ++it)
   {
     std::copy(it->payment_service_provider_clearing_accounts.begin(), it->payment_service_provider_clearing_accounts.end(), std::inserter(clearing_accounts, clearing_accounts.end()));
   }
-  ilog("${a} clearing accounts", ("a", clearing_accounts.size()));
 
   if (clearing_accounts.empty())
     return;
-
-  const auto& get_limit_orders_prices = [this](const asset_id_type& a, const asset_id_type& b, flat_set<share_type>& prices, bool ascending, uint32_t max_prices) {
-    const auto& limit_order_idx = get_index_type<limit_order_index>();
-    const auto& limit_price_idx = limit_order_idx.indices().get<by_price>();
-    auto limit_itr = limit_price_idx.lower_bound(price::max(a, b));
-    auto limit_end = limit_price_idx.upper_bound(price::min(a, b));
-    auto& asset_a = get(a);
-    auto& asset_b = get(b);
-    double coefficient = asset::scaled_precision(asset_a.precision).value * 1.0 / asset::scaled_precision(asset_b.precision).value;
-    while(limit_itr != limit_end) {
-      double price = ascending ? 1 / limit_itr->sell_price.to_real() : limit_itr->sell_price.to_real();
-      auto p = round((ascending ? price * coefficient : price / coefficient) * DASCOIN_FIAT_ASSET_PRECISION);
-      ilog("p ${a} r ${b}",("a", price)("b", p));
-      prices.insert(static_cast<share_type>(p));
-      if (prices.size() >= max_prices)
-        return;
-      ++limit_itr;
-    }
-  };
 
   const auto& apply_tx = [this, &params](const vector<limit_order_create_operation>& ops) {
     bool was_undo_db_enabled = _undo_db.enabled();
@@ -657,10 +636,8 @@ void database::daspay_clearing_start()
   flat_set<share_type> buy_prices;
   const auto& das_id = get_dascoin_asset_id();
   const auto& web_id = get_web_asset_id();
-  get_limit_orders_prices(das_id, web_id, sell_prices, true, 2);
-  get_limit_orders_prices(web_id, das_id, buy_prices, false, 2);
-
-  ilog("${s} sell prices, ${b} buy prices", ("s", sell_prices.size())("b", buy_prices.size()));
+  get_groups_of_limit_order_prices(das_id, web_id, sell_prices, true, 2);
+  get_groups_of_limit_order_prices(web_id, das_id, buy_prices, false, 2);
 
   for (const auto& clearing_acc : clearing_accounts)
   {
@@ -693,7 +670,6 @@ void database::daspay_clearing_start()
 
       const auto& to_buy = asset{ to_sell.amount * buy_price / DASCOIN_DEFAULT_ASSET_PRECISION, get_web_asset_id() };
 
-      ilog("${c} selling ${a} for ${b}", ("c", clearing_acc)("a", to_pretty_string(to_sell))("b", to_pretty_string(to_buy)));
       limit_orders.emplace_back(limit_order_create_operation{ clearing_acc, to_sell, to_buy, 0, {}, head_block_time() + params.daspay_parameters.clearing_interval_time_seconds });
     }
     else if (webeur_balance.amount >= params.daspay_parameters.collateral_webeur && dasc_balance.amount < params.daspay_parameters.collateral_dascoin)
@@ -708,7 +684,6 @@ void database::daspay_clearing_start()
       share_type buy_price = *price_it;
 
       const auto& to_sell = asset{ to_buy.amount * buy_price / DASCOIN_DEFAULT_ASSET_PRECISION, get_web_asset_id() };
-      ilog("${c} buying ${t} for ${s}",("c", clearing_acc)("t", to_pretty_string(to_buy))("s", to_pretty_string(to_sell)));
       if (webeur_balance >= to_sell)
         limit_orders.emplace_back(limit_order_create_operation{ clearing_acc, to_sell, to_buy, 0, {}, head_block_time() + params.daspay_parameters.clearing_interval_time_seconds });
       else
@@ -735,11 +710,9 @@ void database::resolve_delayed_operations()
   if ( dgpo.next_delayed_operations_resolver_time > head_block_time() )
     return;
 
-  ilog("resolve delayed operations smart contract running");
   const auto& idx = get_index_type<delayed_operations_index>().indices().get<by_account>();
   for (auto it = idx.cbegin(); it != idx.cend(); ++it)
   {
-    ilog("issued_time ${i}, skip ${s}, h ${h}", ("i", it->issued_time)("s", it->skip)("h", head_block_time()));
     if (it->issued_time + it->skip <= head_block_time())
     {
       it->op.visit(op_visitor(*this));

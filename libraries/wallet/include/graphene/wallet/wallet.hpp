@@ -2000,7 +2000,14 @@ class wallet_api
        */
       vector<das33_project_object> get_das33_projects(const string& lower_bound_name, uint32_t limit) const;
 
-
+      /**
+       * @param authority       This MUST be root authority.
+       * @param changed_values  The values to change; all other chain parameters are filled in with default values
+       * @param broadcast       true to broadcast transaction to network
+       */
+      signed_transaction update_global_parameters(const string& authority,
+                                                  const variant_object& changed_values,
+                                                  bool broadcast) const;
 
       //////////////////////////
       // REQUESTS:            //
@@ -2316,6 +2323,8 @@ FC_API( graphene::wallet::wallet_api,
         // Delayed operations resolver:
         (update_delayed_operations_resolver_parameters)
         (get_delayed_operations_for_account)
+
+        (update_global_parameters)
 
         // Requests:
         (get_all_webasset_issue_requests)

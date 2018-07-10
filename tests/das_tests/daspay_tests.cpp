@@ -326,7 +326,7 @@ BOOST_AUTO_TEST_CASE( unreserve_asset_on_account_test )
 
 BOOST_AUTO_TEST_CASE( daspay_debit_test )
 { try {
-  ACTORS((foo)(clearing1)(payment1)(clearing2)(payment2));
+  ACTORS((foo)(clearing1)(payment1)(clearing2)(payment2)(foobar));
   VAULT_ACTOR(bar);
 
   tether_accounts(foo_id, bar_id);
@@ -350,14 +350,11 @@ BOOST_AUTO_TEST_CASE( daspay_debit_test )
   public_key_type pk1 = public_key_type(generate_private_key("foo").get_public_key());
   vector<account_id_type> v1{clearing1_id};
 
-  // Fails: cannot debit 0 amount
+  // Fails: only web euro can be used to debit:
   GRAPHENE_REQUIRE_THROW( do_op(daspay_debit_account_operation(payment1_id, pk1, foo_id, asset{0, db.get_dascoin_asset_id()}, clearing1_id, "", {})), fc::exception );
 
-  // Fails: only dasc can be used to credit:
-  GRAPHENE_REQUIRE_THROW( do_op(daspay_debit_account_operation(payment1_id, pk1, foo_id, asset{0, db.get_web_asset_id()}, clearing1_id, "", {})), fc::exception );
-
   // Fails: service provider not found:
-  GRAPHENE_REQUIRE_THROW( do_op(daspay_debit_account_operation(bar_id, pk1, foo_id, asset{0, db.get_dascoin_asset_id()}, clearing1_id, "", {})), fc::exception );
+  GRAPHENE_REQUIRE_THROW( do_op(daspay_debit_account_operation(bar_id, pk1, foo_id, asset{0, db.get_web_asset_id()}, clearing1_id, "", {})), fc::exception );
 
   do_op(create_payment_service_provider_operation(get_daspay_administrator_id(), payment1_id, v1));
 
@@ -389,6 +386,15 @@ BOOST_AUTO_TEST_CASE( daspay_debit_test )
   // Set price to 1we -> 100dasc
   set_last_dascoin_price(asset(100 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()) / asset(1 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()));
 
+  // Fails: cannot debit negative amount:
+  GRAPHENE_REQUIRE_THROW( do_op(daspay_debit_account_operation(payment1_id, pk1, foo_id, asset{-1, db.get_web_asset_id()}, clearing1_id, "", {})), fc::exception );
+
+  // Success, we can debit 0 amount:
+  do_op(daspay_debit_account_operation(payment1_id, pk1, foo_id, asset{0, db.get_web_asset_id()}, clearing1_id, "", {}));
+
+  issue_webasset("1", foobar_id, 1 * DASCOIN_FIAT_ASSET_PRECISION, 0);
+  do_op(limit_order_create_operation(foobar_id, asset{1 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()}, asset{100 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, 0, {}, db.head_block_time() + fc::seconds(600)));
+
   // Debit one web euro:
   do_op(daspay_debit_account_operation(payment1_id, pk1, foo_id, asset{1 * DASCOIN_FIAT_ASSET_PRECISION, db.get_web_asset_id()}, clearing1_id, "", {}));
 
@@ -412,10 +418,11 @@ BOOST_AUTO_TEST_CASE( daspay_debit_test )
 
 BOOST_AUTO_TEST_CASE( daspay_credit_test )
 { try {
-  ACTORS((foo)(clearing)(payment)(payment2));
-  VAULT_ACTOR(bar);
+  ACTORS((foo)(clearing)(payment)(payment2)(foobar));
+  VAULT_ACTORS((bar)(foobar2));
 
   tether_accounts(clearing_id, bar_id);
+  tether_accounts(foobar_id, foobar2_id);
 
   auto lic_typ = *(_dal.get_license_type("standard_charter"));
 
@@ -467,6 +474,11 @@ BOOST_AUTO_TEST_CASE( daspay_credit_test )
   // Set price to 1we -> 100dasc
   set_last_dascoin_price(asset(100 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()) / asset(1 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()));
 
+  issue_dascoin(foobar2_id, 1000);
+  disable_vault_to_wallet_limit(foobar2_id);
+  transfer_dascoin_vault_to_wallet(foobar2_id, foobar_id, 1000 * DASCOIN_DEFAULT_ASSET_PRECISION);
+  do_op(limit_order_create_operation(foobar_id, asset{100 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, asset{1 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()}, 0, {}, db.head_block_time() + fc::seconds(600)));
+
   // Credit one web euro:
   do_op(daspay_credit_account_operation(payment_id, foo_id, asset{1 * DASCOIN_FIAT_ASSET_PRECISION, db.get_web_asset_id()}, clearing_id, "", {}));
 
@@ -501,7 +513,7 @@ BOOST_AUTO_TEST_CASE( update_daspay_clearing_parameters_unit_test )
 
 BOOST_AUTO_TEST_CASE( daspay_clearing_test )
 { try {
-  ACTORS((foo)(clearing)(payment));
+  ACTORS((foo)(clearing)(payment)(buyer));
   VAULT_ACTORS((bar)(foobar));
 
   tether_accounts(foo_id, bar_id);
@@ -545,6 +557,8 @@ BOOST_AUTO_TEST_CASE( daspay_clearing_test )
 
   // Set price to 1we -> 100dasc
   set_last_dascoin_price(asset(100 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()) / asset(1 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()));
+  issue_webasset("1", buyer_id, 1 * DASCOIN_FIAT_ASSET_PRECISION, 0);
+  do_op(limit_order_create_operation(buyer_id, asset{1 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()}, asset{100 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, 0, {}, db.head_block_time() + fc::seconds(600)));
 
   // Debit one web euro:
   do_op(daspay_debit_account_operation(payment_id, pk, foo_id, asset{1 * DASCOIN_FIAT_ASSET_PRECISION, db.get_web_asset_id()}, clearing_id, "", {}));
@@ -555,8 +569,8 @@ BOOST_AUTO_TEST_CASE( daspay_clearing_test )
   const auto& limit_order_idx = db.get_index_type<limit_order_index>();
   const auto& limit_price_idx = limit_order_idx.indices().get<by_price>();
 
-  // No limit orders at this point:
-  BOOST_CHECK_EQUAL( limit_price_idx.size(), 0 );
+  // Onelimit order at this point:
+  BOOST_CHECK_EQUAL( limit_price_idx.size(), 1 );
 
   // Enable daspay clearing:
   do_op(update_daspay_clearing_parameters_operation(get_daspay_administrator_id(), true, 12, {}, {}));
@@ -564,10 +578,10 @@ BOOST_AUTO_TEST_CASE( daspay_clearing_test )
   // Wait for the next clearing interval:
   generate_blocks(db.head_block_time() + fc::seconds(18));
 
-  // Still no limit orders because there are no buy orders:
+  // No limit orders because a match has been made:
   BOOST_CHECK_EQUAL( limit_price_idx.size(), 0 );
 
-  issue_webasset("1", foo_id, 100 * DASCOIN_FIAT_ASSET_PRECISION, 0);
+  issue_webasset("2", foo_id, 100 * DASCOIN_FIAT_ASSET_PRECISION, 0);
   do_op(limit_order_create_operation(foo_id, asset{10 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()}, asset{100 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, 0, {}, db.head_block_time() + fc::seconds(600)));
 
   // Wait for the next clearing interval:

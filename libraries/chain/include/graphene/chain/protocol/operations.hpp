@@ -31,21 +31,22 @@
 #include <graphene/chain/protocol/committee_member.hpp>
 #include <graphene/chain/protocol/confidential.hpp>
 #include <graphene/chain/protocol/cycle.hpp>
+#include <graphene/chain/protocol/das33_operations.hpp>
+#include <graphene/chain/protocol/daspay_operations.hpp>
 #include <graphene/chain/protocol/fba.hpp>
+#include <graphene/chain/protocol/fee_operations.hpp>
 #include <graphene/chain/protocol/license.hpp>
 #include <graphene/chain/protocol/market.hpp>
 #include <graphene/chain/protocol/proposal.hpp>
 #include <graphene/chain/protocol/transfer.hpp>
 #include <graphene/chain/protocol/vesting.hpp>
 #include <graphene/chain/protocol/upgrade.hpp>
+#include <graphene/chain/protocol/update_globals.hpp>
 #include <graphene/chain/protocol/wire.hpp>
 #include <graphene/chain/protocol/wire_out_with_fee.hpp>
 #include <graphene/chain/protocol/withdraw_permission.hpp>
 #include <graphene/chain/protocol/witness.hpp>
 #include <graphene/chain/protocol/worker.hpp>
-#include <graphene/chain/protocol/fee_operations.hpp>
-#include <graphene/chain/protocol/daspay_operations.hpp>
-#include <graphene/chain/protocol/das33_operations.hpp>
 
 namespace graphene { namespace chain {
 
@@ -195,6 +196,8 @@ namespace graphene { namespace chain {
             das33_project_update_operation,
             das33_project_delete_operation,
             das33_pledge_asset_operation,
+
+            update_global_parameters_operation,
 
             // Virtual operations below this point:
 

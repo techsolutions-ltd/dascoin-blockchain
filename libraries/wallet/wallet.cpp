@@ -5545,6 +5545,11 @@ signed_transaction wallet_api::update_delayed_operations_resolver_parameters(con
                                                broadcast);
 }
 
+vector<delayed_operation_object> wallet_api::get_delayed_operations_for_account(account_id_type account) const
+{
+  return my->_remote_db->get_delayed_operations_for_account(account);
+}
+
 signed_block_with_info::signed_block_with_info( const signed_block& block )
    : signed_block( block )
 {

@@ -350,14 +350,11 @@ BOOST_AUTO_TEST_CASE( daspay_debit_test )
   public_key_type pk1 = public_key_type(generate_private_key("foo").get_public_key());
   vector<account_id_type> v1{clearing1_id};
 
-  // Fails: cannot debit 0 amount
+  // Fails: only web euro can be used to debit:
   GRAPHENE_REQUIRE_THROW( do_op(daspay_debit_account_operation(payment1_id, pk1, foo_id, asset{0, db.get_dascoin_asset_id()}, clearing1_id, "", {})), fc::exception );
 
-  // Fails: only dasc can be used to credit:
-  GRAPHENE_REQUIRE_THROW( do_op(daspay_debit_account_operation(payment1_id, pk1, foo_id, asset{0, db.get_web_asset_id()}, clearing1_id, "", {})), fc::exception );
-
   // Fails: service provider not found:
-  GRAPHENE_REQUIRE_THROW( do_op(daspay_debit_account_operation(bar_id, pk1, foo_id, asset{0, db.get_dascoin_asset_id()}, clearing1_id, "", {})), fc::exception );
+  GRAPHENE_REQUIRE_THROW( do_op(daspay_debit_account_operation(bar_id, pk1, foo_id, asset{0, db.get_web_asset_id()}, clearing1_id, "", {})), fc::exception );
 
   do_op(create_payment_service_provider_operation(get_daspay_administrator_id(), payment1_id, v1));
 
@@ -388,6 +385,12 @@ BOOST_AUTO_TEST_CASE( daspay_debit_test )
 
   // Set price to 1we -> 100dasc
   set_last_dascoin_price(asset(100 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()) / asset(1 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()));
+
+  // Fails: cannot debit negative amount:
+  GRAPHENE_REQUIRE_THROW( do_op(daspay_debit_account_operation(payment1_id, pk1, foo_id, asset{-1, db.get_web_asset_id()}, clearing1_id, "", {})), fc::exception );
+
+  // Success, we can debit 0 amount:
+  do_op(daspay_debit_account_operation(payment1_id, pk1, foo_id, asset{0, db.get_web_asset_id()}, clearing1_id, "", {}));
 
   issue_webasset("1", foobar_id, 1 * DASCOIN_FIAT_ASSET_PRECISION, 0);
   do_op(limit_order_create_operation(foobar_id, asset{1 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()}, asset{100 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, 0, {}, db.head_block_time() + fc::seconds(600)));

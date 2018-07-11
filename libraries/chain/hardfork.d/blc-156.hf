@@ -1,4 +1,4 @@
 // #BLC-156 new algorithm for calculating the amount of dasc in debit and credit operations
 #ifndef HARDFORK_BLC_156_TIME
-#define HARDFORK_BLC_156_TIME (fc::time_point_sec( 1530835200 ))
+#define HARDFORK_BLC_156_TIME (fc::time_point_sec( 1531407600 ))
 #endif

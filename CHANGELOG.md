@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.4.2] - 2018-07-11
+### Added
+ - New operation: update global parameters
+ - New query: get delayed operation for account
+
+### Updated
+ - Allow 0 amount in debit operation
+ - Cherry picked fixes for BitShares issue #411
+ - Hardfork: new algorithm to calculate price in debit and credit operations
+
 ## [0.4.1] - 2018-06-27
 ### Added
 

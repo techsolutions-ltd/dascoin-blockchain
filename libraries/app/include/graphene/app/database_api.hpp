@@ -892,6 +892,13 @@ class database_api
        */
       optional<vector<daspay_authority>> get_daspay_authority_for_account(account_id_type account) const;
 
+      /**
+       * @brief Get all delayed operations for a specified account
+       * @param account id of account
+       * @return vector of delayed operation objects
+       */
+      vector<delayed_operation_object> get_delayed_operations_for_account(account_id_type account) const;
+
       //////////////////////////
       // DAS33:               //
       //////////////////////////
@@ -1088,6 +1095,7 @@ FC_API( graphene::app::database_api,
    // DasPay
    (get_payment_service_providers)
    (get_daspay_authority_for_account)
+   (get_delayed_operations_for_account)
 
    // Das33
    (get_das33_pledges)

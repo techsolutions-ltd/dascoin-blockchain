@@ -231,5 +231,35 @@ BOOST_AUTO_TEST_CASE(starting_amount_of_cycle_asset_test)
   FC_LOG_AND_RETHROW()
 }
 
+BOOST_AUTO_TEST_CASE(update_global_parameters_test)
+{
+  try {
+  auto root_id = db.get_global_properties().authorities.root_administrator;
+  auto lic_id = db.get_global_properties().authorities.license_administrator;
+  auto& params = db.get_global_properties().parameters;
+  chain_parameters new_params = params;
+
+  // Fails, wrong authority used:
+  GRAPHENE_REQUIRE_THROW( do_op(update_global_parameters_operation(lic_id, new_params)), fc::exception );
+
+  // Fails, block interval set to less than 1:
+  new_params.block_interval = 0;
+  GRAPHENE_REQUIRE_THROW( do_op(update_global_parameters_operation(root_id, new_params)), fc::exception );
+
+  // Fails, maintenance interval less than block interval:
+  new_params.block_interval = 6;
+  new_params.maintenance_interval = 5;
+  GRAPHENE_REQUIRE_THROW( do_op(update_global_parameters_operation(root_id, new_params)), fc::exception );
+
+  // Fails, maintenance interval not a multiply of block interval:
+  new_params.maintenance_interval = 11;
+  GRAPHENE_REQUIRE_THROW( do_op(update_global_parameters_operation(root_id, new_params)), fc::exception );
+
+  // Success:
+  new_params.maintenance_interval = 12;
+  do_op(update_global_parameters_operation(root_id, new_params));
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_SUITE_END()  // account_unit_tests
 BOOST_AUTO_TEST_SUITE_END()  // dascoin_tests

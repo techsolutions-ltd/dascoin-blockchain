@@ -194,6 +194,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       // DasPay:
       vector<payment_service_provider_object> get_payment_service_providers() const;
       optional<vector<daspay_authority>> get_daspay_authority_for_account(account_id_type account) const;
+      vector<delayed_operation_object> get_delayed_operations_for_account(account_id_type account) const;
 
       // Das33
       vector<das33_pledge_holder_object> get_das33_pledges(das33_pledge_holder_id_type from, uint32_t limit) const;
@@ -2645,6 +2646,25 @@ optional<vector<daspay_authority>> database_api_impl::get_daspay_authority_for_a
     });
 
     return ret;
+}
+
+vector<delayed_operation_object> database_api::get_delayed_operations_for_account(account_id_type account) const
+{
+  return my->get_delayed_operations_for_account(account);
+}
+
+vector<delayed_operation_object> database_api_impl::get_delayed_operations_for_account(account_id_type account) const
+{
+  const auto& delayed_operations = _db.get_index_type<delayed_operations_index>().indices().get<by_account>();
+
+  vector<delayed_operation_object> result;
+  for (const delayed_operation_object& operation: delayed_operations)
+  {
+    if (operation.account == account)
+      result.emplace_back(operation);
+  }
+  
+  return result;
 }
 
 //////////////////////////////////////////////////////////////////////

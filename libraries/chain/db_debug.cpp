@@ -143,12 +143,6 @@ void debug_apply_update( database& db, const fc::variant_object& vo )
    switch( action )
    {
       case db_action_create:
-         /*
-         idx.create( [&]( object& obj )
-         {
-            idx.object_from_variant( vo, obj );
-         } );
-         */
          FC_ASSERT( false );
          break;
       case db_action_write:

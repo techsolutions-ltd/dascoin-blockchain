@@ -1960,7 +1960,7 @@ public:
    static WorkerInit _create_worker_initializer( const variant& worker_settings )
    {
       WorkerInit result;
-      from_variant( worker_settings, result );
+      from_variant( worker_settings, result, GRAPHENE_MAX_NESTED_OBJECTS );
       return result;
    }
 
@@ -2048,7 +2048,7 @@ public:
       for( const variant& obj : objects )
       {
          worker_object wo;
-         from_variant( obj, wo );
+         from_variant( obj, wo, GRAPHENE_MAX_NESTED_OBJECTS );
          new_votes.erase( wo.vote_for );
          new_votes.erase( wo.vote_against );
          if( delta.vote_for.find( wo.id ) != delta.vote_for.end() )
@@ -2896,7 +2896,7 @@ public:
       const chain_parameters& current_params = get_global_properties().parameters;
       chain_parameters new_params = current_params;
       fc::reflector<chain_parameters>::visit(
-         fc::from_variant_visitor<chain_parameters>( changed_values, new_params )
+         fc::from_variant_visitor<chain_parameters>( changed_values, new_params, GRAPHENE_MAX_NESTED_OBJECTS )
          );
 
       committee_member_update_global_parameters_operation update_op;
@@ -5569,13 +5569,15 @@ vesting_balance_object_with_info::vesting_balance_object_with_info( const vestin
 
 } } // graphene::wallet
 
-void fc::to_variant(const account_multi_index_type& accts, fc::variant& vo)
-{
-   vo = vector<account_object>(accts.begin(), accts.end());
-}
+namespace fc {
+  void to_variant( const account_multi_index_type& accts, variant& vo, uint32_t max_depth )
+  {
+    to_variant( std::vector<account_object>(accts.begin(), accts.end()), vo, max_depth );
+  }
 
-void fc::from_variant(const fc::variant& var, account_multi_index_type& vo)
-{
-   const vector<account_object>& v = var.as<vector<account_object>>();
-   vo = account_multi_index_type(v.begin(), v.end());
+  void from_variant( const variant& var, account_multi_index_type& vo, uint32_t max_depth )
+  {
+    const std::vector<account_object>& v = var.as<std::vector<account_object>>( max_depth );
+    vo = account_multi_index_type(v.begin(), v.end());
+  }
 }

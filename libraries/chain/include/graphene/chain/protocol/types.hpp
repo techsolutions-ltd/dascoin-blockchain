@@ -528,8 +528,8 @@ namespace fc
     void from_variant( const fc::variant& var, graphene::chain::extended_public_key_type& vo, uint32_t max_depth = 2 );
     void to_variant( const graphene::chain::extended_private_key_type& var, fc::variant& vo, uint32_t max_depth = 2 );
     void from_variant( const fc::variant& var, graphene::chain::extended_private_key_type& vo, uint32_t max_depth = 2 );
-    void to_variant( const graphene::chain::version& v, variant& var );
-    void from_variant( const variant& var, graphene::chain::version& v );
+    void to_variant( const graphene::chain::version& v, variant& var, uint32_t max_depth = 2 );
+    void from_variant( const variant& var, graphene::chain::version& v, uint32_t max_depth = 2 );
 }
 
 REFLECT_ENUM_CHECK( graphene::chain::license_kind,

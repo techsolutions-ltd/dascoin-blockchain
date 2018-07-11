@@ -292,12 +292,12 @@ namespace fc
       vo = graphene::chain::extended_private_key_type( var.as_string() );
     }
 
-    void to_variant(const graphene::chain::version& v, variant& var)
+    void to_variant(const graphene::chain::version& v, variant& var, uint32_t max_depth)
     {
         var = fc::string( v );
     }
 
-    void from_variant(const variant& var, graphene::chain::version& v)
+    void from_variant(const variant& var, graphene::chain::version& v, uint32_t max_depth)
     {
         uint32_t major = 0, hardfork = 0, revision = 0;
         char dot_a = 0, dot_b = 0;

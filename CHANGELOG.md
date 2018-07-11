@@ -8,11 +8,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
  - New operation: update global parameters
  - New query: get delayed operation for account
+ - Hardfork: new algorithm to calculate price in debit and credit operations
 
 ### Updated
  - Allow 0 amount in debit operation
+ - Allow purchasing cycles from all accoind kinds
  - Cherry picked fixes for BitShares issue #411
- - Hardfork: new algorithm to calculate price in debit and credit operations
 
 ## [0.4.1] - 2018-06-27
 ### Added

@@ -324,7 +324,8 @@ namespace detail {
          {
             std::string genesis_str;
             fc::read_file_contents( _options->at("genesis-json").as<boost::filesystem::path>(), genesis_str );
-            graphene::chain::genesis_state_type genesis = fc::json::from_string( genesis_str ).as<genesis_state_type>(20);
+            auto vvv = fc::json::from_string( genesis_str );
+            graphene::chain::genesis_state_type genesis = vvv.as<genesis_state_type>(20);
             bool modified_genesis = false;
             if( _options->count("genesis-timestamp") )
             {
@@ -989,7 +990,6 @@ void application::initialize(const fc::path& data_dir, const boost::program_opti
       wanted.push_back("witness");
       wanted.push_back("account_history");
       wanted.push_back("market_history");
-      wanted.push_back("grouped_orders");
    }
    int es_ah_conflict_counter = 0;
    for (auto& it : wanted)

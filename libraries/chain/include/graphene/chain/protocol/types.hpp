@@ -522,12 +522,12 @@ namespace graphene { namespace chain {
 
 namespace fc
 {
-    void to_variant( const graphene::chain::public_key_type& var,  fc::variant& vo );
-    void from_variant( const fc::variant& var,  graphene::chain::public_key_type& vo );
-    void to_variant( const graphene::chain::extended_public_key_type& var, fc::variant& vo );
-    void from_variant( const fc::variant& var, graphene::chain::extended_public_key_type& vo );
-    void to_variant( const graphene::chain::extended_private_key_type& var, fc::variant& vo );
-    void from_variant( const fc::variant& var, graphene::chain::extended_private_key_type& vo );
+    void to_variant( const graphene::chain::public_key_type& var,  fc::variant& vo, uint32_t max_depth = 2 );
+    void from_variant( const fc::variant& var,  graphene::chain::public_key_type& vo, uint32_t max_depth = 2 );
+    void to_variant( const graphene::chain::extended_public_key_type& var, fc::variant& vo, uint32_t max_depth = 2 );
+    void from_variant( const fc::variant& var, graphene::chain::extended_public_key_type& vo, uint32_t max_depth = 2 );
+    void to_variant( const graphene::chain::extended_private_key_type& var, fc::variant& vo, uint32_t max_depth = 2 );
+    void from_variant( const fc::variant& var, graphene::chain::extended_private_key_type& vo, uint32_t max_depth = 2 );
     void to_variant( const graphene::chain::version& v, variant& var );
     void from_variant( const variant& var, graphene::chain::version& v );
 }

@@ -182,7 +182,7 @@ struct database_fixture {
    static constexpr uint32_t apply_bonus(uint32_t value, uint32_t bonus);
 
    database_fixture();
-   ~database_fixture();
+   ~database_fixture() noexcept(false);
 
    void init_genesis_state();
 

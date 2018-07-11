@@ -247,7 +247,7 @@ struct serializer<std::vector<T>,false>
 template<typename T>
 struct serializer<fc::smart_ref<T>,false>
 {
-   static void init() {
+   static void init() { 
       serializer<T>::init(); }
    static void generate() {}
 };

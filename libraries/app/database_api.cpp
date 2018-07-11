@@ -376,8 +376,8 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       boost::signals2::scoped_connection _pending_trx_connection;
       map< pair<asset_id_type,asset_id_type>, std::function<void(const variant&)> > _market_subscriptions;
       graphene::chain::database& _db;
-      const application_options* _app_options = nullptr;
       database_access_layer _dal;
+      const application_options* _app_options = nullptr;
 };
 
 //////////////////////////////////////////////////////////////////////

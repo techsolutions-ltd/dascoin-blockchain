@@ -93,8 +93,8 @@ void witness_plugin::plugin_initialize(const boost::program_options::variables_m
       const std::vector<std::string> key_id_to_wif_pair_strings = options["private-key"].as<std::vector<std::string>>();
       for (const std::string& key_id_to_wif_pair_string : key_id_to_wif_pair_strings)
       {
-         auto key_id_to_wif_pair = graphene::app::dejsonify<std::pair<chain::public_key_type, std::string> >(key_id_to_wif_pair_string);
-         idump((key_id_to_wif_pair));
+         auto key_id_to_wif_pair = graphene::app::dejsonify<std::pair<chain::public_key_type, std::string> >(key_id_to_wif_pair_string, 5);
+         ilog("Public Key: ${public}", ("public", key_id_to_wif_pair.first));
          fc::optional<fc::ecc::private_key> private_key = graphene::utilities::wif_to_key(key_id_to_wif_pair.second);
          if (!private_key)
          {
@@ -102,7 +102,7 @@ void witness_plugin::plugin_initialize(const boost::program_options::variables_m
             // just here to ease the transition, can be removed soon
             try
             {
-               private_key = fc::variant(key_id_to_wif_pair.second).as<fc::ecc::private_key>();
+               private_key = fc::variant(key_id_to_wif_pair.second, 2).as<fc::ecc::private_key>(1);
             }
             catch (const fc::exception&)
             {

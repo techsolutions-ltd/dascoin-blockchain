@@ -77,7 +77,7 @@ void debug_witness_plugin::plugin_initialize(const boost::program_options::varia
             // just here to ease the transition, can be removed soon
             try
             {
-               private_key = fc::variant( key_id_to_wif_pair.second, GRAPHENE_MAX_NESTED_OBJECTS ).template as<fc::ecc::private_key>( GRAPHENE_MAX_NESTED_OBJECTS );
+               private_key = fc::variant( key_id_to_wif_pair.second, GRAPHENE_MAX_NESTED_OBJECTS ).as<fc::ecc::private_key>( GRAPHENE_MAX_NESTED_OBJECTS );
             }
             catch (const fc::exception&)
             {

@@ -359,7 +359,6 @@ void_result purchase_cycles_evaluator::do_evaluate(const operation_type& op)
 
   const auto& d = db();
   const auto& wallet_obj = op.wallet_id(d);
-  auto account_kind_string = fc::reflector<account_kind>::to_string(wallet_obj.kind);
 
   const dynamic_global_property_object dgpo = d.get_dynamic_global_properties();
 

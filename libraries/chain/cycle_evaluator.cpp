@@ -361,8 +361,6 @@ void_result purchase_cycles_evaluator::do_evaluate(const operation_type& op)
   const auto& wallet_obj = op.wallet_id(d);
   auto account_kind_string = fc::reflector<account_kind>::to_string(wallet_obj.kind);
 
-  FC_ASSERT( wallet_obj.is_wallet(), "Cycles can be purchased only from a wallet account, '${w}' is ${k}", ("w", wallet_obj.name)("k", account_kind_string) );
-
   const dynamic_global_property_object dgpo = d.get_dynamic_global_properties();
 
   FC_ASSERT( dgpo.frequency == op.frequency, "Current frequency is ${cf}, ${opf} given", ("cf", dgpo.frequency)("opf", op.frequency) );

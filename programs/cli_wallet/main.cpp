@@ -187,7 +187,7 @@ int main( int argc, char** argv )
       fc::http::websocket_client client;
       idump((wdata.ws_server));
       auto con  = client.connect( wdata.ws_server );
-      auto apic = std::make_shared<fc::rpc::websocket_api_connection>(*con);
+      auto apic = std::make_shared<fc::rpc::websocket_api_connection>(*con, GRAPHENE_MAX_NESTED_OBJECTS);
 
       auto remote_api = apic->get_remote_api< login_api >(1);
       edump((wdata.ws_user)(wdata.ws_password) );
@@ -200,7 +200,7 @@ int main( int argc, char** argv )
 
       fc::api<wallet_api> wapi(wapiptr);
 
-      auto wallet_cli = std::make_shared<fc::rpc::cli>();
+      auto wallet_cli = std::make_shared<fc::rpc::cli>(GRAPHENE_MAX_NESTED_OBJECTS);
       for( auto& name_formatter : wapiptr->get_result_formatters() )
          wallet_cli->format_result( name_formatter.first, name_formatter.second );
 
@@ -227,7 +227,7 @@ int main( int argc, char** argv )
          _websocket_server->on_connection([&]( const fc::http::websocket_connection_ptr& c ){
             std::cout << "here... \n";
             wlog("." );
-            auto wsc = std::make_shared<fc::rpc::websocket_api_connection>(*c);
+            auto wsc = std::make_shared<fc::rpc::websocket_api_connection>(*c, GRAPHENE_MAX_NESTED_OBJECTS);
             wsc->register_api(wapi);
             c->set_session_data( wsc );
          });
@@ -244,7 +244,7 @@ int main( int argc, char** argv )
       if( options.count("rpc-tls-endpoint") )
       {
          _websocket_tls_server->on_connection([&]( const fc::http::websocket_connection_ptr& c ){
-            auto wsc = std::make_shared<fc::rpc::websocket_api_connection>(*c);
+            auto wsc = std::make_shared<fc::rpc::websocket_api_connection>(*c, GRAPHENE_MAX_NESTED_OBJECTS);
             wsc->register_api(wapi);
             c->set_session_data( wsc );
          });
@@ -265,7 +265,7 @@ int main( int argc, char** argv )
             [&]( const fc::http::request& req, const fc::http::server::response& resp )
             {
                std::shared_ptr< fc::rpc::http_api_connection > conn =
-                  std::make_shared< fc::rpc::http_api_connection>();
+                  std::make_shared< fc::rpc::http_api_connection>(GRAPHENE_MAX_NESTED_OBJECTS);
                conn->register_api( wapi );
                conn->on_request( req, resp );
             } );

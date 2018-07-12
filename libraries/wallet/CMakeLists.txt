@@ -1,6 +1,6 @@
 file(GLOB HEADERS "include/graphene/wallet/*.hpp")
 
-find_package( Perl )
+#find_package( Perl )
 find_package( Doxygen )
 
 if( PERL_FOUND AND DOXYGEN_FOUND AND NOT "${CMAKE_GENERATOR}" STREQUAL "Ninja" )

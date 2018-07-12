@@ -120,8 +120,8 @@ int main( int argc, char** argv )
 
       std::cout << "Logging RPC to file: " << (data_dir / ac.filename).preferred_string() << "\n";
 
-      cfg.appenders.push_back(fc::appender_config( "default", "console", fc::variant(fc::console_appender::config())));
-      cfg.appenders.push_back(fc::appender_config( "rpc", "file", fc::variant(ac)));
+      cfg.appenders.push_back(fc::appender_config( "default", "console", fc::variant(fc::console_appender::config(), 20)));
+      cfg.appenders.push_back(fc::appender_config( "rpc", "file", fc::variant(ac, 5)));
 
       cfg.loggers = { fc::logger_config("default"), fc::logger_config( "rpc") };
       cfg.loggers.front().level = fc::log_level::info;
@@ -151,7 +151,7 @@ int main( int argc, char** argv )
       fc::path wallet_file( options.count("wallet-file") ? options.at("wallet-file").as<string>() : "wallet.json");
       if( fc::exists( wallet_file ) )
       {
-         wdata = fc::json::from_file( wallet_file ).as<wallet_data>();
+         wdata = fc::json::from_file( wallet_file ).as<wallet_data>( GRAPHENE_MAX_NESTED_OBJECTS );
          if( options.count("chain-id") )
          {
             // the --chain-id on the CLI must match the chain ID embedded in the wallet file

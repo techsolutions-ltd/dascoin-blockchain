@@ -2,3 +2,6 @@
 	path = libraries/fc
 	url = git@gitlab.internal.roundglobe.tech:DasCoin/dascoin-fc.git
 	branch = bitshares_codebase
+[submodule "docs"]
+	path = docs
+	url = git@gitlab.internal.roundglobe.tech:DasCoin/dascoin-docs.git

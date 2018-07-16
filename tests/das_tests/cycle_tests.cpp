@@ -129,6 +129,7 @@ BOOST_AUTO_TEST_CASE( purchase_cycle_asset_test )
   VAULT_ACTOR(vault);
   ACTOR(wallet);
   ACTOR(feepool);
+  CUSTODIAN_ACTOR(custodian);
 
   tether_accounts(wallet_id, vault_id);
 
@@ -184,10 +185,20 @@ BOOST_AUTO_TEST_CASE( purchase_cycle_asset_test )
   do_op(cfpao);
 
   // Purchase succeeds:
-  do_op(purchase_cycle_asset_operation(wallet_id, dsc, 2 * DASCOIN_FREQUENCY_PRECISION, 20));
+  do_op(purchase_cycle_asset_operation(wallet_id, asset{5 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, 2 * DASCOIN_FREQUENCY_PRECISION, 10));
 
   // Fee pool account should have 10 dsc now:
-  BOOST_CHECK_EQUAL( get_balance(feepool_id, get_dascoin_asset_id()), 10 * DASCOIN_DEFAULT_ASSET_PRECISION );
+  BOOST_CHECK_EQUAL( get_balance(feepool_id, get_dascoin_asset_id()), 5 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+  // Transfer dsc to custodian account:
+  transfer_operation transfer_op;
+  transfer_op.from = wallet_id;
+  transfer_op.to = custodian_id;
+  transfer_op.amount = asset{2 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()};
+  do_op(transfer_op);
+  // Purchase cycles with custodian account
+  do_op(purchase_cycle_asset_operation(custodian_id, asset{1 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, 2 * DASCOIN_FREQUENCY_PRECISION, 2));
+
 
 } FC_LOG_AND_RETHROW() }
 

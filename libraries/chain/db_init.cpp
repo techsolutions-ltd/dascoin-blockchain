@@ -60,24 +60,25 @@
 #include <graphene/chain/asset_evaluator.hpp>
 #include <graphene/chain/assert_evaluator.hpp>
 #include <graphene/chain/balance_evaluator.hpp>
+#include <graphene/chain/change_fee_evaluator.hpp>
 #include <graphene/chain/committee_member_evaluator.hpp>
 #include <graphene/chain/confidential_evaluator.hpp>
 #include <graphene/chain/custom_evaluator.hpp>
 #include <graphene/chain/cycle_evaluator.hpp>
+#include <graphene/chain/das33_evaluator.hpp>
+#include <graphene/chain/daspay_evaluator.hpp>
 #include <graphene/chain/license_evaluator.hpp>
 #include <graphene/chain/market_evaluator.hpp>
 #include <graphene/chain/proposal_evaluator.hpp>
 #include <graphene/chain/transfer_evaluator.hpp>
 #include <graphene/chain/vesting_balance_evaluator.hpp>
+#include <graphene/chain/update_global_parameters_evaluator.hpp>
 #include <graphene/chain/upgrade_event_evaluator.hpp>
 #include <graphene/chain/wire_evaluator.hpp>
 #include <graphene/chain/wire_out_with_fee_evaluator.hpp>
 #include <graphene/chain/withdraw_permission_evaluator.hpp>
 #include <graphene/chain/witness_evaluator.hpp>
 #include <graphene/chain/worker_evaluator.hpp>
-#include <graphene/chain/change_fee_evaluator.hpp>
-#include <graphene/chain/daspay_evaluator.hpp>
-#include <graphene/chain/das33_evaluator.hpp>
 
 #include <graphene/chain/protocol/fee_schedule.hpp>
 
@@ -290,6 +291,7 @@ void database::initialize_evaluators()
    register_evaluator<das33_project_delete_evaluator>();
    register_evaluator<das33_pledge_asset_evaluator>();
    register_evaluator<update_delayed_operations_resolver_parameters_evaluator>();
+   register_evaluator<update_global_parameters_evaluator>();
 }
 
 void database::initialize_indexes()

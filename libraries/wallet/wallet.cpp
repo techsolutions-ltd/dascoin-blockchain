@@ -1382,6 +1382,32 @@ public:
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (delayed_operations_resolver_enabled)(delayed_operations_resolver_interval_time_seconds)(broadcast) ) }
 
+   signed_transaction update_global_parameters(const string& authority,
+                                               const variant_object& changed_values,
+                                               bool broadcast = false)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+      FC_ASSERT( !changed_values.contains("current_fees") );
+
+      const chain_parameters& current_params = get_global_properties().parameters;
+      chain_parameters new_params = current_params;
+      fc::reflector<chain_parameters>::visit(
+         fc::from_variant_visitor<chain_parameters>( changed_values, new_params )
+      );
+
+      update_global_parameters_operation op;
+
+      op.authority = get_account(authority).id;
+      op.new_parameters = new_params;
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (authority)(changed_values)(broadcast) ) }
+
    signed_transaction tether_accounts(string wallet, string vault, bool broadcast = false)
    { try {
       FC_ASSERT( !self.is_locked() );
@@ -5580,6 +5606,13 @@ signed_transaction wallet_api::update_delayed_operations_resolver_parameters(con
 vector<delayed_operation_object> wallet_api::get_delayed_operations_for_account(account_id_type account) const
 {
   return my->_remote_db->get_delayed_operations_for_account(account);
+}
+
+signed_transaction wallet_api::update_global_parameters(const string& authority,
+                                                        const variant_object& changed_values,
+                                                        bool broadcast /* = false */) const
+{
+   return my->update_global_parameters( authority, changed_values, broadcast );
 }
 
 signed_block_with_info::signed_block_with_info( const signed_block& block )

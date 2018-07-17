@@ -1392,7 +1392,7 @@ public:
       const chain_parameters& current_params = get_global_properties().parameters;
       chain_parameters new_params = current_params;
       fc::reflector<chain_parameters>::visit(
-         fc::from_variant_visitor<chain_parameters>( changed_values, new_params )
+         fc::from_variant_visitor<chain_parameters>( changed_values, new_params, GRAPHENE_MAX_NESTED_OBJECTS )
       );
 
       update_global_parameters_operation op;

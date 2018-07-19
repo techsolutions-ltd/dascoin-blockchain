@@ -1097,7 +1097,7 @@ void application::shutdown()
    if( my->_chain_db )
    {
       my->_chain_db->close();
-      my->_chain_db = nullptr;
+      //my->_chain_db = nullptr;
    }
 }
 

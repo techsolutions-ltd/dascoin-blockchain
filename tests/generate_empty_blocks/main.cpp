@@ -119,12 +119,11 @@ int main( int argc, char** argv )
       uint32_t num_blocks = options["num-blocks"].as<uint32_t>();
       uint32_t miss_rate = options["miss-rate"].as<uint32_t>();
 
-      fc::ecc::private_key init_account_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("null_key")) );
       fc::ecc::private_key nathan_priv_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("nathan")));
 
       database db;
       fc::path db_path = data_dir / "db";
-      db.open(db_path, [&]() { return genesis; }, "TEST");
+      db.open(db_path, [&]() { return genesis; }, "TEST" );
 
       uint32_t slot = 1;
       uint32_t missed = 0;

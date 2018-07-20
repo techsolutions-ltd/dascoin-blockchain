@@ -1,4 +1,4 @@
-dascoin-blockchain
+DasCoin Blockchain
 ==============
 
 [Build Status](https://travis-ci.org/techsolutions-ltd/dascoin-blockchain/branches):
@@ -15,9 +15,9 @@ dascoin-blockchain
 * [FAQ](#faq)
 * [License](#license)
 
-dascoin-blockchain is the techsolutions-ltd blockchain implementation and command-line interface.
+DasCoin Blockchain is the techsolutions-ltd blockchain implementation and command-line interface.
 
-**NOTE:** Most recent dascoin-blockchain repositories can be updated with the following steps:
+**NOTE:** Most recent DasCoin Blockchain repositories can be updated with the following steps:
 
     git remote set-url origin https://github.com/techsolutions-ltd/dascoin-blockchain.git
     git checkout master
@@ -45,13 +45,13 @@ To build after all dependencies are installed:
     cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo .
     make
 
-**NOTE:** dascoin-blockchain requires an [OpenSSL](https://www.openssl.org/) version in the 1.0.x series. OpenSSL 1.1.0 and newer are NOT supported. If your system OpenSSL version is newer, then you will need to manually provide an older version of OpenSSL and specify it to CMake using `-DOPENSSL_INCLUDE_DIR`, `-DOPENSSL_SSL_LIBRARY`, and `-DOPENSSL_CRYPTO_LIBRARY`.
+**NOTE:** DasCoin Blockchain requires an [OpenSSL](https://www.openssl.org/) version in the 1.0.x series. OpenSSL 1.1.0 and newer are NOT supported. If your system OpenSSL version is newer, then you will need to manually provide an older version of OpenSSL and specify it to CMake using `-DOPENSSL_INCLUDE_DIR`, `-DOPENSSL_SSL_LIBRARY`, and `-DOPENSSL_CRYPTO_LIBRARY`.
 
-**NOTE:** dascoin-blockchain requires a [Boost](http://www.boost.org/) version in the range [1.57, 1.65]. Versions earlier than
+**NOTE:** DasCoin Blockchain requires a [Boost](http://www.boost.org/) version in the range [1.57, 1.65]. Versions earlier than
 1.57 or newer than 1.65 are NOT supported. If your system Boost version is newer, then you will need to manually build
 an older version of Boost and specify it to CMake using `DBOOST_ROOT`.
 
-**NOTE:** dascoin-blockchain requires a 64-bit operating system to build, and will not build on a 32-bit OS.
+**NOTE:** DasCoin Blockchain requires a 64-bit operating system to build, and will not build on a 32-bit OS.
 
 After building, the witness node can be launched with:
 
@@ -86,7 +86,7 @@ Use `help` to see all available wallet commands. Source definition and listing o
 
 Support
 -------
-dascoin-blockchain bugs can be reported directly to the [issue tracker](https://github.com/techsolutions-ltd/dascoin-blockchain/issues).
+DasCoin Blockchain bugs can be reported directly to the [issue tracker](https://github.com/techsolutions-ltd/dascoin-blockchain/issues).
 
 Up to date online Doxygen documentation can be found at [Doxygen](https://bitshares.org/doxygen/hierarchy.html)
 
@@ -117,7 +117,7 @@ API 0 is accessible using regular JSON-RPC:
 Accessing restricted API's
 --------------------------
 
-You can restrict API's to particular users by specifying an `apiaccess` file in `config.ini`.  Here is an example `apiaccess` file which allows
+You can restrict API's to particular users by specifying an `api-access` file in `config.ini` or by using the `--api-access /full/path/to/api-access.json` startup node command.  Here is an example `api-access` file which allows
 user `bytemaster` with password `supersecret` to access four different API's, while allowing any other user to access the three public API's
 necessary to use the wallet:
 
@@ -234,5 +234,5 @@ FAQ
  
 License
 -------
-dascoin-blockchain is under the MIT license. See [LICENSE](https://github.com/techsolutions-ltd/dascoin-blockchain/blob/master/LICENSE.txt)
+DasCoin Blockchain is under the MIT license. See [LICENSE](https://github.com/techsolutions-ltd/dascoin-blockchain/blob/master/LICENSE.txt)
 for more information.

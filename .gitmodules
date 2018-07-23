@@ -3,8 +3,3 @@
 	url = https://gitlab.internal.roundglobe.tech/DasCoin/dascoin-docs.git
 	branch = master
 	ignore = dirty
-
-[submodule "libraries/fc"]
-	path = libraries/fc
-	url = https://gitlab.internal.roundglobe.tech/DasCoin/dascoin-fc.git
-	branch = BLC-170_UpgradeCodebaseWithBitShares

@@ -341,7 +341,7 @@ class wallet_api
        * @param id the name or id of the account whose balances you want
        * @returns a list of the given account's balances
        */
-      vector<asset>            list_account_balances(const string& id);
+      vector<asset_reserved>            list_account_balances(const string& id);
       /** Lists all assets registered on the blockchain.
        *
        * To list all assets, pass the empty string \c "" for the lowerbound to start

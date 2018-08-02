@@ -137,26 +137,13 @@ struct limit_orders_grouped_by_price
    std::vector<agregated_limit_orders_with_same_price> sell;
 };
 
-struct limit_order_price
-{
-   limit_order_price(share_type b, share_type q)
-      : base(b), quote(q)
-   {}
-   limit_order_price()
-      : base(0), quote(0)
-   {}
-
-   share_type                 base;
-   share_type                 quote;
-};
-
 // agregated limit orders with same price
 struct agregated_limit_orders_with_same_price_collection {
    share_type                 price;
    share_type                 base_volume;
    share_type                 quote_volume;
    share_type                 count;
-   std::vector<limit_order_price> limit_orders;
+   std::vector<agregated_limit_orders_with_same_price> limit_orders;
 
 };
 
@@ -987,7 +974,6 @@ FC_REFLECT( graphene::app::market_hi_low_volume, (base)(quote)(high)(low)(base_v
 FC_REFLECT( graphene::app::market_trade, (sequence)(date)(price)(amount)(value) );
 FC_REFLECT( graphene::app::agregated_limit_orders_with_same_price, (price)(base_volume)(quote_volume)(count) );
 FC_REFLECT( graphene::app::limit_orders_grouped_by_price, (buy)(sell) );
-FC_REFLECT( graphene::app::limit_order_price, (base)(quote) );
 FC_REFLECT( graphene::app::agregated_limit_orders_with_same_price_collection, (price)(base_volume)(quote_volume)(count)(limit_orders) );
 FC_REFLECT( graphene::app::limit_orders_collection_grouped_by_price, (buy)(sell) );
 FC_REFLECT( graphene::app::cycle_price, (cycle_amount)(asset_amount)(frequency) );

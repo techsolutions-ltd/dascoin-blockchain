@@ -380,6 +380,10 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       map< pair<asset_id_type,asset_id_type>, std::function<void(const variant&)> > _market_subscriptions;
       graphene::chain::database& _db;
       database_access_layer _dal;
+
+   private:
+      template<typename IterStart, typename IterEnd>
+      void func_re_pack(IterStart helper_itr, IterEnd end, std::vector<agregated_limit_orders_with_same_price_collection>& ret, uint32_t limit_group, uint32_t limit_per_group) const;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -1298,6 +1302,59 @@ limit_orders_collection_grouped_by_price database_api::get_limit_orders_collecti
    return my->get_limit_orders_collection_grouped_by_price( a, b, limit_group, limit_per_group );
 }
 
+
+template<typename IterStart, typename IterEnd>
+void database_api_impl::func_re_pack(IterStart helper_itr, IterEnd end, std::vector<agregated_limit_orders_with_same_price_collection>& ret, uint32_t limit_group, uint32_t limit_per_group) const
+{
+   uint32_t count = 0;
+   while(helper_itr != end && count < limit_group)
+   {
+      auto& alo = helper_itr->second;
+      share_type group_price_key = static_cast<share_type>(alo.price / ORDER_BOOK_GROUP_QUERY_PRECISION_DIFF);
+      agregated_limit_orders_with_same_price_collection aloc;
+      aloc.price = group_price_key;
+      aloc.base_volume = alo.base_volume;
+      aloc.quote_volume = alo.quote_volume;
+      aloc.count = alo.count;
+      aloc.limit_orders.push_back(alo);
+
+      ret.push_back(aloc);
+      helper_itr++;
+      count++;
+      // put all groups in same basket if price for group is same
+      while(helper_itr != end)
+      {
+         alo = helper_itr->second;
+         share_type group_price_key_temp = static_cast<share_type>(alo.price / ORDER_BOOK_GROUP_QUERY_PRECISION_DIFF);
+         if(group_price_key_temp != group_price_key)
+         {
+            break;
+         }
+         if(aloc.limit_orders.size() < limit_per_group)
+         {
+            ret.back().count += alo.count;
+            ret.back().base_volume += alo.base_volume;
+            ret.back().quote_volume += alo.quote_volume;
+            ret.back().limit_orders.push_back(alo);
+         }
+         helper_itr++;
+      }
+   }
+}
+
+template void database_api_impl::func_re_pack < std::map<share_type, agregated_limit_orders_with_same_price>::iterator,
+                                 std::map<share_type, agregated_limit_orders_with_same_price>::iterator > (
+                                       std::map<share_type, agregated_limit_orders_with_same_price>::iterator helper_itr,
+                                       std::map<share_type, agregated_limit_orders_with_same_price>::iterator end,
+                                       std::vector<agregated_limit_orders_with_same_price_collection>& ret,
+                                       uint32_t limit_group, uint32_t limit_per_group ) const;
+template void database_api_impl::func_re_pack < std::map<share_type, agregated_limit_orders_with_same_price>::reverse_iterator,
+                                 std::map<share_type, agregated_limit_orders_with_same_price>::reverse_iterator > (
+                                       std::map<share_type, agregated_limit_orders_with_same_price>::reverse_iterator helper_itr,
+                                       std::map<share_type, agregated_limit_orders_with_same_price>::reverse_iterator end,
+                                       std::vector<agregated_limit_orders_with_same_price_collection>& ret,
+                                       uint32_t limit_group, uint32_t limit_per_group ) const;
+
 limit_orders_collection_grouped_by_price database_api_impl::get_limit_orders_collection_grouped_by_price(asset_id_type base, asset_id_type quote, uint32_t limit_group, uint32_t limit_per_group) const
 {
    FC_ASSERT( limit_per_group <= 100 && limit_group <= 100);
@@ -1310,7 +1367,7 @@ limit_orders_collection_grouped_by_price database_api_impl::get_limit_orders_col
 
 
    auto func = [this, &limit_price_idx, limit_group, limit_per_group](asset_id_type& a, asset_id_type& b, std::vector<agregated_limit_orders_with_same_price_collection>& ret, bool ascending){
-      std::map<share_type, agregated_limit_orders_with_same_price_collection> helper_map;
+      std::map<share_type, agregated_limit_orders_with_same_price> helper_map;
 
       auto limit_itr = limit_price_idx.lower_bound(price::max(a,b));
       auto limit_end = limit_price_idx.upper_bound(price::min(a,b));
@@ -1323,7 +1380,7 @@ limit_orders_collection_grouped_by_price database_api_impl::get_limit_orders_col
       {
          double price = ascending ? 1 / limit_itr->sell_price.to_real() : limit_itr->sell_price.to_real();
          // adjust price precision and value accordingly so we can forme key
-         auto p = round((ascending ? price * coef : price / coef) * DASCOIN_FIAT_ASSET_PRECISION);
+         auto p = round((ascending ? price * coef : price / coef) * ORDER_BOOK_QUERY_PRECISION);
          share_type price_key = static_cast<share_type>(p);
 
          auto helper_itr = helper_map.find(price_key);
@@ -1332,16 +1389,11 @@ limit_orders_collection_grouped_by_price database_api_impl::get_limit_orders_col
          // if we are adding limit order with new price
          if(helper_itr == helper_map.end())
          {
-            agregated_limit_orders_with_same_price_collection alo;
+            agregated_limit_orders_with_same_price alo;
             alo.price = price_key;
             alo.base_volume = limit_itr->for_sale.value;
-
             alo.quote_volume = quote_amount;
             alo.count = 1;
-            if(alo.count <= limit_per_group)
-            {
-               alo.limit_orders.push_back(limit_order_price(limit_itr->for_sale, quote_amount));
-            }
             helper_map[price_key] = alo;
          }
          else
@@ -1349,36 +1401,19 @@ limit_orders_collection_grouped_by_price database_api_impl::get_limit_orders_col
             helper_itr->second.base_volume += limit_itr->for_sale.value;
             helper_itr->second.quote_volume += quote_amount;
             helper_itr->second.count++;
-            if(helper_itr->second.count <= limit_per_group)
-            {
-               helper_itr->second.limit_orders.push_back(limit_order_price(limit_itr->for_sale, quote_amount));
-            }
          }
 
          ++limit_itr;
       }
 
       // re-pack result in vector (from map) in desired order
-      uint32_t count = 0;
       if(ascending)
       {
-         auto helper_itr = helper_map.begin();
-         while(helper_itr != helper_map.end() && count < limit_group)
-         {
-            ret.push_back(helper_itr->second);
-            helper_itr++;
-            count++;
-         }
+         func_re_pack(helper_map.begin(), helper_map.end(), ret, limit_group, limit_per_group);
       }
       else
       {
-         auto helper_itr = helper_map.rbegin();
-         while(helper_itr != helper_map.rend() && count < limit_group)
-         {
-            ret.push_back(helper_itr->second);
-            helper_itr++;
-            count++;
-         }
+         func_re_pack(helper_map.rbegin(), helper_map.rend(), ret, limit_group, limit_per_group);
       }
    };
 
@@ -1387,6 +1422,8 @@ limit_orders_collection_grouped_by_price database_api_impl::get_limit_orders_col
 
    return std::move(result);
 }
+
+
 
 vector<call_order_object> database_api::get_call_orders(asset_id_type a, uint32_t limit)const
 {

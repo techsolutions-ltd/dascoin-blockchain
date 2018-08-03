@@ -1342,19 +1342,6 @@ void database_api_impl::func_re_pack(IterStart helper_itr, IterEnd end, std::vec
    }
 }
 
-template void database_api_impl::func_re_pack < std::map<share_type, agregated_limit_orders_with_same_price>::iterator,
-                                 std::map<share_type, agregated_limit_orders_with_same_price>::iterator > (
-                                       std::map<share_type, agregated_limit_orders_with_same_price>::iterator helper_itr,
-                                       std::map<share_type, agregated_limit_orders_with_same_price>::iterator end,
-                                       std::vector<agregated_limit_orders_with_same_price_collection>& ret,
-                                       uint32_t limit_group, uint32_t limit_per_group ) const;
-template void database_api_impl::func_re_pack < std::map<share_type, agregated_limit_orders_with_same_price>::reverse_iterator,
-                                 std::map<share_type, agregated_limit_orders_with_same_price>::reverse_iterator > (
-                                       std::map<share_type, agregated_limit_orders_with_same_price>::reverse_iterator helper_itr,
-                                       std::map<share_type, agregated_limit_orders_with_same_price>::reverse_iterator end,
-                                       std::vector<agregated_limit_orders_with_same_price_collection>& ret,
-                                       uint32_t limit_group, uint32_t limit_per_group ) const;
-
 limit_orders_collection_grouped_by_price database_api_impl::get_limit_orders_collection_grouped_by_price(asset_id_type base, asset_id_type quote, uint32_t limit_group, uint32_t limit_per_group) const
 {
    FC_ASSERT( limit_per_group <= 100 && limit_group <= 100);

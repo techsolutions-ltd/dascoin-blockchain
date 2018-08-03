@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.4.3] - 2018-08-03
+### Added
+ - New query: get limit orders collection grouped by price
+
+### Updated
+ - Updated upgrade behavior for utility licenses
+ - Fixed bug regarding websocket server not accepting connections after
+   firewall rules are changed.
+
 ## [0.4.2] - 2018-07-11
 ### Added
  - New operation: update global parameters

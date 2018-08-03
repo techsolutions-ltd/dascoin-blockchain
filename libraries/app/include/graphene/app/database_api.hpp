@@ -137,6 +137,23 @@ struct limit_orders_grouped_by_price
    std::vector<agregated_limit_orders_with_same_price> sell;
 };
 
+// agregated limit orders with same price
+struct agregated_limit_orders_with_same_price_collection {
+   share_type                 price;
+   share_type                 base_volume;
+   share_type                 quote_volume;
+   share_type                 count;
+   std::vector<agregated_limit_orders_with_same_price> limit_orders;
+
+};
+
+// agregated limit orders grouped by price and devided in two vectros for buy/sell limit orders
+struct limit_orders_collection_grouped_by_price
+{
+   std::vector<agregated_limit_orders_with_same_price_collection> buy;
+   std::vector<agregated_limit_orders_with_same_price_collection> sell;
+};
+
 struct cycle_price
 {
    share_type                 cycle_amount;
@@ -424,6 +441,15 @@ class database_api
        * @return The limit orders aggregated by same price, ordered by price (in buy - descending in sell - ascending)
        */
       limit_orders_grouped_by_price get_limit_orders_grouped_by_price(asset_id_type a, asset_id_type b, uint32_t limit)const;
+
+      /**
+       * @brief Get limit orders in a given market grouped by price and devided in buy and sell vectors
+       * @param a ID of asset being sold
+       * @param b ID of asset being purchased
+       * @param limit Maximum number of orders groups to retrieve per buy and per sell vector
+       * @return The limit orders aggregated by same price, ordered by price (in buy - descending in sell - ascending)
+       */
+      limit_orders_collection_grouped_by_price get_limit_orders_collection_grouped_by_price(asset_id_type a, asset_id_type b, uint32_t limit_group, uint32_t limit_per_group)const;
 
       /**
        * @brief Get limit orders for an account, in a given market
@@ -948,6 +974,8 @@ FC_REFLECT( graphene::app::market_hi_low_volume, (base)(quote)(high)(low)(base_v
 FC_REFLECT( graphene::app::market_trade, (sequence)(date)(price)(amount)(value) );
 FC_REFLECT( graphene::app::agregated_limit_orders_with_same_price, (price)(base_volume)(quote_volume)(count) );
 FC_REFLECT( graphene::app::limit_orders_grouped_by_price, (buy)(sell) );
+FC_REFLECT( graphene::app::agregated_limit_orders_with_same_price_collection, (price)(base_volume)(quote_volume)(count)(limit_orders) );
+FC_REFLECT( graphene::app::limit_orders_collection_grouped_by_price, (buy)(sell) );
 FC_REFLECT( graphene::app::cycle_price, (cycle_amount)(asset_amount)(frequency) );
 FC_REFLECT( graphene::app::dasc_holder, (holder)(vaults)(amount) );
 FC_REFLECT( graphene::app::daspay_authority, (payment_provider)(daspay_public_key)(memo) );
@@ -1008,6 +1036,7 @@ FC_API( graphene::app::database_api,
    (get_limit_orders)
    (get_limit_orders_for_account)
    (get_limit_orders_grouped_by_price)
+   (get_limit_orders_collection_grouped_by_price)
    (get_call_orders)
    (get_settle_orders)
    (get_margin_positions)

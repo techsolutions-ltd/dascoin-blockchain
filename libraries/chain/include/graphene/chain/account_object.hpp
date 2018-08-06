@@ -48,6 +48,8 @@ namespace graphene { namespace chain {
 
          account_id_type  owner;
 
+         string           name; ///< redundantly store account name here for better maintenance performance
+
          /**
           * Keep the most recent operation as a root pointer to a linked list of the transaction history.
           */
@@ -60,6 +62,18 @@ namespace graphene { namespace chain {
           * total here and update it every time an order is created or modified.
           */
          share_type total_core_in_orders;
+
+         share_type core_in_balance = 0; ///< redundantly store core balance here for better maintenance performance
+
+         bool has_cashback_vb = false; ///< redundantly store this for better maintenance performance
+
+         bool is_voting = false; ///< redundately store whether this account is voting for better maintenance performance
+
+         /// Whether this account owns some CORE asset and is voting
+         inline bool has_some_core_voting() const
+         {
+            return is_voting && ( total_core_in_orders > 0 || core_in_balance > 0 || has_cashback_vb );
+         }
 
          /**
           * Tracks the total fees paid by this account for the purpose of calculating bulk discounts.
@@ -80,6 +94,12 @@ namespace graphene { namespace chain {
           * available for withdrawal) rather than requiring the normal vesting period.
           */
          share_type pending_vested_fees;
+
+         /// Whether this account has pending fees, no matter vested or not
+         inline bool has_pending_fees() const { return pending_fees > 0 || pending_vested_fees > 0; }
+
+         /// Whether need to process this account during the maintenance interval
+         inline bool need_maintenance() const { return has_some_core_voting() || has_pending_fees(); }
 
          /// @brief Split up and pay out @ref pending_fees and @ref pending_vested_fees
          void process_fees(const account_object& a, database& d) const;
@@ -519,6 +539,33 @@ namespace graphene { namespace chain {
    typedef generic_index<
       account_cycle_balance_object, account_cycle_balance_multi_index_type
    > account_cycle_balance_index;
+
+   struct by_owner;
+   struct by_maintenance_seq;
+
+   /**
+    * @ingroup object_index
+    */
+   typedef multi_index_container<
+      account_statistics_object,
+      indexed_by<
+         ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
+         ordered_unique< tag<by_owner>,
+                         member< account_statistics_object, account_id_type, &account_statistics_object::owner > >,
+         ordered_unique< tag<by_maintenance_seq>,
+            composite_key<
+               account_statistics_object,
+               const_mem_fun<account_statistics_object, bool, &account_statistics_object::need_maintenance>,
+               member<account_statistics_object, string, &account_statistics_object::name>
+            >
+         >
+      >
+   > account_stats_multi_index_type;
+
+   /**
+    * @ingroup object_index
+    */
+   typedef generic_index<account_statistics_object, account_stats_multi_index_type> account_stats_index;
 
 } }  // namsepace graphene::chain
 

@@ -327,7 +327,6 @@ void database::initialize_indexes()
    add_index< primary_index<asset_bitasset_data_index                     > >();
    add_index< primary_index<simple_index<global_property_object          >> >();
    add_index< primary_index<simple_index<dynamic_global_property_object  >> >();
-   add_index< primary_index<simple_index<account_statistics_object       >> >();
    add_index< primary_index<account_stats_index                           > >();
    add_index< primary_index<simple_index<asset_dynamic_data_object       >> >();
    add_index< primary_index<simple_index<block_summary_object            >> >();

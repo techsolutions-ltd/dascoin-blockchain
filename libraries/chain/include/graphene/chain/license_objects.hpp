@@ -39,8 +39,7 @@ namespace graphene { namespace chain {
     {
       standard,
       president,
-      utility,
-      utility_president
+      utility
     };
 
     class policy_class
@@ -54,9 +53,7 @@ namespace graphene { namespace chain {
         else if (p == president)
           return policy_class::get_amount_to_upgrade_president(upgradeable);
         else if (p == utility)
-          return policy_class::get_amount_to_upgrade(upgradeable);
-        else if (p == utility_president)
-          return policy_class::get_amount_to_upgrade_utility_president(upgradeable);
+          return policy_class::get_amount_to_upgrade_utility(upgradeable);
         else
            FC_THROW("Undefined upgrade policy!");
       }
@@ -75,7 +72,7 @@ namespace graphene { namespace chain {
       }
 
       template<typename T>
-      static share_type get_amount_to_upgrade_utility_president(const T& upgradeable)
+      static share_type get_amount_to_upgrade_utility(const T& upgradeable)
       {
         return upgradeable.base_amount;
       }
@@ -104,7 +101,6 @@ namespace graphene { namespace chain {
         using upgrade_policy = detail::policy;
 
         upgrade_policy up_policy;
-        share_type shadow_amount;
 
         license_history_record() = default;
         explicit license_history_record(license_type_id_type license,
@@ -124,8 +120,8 @@ namespace graphene { namespace chain {
               activated_at(activated_at),
               issued_on_blockchain(issued_on_blockchain),
               balance_upgrade(balance_upgrade),
-              up_policy(up_policy),
-              shadow_amount(0){}
+              up_policy(up_policy)
+              {}
 
         share_type amount_to_upgrade()
         {

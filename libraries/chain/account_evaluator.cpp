@@ -165,13 +165,16 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
          referrer_percent = GRAPHENE_100_PERCENT;
    }
 
-   const auto& new_acnt_object = db().create<account_object>( [&]( account_object& obj ){
+   const auto& global_properties = d.get_global_properties();
+
+   const auto& new_acnt_object = d.create<account_object>( [&o,&d,&global_properties,referrer_percent]( account_object& obj )
+   {
          obj.kind = static_cast<account_kind>(o.kind);
          obj.registrar = o.registrar;
          obj.referrer = o.referrer;
-         obj.lifetime_referrer = o.referrer(db()).lifetime_referrer;
+         obj.lifetime_referrer = o.referrer(d).lifetime_referrer;
 
-         auto& params = db().get_global_properties().parameters;
+         const auto& params = global_properties.parameters;
          obj.network_fee_percentage = params.network_percent_of_fee;
          obj.lifetime_referrer_fee_percentage = params.lifetime_referrer_percent_of_fee;
          obj.referrer_rewards_percentage = referrer_percent;
@@ -180,7 +183,10 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
          obj.owner            = o.owner;
          obj.active           = o.active;
          obj.options          = o.options;
-         obj.statistics = db().create<account_statistics_object>([&](account_statistics_object& s){s.owner = obj.id;}).id;
+         obj.statistics = d.create<account_statistics_object>([&obj](account_statistics_object& s){
+                             s.owner = obj.id;
+                             s.name = obj.name;
+                          }).id;
 
          if( o.extensions.value.owner_special_authority.valid() )
             obj.owner_special_authority = *(o.extensions.value.owner_special_authority);
@@ -199,7 +205,7 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
         obj.roll_back_enabled = true;
 
          // from this moment there are no vault limits
-         if(db().head_block_time() >= HARDFORK_EXEX_102_TIME)
+         if(d.head_block_time() >= HARDFORK_EXEX_102_TIME)
             obj.disable_vault_to_wallet_limit = true;
    });
 
@@ -212,8 +218,8 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
       wlog( "Affected account object is ${o}", ("o", new_acnt_object) );
    }
 
-   const auto& dynamic_properties = db().get_dynamic_global_properties();
-   db().modify(dynamic_properties, [](dynamic_global_property_object& p) {
+   const auto& dynamic_properties = d.get_dynamic_global_properties();
+   d.modify(dynamic_properties, [](dynamic_global_property_object& p) {
       ++p.accounts_registered_this_interval;
    });
 
@@ -277,7 +283,6 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
    }
 
    return new_acnt_object.id;
-
 } FC_CAPTURE_AND_RETHROW((o)) }
 
 
@@ -347,14 +352,14 @@ void_result account_update_evaluator::do_apply( const account_update_operation& 
       sa_after = a.has_special_authority();
    });
 
-   if( sa_before & (!sa_after) )
+   if( sa_before && (!sa_after) )
    {
       const auto& sa_idx = d.get_index_type< special_authority_index >().indices().get<by_account>();
       auto sa_it = sa_idx.find( o.account );
       assert( sa_it != sa_idx.end() );
       d.remove( *sa_it );
    }
-   else if( (!sa_before) & sa_after )
+   else if( (!sa_before) && sa_after )
    {
       d.create< special_authority_object >( [&]( special_authority_object& sa )
       {
@@ -371,7 +376,7 @@ void_result account_whitelist_evaluator::do_evaluate(const account_whitelist_ope
 
    listed_account = &o.account_to_list(d);
    if( !d.get_global_properties().parameters.allow_non_member_whitelists )
-      FC_ASSERT(o.authorizing_account(d).is_lifetime_member());
+      FC_ASSERT( o.authorizing_account(d).is_lifetime_member(), "The authorizing account must be a lifetime member." );
 
    return void_result();
 } FC_CAPTURE_AND_RETHROW( (o) ) }

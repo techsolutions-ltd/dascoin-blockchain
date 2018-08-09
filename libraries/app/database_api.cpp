@@ -378,14 +378,11 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       map< pair<asset_id_type,asset_id_type>, std::function<void(const variant&)> > _market_subscriptions;
       graphene::chain::database& _db;
       database_access_layer _dal;
-<<<<<<< HEAD
       const application_options* _app_options = nullptr;
-=======
 
    private:
       template<typename IterStart, typename IterEnd>
       void func_re_pack(IterStart helper_itr, IterEnd end, std::vector<agregated_limit_orders_with_same_price_collection>& ret, uint32_t limit_group, uint32_t limit_per_group) const;
->>>>>>> develop
 };
 
 //////////////////////////////////////////////////////////////////////

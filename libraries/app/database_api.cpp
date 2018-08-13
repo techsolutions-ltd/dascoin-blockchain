@@ -1094,26 +1094,27 @@ tethered_accounts_balances_collection database_api_impl::get_tethered_accounts_b
    ret.asset_id = asset;
    const auto& idx = _db.get_index_type<account_index>().indices().get<by_id>();
    const auto it = idx.find(id);
-   flat_set<pair<account_id_type, account_kind>> accounts;
+   flat_set<tuple<account_id_type, string, account_kind>> accounts;
    if (it != idx.end())
    {
       const auto& account = *it;
       if (account.kind == account_kind::wallet)
       {
-         accounts.insert(make_pair(id, account.kind));
+         accounts.insert(make_tuple(id, account.name, account.kind));
          std::transform(account.vault.begin(), account.vault.end(), std::inserter(accounts, accounts.begin()), [&](account_id_type vault)
          {
-            return make_pair(vault, account_kind::vault);
+            const auto& vault_acc = vault(_db);
+            return make_tuple(vault, vault_acc.name, account_kind::vault);
          });
       }
       else if (account.kind == account_kind::custodian || account.kind == account_kind::special)
       {
-         accounts.insert(make_pair(id, account.kind));
+         accounts.insert(make_tuple(id, account.name, account.kind));
       }
       else if (account.kind == account_kind::vault)
       {
           if (account.parents.empty())
-             accounts.insert(make_pair(id, account.kind));
+             accounts.insert(make_tuple(id, account.name, account.kind));
           else
              return get_tethered_accounts_balances(*(account.parents.begin()), asset);
       }
@@ -1121,9 +1122,9 @@ tethered_accounts_balances_collection database_api_impl::get_tethered_accounts_b
 
    for (const auto& i : accounts)
    {
-      const auto& balance_obj = _db.get_balance_object(i.first, asset);
+      const auto& balance_obj = _db.get_balance_object(get<0>(i), asset);
       ret.total += balance_obj.balance;
-      ret.details.emplace_back(tethered_accounts_balance{i.first, i.second, balance_obj.balance});
+      ret.details.emplace_back(tethered_accounts_balance{get<0>(i), get<1>(i), get<2>(i), balance_obj.balance});
    }
    return ret;
 }

@@ -184,6 +184,7 @@ struct balance_with_reserved
 struct tethered_accounts_balance
 {
    account_id_type            account;
+   string                     name;
    account_kind               kind;
    share_type                 balance;
 };
@@ -1007,7 +1008,7 @@ FC_REFLECT( graphene::app::cycle_price, (cycle_amount)(asset_amount)(frequency) 
 FC_REFLECT( graphene::app::dasc_holder, (holder)(vaults)(amount) );
 FC_REFLECT( graphene::app::daspay_authority, (payment_provider)(daspay_public_key)(memo) );
 FC_REFLECT( graphene::app::balance_with_reserved, (balance)(reserved) );
-FC_REFLECT( graphene::app::tethered_accounts_balance, (account)(kind)(balance) );
+FC_REFLECT( graphene::app::tethered_accounts_balance, (account)(name)(kind)(balance) );
 FC_REFLECT( graphene::app::tethered_accounts_balances_collection, (asset_id)(total)(details) );
 
 FC_API( graphene::app::database_api,

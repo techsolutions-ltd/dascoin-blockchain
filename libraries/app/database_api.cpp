@@ -1111,8 +1111,6 @@ tethered_accounts_balances_collection database_api_impl::get_tethered_accounts_b
          accounts.insert(make_pair(id, account.kind));
       }
    }
-   if (accounts.empty())
-      return ret;
 
    for (const auto& i : accounts)
    {

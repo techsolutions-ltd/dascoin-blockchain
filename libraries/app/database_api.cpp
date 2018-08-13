@@ -104,7 +104,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<balance_object> get_balance_objects( const vector<address>& addrs )const;
       vector<asset> get_vested_balances( const vector<balance_id_type>& objs )const;
       vector<vesting_balance_object> get_vesting_balances( account_id_type account_id )const;
-      tethered_accounts_balances_collection get_tethered_accounts_balances(account_id_type id, asset_id_type asset)const;
+      tethered_accounts_balances_collection get_tethered_accounts_balances( account_id_type id, asset_id_type asset )const;
       vector<tethered_accounts_balances_collection> get_tethered_accounts_balances( account_id_type account, const flat_set<asset_id_type>& assets )const;
 
       // Assets

@@ -1106,9 +1106,16 @@ tethered_accounts_balances_collection database_api_impl::get_tethered_accounts_b
             return make_pair(vault, account_kind::vault);
          });
       }
-      else if (account.kind == account_kind::vault || account.kind == account_kind::custodian)
+      else if (account.kind == account_kind::custodian || account.kind == account_kind::special)
       {
          accounts.insert(make_pair(id, account.kind));
+      }
+      else if (account.kind == account_kind::vault)
+      {
+          if (account.parents.empty())
+             accounts.insert(make_pair(id, account.kind));
+          else
+             return get_tethered_accounts_balances(*(account.parents.begin()), asset);
       }
    }
 

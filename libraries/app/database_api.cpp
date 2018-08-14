@@ -1123,8 +1123,8 @@ tethered_accounts_balances_collection database_api_impl::get_tethered_accounts_b
    for (const auto& i : accounts)
    {
       const auto& balance_obj = _db.get_balance_object(get<0>(i), asset);
-      ret.total += balance_obj.balance;
-      ret.details.emplace_back(tethered_accounts_balance{get<0>(i), get<1>(i), get<2>(i), balance_obj.balance});
+      ret.total += balance_obj.balance + balance_obj.reserved;
+      ret.details.emplace_back(tethered_accounts_balance{get<0>(i), get<1>(i), get<2>(i), balance_obj.balance, balance_obj.reserved});
    }
    return ret;
 }

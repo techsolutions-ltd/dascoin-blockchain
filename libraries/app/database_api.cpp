@@ -104,6 +104,8 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<balance_object> get_balance_objects( const vector<address>& addrs )const;
       vector<asset> get_vested_balances( const vector<balance_id_type>& objs )const;
       vector<vesting_balance_object> get_vesting_balances( account_id_type account_id )const;
+      tethered_accounts_balances_collection get_tethered_accounts_balances( account_id_type id, asset_id_type asset )const;
+      vector<tethered_accounts_balances_collection> get_tethered_accounts_balances( account_id_type account, const flat_set<asset_id_type>& assets )const;
 
       // Assets
       asset_id_type get_web_asset_id() const;
@@ -1058,6 +1060,73 @@ vector<vesting_balance_object> database_api_impl::get_vesting_balances( account_
       return result;
    }
    FC_CAPTURE_AND_RETHROW( (account_id) );
+}
+
+vector<tethered_accounts_balances_collection> database_api::get_tethered_accounts_balances( account_id_type id, const flat_set<asset_id_type>& assets )const
+{
+   return my->get_tethered_accounts_balances( id, assets );
+}
+
+vector<tethered_accounts_balances_collection> database_api_impl::get_tethered_accounts_balances( account_id_type account, const flat_set<asset_id_type>& assets )const
+{
+   vector<asset_id_type> tmp;
+   if (assets.empty()) {
+      // if the caller passes in an empty list of assets, get all assets the account owns.
+      const account_balance_index &balance_index = _db.get_index_type<account_balance_index>();
+      auto range = balance_index.indices().get<by_account_asset>().equal_range(boost::make_tuple(account));
+      for (const account_balance_object &balance : boost::make_iterator_range(range.first, range.second))
+         tmp.emplace_back(balance.asset_type);
+   } else {
+      tmp.reserve(assets.size());
+      std::copy(assets.begin(), assets.end(), std::back_inserter(tmp));
+   }
+   vector<tethered_accounts_balances_collection> result;
+   std::transform(tmp.begin(), tmp.end(), std::back_inserter(result), [this, account](asset_id_type id) {
+      return get_tethered_accounts_balances(account, id);
+   });
+   return result;
+}
+
+tethered_accounts_balances_collection database_api_impl::get_tethered_accounts_balances( account_id_type id, asset_id_type asset )const
+{
+   tethered_accounts_balances_collection ret;
+   ret.total = 0;
+   ret.asset_id = asset;
+   const auto& idx = _db.get_index_type<account_index>().indices().get<by_id>();
+   const auto it = idx.find(id);
+   flat_set<tuple<account_id_type, string, account_kind>> accounts;
+   if (it != idx.end())
+   {
+      const auto& account = *it;
+      if (account.kind == account_kind::wallet)
+      {
+         accounts.insert(make_tuple(id, account.name, account.kind));
+         std::transform(account.vault.begin(), account.vault.end(), std::inserter(accounts, accounts.begin()), [&](account_id_type vault)
+         {
+            const auto& vault_acc = vault(_db);
+            return make_tuple(vault, vault_acc.name, account_kind::vault);
+         });
+      }
+      else if (account.kind == account_kind::custodian || account.kind == account_kind::special)
+      {
+         accounts.insert(make_tuple(id, account.name, account.kind));
+      }
+      else if (account.kind == account_kind::vault)
+      {
+          if (account.parents.empty())
+             accounts.insert(make_tuple(id, account.name, account.kind));
+          else
+             return get_tethered_accounts_balances(*(account.parents.begin()), asset);
+      }
+   }
+
+   for (const auto& i : accounts)
+   {
+      const auto& balance_obj = _db.get_balance_object(get<0>(i), asset);
+      ret.total += balance_obj.balance + balance_obj.reserved;
+      ret.details.emplace_back(tethered_accounts_balance{get<0>(i), get<1>(i), get<2>(i), balance_obj.balance, balance_obj.reserved});
+   }
+   return ret;
 }
 
 //////////////////////////////////////////////////////////////////////

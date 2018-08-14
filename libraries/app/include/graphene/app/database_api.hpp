@@ -175,6 +175,21 @@ struct daspay_authority
    optional<string>           memo;
 };
 
+struct tethered_accounts_balance
+{
+   account_id_type            account;
+   string                     name;
+   account_kind               kind;
+   share_type                 balance;
+   share_type                 reserved;
+};
+
+struct tethered_accounts_balances_collection
+{
+   share_type                 total;
+   asset_id_type              asset_id;
+   vector<tethered_accounts_balance> details;
+};
 
 /**
  * @brief The database_api class implements the RPC API for the chain database.
@@ -375,6 +390,14 @@ class database_api
       vector<asset> get_vested_balances( const vector<balance_id_type>& objs )const;
 
       vector<vesting_balance_object> get_vesting_balances( account_id_type account_id )const;
+
+      /**
+       * @brief Get a tethered accounts' balances in various assets
+       * @param id ID of the account to get balances for
+       * @param assets IDs of the assets to get balances of; if empty, get all assets account has a balance in
+       * @return Balances of the tethered accounts
+       */
+      vector<tethered_accounts_balances_collection> get_tethered_accounts_balances(account_id_type id, const flat_set<asset_id_type>& assets)const;
 
       /**
        * @brief Get the total number of accounts registered with the blockchain
@@ -979,6 +1002,8 @@ FC_REFLECT( graphene::app::limit_orders_collection_grouped_by_price, (buy)(sell)
 FC_REFLECT( graphene::app::cycle_price, (cycle_amount)(asset_amount)(frequency) );
 FC_REFLECT( graphene::app::dasc_holder, (holder)(vaults)(amount) );
 FC_REFLECT( graphene::app::daspay_authority, (payment_provider)(daspay_public_key)(memo) );
+FC_REFLECT( graphene::app::tethered_accounts_balance, (account)(name)(kind)(balance)(reserved) );
+FC_REFLECT( graphene::app::tethered_accounts_balances_collection, (asset_id)(total)(details) );
 
 FC_API( graphene::app::database_api,
    // Objects
@@ -1024,6 +1049,7 @@ FC_API( graphene::app::database_api,
    (get_balance_objects)
    (get_vested_balances)
    (get_vesting_balances)
+   (get_tethered_accounts_balances)
 
    // Assets
    (get_assets)

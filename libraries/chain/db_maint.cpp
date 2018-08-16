@@ -804,9 +804,9 @@ void database::perform_upgrades(const account_object& account, const upgrade_eve
    {
       // Apply the upgrade operation and modify cycle balance:
       push_applied_operation(upgrade_account_cycles_operation{account.id});
-      modify(cycle_balance_obj, [&](account_cycle_balance_object& acb){
-        acb.balance = new_balance;
-      });
+      auto balance_change = new_balance - cycle_balance_obj.balance;
+      if (balance_change > 0)
+        issue_cycles(cycle_balance_obj, balance_change);
    }
 }
 

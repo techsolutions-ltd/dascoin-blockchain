@@ -78,4 +78,31 @@ namespace graphene { namespace chain {
     asset expected;
   };
 
+  class das33_project_complete_evaluator : public evaluator<das33_project_complete_evaluator>
+  {
+  public:
+    typedef das33_project_complete_operation operation_type;
+
+    void_result do_evaluate( const operation_type& op );
+    void_result do_apply( const operation_type& op );
+  };
+
+  class das33_project_reject_evaluator : public evaluator<das33_project_reject_evaluator>
+  {
+  public:
+    typedef das33_project_reject_operation operation_type;
+
+    void_result do_evaluate( const operation_type& op );
+    void_result do_apply( const operation_type& op );
+  };
+
+  class das33_pledge_result_evaluator : public evaluator<das33_pledge_result_evaluator>
+  {
+  public:
+    typedef das33_pledge_result_operation operation_type;
+
+    void_result do_evaluate( const operation_type& op );
+    void_result do_apply( const operation_type& op );
+  };
+
 } }  // namespace graphene::chain

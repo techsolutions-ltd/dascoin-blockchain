@@ -507,34 +507,49 @@ struct get_impacted_account_visitor
 
    void operator() ( const set_chain_authority_operation& op )
    {
-     _impacted.insert(op.issuer);
-     _impacted.insert(op.account);
+      _impacted.insert(op.issuer);
+      _impacted.insert(op.account);
    }
 
    void operator() ( const das33_pledge_asset_operation& op )
    {
-     _impacted.insert(op.account_id);
+      _impacted.insert(op.account_id);
+   }
+
+   void operator() ( const das33_project_complete_operation& op )
+   {
+      _impacted.insert(op.authority);
+   }
+
+   void operator() ( const das33_project_reject_operation& op )
+   {
+      _impacted.insert(op.authority);
+   }
+
+   void operator() ( const das33_pledge_result_operation& op )
+   {
+      _impacted.insert(op.account);
    }
 
    void operator() ( const das33_project_create_operation& op )
    {
-     _impacted.insert(op.authority);
-     _impacted.insert(op.owner);
+      _impacted.insert(op.authority);
+      _impacted.insert(op.owner);
    }
 
    void operator() ( const das33_project_update_operation& op )
    {
-     _impacted.insert(op.authority);
+      _impacted.insert(op.authority);
    }
 
    void operator() ( const das33_project_delete_operation& op )
    {
-     _impacted.insert(op.authority);
+      _impacted.insert(op.authority);
    }
 
    void operator() ( const update_global_parameters_operation& op )
    {
-     _impacted.insert(op.authority);
+      _impacted.insert(op.authority);
    }
 };
 
@@ -722,7 +737,7 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
             case impl_das33_project_object_type:
               break;
             case impl_das33_pledge_holder_object_type:
-	      break;
+              break;
             case impl_delayed_operation_object_type:
               break;
       }

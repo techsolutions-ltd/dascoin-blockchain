@@ -290,6 +290,9 @@ void database::initialize_evaluators()
    register_evaluator<das33_project_update_evaluator>();
    register_evaluator<das33_project_delete_evaluator>();
    register_evaluator<das33_pledge_asset_evaluator>();
+   register_evaluator<das33_project_complete_evaluator>();
+   register_evaluator<das33_project_reject_evaluator>();
+   register_evaluator<das33_pledge_result_evaluator>();
    register_evaluator<update_delayed_operations_resolver_parameters_evaluator>();
    register_evaluator<update_global_parameters_evaluator>();
 }

@@ -340,5 +340,48 @@ namespace graphene { namespace chain {
     return {};
   }
 
+  void_result das33_project_complete_evaluator::do_evaluate(const das33_project_complete_operation& op)
+  { try {
+
+    return {};
+
+  } FC_CAPTURE_AND_RETHROW((op)) }
+
+  void_result das33_project_complete_evaluator::do_apply(const das33_project_complete_operation& op)
+  { try {
+
+    return {};
+
+  } FC_CAPTURE_AND_RETHROW((op)) }
+
+  void_result das33_project_reject_evaluator::do_evaluate(const das33_project_reject_operation& op)
+  { try {
+
+    return {};
+
+  } FC_CAPTURE_AND_RETHROW((op)) }
+
+  void_result das33_project_reject_evaluator::do_apply(const das33_project_reject_operation& op)
+  { try {
+
+    return {};
+
+  } FC_CAPTURE_AND_RETHROW((op)) }
+
+  void_result das33_pledge_result_evaluator::do_evaluate(const das33_pledge_result_operation& op)
+  { try {
+
+    return {};
+
+  } FC_CAPTURE_AND_RETHROW((op)) }
+
+  void_result das33_pledge_result_evaluator::do_apply(const das33_pledge_result_operation& op)
+  { try {
+
+    return {};
+
+  } FC_CAPTURE_AND_RETHROW((op)) }
+
+
 
 } }  // namespace graphene::chain

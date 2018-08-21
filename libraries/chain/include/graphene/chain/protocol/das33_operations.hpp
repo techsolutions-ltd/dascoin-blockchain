@@ -130,21 +130,89 @@ namespace graphene { namespace chain {
     share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
 
+  struct das33_project_complete_operation : public base_operation
+  {
+    struct fee_parameters_type {};
+    asset fee;
+
+    account_id_type        authority;
+    das33_project_id_type  project;
+    extensions_type        extensions;
+
+    das33_project_complete_operation() = default;
+
+    explicit das33_project_complete_operation(const account_id_type& authority,
+                                             const das33_project_id_type&  project)
+              : authority(authority)
+              , project(project) {}
+
+    account_id_type fee_payer() const { return authority; }
+    void validate() const;
+    share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+  };
+
+  struct das33_project_reject_operation : public base_operation
+  {
+    struct fee_parameters_type {};
+    asset fee;
+
+    account_id_type        authority;
+    das33_project_id_type  project;
+    extensions_type        extensions;
+
+    das33_project_reject_operation() = default;
+
+    explicit das33_project_reject_operation(const account_id_type& authority,
+                                           const das33_project_id_type&  project)
+              : authority(authority)
+              , project(project) {}
+
+    account_id_type fee_payer() const { return authority; }
+    void validate() const;
+    share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+  };
+
+  struct das33_pledge_result_operation : public base_operation
+  {
+    struct fee_parameters_type {};
+    asset fee;
+
+    account_id_type                account;
+    bool                           completed;
+    asset                          pledged;
+    asset                          received;
+    optional<license_type_id_type> license_id;
+    das33_project_id_type          project_id;
+    time_point_sec                 timestamp;
+    extensions_type                extensions;
+
+    das33_pledge_result_operation() = default;
+
+    explicit das33_pledge_result_operation(const account_id_type& account,
+                                           const bool completed,
+                                           const asset& pledged,
+                                           const asset& received,
+                                           const optional<license_type_id_type> license_id,
+                                           const das33_project_id_type& project_id,
+                                           const time_point_sec& timestamp)
+              : account(account)
+              , completed(completed)
+              , pledged(pledged)
+              , received(received)
+              , license_id(license_id)
+              , project_id(project_id)
+              , timestamp(timestamp) {}
+
+    account_id_type fee_payer() const { return account; }
+    void validate() const;
+    share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+  };
+
 } }  // namespace graphene::chain
 
 ////////////////////////////////
 // REFLECTIONS:               //
 ////////////////////////////////
-
-FC_REFLECT( graphene::chain::das33_pledge_asset_operation::fee_parameters_type, )
-FC_REFLECT( graphene::chain::das33_pledge_asset_operation,
-            (fee)
-            (account_id)
-            (pledged)
-            (license_id)
-            (project_id)
-            (extensions)
-          )
 
 FC_REFLECT( graphene::chain::das33_project_create_operation::fee_parameters_type, )
 FC_REFLECT( graphene::chain::das33_project_create_operation,
@@ -176,5 +244,44 @@ FC_REFLECT( graphene::chain::das33_project_delete_operation,
             (fee)
             (authority)
             (project_id)
+            (extensions)
+          )
+
+FC_REFLECT( graphene::chain::das33_pledge_asset_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::das33_pledge_asset_operation,
+            (fee)
+            (account_id)
+            (pledged)
+            (license_id)
+            (project_id)
+            (extensions)
+          )
+
+FC_REFLECT( graphene::chain::das33_project_complete_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::das33_project_complete_operation,
+            (fee)
+            (authority)
+            (project)
+            (extensions)
+          )
+
+FC_REFLECT( graphene::chain::das33_project_reject_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::das33_project_reject_operation,
+            (fee)
+            (authority)
+            (project)
+            (extensions)
+          )
+
+FC_REFLECT( graphene::chain::das33_pledge_result_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::das33_pledge_result_operation,
+            (fee)
+            (account)
+            (completed)
+            (pledged)
+            (received)
+            (license_id)
+            (project_id)
+            (timestamp)
             (extensions)
           )

@@ -69,4 +69,13 @@ namespace graphene { namespace chain {
                "If cycles are pledged, license must be provided. Otherwise license must NOT be provided");
   }
 
+  void das33_project_complete_operation::validate() const
+  {  }
+
+  void das33_project_reject_operation::validate() const
+  {  }
+
+  void das33_pledge_result_operation::validate() const
+  {  }
+
 } } // namespace graphene::chain

@@ -688,4 +688,25 @@ void_result asset_deny_issue_request_evaluator::do_apply(const asset_deny_issue_
 
 } FC_CAPTURE_AND_RETHROW((o)) }
 
+void_result update_last_btc_price_evaluator::do_evaluate(const update_last_btc_price_operation& o)
+{ try {
+  
+  const auto& d = db();
+  FC_ASSERT( o.issuer == d.get_chain_authorities().webasset_issuer );
+  
+  return{};
+
+} FC_CAPTURE_AND_RETHROW((o)) }
+
+void_result update_last_btc_price_evaluator::do_apply(const update_last_btc_price_operation& o)
+{ try {
+
+  auto btc_price = o.eur_amount_per_btc;
+  db().modify(db().get_dynamic_global_properties(), [btc_price](dynamic_global_property_object& dgpo){
+    dgpo.last_btc_price = btc_price;
+  });
+  return {};
+
+} FC_CAPTURE_AND_RETHROW((o)) }
+
 } } // graphene::chain

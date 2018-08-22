@@ -566,6 +566,11 @@ struct get_impacted_account_visitor
    {
       _impacted.insert(op.authority);
    }
+
+   void operator()( const update_last_btc_price_operation& op )
+   {
+      _impacted.insert( op.issuer );
+   }
 };
 
 void operation_get_impacted_accounts( const operation& op, flat_set<account_id_type>& result )

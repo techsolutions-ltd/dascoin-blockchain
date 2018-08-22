@@ -1052,12 +1052,14 @@ class wallet_api
        * @param to_account the name or id of the account to receive the webasset
        * @param amount the amount to issue, in nominal units
        * @param reserved reserved amount to issue, in nominal units
+       * @param unique_id unique identifier of this issue
        * @param broadcast true to broadcast the transaction on the network
        * @returns the signed transaction issuing the webasset
        */
       signed_transaction issue_webasset(string to_account,
                                         string amount,
                                         string reserved,
+                                        string unique_id,
                                         bool broadcast = false);
 
       /** Update the core options on an asset.

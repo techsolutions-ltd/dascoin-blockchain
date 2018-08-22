@@ -2689,7 +2689,7 @@ public:
       return sign_transaction(tx, broadcast);
    }
 
-   signed_transaction issue_webasset(string to_account, string amount, string reserved, bool broadcast)
+   signed_transaction issue_webasset(string to_account, string amount, string reserved, string unique_id, bool broadcast)
    {
        const auto asset_obj = get_web_asset();
 
@@ -2703,6 +2703,7 @@ public:
        issue_op.asset_id = asset_obj.id;
        issue_op.reserved_amount =
            asset_obj.amount_from_string(reserved).amount;
+       issue_op.unique_id = unique_id;
 
        signed_transaction tx;
        tx.operations.push_back(issue_op);
@@ -4011,9 +4012,9 @@ signed_transaction wallet_api::issue_asset(string to_account, string amount, str
    return my->issue_asset(to_account, amount, symbol, memo, broadcast);
 }
 
-signed_transaction wallet_api::issue_webasset(string to_account, string amount, string reserved, bool broadcast)
+signed_transaction wallet_api::issue_webasset(string to_account, string amount, string reserved, string unique_id, bool broadcast)
 {
-    return my->issue_webasset(to_account, amount, reserved, broadcast);
+    return my->issue_webasset(to_account, amount, reserved, unique_id, broadcast);
 }
 
 signed_transaction wallet_api::transfer(string from, string to, string amount,

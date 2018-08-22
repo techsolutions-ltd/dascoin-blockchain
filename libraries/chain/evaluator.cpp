@@ -102,7 +102,7 @@ database& generic_evaluator::db()const { return trx_state->db(); }
                b.balance += fee_paid;
             });
          }
-         else // this meens that we have to burn fee asset
+         else // this means that we have to burn fee asset
          {
             d.modify(d.get_cycle_asset().dynamic_asset_data_id(d), [&](asset_dynamic_data_object& addo)
             {

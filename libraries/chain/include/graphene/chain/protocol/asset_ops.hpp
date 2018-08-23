@@ -558,9 +558,9 @@ namespace graphene { namespace chain {
    };
 
    /**
-    * @brief used to set last bitcoin price.
+    * @brief used to set external bitcoin price.
     */
-   struct update_last_btc_price_operation : public base_operation
+   struct update_external_btc_price_operation : public base_operation
    {
       struct fee_parameters_type {};
       asset fee;
@@ -710,8 +710,8 @@ FC_REFLECT( graphene::chain::record_distribute_dascoin_operation,
             (extensions)
           )
 
-FC_REFLECT( graphene::chain::update_last_btc_price_operation::fee_parameters_type, )
-FC_REFLECT( graphene::chain::update_last_btc_price_operation,
+FC_REFLECT( graphene::chain::update_external_btc_price_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::update_external_btc_price_operation,
             (fee)
             (issuer)
             (eur_amount_per_btc)

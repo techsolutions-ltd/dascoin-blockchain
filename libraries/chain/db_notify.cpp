@@ -563,7 +563,7 @@ struct get_impacted_account_visitor
       _impacted.insert(op.authority);
    }
 
-   void operator()( const update_last_btc_price_operation& op )
+   void operator()( const update_external_btc_price_operation& op )
    {
       _impacted.insert( op.issuer );
    }

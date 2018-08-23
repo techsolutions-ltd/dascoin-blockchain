@@ -223,10 +223,10 @@ share_type database_fixture::get_asset_current_supply(asset_id_type asset_id)
 
 } FC_LOG_AND_RETHROW() }
 
-void database_fixture::set_last_btc_price(price eur_amount_per_btc)
+void database_fixture::set_external_btc_price(price eur_amount_per_btc)
 { try {
 
-  update_last_btc_price_operation op;
+  update_external_btc_price_operation op;
   op.issuer = get_webasset_issuer_id();
   op.eur_amount_per_btc = eur_amount_per_btc;
 

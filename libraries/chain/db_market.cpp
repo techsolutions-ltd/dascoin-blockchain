@@ -436,10 +436,10 @@ bool database::fill_order(const force_settlement_object& settle, const asset& pa
    return filled;
 } FC_CAPTURE_AND_RETHROW( (settle)(pays)(receives) ) }
 
-void database::push_fill_order_operation( const fill_order_operation &fill_order, bool set_price /* = true */)
+void database::push_fill_order_operation( const fill_order_operation &fill_order, bool set_dascoin_price /* = true */)
 {
     push_applied_operation(fill_order);
-    if (set_price)
+    if (set_dascoin_price)
     {
         // Update dascoin price only if market is DSC:WEBEUR.
         if (fill_order.pays.asset_id == get_dascoin_asset_id() && fill_order.receives.asset_id == get_web_asset_id())
@@ -448,15 +448,6 @@ void database::push_fill_order_operation( const fill_order_operation &fill_order
             price dsc_price = fill_order.pays / fill_order.receives;
             modify(get_dynamic_global_properties(), [dsc_price](dynamic_global_property_object &dgpo) {
                 dgpo.last_dascoin_price = dsc_price;
-            });
-        }
-        // Update btc price only if market is BTC:WEBEUR.
-        if (fill_order.pays.asset_id == get_btc_asset_id() && fill_order.receives.asset_id == get_btc_asset_id())
-        {
-            // This is the same as in market history.
-            price btc_price = fill_order.pays / fill_order.receives;
-            modify(get_dynamic_global_properties(), [btc_price](dynamic_global_property_object &dgpo) {
-                dgpo.last_btc_price = btc_price;
             });
         }
     }

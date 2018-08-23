@@ -198,7 +198,7 @@ namespace graphene { namespace chain {
             das33_pledge_asset_operation,
 
             update_global_parameters_operation,
-            update_last_btc_price_operation,
+            update_external_btc_price_operation,
 
             das33_distribute_project_pledges_operation,
             das33_project_reject_operation,

@@ -185,7 +185,7 @@ namespace graphene { namespace chain {
          /**
           * Last bitcoin trade price on the BTC:WEBEUR market
           */
-         price last_btc_price;
+         price external_btc_price;
 
          /**
           * Last daily dascoin trade price on the DSC:WEBEUR market.
@@ -249,7 +249,7 @@ FC_REFLECT_DERIVED( graphene::chain::dynamic_global_property_object, (graphene::
                     (next_spend_limit_reset)
                     (is_root_authority_enabled_flag)
                     (last_dascoin_price)
-                    (last_btc_price)
+                    (external_btc_price)
                     (fee_pool_account_id)
                   )
 

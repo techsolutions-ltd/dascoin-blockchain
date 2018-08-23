@@ -11,7 +11,6 @@ class change_fee_evaluator : public evaluator<change_fee_evaluator>
 
       void_result do_evaluate( const change_operation_fee_operation& o );
       void_result do_apply( const change_operation_fee_operation& o );
-
 };
 
 class change_fee_pool_account_evaluator : public evaluator<change_fee_pool_account_evaluator>
@@ -21,7 +20,6 @@ class change_fee_pool_account_evaluator : public evaluator<change_fee_pool_accou
 
       void_result do_evaluate( const change_fee_pool_account_operation& o );
       void_result do_apply( const change_fee_pool_account_operation& o );
-
 };
 
 } }  // namespace graphene::chain

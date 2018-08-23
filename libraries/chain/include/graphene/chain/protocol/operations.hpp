@@ -198,7 +198,8 @@ namespace graphene { namespace chain {
             das33_pledge_asset_operation,
             das33_project_complete_operation,
             das33_project_reject_operation,
-            das33_pledge_result_operation,
+            das33_pledge_complete_operation,
+            das33_pledge_reject_operation,
 
             update_global_parameters_operation,
 
@@ -217,7 +218,8 @@ namespace graphene { namespace chain {
             fill_order_operation,
             wire_out_result_operation,
             wire_out_with_fee_result_operation,
-            unreserve_completed_operation
+            unreserve_completed_operation,
+            das33_pledge_result_operation
    > operation;
 
    /// @} // operations group

@@ -526,9 +526,20 @@ struct get_impacted_account_visitor
       _impacted.insert(op.authority);
    }
 
+   void operator() ( const das33_pledge_complete_operation& op )
+   {
+      _impacted.insert(op.authority);
+   }
+
+   void operator() ( const das33_pledge_reject_operation& op )
+   {
+      _impacted.insert(op.authority);
+   }
+
    void operator() ( const das33_pledge_result_operation& op )
    {
-      _impacted.insert(op.account);
+      _impacted.insert(op.funders_account);
+      _impacted.insert(op.account_to_fund);
    }
 
    void operator() ( const das33_project_create_operation& op )

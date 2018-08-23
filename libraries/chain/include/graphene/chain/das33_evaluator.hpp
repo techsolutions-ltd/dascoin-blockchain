@@ -86,6 +86,9 @@ namespace graphene { namespace chain {
 
     void_result do_evaluate( const operation_type& op );
     void_result do_apply( const operation_type& op );
+
+  private:
+        account_id_type _pro_owner;
   };
 
   class das33_project_reject_evaluator : public evaluator<das33_project_reject_evaluator>
@@ -95,15 +98,36 @@ namespace graphene { namespace chain {
 
     void_result do_evaluate( const operation_type& op );
     void_result do_apply( const operation_type& op );
+
+  private:
+      account_id_type _pro_owner;
   };
 
-  class das33_pledge_result_evaluator : public evaluator<das33_pledge_result_evaluator>
+  class das33_pledge_complete_evaluator : public evaluator<das33_pledge_complete_evaluator>
   {
   public:
-    typedef das33_pledge_result_operation operation_type;
+    typedef das33_pledge_complete_operation operation_type;
 
     void_result do_evaluate( const operation_type& op );
     void_result do_apply( const operation_type& op );
+
+  private:
+    const das33_pledge_holder_object* _pledge_holder_ptr = nullptr;
+    account_id_type _pro_owner;
   };
+
+  class das33_pledge_reject_evaluator : public evaluator<das33_pledge_reject_evaluator>
+  {
+  public:
+    typedef das33_pledge_reject_operation operation_type;
+
+    void_result do_evaluate( const operation_type& op );
+    void_result do_apply( const operation_type& op );
+
+  private:
+    const das33_pledge_holder_object* _pledge_holder_ptr = nullptr;
+    account_id_type _pro_owner;
+  };
+
 
 } }  // namespace graphene::chain

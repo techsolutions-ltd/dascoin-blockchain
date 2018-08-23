@@ -31,7 +31,7 @@ namespace graphene { namespace chain {
 
   struct das33_project_create_operation : public base_operation
   {
-    struct fee_parameters_type {};
+    struct fee_parameters_type { uint64_t fee = 0; };
     asset fee;
 
     account_id_type                authority;
@@ -59,12 +59,11 @@ namespace graphene { namespace chain {
 
     account_id_type fee_payer() const { return authority; }
     void validate() const;
-    share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
 
   struct das33_project_update_operation : public base_operation
   {
-    struct fee_parameters_type {};
+    struct fee_parameters_type { uint64_t fee = 0; };
     asset fee;
 
     account_id_type                          authority;
@@ -83,12 +82,11 @@ namespace graphene { namespace chain {
 
     account_id_type fee_payer() const { return authority; }
     void validate() const;
-    share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
 
   struct das33_project_delete_operation : public base_operation
   {
-    struct fee_parameters_type {};
+    struct fee_parameters_type { uint64_t fee = 0; };
     asset fee;
 
     account_id_type       authority;
@@ -103,12 +101,11 @@ namespace graphene { namespace chain {
 
     account_id_type fee_payer() const { return authority; }
     void validate() const;
-    share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
 
   struct das33_pledge_asset_operation : public base_operation
   {
-    struct fee_parameters_type {};
+    struct fee_parameters_type { uint64_t fee = 0; };
     asset fee;
 
     account_id_type                 account_id;
@@ -130,12 +127,11 @@ namespace graphene { namespace chain {
 
     account_id_type fee_payer() const { return account_id; }
     void validate() const;
-    share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
 
   struct das33_project_complete_operation : public base_operation
   {
-    struct fee_parameters_type {};
+    struct fee_parameters_type { uint64_t fee = 0; };
     asset fee;
 
     account_id_type        authority;
@@ -151,12 +147,11 @@ namespace graphene { namespace chain {
 
     account_id_type fee_payer() const { return authority; }
     void validate() const;
-    share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
 
   struct das33_project_reject_operation : public base_operation
   {
-    struct fee_parameters_type {};
+    struct fee_parameters_type { uint64_t fee = 0; };
     asset fee;
 
     account_id_type        authority;
@@ -172,43 +167,81 @@ namespace graphene { namespace chain {
 
     account_id_type fee_payer() const { return authority; }
     void validate() const;
-    share_type calculate_fee(const fee_parameters_type&) const { return 0; }
+  };
+
+  struct das33_pledge_complete_operation : public base_operation
+  {
+    struct fee_parameters_type { uint64_t fee = 0; };
+    asset fee;
+
+    account_id_type        authority;
+    das33_pledge_holder_id_type  pledge;
+    extensions_type        extensions;
+
+    das33_pledge_complete_operation() = default;
+
+    explicit das33_pledge_complete_operation(const account_id_type& authority,
+                                           const das33_pledge_holder_id_type&  pledge)
+              : authority(authority)
+              , pledge(pledge) {}
+
+    account_id_type fee_payer() const { return authority; }
+    void validate() const;
+  };
+
+  struct das33_pledge_reject_operation : public base_operation
+  {
+    struct fee_parameters_type { uint64_t fee = 0; };
+    asset fee;
+
+    account_id_type        authority;
+    das33_pledge_holder_id_type  pledge;
+    extensions_type        extensions;
+
+    das33_pledge_reject_operation() = default;
+
+    explicit das33_pledge_reject_operation(const account_id_type& authority,
+                                           const das33_pledge_holder_id_type&  pledge)
+              : authority(authority)
+              , pledge(pledge) {}
+
+    account_id_type fee_payer() const { return authority; }
+    void validate() const;
   };
 
   struct das33_pledge_result_operation : public base_operation
   {
-    struct fee_parameters_type {};
+    struct fee_parameters_type { uint64_t fee = 0; };
     asset fee;
 
-    account_id_type                account;
+    account_id_type                funders_account;
+    account_id_type                account_to_fund;
     bool                           completed;
     asset                          pledged;
     asset                          received;
-    optional<license_type_id_type> license_id;
     das33_project_id_type          project_id;
     time_point_sec                 timestamp;
     extensions_type                extensions;
 
     das33_pledge_result_operation() = default;
 
-    explicit das33_pledge_result_operation(const account_id_type& account,
+    explicit das33_pledge_result_operation(const account_id_type& funders_account,
+                                           const account_id_type& account_to_fund,
                                            const bool completed,
                                            const asset& pledged,
                                            const asset& received,
-                                           const optional<license_type_id_type> license_id,
                                            const das33_project_id_type& project_id,
                                            const time_point_sec& timestamp)
-              : account(account)
+              : funders_account(funders_account)
+              , account_to_fund(account_to_fund)
               , completed(completed)
               , pledged(pledged)
               , received(received)
-              , license_id(license_id)
               , project_id(project_id)
               , timestamp(timestamp) {}
 
-    account_id_type fee_payer() const { return account; }
+    account_id_type fee_payer() const { return funders_account; }
     void validate() const;
-    share_type calculate_fee(const fee_parameters_type&) const { return 0; }
   };
 
 } }  // namespace graphene::chain
@@ -217,7 +250,7 @@ namespace graphene { namespace chain {
 // REFLECTIONS:               //
 ////////////////////////////////
 
-FC_REFLECT( graphene::chain::das33_project_create_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::das33_project_create_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::das33_project_create_operation,
             (fee)
             (authority)
@@ -229,7 +262,7 @@ FC_REFLECT( graphene::chain::das33_project_create_operation,
             (extensions)
           )
 
-FC_REFLECT( graphene::chain::das33_project_update_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::das33_project_update_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::das33_project_update_operation,
             (fee)
             (authority)
@@ -245,7 +278,7 @@ FC_REFLECT( graphene::chain::das33_project_update_operation,
             (extensions)
           )
 
-FC_REFLECT( graphene::chain::das33_project_delete_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::das33_project_delete_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::das33_project_delete_operation,
             (fee)
             (authority)
@@ -253,7 +286,7 @@ FC_REFLECT( graphene::chain::das33_project_delete_operation,
             (extensions)
           )
 
-FC_REFLECT( graphene::chain::das33_pledge_asset_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::das33_pledge_asset_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::das33_pledge_asset_operation,
             (fee)
             (account_id)
@@ -263,7 +296,7 @@ FC_REFLECT( graphene::chain::das33_pledge_asset_operation,
             (extensions)
           )
 
-FC_REFLECT( graphene::chain::das33_project_complete_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::das33_project_complete_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::das33_project_complete_operation,
             (fee)
             (authority)
@@ -271,7 +304,7 @@ FC_REFLECT( graphene::chain::das33_project_complete_operation,
             (extensions)
           )
 
-FC_REFLECT( graphene::chain::das33_project_reject_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::das33_project_reject_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::das33_project_reject_operation,
             (fee)
             (authority)
@@ -279,14 +312,30 @@ FC_REFLECT( graphene::chain::das33_project_reject_operation,
             (extensions)
           )
 
-FC_REFLECT( graphene::chain::das33_pledge_result_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::das33_pledge_complete_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::das33_pledge_complete_operation,
+            (fee)
+            (authority)
+            (pledge)
+            (extensions)
+          )
+
+FC_REFLECT( graphene::chain::das33_pledge_reject_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::das33_pledge_reject_operation,
+            (fee)
+            (authority)
+            (pledge)
+            (extensions)
+          )
+
+FC_REFLECT( graphene::chain::das33_pledge_result_operation::fee_parameters_type, (fee) )
 FC_REFLECT( graphene::chain::das33_pledge_result_operation,
             (fee)
-            (account)
+            (funders_account)
+            (account_to_fund)
             (completed)
             (pledged)
             (received)
-            (license_id)
             (project_id)
             (timestamp)
             (extensions)

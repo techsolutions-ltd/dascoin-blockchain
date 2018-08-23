@@ -353,6 +353,132 @@ BOOST_AUTO_TEST_CASE( das33_pledge_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( das33_complete_project_test )
+{ try {
+
+    ACTOR(user);
+    ACTOR(owner);
+    VAULT_ACTOR(vault);
+
+    tether_accounts(user_id, vault_id);
+
+    // Issue a bunch of assets
+    issue_dascoin(vault_id, 100);
+    disable_vault_to_wallet_limit(vault_id);
+    transfer_dascoin_vault_to_wallet(vault_id, user_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+    BOOST_CHECK_EQUAL( get_balance(user_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+    // Create a das33 project
+    asset_id_type test_asset_id = create_new_asset("TEST", 100000000, 2, price({asset(1),asset(1,asset_id_type(1))}));
+    vector<price> prices{
+        {
+            asset{1 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()},
+            asset{1, test_asset_id}
+        }
+    };
+    // Create bonuses map
+    map<asset_id_type, share_type> bonuses;
+
+    das33_project_create_operation project_create;
+        project_create.authority       = get_das33_administrator_id();
+        project_create.name            = "test_project0";
+        project_create.owner           = owner_id;
+        project_create.token           = test_asset_id;
+        project_create.bonuses         = bonuses;
+        project_create.goal_amount_eur = 10000000;
+    do_op(project_create);
+
+    das33_project_object project = get_das33_projects()[0];
+
+    // Activate project
+    das33_project_update_operation project_update;
+        project_update.project_id = project.id;
+        project_update.authority  = get_das33_administrator_id();
+        project_update.status     = das33_project_status::active;
+    do_op(project_update);
+
+    // Initial check
+    BOOST_CHECK_EQUAL(get_das33_pledges().size(), 0);
+
+    // Pledge DASC
+    do_op(das33_pledge_asset_operation(user_id, asset{10 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project.id));
+    do_op(das33_pledge_asset_operation(user_id, asset{10 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project.id));
+    BOOST_CHECK_EQUAL(get_das33_pledges().size(), 2);
+
+    // Complete pledge
+    do_op(das33_pledge_complete_operation(get_das33_administrator_id(), get_das33_pledges()[0].id));
+    BOOST_CHECK_EQUAL(get_das33_pledges().size(), 1);
+    // Complete project
+    do_op(das33_project_complete_operation(get_das33_administrator_id(), project.id));
+
+    BOOST_CHECK_EQUAL(get_das33_pledges().size(), 0);
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( das33_reject_project_test )
+{ try {
+
+    ACTOR(user);
+    ACTOR(owner);
+    VAULT_ACTOR(vault);
+
+    tether_accounts(user_id, vault_id);
+
+    // Issue a bunch of assets
+    issue_dascoin(vault_id, 100);
+    disable_vault_to_wallet_limit(vault_id);
+    transfer_dascoin_vault_to_wallet(vault_id, user_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+    BOOST_CHECK_EQUAL( get_balance(user_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+    // Create a das33 project
+    asset_id_type test_asset_id = create_new_asset("TEST", 100000000, 2, price({asset(1),asset(1,asset_id_type(1))}));
+    vector<price> prices{
+        {
+            asset{1 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()},
+            asset{1, test_asset_id}
+        }
+    };
+    // Create bonuses map
+    map<asset_id_type, share_type> bonuses;
+
+    das33_project_create_operation project_create;
+        project_create.authority       = get_das33_administrator_id();
+        project_create.name            = "test_project0";
+        project_create.owner           = owner_id;
+        project_create.token           = test_asset_id;
+        project_create.bonuses         = bonuses;
+        project_create.goal_amount_eur = 10000000;
+    do_op(project_create);
+
+    das33_project_object project = get_das33_projects()[0];
+
+    // Activate project
+    das33_project_update_operation project_update;
+        project_update.project_id = project.id;
+        project_update.authority  = get_das33_administrator_id();
+        project_update.status     = das33_project_status::active;
+    do_op(project_update);
+
+    // Initial check
+    BOOST_CHECK_EQUAL(get_das33_pledges().size(), 0);
+
+    // Pledge DASC
+    do_op(das33_pledge_asset_operation(user_id, asset{10 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project.id));
+    do_op(das33_pledge_asset_operation(user_id, asset{10 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project.id));
+    BOOST_CHECK_EQUAL(get_das33_pledges().size(), 2);
+
+    // Reject pledge
+    do_op(das33_pledge_reject_operation(get_das33_administrator_id(), get_das33_pledges()[0].id));
+    BOOST_CHECK_EQUAL(get_das33_pledges().size(), 1);
+    // Reject project
+    do_op(das33_project_reject_operation(get_das33_administrator_id(), project.id));
+
+    BOOST_CHECK_EQUAL(get_das33_pledges().size(), 0);
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_SUITE_END()  // dascoin_tests::das33_tests
 BOOST_AUTO_TEST_SUITE_END()  // dascoin_tests
 

@@ -437,12 +437,61 @@ namespace graphene { namespace chain {
   void_result das33_project_complete_evaluator::do_evaluate(const das33_project_complete_operation& op)
   { try {
 
+     auto& d = db();
+
+     auto& pro_index = d.get_index_type<das33_project_index>().indices().get<by_id>();
+     auto pro_itr = pro_index.find(op.project);
+     account_id_type pro_owner;
+     FC_ASSERT(pro_itr != pro_index.end(), "Missing project object with this project_id!");
+
+     _pro_owner = pro_itr->owner;
+
     return {};
 
   } FC_CAPTURE_AND_RETHROW((op)) }
 
   void_result das33_project_complete_evaluator::do_apply(const das33_project_complete_operation& op)
   { try {
+
+    auto& d = db();
+
+    while(true)
+    {
+       auto& index = d.get_index_type<das33_pledge_holder_index>().indices().get<by_project>();
+       auto itr = index.lower_bound(op.project);
+       if(itr == index.end())
+          break;
+
+       // make virtual op for history traking
+       const das33_pledge_holder_object& pho = *itr;
+       das33_pledge_result_operation new_op = das33_pledge_result_operation(
+          pho.account_id, _pro_owner, true, pho.pledged, pho.expected, op.project, fc::time_point::now()
+       );
+       d.push_applied_operation(new_op);
+
+       // give to project owner pledged amount
+       auto& balance_obj = d.get_balance_object(_pro_owner, pho.pledged.asset_id);
+       d.modify(balance_obj, [&](account_balance_object& balance_obj){
+          balance_obj.balance += pho.pledged.amount;
+       });
+
+       // issue balance object if it does not exists
+       if(!d.check_if_balance_object_exists(pho.account_id,pho.expected.asset_id))
+       {
+          d.create<account_balance_object>([&pho](account_balance_object& abo){
+             abo.owner = pho.account_id;
+             abo.asset_type = pho.expected.asset_id;
+             abo.balance = 0;
+             abo.reserved = 0;
+          });
+       }
+
+       // issue token asset
+       auto& balance1_obj = d.get_balance_object(pho.account_id, pho.expected.asset_id);
+       d.issue_asset(balance1_obj, pho.expected.amount, 0);
+
+       d.remove(*itr);
+    }
 
     return {};
 
@@ -451,6 +500,15 @@ namespace graphene { namespace chain {
   void_result das33_project_reject_evaluator::do_evaluate(const das33_project_reject_operation& op)
   { try {
 
+     auto& d = db();
+
+     auto& pro_index = d.get_index_type<das33_project_index>().indices().get<by_id>();
+     auto pro_itr = pro_index.find(op.project);
+     account_id_type pro_owner;
+     FC_ASSERT(pro_itr != pro_index.end(), "Missing project object with this project_id!");
+
+     _pro_owner = pro_itr->owner;
+
     return {};
 
   } FC_CAPTURE_AND_RETHROW((op)) }
@@ -458,24 +516,138 @@ namespace graphene { namespace chain {
   void_result das33_project_reject_evaluator::do_apply(const das33_project_reject_operation& op)
   { try {
 
+     auto& d = db();
+
+     while(true)
+     {
+        auto& index = d.get_index_type<das33_pledge_holder_index>().indices().get<by_project>();
+        auto itr = index.lower_bound(op.project);
+        if(itr == index.end())
+           break;
+
+        const das33_pledge_holder_object& pho = *itr;
+        das33_pledge_result_operation new_op = das33_pledge_result_operation(
+              pho.account_id, _pro_owner, false, pho.pledged, pho.expected, op.project, fc::time_point::now()
+        );
+        d.push_applied_operation(new_op);
+
+        auto& balance_obj = d.get_balance_object(pho.account_id, pho.pledged.asset_id);
+        d.modify(balance_obj, [&](account_balance_object& balance_obj){
+           balance_obj.balance += pho.pledged.amount;
+        });
+
+        d.remove(*itr);
+     }
+
     return {};
 
   } FC_CAPTURE_AND_RETHROW((op)) }
 
-  void_result das33_pledge_result_evaluator::do_evaluate(const das33_pledge_result_operation& op)
+  void_result das33_pledge_complete_evaluator::do_evaluate(const das33_pledge_complete_operation& op)
+  { try {
+     auto& d = db();
+
+     // find pledge object
+     auto& index = d.get_index_type<das33_pledge_holder_index>().indices().get<by_id>();
+     auto itr = index.find(op.pledge);
+     FC_ASSERT(itr != index.end(),"Missing pledge object with this pledge_id.");
+
+     auto& pro_index = d.get_index_type<das33_project_index>().indices().get<by_id>();
+     auto pro_itr = pro_index.find(itr->project_id);
+     account_id_type pro_owner;
+     FC_ASSERT(pro_itr != pro_index.end(), "Missing project object with this project_id!");
+
+     _pro_owner = pro_itr->owner;
+     _pledge_holder_ptr = &(*itr);
+
+    return {};
+
+  } FC_CAPTURE_AND_RETHROW((op)) }
+
+  void_result das33_pledge_complete_evaluator::do_apply(const das33_pledge_complete_operation& op)
   { try {
 
+     auto& d = db();
+
+     // make virtual op for history traking
+     const das33_pledge_holder_object& pho = *_pledge_holder_ptr;
+     das33_pledge_result_operation new_op = das33_pledge_result_operation(
+        pho.account_id, _pro_owner, true, pho.pledged, pho.expected, pho.project_id, fc::time_point::now()
+     );
+     d.push_applied_operation(new_op);
+
+     // give to project owner pledged amount
+     auto& balance_obj = d.get_balance_object(_pro_owner, pho.pledged.asset_id);
+     d.modify(balance_obj, [&](account_balance_object& balance_obj){
+        balance_obj.balance += pho.pledged.amount;
+     });
+
+     // issue balance object if it does not exists
+     if(!d.check_if_balance_object_exists(pho.account_id,pho.expected.asset_id))
+     {
+        d.create<account_balance_object>([&pho](account_balance_object& abo){
+           abo.owner = pho.account_id;
+           abo.asset_type = pho.expected.asset_id;
+           abo.balance = 0;
+           abo.reserved = 0;
+        });
+     }
+
+     // issue token asset
+     auto& balance1_obj = d.get_balance_object(pho.account_id, pho.expected.asset_id);
+     d.issue_asset(balance1_obj, pho.expected.amount, 0);
+
+     d.remove(pho);
+
     return {};
 
   } FC_CAPTURE_AND_RETHROW((op)) }
 
-  void_result das33_pledge_result_evaluator::do_apply(const das33_pledge_result_operation& op)
+  void_result das33_pledge_reject_evaluator::do_evaluate(const das33_pledge_reject_operation& op)
   { try {
 
+     auto& d = db();
+
+     // find pledge object
+     auto& index = d.get_index_type<das33_pledge_holder_index>().indices().get<by_id>();
+     auto itr = index.find(op.pledge);
+     FC_ASSERT(itr != index.end(),"Missing pledge object with this pledge_id.");
+
+     auto& pro_index = d.get_index_type<das33_project_index>().indices().get<by_id>();
+     auto pro_itr = pro_index.find(itr->project_id);
+     account_id_type pro_owner;
+     FC_ASSERT(pro_itr != pro_index.end(), "Missing project object with this project_id!");
+
+     _pro_owner = pro_itr->owner;
+     _pledge_holder_ptr = &(*itr);
+
     return {};
 
   } FC_CAPTURE_AND_RETHROW((op)) }
 
+  void_result das33_pledge_reject_evaluator::do_apply(const das33_pledge_reject_operation& op)
+  { try {
+
+     auto& d = db();
+
+     // make virtual op for history traking
+     const das33_pledge_holder_object& pho = *_pledge_holder_ptr;
+     das33_pledge_result_operation new_op = das33_pledge_result_operation(
+        pho.account_id, _pro_owner, false, pho.pledged, pho.expected, pho.project_id, fc::time_point::now()
+     );
+     d.push_applied_operation(new_op);
+
+     // give to project owner pledged amount
+     auto& balance_obj = d.get_balance_object(pho.account_id, pho.pledged.asset_id);
+     d.modify(balance_obj, [&](account_balance_object& balance_obj){
+        balance_obj.balance += pho.pledged.amount;
+     });
+
+     d.remove(pho);
+
+    return {};
+
+  } FC_CAPTURE_AND_RETHROW((op)) }
 
 
 } }  // namespace graphene::chain

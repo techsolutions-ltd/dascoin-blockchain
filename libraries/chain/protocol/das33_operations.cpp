@@ -74,6 +74,12 @@ namespace graphene { namespace chain {
   void das33_project_reject_operation::validate() const
   {  }
 
+  void das33_pledge_complete_operation::validate() const
+  {  }
+
+  void das33_pledge_reject_operation::validate() const
+  {  }
+
   void das33_pledge_result_operation::validate() const
   {  }
 

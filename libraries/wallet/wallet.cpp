@@ -1248,8 +1248,8 @@ public:
                                            const string& name,
                                            const string& owner,
                                            const string& token,
-                                           const vector<pair<string, string>>& ratios,
-                                           share_type min_to_collect,
+                                           const vector<pair<string, share_type>>& bonuses,
+                                           share_type goal_amount,
                                            bool broadcast)
    { try {
          FC_ASSERT( !self.is_locked() );
@@ -1260,15 +1260,16 @@ public:
          op.name = name;
          op.owner = get_account(owner).id;
          op.token = get_asset_id(token);
-         op.min_to_collect = min_to_collect;
+         op.goal_amount_eur = goal_amount;
 
-         FC_ASSERT(ratios.size() % 2 == 0, "Must have even number of assets in ratios");
-         vector<price> prices;
-         for(uint32_t i=0; i<ratios.size(); i+=2)
+         //FC_ASSERT(ratios.size() % 2 == 0, "Must have even number of items in bonuses");
+         map<asset_id_type, share_type> bonus_map;
+         for(uint32_t i=0; i<bonuses.size(); i++)
          {
-             prices.emplace_back(get_asset(ratios[i].second).amount_from_string(ratios[i].first), get_asset(ratios[i+1].second).amount_from_string(ratios[i+1].first));
+             //bonus_map.emplace_back(get_asset(ratios[i].second).amount_from_string(ratios[i].first), get_asset(ratios[i+1].second).amount_from_string(ratios[i+1].first));
+           bonus_map[get_asset_id(bonuses[i].first)] = bonuses[i].second;
          }
-         op.ratios = prices;
+         op.bonuses = bonus_map;
 
          signed_transaction tx;
          tx.operations.push_back(op);
@@ -1276,14 +1277,14 @@ public:
          tx.validate();
 
          return sign_transaction(tx, broadcast);
-      } FC_CAPTURE_AND_RETHROW( (authority)(name)(owner)(token)(ratios)(min_to_collect)(broadcast) ) }
+      } FC_CAPTURE_AND_RETHROW( (authority)(name)(owner)(token)(bonuses)(goal_amount)(broadcast) ) }
 
    signed_transaction update_das33_project(const string& authority,
                                            const string& project_id,
                                            optional<string> name,
                                            optional<string> owner,
-                                           const vector<pair<string, string>>& ratios,
-                                           optional<share_type> min_to_collect,
+                                           optional<vector<pair<string, share_type>>> bonuses,
+                                           optional<price> token_price,
                                            optional<uint8_t> status,
                                            bool broadcast)
    { try {
@@ -1296,18 +1297,17 @@ public:
          op.project_id = *id;
          if (name) op.name = name;
          if (owner) op.owner = get_account(*owner).id;
-         if (min_to_collect) op.min_to_collect = *min_to_collect;
+         if (token_price) op.token_price = *token_price;
          if (status) op.status = *status;
 
-         if (ratios.size() > 0)
+         if (bonuses)
          {
-	   FC_ASSERT(ratios.size() % 2 == 0, "Must have even number of assets in ratios");
-	   vector<price> prices;
-	   for(uint32_t i=0; i<ratios.size(); i+=2)
-	   {
-	       prices.emplace_back(get_asset(ratios[i].second).amount_from_string(ratios[i].first), get_asset(ratios[i+1].second).amount_from_string(ratios[i+1].first));
-	   }
-	   op.ratios = prices;
+           map<asset_id_type, share_type> bonus_map;
+           for(uint32_t i=0; i<(*bonuses).size(); i++)
+           {
+             bonus_map[get_asset_id((*bonuses)[i].first)] = (*bonuses)[i].second;
+           }
+           op.bonuses = bonus_map;
          }
 
          signed_transaction tx;
@@ -1316,7 +1316,7 @@ public:
          tx.validate();
 
          return sign_transaction(tx, broadcast);
-      } FC_CAPTURE_AND_RETHROW( (authority)(project_id)(name)(owner)(ratios)(min_to_collect)(status)(broadcast) ) }
+      } FC_CAPTURE_AND_RETHROW( (authority)(project_id)(name)(owner)(bonuses)(token_price)(status)(broadcast) ) }
 
    signed_transaction delete_das33_project(const string& authority,
                                            const string& project_id,
@@ -5521,16 +5521,16 @@ signed_transaction wallet_api::create_das33_project(const string& authority,
                                                     const string& name,
                                                     const string& owner,
                                                     const string& token,
-                                                    const vector<pair<string, string>>& ratios,
-                                                    share_type min_to_collect,
+                                                    vector<pair<string, share_type>> bonuses,
+                                                    share_type goal_amount,
                                                     bool broadcast) const
 {
     return my->create_das33_project(authority,
                                     name,
                                     owner,
                                     token,
-                                    ratios,
-                                    min_to_collect,
+                                    bonuses,
+                                    goal_amount,
                                     broadcast);
 }
 
@@ -5538,8 +5538,8 @@ signed_transaction wallet_api::update_das33_project(const string& authority,
                                                     const string& project_id,
                                                     optional<string> name,
                                                     optional<string> owner,
-                                                    const vector<pair<string, string>>& ratios,
-                                                    optional<share_type> min_to_collect,
+                                                    optional<vector<pair<string, share_type>>> bonuses,
+                                                    optional<price> token_price,
                                                     optional<uint8_t> status,
                                                     bool broadcast) const
 {
@@ -5547,8 +5547,8 @@ signed_transaction wallet_api::update_das33_project(const string& authority,
                                   project_id,
                                   name,
                                   owner,
-                                  ratios,
-                                  min_to_collect,
+                                  bonuses,
+                                  token_price,
                                   status,
                                   broadcast);
 }

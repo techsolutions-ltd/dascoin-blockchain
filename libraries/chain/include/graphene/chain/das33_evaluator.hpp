@@ -76,6 +76,7 @@ namespace graphene { namespace chain {
     void_result do_apply_asset(database &d, const das33_pledge_asset_operation &op, const account_balance_object &balance_obj) const;
 
     asset expected;
+    price price_at_evaluation;
   };
 
   class das33_project_complete_evaluator : public evaluator<das33_project_complete_evaluator>

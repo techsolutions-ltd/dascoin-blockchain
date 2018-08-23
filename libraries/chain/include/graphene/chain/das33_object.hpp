@@ -32,6 +32,8 @@
 
 namespace graphene { namespace chain {
 
+#define BONUS_PRECISION 100
+
   ///////////////////////////////
   // OBJECTS:                  //
   ///////////////////////////////
@@ -42,23 +44,31 @@ namespace graphene { namespace chain {
     static const uint8_t space_id = implementation_ids;
     static const uint8_t type_id  = impl_das33_project_object_type;
 
-    string name;
-    account_id_type owner;
-    asset_id_type token_id;
-    optional<share_type> min_to_collect;
-    share_type collected;
-    vector<price> token_prices;
-    das33_project_status status;
+    string                         name;
+    account_id_type                owner;
+    asset_id_type                  token_id;
+    share_type                     goal_amount_eur;
+    map<asset_id_type, share_type> bonuses;
+    price                          token_price;
+    share_type                     collected_amount_eur = 0;
+    share_type                     tokens_sold = 0;
+    das33_project_status           status;
+    share_type                     phase_limit;
+    time_point_sec                 phase_end;
 
     das33_project_object() = default;
-    explicit das33_project_object(string name, account_id_type owner, asset_id_type token, share_type min_to_collect, vector<price> ratios)
+    explicit das33_project_object(string name, account_id_type owner, asset_id_type token, share_type goal_amount_eur,
+                                  map<asset_id_type, share_type>& bonuses, price price)
              : name(name),
                owner(owner),
                token_id(token),
-               min_to_collect(min_to_collect),
-               collected(0),
-               token_prices(ratios),
-               status(das33_project_status::inactive) {}
+               goal_amount_eur(goal_amount_eur),
+               bonuses(bonuses),
+               token_price(price),
+               collected_amount_eur(0),
+               tokens_sold(0),
+               status(das33_project_status::inactive),
+               phase_limit(0) {}
   };
 
   class das33_pledge_holder_object : public abstract_object<das33_pledge_holder_object>
@@ -171,8 +181,12 @@ FC_REFLECT_DERIVED( graphene::chain::das33_project_object, (graphene::db::object
                     (name)
                     (owner)
                     (token_id)
-                    (min_to_collect)
-                    (collected)
-                    (token_prices)
+                    (goal_amount_eur)
+                    (bonuses)
+                    (token_price)
+                    (collected_amount_eur)
+                    (tokens_sold)
                     (status)
+                    (phase_limit)
+                    (phase_end)
                   )

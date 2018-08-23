@@ -34,13 +34,13 @@ namespace graphene { namespace chain {
     struct fee_parameters_type {};
     asset fee;
 
-    account_id_type              authority;
-    string                       name;
-    account_id_type              owner;
-    asset_id_type                token;
-    vector<price>                ratios;
-    optional<share_type>         min_to_collect;
-    extensions_type              extensions;
+    account_id_type                authority;
+    string                         name;
+    account_id_type                owner;
+    asset_id_type                  token;
+    map<asset_id_type, share_type> bonuses;
+    share_type                     goal_amount_eur;
+    extensions_type                extensions;
 
     das33_project_create_operation() = default;
 
@@ -48,14 +48,14 @@ namespace graphene { namespace chain {
                                             const string& name,
                                             const account_id_type& owner,
                                             const asset_id_type& token,
-                                            const vector<price>& ratios,
-                                            share_type min_to_collect)
+                                            const map<asset_id_type, share_type>& bonuses,
+                                            share_type goal_amount_eur)
               : authority(authority)
               , name(name)
               , owner(owner)
               , token(token)
-              , ratios(ratios)
-              , min_to_collect(min_to_collect) {}
+              , bonuses(bonuses)
+              , goal_amount_eur(goal_amount_eur) {}
 
     account_id_type fee_payer() const { return authority; }
     void validate() const;
@@ -67,14 +67,17 @@ namespace graphene { namespace chain {
     struct fee_parameters_type {};
     asset fee;
 
-    account_id_type                        authority;
-    das33_project_id_type                  project_id;
-    optional<string>                       name;
-    optional<account_id_type>              owner;
-    vector<price>                          ratios;
-    optional<share_type>                   min_to_collect;
-    optional<uint8_t>                      status;
-    extensions_type                        extensions;
+    account_id_type                          authority;
+    das33_project_id_type                    project_id;
+    optional<string>                         name;
+    optional<account_id_type>                owner;
+    optional<share_type>                     goal_amount;
+    optional<price>                          token_price;
+    optional<map<asset_id_type, share_type>> bonuses;
+    optional<share_type>                     phase_limit;
+    optional<time_point_sec>                 phase_end;
+    optional<uint8_t>                        status;
+    extensions_type                          extensions;
 
     das33_project_update_operation() = default;
 
@@ -221,8 +224,8 @@ FC_REFLECT( graphene::chain::das33_project_create_operation,
             (name)
             (owner)
             (token)
-            (ratios)
-            (min_to_collect)
+            (bonuses)
+            (goal_amount_eur)
             (extensions)
           )
 
@@ -233,8 +236,11 @@ FC_REFLECT( graphene::chain::das33_project_update_operation,
             (project_id)
             (name)
             (owner)
-            (ratios)
-            (min_to_collect)
+            (goal_amount)
+            (token_price)
+            (bonuses)
+            (phase_limit)
+            (phase_end)
             (status)
             (extensions)
           )

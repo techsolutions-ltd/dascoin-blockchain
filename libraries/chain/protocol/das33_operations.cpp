@@ -31,10 +31,10 @@ namespace graphene { namespace chain {
   void das33_project_create_operation::validate() const
   {
     FC_ASSERT( fee.amount >= 0 );
-    FC_ASSERT( ratios.size() > 0);
     const size_t len = name.size();
     FC_ASSERT ( len >= GRAPHENE_MIN_ACCOUNT_NAME_LENGTH );
     FC_ASSERT ( len <= GRAPHENE_MAX_ACCOUNT_NAME_LENGTH );
+    FC_ASSERT ( goal_amount_eur > 0);
   }
 
   void das33_project_update_operation::validate() const
@@ -45,6 +45,10 @@ namespace graphene { namespace chain {
       const size_t len = (*name).size();
       FC_ASSERT ( len >= GRAPHENE_MIN_ACCOUNT_NAME_LENGTH );
       FC_ASSERT ( len <= GRAPHENE_MAX_ACCOUNT_NAME_LENGTH );
+    }
+    if (goal_amount)
+    {
+      FC_ASSERT ( *goal_amount > 0 );
     }
   }
 
@@ -60,13 +64,8 @@ namespace graphene { namespace chain {
     FC_ASSERT( account_id != account_id_type(), "Illegal account id");
 
     // For now, only dascoins can be pledged
+    // TODO: add bitcoin
     FC_ASSERT( pledged.asset_id == asset_id_type{DASCOIN_DASCOIN_INDEX}, "Illegal asset pledged");
-
-    // (cycle asset) AND (license valid)  OR  (NOT cycle asset) AND (NOT license valid)
-    //  =>  NOT (NOT cycle asset) AND (license valid)  OR  (NOT cycle asset) AND NOT (license valid)
-    //  =>  (NOT cycle asset) XOR (license valid)
-    FC_ASSERT( (pledged.asset_id != asset_id_type{DASCOIN_CYCLE_ASSET_INDEX}) ^ license_id.valid(),
-               "If cycles are pledged, license must be provided. Otherwise license must NOT be provided");
   }
 
   void das33_project_complete_operation::validate() const

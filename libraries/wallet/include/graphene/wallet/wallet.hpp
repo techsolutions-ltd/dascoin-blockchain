@@ -1948,15 +1948,15 @@ class wallet_api
        * @param owner           acccount id of project owner
        * @param token           id of a token that will be issued by this project
        * @param ratios          array of prices of project token
-       * @param min_to_collect  minimum amount of tokens needed for project to be successful
+       * @param goal_amount     minimum amount of tokens needed for project to be successful
        * @param broadcast       true to broadcast transaction to network
        */
       signed_transaction create_das33_project(const string& authority,
                                               const string& name,
                                               const string& owner,
                                               const string& token,
-                                              const vector<pair<string, string>>& ratios,
-                                              share_type min_to_collect,
+                                              vector<pair<string, share_type>> bonuses,
+                                              share_type goal_amount,
                                               bool broadcast) const;
 
       /**
@@ -1967,7 +1967,7 @@ class wallet_api
        * @param name            optional new name of a project
        * @param owner           optional new project owner
        * @param ratios          array of prices of project token, empty array if it shouldn't be changed
-       * @param min_to_collect  optional new minimum amount
+       * @param goal_amount     optional new minimum amount
        * @param status          optional new status of a project
        * @param broadcast       true to broadcast transaction to network
        */
@@ -1975,8 +1975,8 @@ class wallet_api
                                               const string& project_id,
                                               optional<string> name,
                                               optional<string> owner,
-                                              const vector<pair<string, string>>& ratios,
-                                              optional<share_type> min_to_collect,
+                                              optional<vector<pair<string, share_type>>> bonuses,
+                                              optional<price> token_price,
                                               optional<uint8_t> status,
                                               bool broadcast) const;
 

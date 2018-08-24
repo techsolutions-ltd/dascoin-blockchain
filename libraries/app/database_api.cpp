@@ -2779,7 +2779,7 @@ vector<dasc_holder> database_api_impl::get_top_dasc_holders() const
         {
             holder.vaults = account.vault.size();
             const auto& balance_obj = _db.get_balance_object(account.id, dasc_id);
-            holder.amount = balance_obj.balance;
+            holder.amount = balance_obj.balance + balance_obj.reserved;
             std::for_each(account.vault.begin(), account.vault.end(), [this, &holder, &dasc_id](const account_id_type& vault_id) {
                 const auto& balance_obj = _db.get_balance_object(vault_id, dasc_id);
                 holder.amount += balance_obj.balance;

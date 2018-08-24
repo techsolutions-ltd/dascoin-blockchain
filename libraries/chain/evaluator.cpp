@@ -35,6 +35,7 @@
 #include <graphene/chain/market_evaluator.hpp>
 #include <graphene/chain/protocol/fee_schedule.hpp>
 
+#include <fc/smart_ref_impl.hpp>
 #include <fc/uint128.hpp>
 
 namespace graphene { namespace chain {
@@ -53,6 +54,9 @@ database& generic_evaluator::db()const { return trx_state->db(); }
    void generic_evaluator::prepare_fee(account_id_type account_id, asset fee, operation op)
    {
       const database& d = db();
+      const auto& gbo = d.get_global_properties();
+      const auto current_fee_asset = gbo.parameters.current_fees->fee_asset_id(d);
+
       FC_ASSERT( fee.amount >= 0 );
       fee_paying_account = &account_id(d);
 
@@ -65,8 +69,8 @@ database& generic_evaluator::db()const { return trx_state->db(); }
       {
           FC_ASSERT( fee.amount == fee_paid, "Attempted to pay wrong amount of fee. Expected ${expected} payed ${payed}.",
                      ("expected", fee_paid)("payed", fee.amount) );
-          FC_ASSERT( fee.asset_id == d.get_cycle_asset_id(), "Attempted to pay fee by using asset ${a} '${sym}', which is unauthorized. Fee must be payed in Cycles.",
-                     ("a", fee.asset_id)("sym", fee_asset->symbol) );
+          FC_ASSERT( fee.asset_id == gbo.parameters.current_fees->fee_asset_id, "Attempted to pay fee by using asset ${a} '${sym}', which is unauthorized. Fee must be payed in ${f}.",
+                     ("a", fee.asset_id)("sym", fee_asset->symbol)("f", current_fee_asset.symbol) );
       }
 
       // if asset is core just leave this part
@@ -76,11 +80,10 @@ database& generic_evaluator::db()const { return trx_state->db(); }
          return;
       }
 
-      account_fee_balance_object = &(d.get_balance_object(account_id, d.get_cycle_asset_id()));
+      account_fee_balance_object = &(d.get_balance_object(account_id, fee.asset_id));
 
       auto balance = account_fee_balance_object->get_balance();
       FC_ASSERT( fee_paid <= balance.amount, "Low balance. Not enough to pay fee.");
-
    }
 
    void generic_evaluator::pay_fee()
@@ -97,14 +100,15 @@ database& generic_evaluator::db()const { return trx_state->db(); }
          const auto& dynamic_properties = d.get_dynamic_global_properties();
          if(dynamic_properties.fee_pool_account_id != account_id_type())
          {
-            d.modify(d.get_balance_object(dynamic_properties.fee_pool_account_id, d.get_cycle_asset_id()), [&](account_balance_object& b)
+            d.modify(d.get_balance_object(dynamic_properties.fee_pool_account_id, account_fee_balance_object->asset_type), [&](account_balance_object& b)
             {
                b.balance += fee_paid;
             });
          }
          else // this means that we have to burn fee asset
          {
-            d.modify(d.get_cycle_asset().dynamic_asset_data_id(d), [&](asset_dynamic_data_object& addo)
+            const auto& fee_asset = account_fee_balance_object->asset_type(d);
+            d.modify(fee_asset.dynamic_asset_data_id(d), [&](asset_dynamic_data_object& addo)
             {
                addo.current_supply -= fee_paid;
             });

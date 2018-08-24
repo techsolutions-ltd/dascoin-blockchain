@@ -79,6 +79,7 @@ namespace graphene { namespace chain {
        */
       flat_set<fee_parameters> parameters;
       uint32_t                 scale = GRAPHENE_100_PERCENT; ///< fee * scale / GRAPHENE_100_PERCENT
+      asset_id_type fee_asset_id{DASCOIN_CYCLE_ASSET_INDEX};
    };
 
    typedef fee_schedule fee_schedule_type;

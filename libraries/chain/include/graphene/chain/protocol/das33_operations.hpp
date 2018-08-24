@@ -38,8 +38,10 @@ namespace graphene { namespace chain {
     string                         name;
     account_id_type                owner;
     asset_id_type                  token;
-    map<asset_id_type, share_type> bonuses;
+    map<asset_id_type, share_type> discounts;
     share_type                     goal_amount_eur;
+    share_type                     min_pledge;
+    share_type                     max_pledge;
     extensions_type                extensions;
 
     das33_project_create_operation() = default;
@@ -48,13 +50,15 @@ namespace graphene { namespace chain {
                                             const string& name,
                                             const account_id_type& owner,
                                             const asset_id_type& token,
-                                            const map<asset_id_type, share_type>& bonuses,
-                                            share_type goal_amount_eur)
+                                            const map<asset_id_type, share_type>& discounts,
+                                            share_type goal_amount_eur,
+                                            share_type min_pledge,
+                                            share_type max_pledge)
               : authority(authority)
               , name(name)
               , owner(owner)
               , token(token)
-              , bonuses(bonuses)
+              , discounts(discounts)
               , goal_amount_eur(goal_amount_eur) {}
 
     account_id_type fee_payer() const { return authority; }
@@ -72,7 +76,9 @@ namespace graphene { namespace chain {
     optional<account_id_type>                owner;
     optional<share_type>                     goal_amount;
     optional<price>                          token_price;
-    optional<map<asset_id_type, share_type>> bonuses;
+    optional<map<asset_id_type, share_type>> discounts;
+    optional<share_type>                     min_pledge;
+    optional<share_type>                     max_pledge;
     optional<share_type>                     phase_limit;
     optional<time_point_sec>                 phase_end;
     optional<uint8_t>                        status;
@@ -257,7 +263,7 @@ FC_REFLECT( graphene::chain::das33_project_create_operation,
             (name)
             (owner)
             (token)
-            (bonuses)
+            (discounts)
             (goal_amount_eur)
             (extensions)
           )
@@ -271,7 +277,7 @@ FC_REFLECT( graphene::chain::das33_project_update_operation,
             (owner)
             (goal_amount)
             (token_price)
-            (bonuses)
+            (discounts)
             (phase_limit)
             (phase_end)
             (status)

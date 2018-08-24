@@ -208,7 +208,9 @@ struct database_fixture {
    void generate_blocks(fc::time_point_sec timestamp, bool miss_intermediate_blocks = true, uint32_t skip = ~0);
    
    void do_op(const operation& op) { push_op(op, true); }
+   void do_op_no_balance_check(const operation& op) { push_op_no_balance_check(op, true); }
    void push_op(const operation& op, bool gen_block = false);
+   void push_op_no_balance_check(const operation& op, bool gen_block = false);
 
    account_create_operation make_account(
       const account_kind kind,

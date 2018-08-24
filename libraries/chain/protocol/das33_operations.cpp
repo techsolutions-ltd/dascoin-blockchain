@@ -35,6 +35,8 @@ namespace graphene { namespace chain {
     FC_ASSERT ( len >= GRAPHENE_MIN_ACCOUNT_NAME_LENGTH );
     FC_ASSERT ( len <= GRAPHENE_MAX_ACCOUNT_NAME_LENGTH );
     FC_ASSERT ( goal_amount_eur > 0);
+    FC_ASSERT ( min_pledge >= 0 );
+    FC_ASSERT ( max_pledge >= min_pledge );
   }
 
   void das33_project_update_operation::validate() const
@@ -50,6 +52,10 @@ namespace graphene { namespace chain {
     {
       FC_ASSERT ( *goal_amount > 0 );
     }
+    if (min_pledge)
+      FC_ASSERT ( *min_pledge >= 0 );
+    if (max_pledge)
+          FC_ASSERT ( *max_pledge >= 0 );
   }
 
   void das33_project_delete_operation::validate() const

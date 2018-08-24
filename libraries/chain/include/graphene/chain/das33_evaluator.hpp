@@ -69,8 +69,10 @@ namespace graphene { namespace chain {
     void_result do_evaluate( const operation_type& op );
     object_id_type do_apply( const operation_type& op );
 
+  private:
     asset expected;
     price price_at_evaluation;
+    share_type discount;
   };
 
   class das33_project_complete_evaluator : public evaluator<das33_project_complete_evaluator>

@@ -1269,7 +1269,7 @@ public:
              //bonus_map.emplace_back(get_asset(ratios[i].second).amount_from_string(ratios[i].first), get_asset(ratios[i+1].second).amount_from_string(ratios[i+1].first));
            bonus_map[get_asset_id(bonuses[i].first)] = bonuses[i].second;
          }
-         op.bonuses = bonus_map;
+         op.discounts = bonus_map;
 
          signed_transaction tx;
          tx.operations.push_back(op);
@@ -1307,7 +1307,7 @@ public:
            {
              bonus_map[get_asset_id((*bonuses)[i].first)] = (*bonuses)[i].second;
            }
-           op.bonuses = bonus_map;
+           op.discounts = bonus_map;
          }
 
          signed_transaction tx;

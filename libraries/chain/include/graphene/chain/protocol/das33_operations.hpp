@@ -136,21 +136,34 @@ namespace graphene { namespace chain {
     void validate() const;
   };
 
-  struct das33_project_complete_operation : public base_operation
+  struct das33_distribute_project_pledges_operation : public base_operation
   {
     struct fee_parameters_type { uint64_t fee = 0; };
     asset fee;
 
     account_id_type        authority;
     das33_project_id_type  project;
+    share_type             phase_number;
+    share_type             to_escrow;
+    share_type             base_to_pledger;
+    share_type             bonus_to_pledger;
+
     extensions_type        extensions;
 
-    das33_project_complete_operation() = default;
+    das33_distribute_project_pledges_operation() = default;
 
-    explicit das33_project_complete_operation(const account_id_type& authority,
-                                             const das33_project_id_type&  project)
+    explicit das33_distribute_project_pledges_operation(const account_id_type&       authority,
+                                                        const das33_project_id_type&  project,
+                                                        share_type                    phase_number,
+                                                        share_type                    to_escrow,
+                                                        share_type                    base_to_pledger,
+                                                        share_type                    bonus_to_pledger)
               : authority(authority)
-              , project(project) {}
+              , project(project)
+              , phase_number(phase_number)
+              , to_escrow(to_escrow)
+              , base_to_pledger(base_to_pledger)
+              , bonus_to_pledger(bonus_to_pledger){}
 
     account_id_type fee_payer() const { return authority; }
     void validate() const;
@@ -176,21 +189,32 @@ namespace graphene { namespace chain {
     void validate() const;
   };
 
-  struct das33_pledge_complete_operation : public base_operation
+  struct das33_distribute_pledge_operation : public base_operation
   {
     struct fee_parameters_type { uint64_t fee = 0; };
     asset fee;
 
-    account_id_type        authority;
+    account_id_type              authority;
     das33_pledge_holder_id_type  pledge;
-    extensions_type        extensions;
+    share_type                   to_escrow;
+    share_type                   base_to_pledger;
+    share_type                   bonus_to_pledger;
 
-    das33_pledge_complete_operation() = default;
+    extensions_type              extensions;
 
-    explicit das33_pledge_complete_operation(const account_id_type& authority,
-                                           const das33_pledge_holder_id_type&  pledge)
+    das33_distribute_pledge_operation() = default;
+
+    explicit das33_distribute_pledge_operation(const account_id_type& authority,
+                                           const das33_pledge_holder_id_type&  pledge,
+                                           const share_type to_escrow,
+                                           const share_type base_to_pledger,
+                                           const share_type bonus_to_pledger)
+
               : authority(authority)
-              , pledge(pledge) {}
+              , pledge(pledge)
+              , to_escrow(to_escrow)
+              , base_to_pledger(base_to_pledger)
+              , bonus_to_pledger(bonus_to_pledger){}
 
     account_id_type fee_payer() const { return authority; }
     void validate() const;
@@ -201,9 +225,9 @@ namespace graphene { namespace chain {
     struct fee_parameters_type { uint64_t fee = 0; };
     asset fee;
 
-    account_id_type        authority;
+    account_id_type              authority;
     das33_pledge_holder_id_type  pledge;
-    extensions_type        extensions;
+    extensions_type              extensions;
 
     das33_pledge_reject_operation() = default;
 
@@ -308,11 +332,15 @@ FC_REFLECT( graphene::chain::das33_pledge_asset_operation,
             (extensions)
           )
 
-FC_REFLECT( graphene::chain::das33_project_complete_operation::fee_parameters_type, (fee) )
-FC_REFLECT( graphene::chain::das33_project_complete_operation,
+FC_REFLECT( graphene::chain::das33_distribute_project_pledges_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::das33_distribute_project_pledges_operation,
             (fee)
             (authority)
             (project)
+            (phase_number)
+            (to_escrow)
+            (base_to_pledger)
+            (bonus_to_pledger)
             (extensions)
           )
 
@@ -324,11 +352,14 @@ FC_REFLECT( graphene::chain::das33_project_reject_operation,
             (extensions)
           )
 
-FC_REFLECT( graphene::chain::das33_pledge_complete_operation::fee_parameters_type, (fee) )
-FC_REFLECT( graphene::chain::das33_pledge_complete_operation,
+FC_REFLECT( graphene::chain::das33_distribute_pledge_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::das33_distribute_pledge_operation,
             (fee)
             (authority)
             (pledge)
+            (to_escrow)
+            (base_to_pledger)
+            (bonus_to_pledger)
             (extensions)
           )
 

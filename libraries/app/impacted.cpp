@@ -520,7 +520,7 @@ struct get_impacted_account_visitor
       _impacted.insert( op.account_id );
    }
 
-   void operator() ( const das33_project_complete_operation& op )
+   void operator() ( const das33_distribute_project_pledges_operation& op )
    {
       _impacted.insert(op.authority);
    }
@@ -530,7 +530,7 @@ struct get_impacted_account_visitor
       _impacted.insert(op.authority);
    }
 
-   void operator() ( const das33_pledge_complete_operation& op )
+   void operator() ( const das33_distribute_pledge_operation& op )
    {
       _impacted.insert(op.authority);
    }

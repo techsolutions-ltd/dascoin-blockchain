@@ -75,10 +75,10 @@ namespace graphene { namespace chain {
     share_type discount;
   };
 
-  class das33_project_complete_evaluator : public evaluator<das33_project_complete_evaluator>
+  class das33_distribute_project_pledges_evaluator : public evaluator<das33_distribute_project_pledges_evaluator>
   {
   public:
-    typedef das33_project_complete_operation operation_type;
+    typedef das33_distribute_project_pledges_operation operation_type;
 
     void_result do_evaluate( const operation_type& op );
     void_result do_apply( const operation_type& op );
@@ -99,10 +99,10 @@ namespace graphene { namespace chain {
       account_id_type _pro_owner;
   };
 
-  class das33_pledge_complete_evaluator : public evaluator<das33_pledge_complete_evaluator>
+  class das33_distribute_pledge_evaluator : public evaluator<das33_distribute_pledge_evaluator>
   {
   public:
-    typedef das33_pledge_complete_operation operation_type;
+    typedef das33_distribute_pledge_operation operation_type;
 
     void_result do_evaluate( const operation_type& op );
     void_result do_apply( const operation_type& op );

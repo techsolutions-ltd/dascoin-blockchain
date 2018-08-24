@@ -404,7 +404,7 @@ namespace graphene { namespace chain {
 
   } FC_CAPTURE_AND_RETHROW((op)) }
 
-  void_result das33_project_complete_evaluator::do_evaluate(const das33_project_complete_operation& op)
+  void_result das33_distribute_project_pledges_evaluator::do_evaluate(const das33_distribute_project_pledges_operation& op)
   { try {
 
      auto& d = db();
@@ -420,29 +420,42 @@ namespace graphene { namespace chain {
 
   } FC_CAPTURE_AND_RETHROW((op)) }
 
-  void_result das33_project_complete_evaluator::do_apply(const das33_project_complete_operation& op)
+  void_result das33_distribute_project_pledges_evaluator::do_apply(const das33_distribute_project_pledges_operation& op)
   { try {
 
     auto& d = db();
 
-    while(true)
+    std::vector<object_id_type> pledges_to_remove;
+    auto& index = d.get_index_type<das33_pledge_holder_index>().indices().get<by_project>();
+    auto itr = index.lower_bound(op.project);
+
+    while(itr == index.end())
     {
-       auto& index = d.get_index_type<das33_pledge_holder_index>().indices().get<by_project>();
-       auto itr = index.lower_bound(op.project);
-       if(itr == index.end())
-          break;
+       if(itr->phase_number != op.phase_number)
+          continue;
+
+       const das33_pledge_holder_object& pho = *itr;
+
+       // calc amount of token and asset that will be exchanged
+       share_type base_token_to_receive = std::round(static_cast<double>(pho.base_expected.amount.value) * op.base_to_pledger.value / BONUS_PRECISION / BONUS_PRECISION);
+       base_token_to_receive = base_token_to_receive < pho.base_remaining.amount ? base_token_to_receive : pho.base_remaining.amount;
+       share_type bonus_token_to_receive = std::round(static_cast<double>(pho.bonus_expected.amount.value) * op.bonus_to_pledger.value / BONUS_PRECISION / BONUS_PRECISION);
+       bonus_token_to_receive = bonus_token_to_receive < pho.bonus_remaining.amount ? bonus_token_to_receive : pho.bonus_remaining.amount;
+       share_type pledge = std::round(static_cast<double>(pho.pledged.amount.value) * op.to_escrow.value / BONUS_PRECISION);
+       pledge = pledge < pho.pledge_remaining.amount ? pledge : pho.pledge_remaining.amount;
+
+       share_type token_total = base_token_to_receive + bonus_token_to_receive;
 
        // make virtual op for history traking
-       const das33_pledge_holder_object& pho = *itr;
        das33_pledge_result_operation new_op = das33_pledge_result_operation(
-          pho.account_id, _pro_owner, true, pho.pledged, pho.base_expected, op.project, fc::time_point::now()
+          pho.account_id, _pro_owner, true, pledge, token_total, op.project, fc::time_point::now()
        );
        d.push_applied_operation(new_op);
 
        // give to project owner pledged amount
        auto& balance_obj = d.get_balance_object(_pro_owner, pho.pledged.asset_id);
        d.modify(balance_obj, [&](account_balance_object& balance_obj){
-          balance_obj.balance += pho.pledged.amount;
+          balance_obj.balance += pledge;
        });
 
        // issue balance object if it does not exists
@@ -458,9 +471,29 @@ namespace graphene { namespace chain {
 
        // issue token asset
        auto& balance1_obj = d.get_balance_object(pho.account_id, pho.base_expected.asset_id);
-       d.issue_asset(balance1_obj, pho.base_expected.amount, 0);
+       d.issue_asset(balance1_obj, token_total, 0);
 
-       d.remove(*itr);
+       // update pledge holder object
+       d.modify(pho, [&](das33_pledge_holder_object& p){
+          p.pledge_remaining.amount -= pledge;
+          p.base_remaining.amount -= base_token_to_receive;
+          p.bonus_remaining.amount -= bonus_token_to_receive;
+       });
+
+       // if everything is distributed remove object
+       if(pho.pledge_remaining.amount + pho.base_remaining.amount + pho.bonus_remaining.amount <= 0)
+       {
+          pledges_to_remove.push_back(pho.id);
+       }
+       itr++;
+    }
+
+    auto& index1 = d.get_index_type<das33_pledge_holder_index>().indices().get<by_id>();
+    for(object_id_type id : pledges_to_remove)
+    {
+       auto itr = index1.find(id);
+       if(itr != index1.end())
+          d.remove(*itr);
     }
 
     return {};
@@ -513,7 +546,7 @@ namespace graphene { namespace chain {
 
   } FC_CAPTURE_AND_RETHROW((op)) }
 
-  void_result das33_pledge_complete_evaluator::do_evaluate(const das33_pledge_complete_operation& op)
+  void_result das33_distribute_pledge_evaluator::do_evaluate(const das33_distribute_pledge_operation& op)
   { try {
      auto& d = db();
 
@@ -534,22 +567,32 @@ namespace graphene { namespace chain {
 
   } FC_CAPTURE_AND_RETHROW((op)) }
 
-  void_result das33_pledge_complete_evaluator::do_apply(const das33_pledge_complete_operation& op)
+  void_result das33_distribute_pledge_evaluator::do_apply(const das33_distribute_pledge_operation& op)
   { try {
 
      auto& d = db();
+     const das33_pledge_holder_object& pho = *_pledge_holder_ptr;
+
+     // calc amount of token and asset that will be exchanged
+     share_type base_token_to_receive = std::round(static_cast<double>(pho.base_expected.amount.value) * op.base_to_pledger.value / BONUS_PRECISION / BONUS_PRECISION);
+     base_token_to_receive = base_token_to_receive < pho.base_remaining.amount ? base_token_to_receive : pho.base_remaining.amount;
+     share_type bonus_token_to_receive = std::round(static_cast<double>(pho.bonus_expected.amount.value) * op.bonus_to_pledger.value / BONUS_PRECISION / BONUS_PRECISION);
+     bonus_token_to_receive = bonus_token_to_receive < pho.bonus_remaining.amount ? bonus_token_to_receive : pho.bonus_remaining.amount;
+     share_type pledge = std::round(static_cast<double>(pho.pledged.amount.value) * op.to_escrow.value / BONUS_PRECISION);
+     pledge = pledge < pho.pledge_remaining.amount ? pledge : pho.pledge_remaining.amount;
+
+     share_type token_total = base_token_to_receive + bonus_token_to_receive;
 
      // make virtual op for history traking
-     const das33_pledge_holder_object& pho = *_pledge_holder_ptr;
      das33_pledge_result_operation new_op = das33_pledge_result_operation(
-        pho.account_id, _pro_owner, true, pho.pledged, pho.base_expected, pho.project_id, fc::time_point::now()
+        pho.account_id, _pro_owner, true, pledge, token_total, pho.project_id, fc::time_point::now()
      );
      d.push_applied_operation(new_op);
 
      // give to project owner pledged amount
      auto& balance_obj = d.get_balance_object(_pro_owner, pho.pledged.asset_id);
      d.modify(balance_obj, [&](account_balance_object& balance_obj){
-        balance_obj.balance += pho.pledged.amount;
+        balance_obj.balance += pledge;
      });
 
      // issue balance object if it does not exists
@@ -565,9 +608,20 @@ namespace graphene { namespace chain {
 
      // issue token asset
      auto& balance1_obj = d.get_balance_object(pho.account_id, pho.base_expected.asset_id);
-     d.issue_asset(balance1_obj, pho.base_expected.amount, 0);
+     d.issue_asset(balance1_obj, token_total, 0);
 
-     d.remove(pho);
+     // update pledge holder object
+     d.modify(pho, [&](das33_pledge_holder_object& p){
+        p.pledge_remaining.amount -= pledge;
+        p.base_remaining.amount -= base_token_to_receive;
+        p.bonus_remaining.amount -= bonus_token_to_receive;
+     });
+
+     // if everything is distributed remove object
+     if(pho.pledge_remaining.amount + pho.base_remaining.amount + pho.bonus_remaining.amount <= 0)
+     {
+        d.remove(pho);
+     }
 
     return {};
 
@@ -590,6 +644,10 @@ namespace graphene { namespace chain {
 
      _pro_owner = pro_itr->owner;
      _pledge_holder_ptr = &(*itr);
+     const das33_pledge_holder_object& pho = *_pledge_holder_ptr;
+     FC_ASSERT(pho.base_expected.amount == pho.base_remaining.amount
+           && pho.bonus_expected.amount == pho.bonus_remaining.amount
+           && pho.pledged.amount == pho.pledge_remaining.amount , "Project already accepted, can't be rejected!");
 
     return {};
 

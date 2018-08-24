@@ -74,13 +74,13 @@ namespace graphene { namespace chain {
     FC_ASSERT( pledged.asset_id == asset_id_type{DASCOIN_DASCOIN_INDEX}, "Illegal asset pledged");
   }
 
-  void das33_project_complete_operation::validate() const
+  void das33_distribute_project_pledges_operation::validate() const
   {  }
 
   void das33_project_reject_operation::validate() const
   {  }
 
-  void das33_pledge_complete_operation::validate() const
+  void das33_distribute_pledge_operation::validate() const
   {  }
 
   void das33_pledge_reject_operation::validate() const

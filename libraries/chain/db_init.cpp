@@ -549,21 +549,23 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    const auto& dascoin_dyn_asset = create<asset_dynamic_data_object>([&](asset_dynamic_data_object& adao){
       adao.current_supply = 0;
    });
-   create<asset_object>([&](asset_object& ao){
-      ao.symbol = DASCOIN_DASCOIN_SYMBOL;
-      ao.options.max_supply = genesis_state.max_dascoin_supply;
-      ao.precision = DASCOIN_DEFAULT_ASSET_PRECISION_DIGITS;
-      ao.options.flags = DASCOIN_ASSET_INITIAL_FLAGS;
-      ao.options.issuer_permissions = 0;  // No issuer, no permissions, no problem.
-      ao.issuer = GRAPHENE_NULL_ACCOUNT;
-      ao.authenticator = GRAPHENE_NULL_ACCOUNT;
-      // TODO: the base conversion rates are ignored.
-      ao.options.core_exchange_rate.base.amount = 1;
-      ao.options.core_exchange_rate.base.asset_id = asset_id_type(0);
-      ao.options.core_exchange_rate.quote.amount = 1;
-      ao.options.core_exchange_rate.quote.asset_id = asset_id_type(0);
-      ao.dynamic_asset_data_id = dascoin_dyn_asset.id;
-   });
+
+   const asset_object& dasc_asset =
+     create<asset_object>([&](asset_object& ao){
+         ao.symbol = DASCOIN_DASCOIN_SYMBOL;
+         ao.options.max_supply = genesis_state.max_dascoin_supply;
+         ao.precision = DASCOIN_DEFAULT_ASSET_PRECISION_DIGITS;
+         ao.options.flags = DASCOIN_ASSET_INITIAL_FLAGS;
+         ao.options.issuer_permissions = WEB_ASSET_ISSUER_PERMISSION_MASK;
+         ao.issuer = GRAPHENE_NULL_ACCOUNT;
+         ao.authenticator = GRAPHENE_NULL_ACCOUNT;
+         // TODO: the base conversion rates are ignored.
+         ao.options.core_exchange_rate.base.amount = 1;
+         ao.options.core_exchange_rate.base.asset_id = asset_id_type(0);
+         ao.options.core_exchange_rate.quote.amount = 1;
+         ao.options.core_exchange_rate.quote.asset_id = asset_id_type(0);
+         ao.dynamic_asset_data_id = dascoin_dyn_asset.id;
+     });
 
    // Create cycle assets:
    const auto& cycle_dyn_asset = create<asset_dynamic_data_object>([&](asset_dynamic_data_object& a){
@@ -895,6 +897,12 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    // Set up web asset issuer and authenticator:
    // TODO: refactor this to be handled all at once.
    modify(web_asset, [&](asset_object& a){
+      auto& ca = get_chain_authorities();
+      a.issuer = ca.webasset_issuer;
+      a.authenticator = ca.webasset_authenticator;
+   });
+
+   modify(dasc_asset, [&](asset_object& a){
       auto& ca = get_chain_authorities();
       a.issuer = ca.webasset_issuer;
       a.authenticator = ca.webasset_authenticator;

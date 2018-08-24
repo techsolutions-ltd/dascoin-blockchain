@@ -69,12 +69,6 @@ namespace graphene { namespace chain {
     void_result do_evaluate( const operation_type& op );
     object_id_type do_apply( const operation_type& op );
 
-  private:
-    void_result do_evaluate_cycles(const database &d, const das33_pledge_asset_operation &op, const account_object &account_obj) const;
-    void_result do_evaluate_asset(const database &d, const das33_pledge_asset_operation &op, const account_object &balance_obj) const;
-    void_result do_apply_cycles(database &d, const das33_pledge_asset_operation &op, const license_information_object &license_obj) const;
-    void_result do_apply_asset(database &d, const das33_pledge_asset_operation &op, const account_balance_object &balance_obj) const;
-
     asset expected;
     price price_at_evaluation;
   };

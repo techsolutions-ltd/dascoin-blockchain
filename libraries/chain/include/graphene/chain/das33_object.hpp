@@ -79,8 +79,10 @@ namespace graphene { namespace chain {
 
     account_id_type                account_id;
     asset                          pledged;
+    asset                          pledge_owed;
     asset                          expected;
-    optional<license_type_id_type> license_id;
+    asset                          expect_owed;
+    share_type                     discount;
     das33_project_id_type          project_id;
     time_point_sec                 timestamp;
 
@@ -90,14 +92,18 @@ namespace graphene { namespace chain {
 
     explicit das33_pledge_holder_object(account_id_type account_id,
                                         asset pledged,
+                                        asset pledge_owed,
                                         asset expected,
-                                        optional<license_type_id_type> license_id,
+                                        asset expect_owed,
+                                        share_type discount,
                                         das33_project_id_type project_id,
                                         time_point_sec timestamp)
             : account_id(account_id),
               pledged(pledged),
+              pledge_owed(pledge_owed),
               expected(expected),
-              license_id(license_id),
+              expect_owed(expect_owed),
+              discount(discount),
               project_id(project_id),
               timestamp(timestamp) {}
   };
@@ -171,8 +177,10 @@ namespace graphene { namespace chain {
 FC_REFLECT_DERIVED( graphene::chain::das33_pledge_holder_object, (graphene::db::object),
                     (account_id)
                     (pledged)
+                    (pledge_owed)
                     (expected)
-                    (license_id)
+                    (expect_owed)
+                    (discount)
                     (project_id)
                     (timestamp)
                   )

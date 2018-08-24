@@ -359,13 +359,6 @@ namespace graphene { namespace chain {
       from.spent += amount.amount;
     });
 
-    //TODO: I think we shouldn't do this here
-    // Decrease asset supply:
-//    const auto& asset_obj = op.pledged.asset_id(d);
-//    d.modify(asset_obj.dynamic_asset_data_id(d), [&](asset_dynamic_data_object& data){
-//      data.current_supply -= op.pledged.amount;
-//    });
-
     // Update project
     d.modify(project_obj, [&](das33_project_object& p){
         p.tokens_sold += expected.amount;
@@ -376,63 +369,14 @@ namespace graphene { namespace chain {
     return d.create<das33_pledge_holder_object>([&](das33_pledge_holder_object& cpho){
       cpho.account_id = op.account_id;
       cpho.pledged = amount;
+      cpho.pledge_owed = amount;
       cpho.expected = expected;
-      cpho.license_id = op.license_id;
+      cpho.expect_owed = {expected.amount / cpho.discount, expected.asset_id};
       cpho.project_id = op.project_id;
       cpho.timestamp = d.head_block_time();
     }).id;
 
   } FC_CAPTURE_AND_RETHROW((op)) }
-
-//  void_result das33_pledge_asset_evaluator::do_evaluate_cycles(const database &d, const das33_pledge_asset_operation &op, const account_object &account_obj) const {
-//
-//    // Only vault accounts are allowed to submit cycles:
-//    FC_ASSERT( account_obj.is_vault(),
-//               "Account '${n}' is not a vault account",
-//               ("n", account_obj.name)
-//    );
-//
-//    // Check if this account has a license:
-//    FC_ASSERT( account_obj.license_information.valid(),
-//               "Cannot pledge cycles, account '${n}' does not have any licenses",
-//               ("n", account_obj.name)
-//    );
-//
-//    const auto& license_information_obj = (*account_obj.license_information)(d);
-//
-//    // Check if this account has a required license:
-//    const auto& license_iterator = std::find_if(license_information_obj.history.begin(), license_information_obj.history.end(),
-//                                                [&op](const license_information_object::license_history_record& history_record) {
-//                                                    return history_record.license == op.license_id;
-//                                                });
-//    FC_ASSERT ( license_iterator != license_information_obj.history.end(),
-//                "License ${l} is not issued to account ${a}",
-//                ("l", op.license_id)
-//                ("a", op.account_id)
-//    );
-//
-//    // Assure we have enough cycles to submit:
-//    FC_ASSERT ( (*license_iterator).amount >= op.pledged.amount,
-//                "Trying to pledge ${t} cycles from license ${l} of vault ${v}, while ${r} remaining",
-//                ("t", op.pledged.amount)
-//                ("l", op.license_id)
-//                ("v", op.account_id)
-//                ("r", (*license_iterator).amount)
-//    );
-//
-//    return {};
-//  }
-
-//  void_result das33_pledge_asset_evaluator::do_apply_cycles(database &d, const das33_pledge_asset_operation &op, const license_information_object &license_obj) const {
-//
-//    // Spend cycles:
-//    d.modify(license_obj, [&](license_information_object& lio) {
-//      lio.subtract_cycles(*op.license_id, op.pledged.amount);
-//    });
-//
-//    return {};
-//  }
-
 
   void_result das33_project_complete_evaluator::do_evaluate(const das33_project_complete_operation& op)
   { try {

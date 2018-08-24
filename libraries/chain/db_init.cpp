@@ -595,11 +595,11 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    const auto& bitcoin_dyn_asset = create<asset_dynamic_data_object>([&](asset_dynamic_data_object& a){
          a.current_supply = 0;  // Cycle starts with 0 initial supply.
       });
-   create<asset_object>( [&]( asset_object& a ) {
+   const asset_object& btc_asset = create<asset_object>( [&]( asset_object& a ) {
       a.symbol = DASCOIN_BITCOIN_SYMBOL;
       a.options.max_supply = genesis_state.max_bitcoin_supply;
       a.precision = DASCOIN_BITCOIN_PRECISION_DIGITS;
-      a.options.flags = WEB_ASSET_INITIAL_FLAGS; // 
+      a.options.flags = BITCOIN_ASSET_INITIAL_FLAGS; //
       a.options.issuer_permissions = WEB_ASSET_ISSUER_PERMISSION_MASK;  // TODO: set the appropriate issuer permissions.
       a.issuer = GRAPHENE_NULL_ACCOUNT;
       a.authenticator = GRAPHENE_NULL_ACCOUNT;
@@ -922,6 +922,18 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    // Set up web asset issuer and authenticator:
    // TODO: refactor this to be handled all at once.
    modify(web_asset, [&](asset_object& a){
+      auto& ca = get_chain_authorities();
+      a.issuer = ca.webasset_issuer;
+      a.authenticator = ca.webasset_authenticator;
+   });
+
+   modify(dasc_asset, [&](asset_object& a){
+      auto& ca = get_chain_authorities();
+      a.issuer = ca.webasset_issuer;
+      a.authenticator = ca.webasset_authenticator;
+   });
+
+   modify(btc_asset, [&](asset_object& a){
       auto& ca = get_chain_authorities();
       a.issuer = ca.webasset_issuer;
       a.authenticator = ca.webasset_authenticator;

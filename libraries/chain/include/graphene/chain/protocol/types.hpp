@@ -194,6 +194,12 @@ namespace graphene { namespace chain {
 
    const static uint32_t DASCOIN_ASSET_INITIAL_FLAGS = dual_auth_issue_asset;  // TODO: this is temporary.
 
+   const static uint32_t BITCOIN_ASSET_INITIAL_FLAGS = charge_market_fee
+      | white_list
+      | override_authority
+      | disable_confidential
+      | dual_auth_issue_asset;  // TODO: this is temporary.
+
    enum reserved_spaces
    {
       relative_protocol_ids = 0,

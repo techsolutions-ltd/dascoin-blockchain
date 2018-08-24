@@ -126,6 +126,27 @@ public:
    std::string operator()(const asset_create_operation& op)const;
 };
 
+struct fee_asset_id_visitor
+{
+   typedef void result_type;
+
+   fee_schedule& schedule;
+
+   fee_asset_id_visitor(fee_schedule& schedule)
+   : schedule(schedule)
+   {}
+
+   result_type operator()( const asset_id_type& asset_id ) const
+   {
+      schedule.fee_asset_id = asset_id;
+   }
+
+   template<typename VariantMember>
+   result_type operator()( const VariantMember& op ) const
+   {
+   }
+};
+
 template<class T>
 optional<T> maybe_id( const string& name_or_id )
 {
@@ -503,6 +524,14 @@ public:
 
    void set_operation_fees( signed_transaction& tx, const fee_schedule& s  )
    {
+      const auto& params = _remote_db->get_global_properties().parameters;
+      fee_schedule& tmp_fee_schedule = const_cast<fee_schedule&>(s);
+
+      for (const auto& ext : params.extensions)
+      {
+         ext.visit(fee_asset_id_visitor{tmp_fee_schedule});
+      }
+
       for( auto& op : tx.operations )
          s.set_fee(op);
    }
@@ -1408,6 +1437,29 @@ public:
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (authority)(changed_values)(broadcast) ) }
 
+   signed_transaction change_operation_fee(const string& authority,
+                                           share_type new_fee,
+                                           unsigned op_num,
+                                           string comment,
+                                           bool broadcast = false)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      change_operation_fee_operation op;
+
+      op.issuer = get_account(authority).id;
+      op.new_fee = new_fee.value;
+      op.op_num = op_num;
+      op.comment = comment;
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (authority)(new_fee)(op_num)(comment)(broadcast) ) }
+
    signed_transaction tether_accounts(string wallet, string vault, bool broadcast = false)
    { try {
       FC_ASSERT( !self.is_locked() );
@@ -1758,6 +1810,26 @@ public:
 
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (from)(symbol)(amount)(broadcast) ) }
+
+   signed_transaction claim_asset_accumulated_fees_pool(string symbol,
+                                                        string amount,
+                                                        bool broadcast /* = false */)
+   { try {
+      optional<asset_object> asset_pool_to_claim = find_asset(symbol);
+      if (!asset_pool_to_claim)
+        FC_THROW("No asset with that symbol exists!");
+
+      asset_claim_fees_operation claim_op;
+      claim_op.issuer = asset_pool_to_claim->issuer;
+      claim_op.amount_to_claim = asset_pool_to_claim->amount_from_string(amount);
+
+      signed_transaction tx;
+      tx.operations.push_back( claim_op );
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+      tx.validate();
+
+      return sign_transaction( tx, broadcast );
+   } FC_CAPTURE_AND_RETHROW( (symbol)(amount)(broadcast) ) }
 
    signed_transaction reserve_asset(string from,
                                  string amount,
@@ -4078,6 +4150,13 @@ signed_transaction wallet_api::fund_asset_fee_pool(string from,
    return my->fund_asset_fee_pool(from, symbol, amount, broadcast);
 }
 
+signed_transaction wallet_api::claim_asset_accumulated_fees_pool(string symbol,
+                                                                string amount,
+                                                                bool broadcast /* = false */)
+{
+   return my->claim_asset_accumulated_fees_pool(symbol, amount, broadcast);
+}
+
 signed_transaction wallet_api::reserve_asset(string from,
                                           string amount,
                                           string symbol,
@@ -5579,9 +5658,18 @@ vector<delayed_operation_object> wallet_api::get_delayed_operations_for_account(
 
 signed_transaction wallet_api::update_global_parameters(const string& authority,
                                                         const variant_object& changed_values,
-                                                        bool broadcast /* = false */) const
+                                                        bool broadcast) const
 {
    return my->update_global_parameters( authority, changed_values, broadcast );
+}
+
+signed_transaction wallet_api::change_operation_fee(const string& authority,
+                                                   share_type new_fee,
+                                                   unsigned op_num,
+                                                   string comment,
+                                                   bool broadcast) const
+{
+    return my->change_operation_fee(authority, new_fee, op_num, comment, broadcast);
 }
 
 signed_block_with_info::signed_block_with_info( const signed_block& block )

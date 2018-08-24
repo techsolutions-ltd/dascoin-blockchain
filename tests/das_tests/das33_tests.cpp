@@ -180,13 +180,13 @@ BOOST_AUTO_TEST_CASE( das33_pledge_dasc_test )
     BOOST_CHECK_EQUAL( get_balance(user_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
 
     // Create a das33 project
-    asset_id_type test_asset_id = create_new_asset("TEST", 100000000, 2, price({asset(1),asset(1,asset_id_type(1))}));
+    asset_id_type test_asset_id = create_new_asset("TEST", 10000000, 2, price({asset(1),asset(1,asset_id_type(1))}));
 
     // Create bonuses map
     map<asset_id_type, share_type> bonuses{
       {
         get_dascoin_asset_id(),
-        100
+        50
       }
     };
 
@@ -197,6 +197,8 @@ BOOST_AUTO_TEST_CASE( das33_pledge_dasc_test )
         project_create.token           = test_asset_id;
         project_create.discounts       = bonuses;
         project_create.goal_amount_eur = 10000000;
+        project_create.min_pledge      = 0;
+        project_create.max_pledge      = 10000000;
     do_op(project_create);
 
     das33_project_object project = get_das33_projects()[0];
@@ -211,10 +213,20 @@ BOOST_AUTO_TEST_CASE( das33_pledge_dasc_test )
     // Initial check
     BOOST_CHECK_EQUAL(get_das33_pledges().size(), 0);
 
+    // Set last dascoin price
+    set_last_dascoin_price(asset(1 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()) / asset(1 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()));
+
     // Pledge DASC
     do_op_no_balance_check(das33_pledge_asset_operation(user_id, asset{10 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project.id));
     do_op_no_balance_check(das33_pledge_asset_operation(user_id, asset{10 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project.id));
     BOOST_CHECK_EQUAL(get_das33_pledges().size(), 2);
+    das33_pledge_holder_object& pledge = get_das33_pledges()[0];
+    BOOST_CHECK_EQUAL(pledge.pledged.amount == 1000000, true);
+    BOOST_CHECK_EQUAL(pledge.pledge_remaining.amount == 1000000, true);
+    BOOST_CHECK_EQUAL(pledge.base_expected.amount == 1000, true);
+    BOOST_CHECK_EQUAL(pledge.base_remaining.amount == 1000, true);
+    BOOST_CHECK_EQUAL(pledge.bonus_expected.amount == 1000, true);
+    BOOST_CHECK_EQUAL(pledge.bonus_remaining.amount ==  1000, true);
 
     // Should Fail: not enough balance
     GRAPHENE_REQUIRE_THROW( do_op_no_balance_check(das33_pledge_asset_operation(user_id, asset{81 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project.id));, fc::exception );
@@ -336,6 +348,8 @@ BOOST_AUTO_TEST_CASE( das33_pledge_test_phase_limit )
         project_create.token           = test_asset_id;
         project_create.discounts        = bonuses;
         project_create.goal_amount_eur = 100000;
+        project_create.min_pledge      = 0;
+        project_create.max_pledge      = 1000000;
     do_op(project_create);
 
     das33_project_object project = get_das33_projects()[0];
@@ -401,8 +415,10 @@ BOOST_AUTO_TEST_CASE( das33_complete_project_test )
         project_create.name            = "test_project0";
         project_create.owner           = owner_id;
         project_create.token           = test_asset_id;
-        project_create.discounts         = bonuses;
-        project_create.goal_amount_eur = 10000000;
+        project_create.discounts       = bonuses;
+        project_create.goal_amount_eur = 100000000;
+        project_create.min_pledge      = 0;
+        project_create.max_pledge      = 100000000;
     do_op(project_create);
 
     das33_project_object project = get_das33_projects()[0];
@@ -470,7 +486,9 @@ BOOST_AUTO_TEST_CASE( das33_reject_project_test )
         project_create.owner           = owner_id;
         project_create.token           = test_asset_id;
         project_create.discounts         = bonuses;
-        project_create.goal_amount_eur = 10000000;
+        project_create.goal_amount_eur = 100000000;
+        project_create.min_pledge      = 0;
+        project_create.max_pledge      = 100000000;
     do_op(project_create);
 
     das33_project_object project = get_das33_projects()[0];

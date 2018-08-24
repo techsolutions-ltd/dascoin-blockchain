@@ -1955,8 +1955,10 @@ class wallet_api
                                               const string& name,
                                               const string& owner,
                                               const string& token,
-                                              vector<pair<string, share_type>> bonuses,
+                                              vector<pair<string, share_type>> discounts,
                                               share_type goal_amount,
+                                              share_type min_pledge,
+                                              share_type max_pledge,
                                               bool broadcast) const;
 
       /**
@@ -1975,8 +1977,13 @@ class wallet_api
                                               const string& project_id,
                                               optional<string> name,
                                               optional<string> owner,
-                                              optional<vector<pair<string, share_type>>> bonuses,
+                                              optional<share_type> goal_amount,
                                               optional<price> token_price,
+                                              optional<vector<pair<string, share_type>>> discounts,
+                                              optional<share_type> min_pledge,
+                                              optional<share_type> max_pledge,
+                                              optional<share_type> phase_limit,
+                                              optional<time_point_sec> phase_end,
                                               optional<uint8_t> status,
                                               bool broadcast) const;
 

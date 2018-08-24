@@ -39,7 +39,7 @@ namespace graphene { namespace chain {
     for (int i = 0; i < pledges.size(); i++)
       {
         if (pledges[i].project_id == project_id && pledges[i].phase_number == round)
-          sum += pledges[i].base_expected.amount;
+          sum += (pledges[i].base_expected.amount + pledges[i].bonus_expected.amount);
       }
     return sum;
   }
@@ -187,6 +187,12 @@ namespace graphene { namespace chain {
         }
       }
 
+      // Check phase number
+      if (op.phase_number.valid())
+      {
+        FC_ASSERT(*op.phase_number > project_to_update->phase_number, "Phase number can not be decreased");
+      }
+
       // Check phase limit
       if (op.phase_limit.valid())
       {
@@ -224,6 +230,7 @@ namespace graphene { namespace chain {
         if (op.max_pledge) dpo.max_pledge = *op.max_pledge;
         if (op.token_price) dpo.token_price = *op.token_price;
         if (op.discounts) dpo.discounts = *op.discounts;
+        if (op.phase_number) dpo.phase_number = *op.phase_number;
         if (op.phase_limit) dpo.phase_limit = *op.phase_limit;
         if (op.phase_end) dpo.phase_end = *op.phase_end;
         if (op.status) dpo.status = static_cast<das33_project_status>(*op.status);
@@ -378,13 +385,18 @@ namespace graphene { namespace chain {
         p.collected_amount_eur += (amount * price_at_evaluation).amount;
     });
 
+    asset base = {expected.amount * discount / BONUS_PRECISION, expected.asset_id};
+    asset bonus = expected - base;
+
     // Create the holder object and return its ID:
     return d.create<das33_pledge_holder_object>([&](das33_pledge_holder_object& cpho){
       cpho.account_id = op.account_id;
       cpho.pledged = amount;
-      cpho.pledged = amount;
-      cpho.base_remaining = expected;
-      cpho.base_expected = {expected.amount * discount / BONUS_PRECISION, expected.asset_id};
+      cpho.pledge_remaining = amount;
+      cpho.base_remaining = base;
+      cpho.base_expected = base;
+      cpho.bonus_remaining = bonus;
+      cpho.bonus_expected = bonus;
       cpho.phase_number = project_obj.phase_number;
       cpho.project_id = op.project_id;
       cpho.timestamp = d.head_block_time();

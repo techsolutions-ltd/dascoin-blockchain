@@ -1248,8 +1248,10 @@ public:
                                            const string& name,
                                            const string& owner,
                                            const string& token,
-                                           const vector<pair<string, share_type>>& bonuses,
+                                           const vector<pair<string, share_type>>& discounts,
                                            share_type goal_amount,
+                                           share_type min_pledge,
+                                           share_type max_pledge,
                                            bool broadcast)
    { try {
          FC_ASSERT( !self.is_locked() );
@@ -1261,15 +1263,17 @@ public:
          op.owner = get_account(owner).id;
          op.token = get_asset_id(token);
          op.goal_amount_eur = goal_amount;
+         op.min_pledge = min_pledge;
+         op.max_pledge = max_pledge;
 
          //FC_ASSERT(ratios.size() % 2 == 0, "Must have even number of items in bonuses");
-         map<asset_id_type, share_type> bonus_map;
-         for(uint32_t i=0; i<bonuses.size(); i++)
+         map<asset_id_type, share_type> discount_map;
+         for(uint32_t i=0; i<discounts.size(); i++)
          {
              //bonus_map.emplace_back(get_asset(ratios[i].second).amount_from_string(ratios[i].first), get_asset(ratios[i+1].second).amount_from_string(ratios[i+1].first));
-           bonus_map[get_asset_id(bonuses[i].first)] = bonuses[i].second;
+             discount_map[get_asset_id(discounts[i].first)] = discounts[i].second;
          }
-         op.discounts = bonus_map;
+         op.discounts = discount_map;
 
          signed_transaction tx;
          tx.operations.push_back(op);
@@ -1277,14 +1281,19 @@ public:
          tx.validate();
 
          return sign_transaction(tx, broadcast);
-      } FC_CAPTURE_AND_RETHROW( (authority)(name)(owner)(token)(bonuses)(goal_amount)(broadcast) ) }
+      } FC_CAPTURE_AND_RETHROW( (authority)(name)(owner)(token)(discounts)(goal_amount)(broadcast) ) }
 
    signed_transaction update_das33_project(const string& authority,
                                            const string& project_id,
                                            optional<string> name,
                                            optional<string> owner,
-                                           optional<vector<pair<string, share_type>>> bonuses,
+                                           optional<share_type> goal_amount,
                                            optional<price> token_price,
+                                           optional<vector<pair<string, share_type>>> discounts,
+                                           optional<share_type> min_pledge,
+                                           optional<share_type> max_pledge,
+                                           optional<share_type> phase_limit,
+                                           optional<time_point_sec> phase_end,
                                            optional<uint8_t> status,
                                            bool broadcast)
    { try {
@@ -1297,15 +1306,20 @@ public:
          op.project_id = *id;
          if (name) op.name = name;
          if (owner) op.owner = get_account(*owner).id;
+         if (goal_amount) op.goal_amount = *goal_amount;
          if (token_price) op.token_price = *token_price;
+         if (min_pledge) op.min_pledge = *min_pledge;
+         if (max_pledge) op.max_pledge = *max_pledge;
+         if (phase_limit) op.phase_limit = *phase_limit;
+         if (phase_end) op.phase_end = *phase_end;
          if (status) op.status = *status;
 
-         if (bonuses)
+         if (discounts)
          {
            map<asset_id_type, share_type> bonus_map;
-           for(uint32_t i=0; i<(*bonuses).size(); i++)
+           for(uint32_t i=0; i<(*discounts).size(); i++)
            {
-             bonus_map[get_asset_id((*bonuses)[i].first)] = (*bonuses)[i].second;
+             bonus_map[get_asset_id((*discounts)[i].first)] = (*discounts)[i].second;
            }
            op.discounts = bonus_map;
          }
@@ -1316,7 +1330,7 @@ public:
          tx.validate();
 
          return sign_transaction(tx, broadcast);
-      } FC_CAPTURE_AND_RETHROW( (authority)(project_id)(name)(owner)(bonuses)(token_price)(status)(broadcast) ) }
+      } FC_CAPTURE_AND_RETHROW( (authority)(project_id)(name)(owner)(discounts)(token_price)(status)(broadcast) ) }
 
    signed_transaction delete_das33_project(const string& authority,
                                            const string& project_id,
@@ -5521,16 +5535,20 @@ signed_transaction wallet_api::create_das33_project(const string& authority,
                                                     const string& name,
                                                     const string& owner,
                                                     const string& token,
-                                                    vector<pair<string, share_type>> bonuses,
+                                                    vector<pair<string, share_type>> discounts,
                                                     share_type goal_amount,
+                                                    share_type min_pledge,
+                                                    share_type max_pledge,
                                                     bool broadcast) const
 {
     return my->create_das33_project(authority,
                                     name,
                                     owner,
                                     token,
-                                    bonuses,
+                                    discounts,
                                     goal_amount,
+                                    min_pledge,
+                                    max_pledge,
                                     broadcast);
 }
 
@@ -5538,8 +5556,13 @@ signed_transaction wallet_api::update_das33_project(const string& authority,
                                                     const string& project_id,
                                                     optional<string> name,
                                                     optional<string> owner,
-                                                    optional<vector<pair<string, share_type>>> bonuses,
+                                                    optional<share_type> goal_amount,
                                                     optional<price> token_price,
+                                                    optional<vector<pair<string, share_type>>> discounts,
+                                                    optional<share_type> min_pledge,
+                                                    optional<share_type> max_pledge,
+                                                    optional<share_type> phase_limit,
+                                                    optional<time_point_sec> phase_end,
                                                     optional<uint8_t> status,
                                                     bool broadcast) const
 {
@@ -5547,8 +5570,13 @@ signed_transaction wallet_api::update_das33_project(const string& authority,
                                   project_id,
                                   name,
                                   owner,
-                                  bonuses,
+                                  goal_amount,
                                   token_price,
+                                  discounts,
+                                  min_pledge,
+                                  max_pledge,
+                                  phase_limit,
+                                  phase_end,
                                   status,
                                   broadcast);
 }

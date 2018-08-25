@@ -70,7 +70,10 @@ namespace graphene { namespace chain {
     object_id_type do_apply( const operation_type& op );
 
   private:
-    asset expected;
+    asset total;
+    asset base;
+    asset bonus;
+    asset to_take;
     price price_at_evaluation;
     share_type discount;
   };

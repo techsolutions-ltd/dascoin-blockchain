@@ -58,6 +58,16 @@ namespace graphene { namespace chain {
     return result;
   }
 
+  share_type precision_modifier(asset_object a, asset_object b)
+  {
+    share_type result = 1;
+    if (a.precision > b.precision)
+    {
+      result = std::pow(10, a.precision - b.precision);
+    }
+    return result;
+  }
+
   // method implementations:
 
   void_result das33_project_create_evaluator::do_evaluate( const operation_type& op )
@@ -314,43 +324,64 @@ namespace graphene { namespace chain {
     FC_ASSERT(project_obj.tokens_sold < project_obj.phase_limit, "All tokens in this phase are sold");
 
     // Calculate expected amount
-    expected.asset_id = project_obj.token_id;
+    share_type precision = precision_modifier(op.pledged.asset_id(d), d.get_web_asset_id()(d));
+    total.asset_id = project_obj.token_id;
     price_at_evaluation = get_price_in_web_eur(op.pledged.asset_id, d);
-    expected = op.pledged * price_at_evaluation * project_obj.token_price;
+    base = asset{op.pledged.amount * precision, op.pledged.asset_id} * price_at_evaluation * project_obj.token_price;
+    base.amount = base.amount / precision;
 
     // Assure that pledge amount is above minimum
-    FC_ASSERT(expected.amount >= project_obj.min_pledge, "Can not pledge: must buy at least ${min} tokens", ("min", project_obj.min_pledge));
+    FC_ASSERT(base.amount >= project_obj.min_pledge, "Can not pledge: must buy at least ${min} tokens", ("min", project_obj.min_pledge));
 
     // Calculate expected amount with discounts
     auto discount_iterator = project_obj.discounts.find(op.pledged.asset_id);
     FC_ASSERT( discount_iterator != project_obj.discounts.end(), "This asset can not be used in this project phase" );
     discount = discount_iterator->second;
-    expected.amount = expected.amount * BONUS_PRECISION / discount;
+    total.amount = base.amount * BONUS_PRECISION / discount;
 
     // Assure that pledge amount is above zero
-    FC_ASSERT(expected.amount > 0,
+    FC_ASSERT(total.amount > 0,
               "Cannot pledge because expected amount of ${tok} is ${ex}",
               ("tok", token_obj.symbol)
-              ("ex", d.to_pretty_string(expected))
+              ("ex", d.to_pretty_string(total))
     );
 
+    bool total_reduced = false;
     // Decrease amount if it passes tokens max supply
-    expected.amount = (project_obj.tokens_sold + expected.amount > token_obj.options.max_supply)
-                    ? token_obj.options.max_supply - project_obj.tokens_sold
-                    : expected.amount;
+    if (project_obj.tokens_sold + total.amount > token_obj.options.max_supply)
+    {
+        total.amount = token_obj.options.max_supply - project_obj.tokens_sold;
+        total_reduced = true;
+    }
 
     // Decrease amount if it passes current phase limit
-    expected.amount = (project_obj.tokens_sold + expected.amount > project_obj.phase_limit)
-                    ? project_obj.phase_limit - project_obj.tokens_sold
-                    : expected.amount;
+    if (project_obj.tokens_sold + total.amount > project_obj.phase_limit)
+    {
+        total.amount = project_obj.phase_limit - project_obj.tokens_sold;
+        total_reduced = true;
+    }
 
     // Assure that pledge amount is below maximum for current user
     auto previous_pledges = users_total_pledges_in_round(op.account_id, op.project_id, project_obj.phase_number, d);
-    FC_ASSERT( previous_pledges + expected.amount <= project_obj.max_pledge,
+    FC_ASSERT( previous_pledges + total.amount <= project_obj.max_pledge,
               "Can not buy more then ${max} tokens per round but amount to receive with bonus is ${this} and you already pledged for ${previous}.",
               ("max", project_obj.max_pledge)
-              ("this", expected.amount)
+              ("this", total.amount)
               ("previous", previous_pledges));
+
+    if (total_reduced)
+    {
+      base = {total.amount * discount / BONUS_PRECISION, total.asset_id};
+      bonus = total - base;
+      precision = precision_modifier(base.asset_id(d), d.get_web_asset_id()(d));
+      to_take = asset{base.amount * precision, base.asset_id} * project_obj.token_price * price_at_evaluation;
+      to_take.amount = to_take.amount / precision;
+    }
+    else
+    {
+      bonus = total - base;
+      to_take = op.pledged;
+    }
 
     return {};
 
@@ -362,11 +393,6 @@ namespace graphene { namespace chain {
     auto& d = db();
     const auto& project_obj = op.project_id(d);
 
-    // Calculate expected amount
-    asset base = {expected.amount * discount / BONUS_PRECISION, expected.asset_id};
-    asset bonus = expected - base;
-    asset to_take = base * project_obj.token_price * price_at_evaluation;
-
     // Adjust the balance and spent amount:
     const auto& balance_obj = d.get_balance_object(op.account_id, op.pledged.asset_id);
     d.modify(balance_obj, [&](account_balance_object& from){
@@ -376,7 +402,7 @@ namespace graphene { namespace chain {
 
     // Update project
     d.modify(project_obj, [&](das33_project_object& p){
-        p.tokens_sold += expected.amount;
+        p.tokens_sold += total.amount;
         p.collected_amount_eur += (to_take * price_at_evaluation).amount;
     });
 

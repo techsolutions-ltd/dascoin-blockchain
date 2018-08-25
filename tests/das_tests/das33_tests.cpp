@@ -167,14 +167,14 @@ BOOST_AUTO_TEST_CASE( das33_pledge_dasc_test )
     BOOST_CHECK_EQUAL( get_balance(user_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
 
     // Create a das33 project
-    asset_id_type test_asset_id = create_new_asset("TEST", 10000000, 2, price({asset(1),asset(1,asset_id_type(1))}));
+    asset_id_type test_asset_id = create_new_asset("TEST", 10000000000, 5, price({asset(1),asset(1,asset_id_type(1))}));
 
     das33_project_create_operation project_create;
         project_create.authority       = get_das33_administrator_id();
         project_create.name            = "test_project0";
         project_create.owner           = owner_id;
         project_create.token           = test_asset_id;
-        project_create.discounts       = {{get_dascoin_asset_id(), 50}};
+        project_create.discounts       = {{get_dascoin_asset_id(), 60}};
         project_create.goal_amount_eur = 10000000;
         project_create.min_pledge      = 0;
         project_create.max_pledge      = 10000000;
@@ -206,17 +206,17 @@ BOOST_AUTO_TEST_CASE( das33_pledge_dasc_test )
 
     BOOST_CHECK(pledges[0].pledged.amount          == 1000000);
     BOOST_CHECK(pledges[0].pledge_remaining.amount == 1000000);
-    BOOST_CHECK(pledges[0].base_expected.amount    == 1000);
-    BOOST_CHECK(pledges[0].base_remaining.amount   == 1000);
-    BOOST_CHECK(pledges[0].bonus_expected.amount   == 1000);
-    BOOST_CHECK(pledges[0].bonus_remaining.amount  == 1000);
+    BOOST_CHECK(pledges[0].base_expected.amount    == 1000000);
+    BOOST_CHECK(pledges[0].base_remaining.amount   == 1000000);
+    BOOST_CHECK(pledges[0].bonus_expected.amount   == 666666);
+    BOOST_CHECK(pledges[0].bonus_remaining.amount  == 666666);
 
     BOOST_CHECK(pledges[1].pledged.amount          == 1000000);
     BOOST_CHECK(pledges[1].pledge_remaining.amount == 1000000);
-    BOOST_CHECK(pledges[1].base_expected.amount    == 1000);
-    BOOST_CHECK(pledges[1].base_remaining.amount   == 1000);
-    BOOST_CHECK(pledges[1].bonus_expected.amount   == 1000);
-    BOOST_CHECK(pledges[1].bonus_remaining.amount  == 1000);
+    BOOST_CHECK(pledges[1].base_expected.amount    == 1000000);
+    BOOST_CHECK(pledges[1].base_remaining.amount   == 1000000);
+    BOOST_CHECK(pledges[1].bonus_expected.amount   == 666666);
+    BOOST_CHECK(pledges[1].bonus_remaining.amount  == 666666);
 
     // Should Fail: not enough balance
     GRAPHENE_REQUIRE_THROW( do_op_no_balance_check(das33_pledge_asset_operation(user_id, asset{81 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project.id));, fc::exception );

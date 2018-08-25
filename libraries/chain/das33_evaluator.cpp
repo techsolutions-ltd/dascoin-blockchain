@@ -423,7 +423,7 @@ namespace graphene { namespace chain {
 
     while(itr != index.second)
     {
-       if(itr->phase_number.valid() && itr->phase_number != op.phase_number) {
+       if(op.phase_number.valid() && itr->phase_number != op.phase_number) {
            ++itr;
            continue;
        }

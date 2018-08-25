@@ -73,8 +73,8 @@ namespace graphene { namespace chain {
                collected_amount_eur(0),
                tokens_sold(0),
                status(das33_project_status::inactive),
-               phase_limit(0),
-               phase_number (0) {}
+               phase_number (0),
+               phase_limit(0) {}
   };
 
   class das33_pledge_holder_object : public abstract_object<das33_pledge_holder_object>

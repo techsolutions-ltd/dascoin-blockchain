@@ -31,16 +31,13 @@ namespace graphene { namespace chain {
   // Helper methods:
   share_type users_total_pledges_in_round(account_id_type user_id, das33_project_id_type project_id, share_type round, const database& d)
   {
-    vector<das33_pledge_holder_object> pledges;
-
-    const auto& idx = d.get_index_type<das33_pledge_holder_index>().indices().get<by_user>().equal_range(user_id);
-    std::copy(idx.first, idx.second, std::back_inserter(pledges));
     share_type sum = 0;
-    for (int i = 0; i < pledges.size(); i++)
-      {
-        if (pledges[i].project_id == project_id && pledges[i].phase_number == round)
-          sum += (pledges[i].base_expected.amount + pledges[i].bonus_expected.amount);
-      }
+    const auto& idx = d.get_index_type<das33_pledge_holder_index>().indices().get<by_user>().equal_range(user_id);
+    for( auto it = idx.first; it != idx.second; ++it )
+    {
+      if (it->project_id == project_id && it->phase_number == round)
+        sum += (it->base_expected.amount + it->bonus_expected.amount);
+    }
     return sum;
   }
 
@@ -78,7 +75,6 @@ namespace graphene { namespace chain {
       FC_ASSERT(idx.find(op.name) == idx.end(), "Das33 project called ${1} already exists.", ("1", op.name));
 
       // Check that owner is a wallet
-
       const auto& owner_obj = op.owner(d);
       FC_ASSERT( owner_obj.is_wallet(), "Owner account '${name}' is not a wallet account", ("name", owner_obj.name));
 
@@ -90,23 +86,26 @@ namespace graphene { namespace chain {
       FC_ASSERT(op.token(d).options.max_supply > 0, "Token must have max_supply > 0");
 
       // Check that token isn't one of the system assets
-      FC_ASSERT(op.token != d.get_core_asset().id && op.token != d.get_web_asset_id()
-                && op.token != d.get_dascoin_asset_id() && op.token != d.get_cycle_asset_id(), "Can not create project with system assets");
+      FC_ASSERT(op.token != d.get_core_asset().id
+             && op.token != d.get_web_asset_id()
+             && op.token != d.get_dascoin_asset_id()
+             && op.token != d.get_cycle_asset_id(), "Can not create project with system assets");
 
       // Check that token is not used by another project
       const auto& it = std::find_if(idx.begin(), idx.end(),
             [op](const das33_project_object& m) -> bool { return m.token_id == op.token; });
       FC_ASSERT(it == idx.end(), "Token with id ${1} is already used by another project", ("1", op.token));
 
-      // Check that bonuses, if present, are grater then 0
-      if (op.discounts.size() > 0)
+      // Check that discounts exist
+      FC_ASSERT(op.discounts.size() > 0, "Discounts must be provided. Only assets in discounts can be pledged.");
+
+      // Check that discounts are grater then 0
+      for (auto itr = op.discounts.begin(); itr != op.discounts.end(); itr++)
       {
-        for (auto itr = op.discounts.begin(); itr != op.discounts.end(); itr++)
-        {
-          FC_ASSERT(itr->second > 0, "Bonus can not be zero or negative");
-        }
+        FC_ASSERT(itr->second > 0, "Discount can not be zero or negative");
       }
       return {};
+
     } FC_CAPTURE_AND_RETHROW((op))
   }
 
@@ -115,11 +114,10 @@ namespace graphene { namespace chain {
     try {
       auto& d = db();
 
-      price token_price;
-      asset_object token = op.token(d);
-      asset max_supply {token.options.max_supply, token.id};
-      asset to_collect {op.goal_amount_eur, d.get_web_asset_id()};
-      token_price = to_collect / max_supply;
+      const asset_object token = op.token(d);
+      const asset max_supply {token.options.max_supply, token.id};
+      const asset to_collect {op.goal_amount_eur, d.get_web_asset_id()};
+      const price token_price = to_collect / max_supply;
 
       return d.create<das33_project_object>([&](das33_project_object& dpo){
              dpo.name = op.name;
@@ -133,6 +131,7 @@ namespace graphene { namespace chain {
              dpo.collected_amount_eur = 0;
              dpo.tokens_sold = 0;
              dpo.status = das33_project_status::inactive;
+             dpo.phase_number = 0;
              dpo.phase_limit = token.options.max_supply;
              dpo.phase_end = time_point_sec::min();
            }).id;
@@ -178,12 +177,9 @@ namespace graphene { namespace chain {
       // Check bonuses
       if (op.discounts.valid())
       {
-        if ((*op.discounts).size() > 0)
+        for (auto itr = (*op.discounts).begin(); itr != (*op.discounts).end(); ++itr)
         {
-          for (auto itr = (*op.discounts).begin(); itr != (*op.discounts).end(); ++itr)
-          {
-            FC_ASSERT(itr->second > 0, "Bonus can not be zero or negative");
-          }
+          FC_ASSERT(itr->second > 0, "Bonus can not be zero or negative");
         }
       }
 
@@ -225,15 +221,18 @@ namespace graphene { namespace chain {
       d.modify<das33_project_object>(*project_to_update, [&](das33_project_object& dpo){
         if (op.name) dpo.name = *op.name;
         if (op.owner) dpo.owner = *op.owner;
+        // token_id: we can't alter
         if (op.goal_amount) dpo.goal_amount_eur = *op.goal_amount;
+        if (op.discounts) dpo.discounts = *op.discounts;
         if (op.min_pledge) dpo.min_pledge = *op.min_pledge;
         if (op.max_pledge) dpo.max_pledge = *op.max_pledge;
         if (op.token_price) dpo.token_price = *op.token_price;
-        if (op.discounts) dpo.discounts = *op.discounts;
+        // collected_amount_eur: we can't alter
+        // tokens_sold: we can't alter
+        if (op.status) dpo.status = static_cast<das33_project_status>(*op.status);
         if (op.phase_number) dpo.phase_number = *op.phase_number;
         if (op.phase_limit) dpo.phase_limit = *op.phase_limit;
         if (op.phase_end) dpo.phase_end = *op.phase_end;
-        if (op.status) dpo.status = static_cast<das33_project_status>(*op.status);
       });
 
       return {};
@@ -282,9 +281,7 @@ namespace graphene { namespace chain {
     const auto& token_obj = project_obj.token_id(d);
 
     // Check if pledged asset and project token are different assets
-    FC_ASSERT( op.pledged.asset_id != project_obj.token_id,
-               "Cannot pledge project tokens"
-    );
+    FC_ASSERT( op.pledged.asset_id != project_obj.token_id, "Cannot pledge project tokens" );
 
     // Assure target project exists:
     const auto& idx = d.get_index_type<das33_project_index>().indices().get<by_id>();
@@ -320,32 +317,40 @@ namespace graphene { namespace chain {
     expected.asset_id = project_obj.token_id;
     price_at_evaluation = get_price_in_web_eur(op.pledged.asset_id, d);
     expected = op.pledged * price_at_evaluation * project_obj.token_price;
-    if (project_obj.discounts.find(op.pledged.asset_id) != project_obj.discounts.end())
-    {
-      discount = project_obj.discounts.find(op.pledged.asset_id)->second;
-      expected.amount = expected.amount * BONUS_PRECISION / discount;
-    }
-    else
-    {
-      FC_ASSERT(false, "This asset can not be used in this project phase");
-    }
 
+    // Assure that pledge amount is above minimum
+    FC_ASSERT(expected.amount >= project_obj.min_pledge, "Can not pledge: must buy at least ${min} tokens", ("min", project_obj.min_pledge));
+
+    // Calculate expected amount with discounts
+    auto discount_iterator = project_obj.discounts.find(op.pledged.asset_id);
+    FC_ASSERT( discount_iterator != project_obj.discounts.end(), "This asset can not be used in this project phase" );
+    discount = discount_iterator->second;
+    expected.amount = expected.amount * BONUS_PRECISION / discount;
+
+    // Assure that pledge amount is above zero
     FC_ASSERT(expected.amount > 0,
               "Cannot pledge because expected amount of ${tok} is ${ex}",
               ("tok", token_obj.symbol)
               ("ex", d.to_pretty_string(expected))
     );
 
-    FC_ASSERT(expected.amount >= project_obj.min_pledge, "Can not pledge: must buy at least ${min} tokens", ("min", project_obj.min_pledge));
+    // Decrease amount if it passes tokens max supply
+    expected.amount = (project_obj.tokens_sold + expected.amount > token_obj.options.max_supply)
+                    ? token_obj.options.max_supply - project_obj.tokens_sold
+                    : expected.amount;
 
-    if (project_obj.tokens_sold + expected.amount > token_obj.options.max_supply)
-      expected.amount = token_obj.options.max_supply - project_obj.tokens_sold;
+    // Decrease amount if it passes current phase limit
+    expected.amount = (project_obj.tokens_sold + expected.amount > project_obj.phase_limit)
+                    ? project_obj.phase_limit - project_obj.tokens_sold
+                    : expected.amount;
 
-    if (project_obj.tokens_sold + expected.amount > project_obj.phase_limit)
-      expected.amount = project_obj.phase_limit - project_obj.tokens_sold;
-
-    FC_ASSERT(users_total_pledges_in_round(op.account_id, op.project_id, project_obj.phase_number, d) + expected.amount < project_obj.max_pledge,
-              "Can not buy more then ${x} tokens per round.", ("x", project_obj.max_pledge));
+    // Assure that pledge amount is below maximum for current user
+    auto previous_pledges = users_total_pledges_in_round(op.account_id, op.project_id, project_obj.phase_number, d);
+    FC_ASSERT( previous_pledges + expected.amount <= project_obj.max_pledge,
+              "Can not buy more then ${max} tokens per round but amount to receive with bonus is ${this} and you already pledged for ${previous}.",
+              ("max", project_obj.max_pledge)
+              ("this", expected.amount)
+              ("previous", previous_pledges));
 
     return {};
 
@@ -355,44 +360,31 @@ namespace graphene { namespace chain {
   { try {
 
     auto& d = db();
-    //const auto& account_obj = op.account_id(d);
     const auto& project_obj = op.project_id(d);
 
-    // Calculate exact amount that should be taken:
-    asset amount;
-    amount.asset_id = op.pledged.asset_id;
-
-    const auto& pledged_asset = op.pledged.asset_id(d);
-    //const auto& project_token = project_obj.token_id(d);
-
-    asset single_asset = asset(std::pow(10, pledged_asset.precision), op.pledged.asset_id);
-    asset web_euros = single_asset * price_at_evaluation;
-    asset token_in_asset = web_euros * project_obj.token_price;
-    //token_in_asset.amount = token_in_asset.amount * bonus / BONUS_PRECISION;
-    amount.amount = (expected.amount * discount / BONUS_PRECISION / token_in_asset.amount) * std::pow(10, pledged_asset.precision);
-
-    const auto& balance_obj = d.get_balance_object(op.account_id, op.pledged.asset_id);
+    // Calculate expected amount
+    asset base = {expected.amount * discount / BONUS_PRECISION, expected.asset_id};
+    asset bonus = expected - base;
+    asset to_take = base * project_obj.token_price * price_at_evaluation;
 
     // Adjust the balance and spent amount:
+    const auto& balance_obj = d.get_balance_object(op.account_id, op.pledged.asset_id);
     d.modify(balance_obj, [&](account_balance_object& from){
-      from.balance -= amount.amount;
-      from.spent += amount.amount;
+      from.balance -= to_take.amount;
+      from.spent += to_take.amount;
     });
 
     // Update project
     d.modify(project_obj, [&](das33_project_object& p){
         p.tokens_sold += expected.amount;
-        p.collected_amount_eur += (amount * price_at_evaluation).amount;
+        p.collected_amount_eur += (to_take * price_at_evaluation).amount;
     });
-
-    asset base = {expected.amount * discount / BONUS_PRECISION, expected.asset_id};
-    asset bonus = expected - base;
 
     // Create the holder object and return its ID:
     return d.create<das33_pledge_holder_object>([&](das33_pledge_holder_object& cpho){
       cpho.account_id = op.account_id;
-      cpho.pledged = amount;
-      cpho.pledge_remaining = amount;
+      cpho.pledged = to_take;
+      cpho.pledge_remaining = to_take;
       cpho.base_remaining = base;
       cpho.base_expected = base;
       cpho.bonus_remaining = bonus;
@@ -426,31 +418,36 @@ namespace graphene { namespace chain {
     auto& d = db();
 
     std::vector<object_id_type> pledges_to_remove;
-    auto& index = d.get_index_type<das33_pledge_holder_index>().indices().get<by_project>();
-    auto itr = index.lower_bound(op.project);
+    const auto& index = d.get_index_type<das33_pledge_holder_index>().indices().get<by_project>().equal_range(op.project);
+    auto itr = index.first;
 
-    while(itr == index.end())
+    while(itr != index.second)
     {
-       if(itr->phase_number != op.phase_number)
-          continue;
+       if(itr->phase_number != op.phase_number) {
+           ++itr;
+           continue;
+       }
 
        const das33_pledge_holder_object& pho = *itr;
 
        // calc amount of token and asset that will be exchanged
-       share_type base_token_to_receive = std::round(static_cast<double>(pho.base_expected.amount.value) * op.base_to_pledger.value / BONUS_PRECISION / BONUS_PRECISION);
-       base_token_to_receive = base_token_to_receive < pho.base_remaining.amount ? base_token_to_receive : pho.base_remaining.amount;
-       share_type bonus_token_to_receive = std::round(static_cast<double>(pho.bonus_expected.amount.value) * op.bonus_to_pledger.value / BONUS_PRECISION / BONUS_PRECISION);
-       bonus_token_to_receive = bonus_token_to_receive < pho.bonus_remaining.amount ? bonus_token_to_receive : pho.bonus_remaining.amount;
-       share_type pledge = std::round(static_cast<double>(pho.pledged.amount.value) * op.to_escrow.value / BONUS_PRECISION);
-       pledge = pledge < pho.pledge_remaining.amount ? pledge : pho.pledge_remaining.amount;
-
-       share_type token_total = base_token_to_receive + bonus_token_to_receive;
+       share_type base = std::round(static_cast<double>(pho.base_expected.amount.value) * op.base_to_pledger.value / BONUS_PRECISION / 100);
+                  base = (base < pho.base_remaining.amount) ? base : pho.base_remaining.amount;
+       share_type bonus = std::round(static_cast<double>(pho.bonus_expected.amount.value) * op.bonus_to_pledger.value / BONUS_PRECISION / 100);
+                  bonus = (bonus < pho.bonus_remaining.amount) ? bonus : pho.bonus_remaining.amount;
+       share_type pledge = std::round(static_cast<double>(pho.pledged.amount.value) * op.to_escrow.value / BONUS_PRECISION / 100);
+                  pledge = (pledge < pho.pledge_remaining.amount) ? pledge : pho.pledge_remaining.amount;
 
        // make virtual op for history traking
-       das33_pledge_result_operation new_op = das33_pledge_result_operation(
-          pho.account_id, _pro_owner, true, pledge, token_total, op.project, fc::time_point::now()
-       );
-       d.push_applied_operation(new_op);
+       das33_pledge_result_operation pledge_result;
+          pledge_result.funders_account = pho.account_id;
+          pledge_result.account_to_fund = _pro_owner;
+          pledge_result.completed = true;
+          pledge_result.pledged = pledge;
+          pledge_result.received = base + bonus;
+          pledge_result.project_id = op.project;
+          pledge_result.timestamp = d.head_block_time();
+       d.push_applied_operation(pledge_result);
 
        // give to project owner pledged amount
        auto& balance_obj = d.get_balance_object(_pro_owner, pho.pledged.asset_id);
@@ -471,13 +468,13 @@ namespace graphene { namespace chain {
 
        // issue token asset
        auto& balance1_obj = d.get_balance_object(pho.account_id, pho.base_expected.asset_id);
-       d.issue_asset(balance1_obj, token_total, 0);
+       d.issue_asset(balance1_obj, base + bonus, 0);
 
        // update pledge holder object
        d.modify(pho, [&](das33_pledge_holder_object& p){
           p.pledge_remaining.amount -= pledge;
-          p.base_remaining.amount -= base_token_to_receive;
-          p.bonus_remaining.amount -= bonus_token_to_receive;
+          p.base_remaining.amount -= base;
+          p.bonus_remaining.amount -= bonus;
        });
 
        // if everything is distributed remove object
@@ -529,10 +526,16 @@ namespace graphene { namespace chain {
            break;
 
         const das33_pledge_holder_object& pho = *itr;
-        das33_pledge_result_operation new_op = das33_pledge_result_operation(
-              pho.account_id, _pro_owner, false, pho.pledged, pho.base_expected, op.project, fc::time_point::now()
-        );
-        d.push_applied_operation(new_op);
+
+        das33_pledge_result_operation pledge_result;
+           pledge_result.funders_account = pho.account_id;
+           pledge_result.account_to_fund = _pro_owner;
+           pledge_result.completed = false;
+           pledge_result.pledged = pho.pledged;
+           pledge_result.received = pho.pledged;
+           pledge_result.project_id = op.project;
+           pledge_result.timestamp = d.head_block_time();
+        d.push_applied_operation(pledge_result);
 
         auto& balance_obj = d.get_balance_object(pho.account_id, pho.pledged.asset_id);
         d.modify(balance_obj, [&](account_balance_object& balance_obj){
@@ -574,20 +577,23 @@ namespace graphene { namespace chain {
      const das33_pledge_holder_object& pho = *_pledge_holder_ptr;
 
      // calc amount of token and asset that will be exchanged
-     share_type base_token_to_receive = std::round(static_cast<double>(pho.base_expected.amount.value) * op.base_to_pledger.value / BONUS_PRECISION / BONUS_PRECISION);
-     base_token_to_receive = base_token_to_receive < pho.base_remaining.amount ? base_token_to_receive : pho.base_remaining.amount;
-     share_type bonus_token_to_receive = std::round(static_cast<double>(pho.bonus_expected.amount.value) * op.bonus_to_pledger.value / BONUS_PRECISION / BONUS_PRECISION);
-     bonus_token_to_receive = bonus_token_to_receive < pho.bonus_remaining.amount ? bonus_token_to_receive : pho.bonus_remaining.amount;
-     share_type pledge = std::round(static_cast<double>(pho.pledged.amount.value) * op.to_escrow.value / BONUS_PRECISION);
-     pledge = pledge < pho.pledge_remaining.amount ? pledge : pho.pledge_remaining.amount;
-
-     share_type token_total = base_token_to_receive + bonus_token_to_receive;
+     share_type base = std::round(static_cast<double>(pho.base_expected.amount.value) * op.base_to_pledger.value / BONUS_PRECISION / 100);
+                base = (base < pho.base_remaining.amount) ? base : pho.base_remaining.amount;
+     share_type bonus = std::round(static_cast<double>(pho.bonus_expected.amount.value) * op.bonus_to_pledger.value / BONUS_PRECISION / 100);
+                bonus = (bonus < pho.bonus_remaining.amount) ? bonus : pho.bonus_remaining.amount;
+     share_type pledge = std::round(static_cast<double>(pho.pledged.amount.value) * op.to_escrow.value / BONUS_PRECISION / 100);
+                pledge = (pledge < pho.pledge_remaining.amount) ? pledge : pho.pledge_remaining.amount;
 
      // make virtual op for history traking
-     das33_pledge_result_operation new_op = das33_pledge_result_operation(
-        pho.account_id, _pro_owner, true, pledge, token_total, pho.project_id, fc::time_point::now()
-     );
-     d.push_applied_operation(new_op);
+     das33_pledge_result_operation pledge_result;
+        pledge_result.funders_account = pho.account_id;
+        pledge_result.account_to_fund = _pro_owner;
+        pledge_result.completed = true;
+        pledge_result.pledged = pledge;
+        pledge_result.received = base + bonus;
+        pledge_result.project_id = pho.project_id;
+        pledge_result.timestamp = d.head_block_time();
+     d.push_applied_operation(pledge_result);
 
      // give to project owner pledged amount
      auto& balance_obj = d.get_balance_object(_pro_owner, pho.pledged.asset_id);
@@ -608,13 +614,13 @@ namespace graphene { namespace chain {
 
      // issue token asset
      auto& balance1_obj = d.get_balance_object(pho.account_id, pho.base_expected.asset_id);
-     d.issue_asset(balance1_obj, token_total, 0);
+     d.issue_asset(balance1_obj, base + bonus, 0);
 
      // update pledge holder object
      d.modify(pho, [&](das33_pledge_holder_object& p){
         p.pledge_remaining.amount -= pledge;
-        p.base_remaining.amount -= base_token_to_receive;
-        p.bonus_remaining.amount -= bonus_token_to_receive;
+        p.base_remaining.amount -= base;
+        p.bonus_remaining.amount -= bonus;
      });
 
      // if everything is distributed remove object
@@ -647,7 +653,8 @@ namespace graphene { namespace chain {
      const das33_pledge_holder_object& pho = *_pledge_holder_ptr;
      FC_ASSERT(pho.base_expected.amount == pho.base_remaining.amount
            && pho.bonus_expected.amount == pho.bonus_remaining.amount
-           && pho.pledged.amount == pho.pledge_remaining.amount , "Project already accepted, can't be rejected!");
+           && pho.pledged.amount == pho.pledge_remaining.amount,
+           "Project already accepted, can't be rejected!");
 
     return {};
 
@@ -660,10 +667,17 @@ namespace graphene { namespace chain {
 
      // make virtual op for history traking
      const das33_pledge_holder_object& pho = *_pledge_holder_ptr;
-     das33_pledge_result_operation new_op = das33_pledge_result_operation(
-        pho.account_id, _pro_owner, false, pho.pledged, pho.base_expected, pho.project_id, fc::time_point::now()
-     );
-     d.push_applied_operation(new_op);
+
+     // make virtual op for history traking
+     das33_pledge_result_operation pledge_result;
+        pledge_result.funders_account = pho.account_id;
+        pledge_result.account_to_fund = _pro_owner;
+        pledge_result.completed = false;
+        pledge_result.pledged = pho.pledged;
+        pledge_result.received = pho.pledged;
+        pledge_result.project_id = pho.project_id;
+        pledge_result.timestamp = d.head_block_time();
+     d.push_applied_operation(pledge_result);
 
      // give to project owner pledged amount
      auto& balance_obj = d.get_balance_object(pho.account_id, pho.pledged.asset_id);

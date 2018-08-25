@@ -38,8 +38,8 @@ namespace graphene { namespace chain {
     string                         name;
     account_id_type                owner;
     asset_id_type                  token;
-    map<asset_id_type, share_type> discounts;
     share_type                     goal_amount_eur;
+    map<asset_id_type, share_type> discounts;
     share_type                     min_pledge;
     share_type                     max_pledge;
     extensions_type                extensions;
@@ -50,16 +50,18 @@ namespace graphene { namespace chain {
                                             const string& name,
                                             const account_id_type& owner,
                                             const asset_id_type& token,
-                                            const map<asset_id_type, share_type>& discounts,
                                             share_type goal_amount_eur,
-                                            share_type min_pledge,
-                                            share_type max_pledge)
+                                            const map<asset_id_type, share_type>& discounts,
+                                            share_type min_pledge = 0,
+                                            share_type max_pledge = share_type::max())
               : authority(authority)
               , name(name)
               , owner(owner)
               , token(token)
+              , goal_amount_eur(goal_amount_eur)
               , discounts(discounts)
-              , goal_amount_eur(goal_amount_eur) {}
+              , min_pledge(min_pledge)
+              , max_pledge(max_pledge) {}
 
     account_id_type fee_payer() const { return authority; }
     void validate() const;

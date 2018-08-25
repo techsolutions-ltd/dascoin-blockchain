@@ -196,12 +196,13 @@ namespace graphene { namespace chain {
             das33_project_update_operation,
             das33_project_delete_operation,
             das33_pledge_asset_operation,
+
+            update_global_parameters_operation,
+
             das33_distribute_project_pledges_operation,
             das33_project_reject_operation,
             das33_distribute_pledge_operation,
             das33_pledge_reject_operation,
-
-            update_global_parameters_operation,
 
             // Virtual operations below this point:
 

@@ -204,7 +204,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<das33_pledge_holder_object> get_das33_pledges_by_account(account_id_type account) const;
       vector<das33_pledge_holder_object> get_das33_pledges_by_project(das33_project_id_type project, das33_pledge_holder_id_type from, uint32_t limit) const;
       vector<das33_project_object> get_das33_projects(const string& lower_bound_name, uint32_t limit) const;
-
+      vector<asset> get_amount_of_assets_pledged_to_project(das33_project_id_type project) const;
 
       template<typename T>
       void subscribe_to_item( const T& i )const
@@ -2942,6 +2942,38 @@ vector<das33_project_object> database_api_impl::get_das33_projects(const string&
   {
      if (itr->id != default_project_id)
        result.emplace_back(*itr);
+  }
+
+  return result;
+}
+
+vector<asset> database_api::get_amount_of_assets_pledged_to_project(das33_project_id_type project) const
+{
+  return my->get_amount_of_assets_pledged_to_project(project);
+}
+
+vector<asset> database_api_impl::get_amount_of_assets_pledged_to_project(das33_project_id_type project) const
+{
+  vector<asset> result;
+  map<asset_id_type, int> index_map;
+
+  auto default_pledge_id = das33_pledge_holder_id_type();
+
+  const auto& pledges = _db.get_index_type<das33_pledge_holder_index>().indices().get<by_project>();
+  for( auto itr = pledges.lower_bound(project); itr != pledges.upper_bound(project); ++itr )
+  {
+   if (itr->id != default_pledge_id)
+   {
+     if (index_map.find(itr->pledged.asset_id) != index_map.end())
+     {
+       result[index_map[itr->pledged.asset_id]] += itr->pledged;
+     }
+     else
+     {
+       index_map[itr->pledged.asset_id] = result.size();
+       result.emplace_back(itr->pledged);
+     }
+   }
   }
 
   return result;

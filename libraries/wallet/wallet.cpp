@@ -5531,6 +5531,11 @@ vector<das33_project_object> wallet_api::get_das33_projects(const string& lower_
     return my->_remote_db->get_das33_projects(lower_bound_name, limit);
 }
 
+vector<asset> wallet_api::get_amount_of_assets_pledged_to_project(das33_project_id_type project) const
+{
+  return my->_remote_db->get_amount_of_assets_pledged_to_project(project);
+}
+
 signed_transaction wallet_api::create_das33_project(const string& authority,
                                                     const string& name,
                                                     const string& owner,

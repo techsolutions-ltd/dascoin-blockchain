@@ -2008,6 +2008,13 @@ class wallet_api
       vector<das33_project_object> get_das33_projects(const string& lower_bound_name, uint32_t limit) const;
 
       /**
+      * @brief Gets a sum of all pledges made to project
+      * @params project id of a project
+      * @return vector of assets, each with total sum of that asset pledged
+      */
+      vector<asset> get_amount_of_assets_pledged_to_project(das33_project_id_type project) const;
+
+      /**
        * @param authority       This MUST be root authority.
        * @param changed_values  The values to change; all other chain parameters are filled in with default values
        * @param broadcast       true to broadcast transaction to network
@@ -2326,6 +2333,7 @@ FC_API( graphene::wallet::wallet_api,
         (update_das33_project)
         (delete_das33_project)
         (get_das33_projects)
+        (get_amount_of_assets_pledged_to_project)
 
         // Delayed operations resolver:
         (update_delayed_operations_resolver_parameters)

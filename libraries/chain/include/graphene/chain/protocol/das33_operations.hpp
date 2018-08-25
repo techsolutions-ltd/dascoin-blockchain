@@ -145,7 +145,7 @@ namespace graphene { namespace chain {
 
     account_id_type        authority;
     das33_project_id_type  project;
-    share_type             phase_number;
+    optional<share_type>   phase_number;
     share_type             to_escrow;
     share_type             base_to_pledger;
     share_type             bonus_to_pledger;

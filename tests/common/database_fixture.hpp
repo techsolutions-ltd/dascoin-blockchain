@@ -208,7 +208,9 @@ struct database_fixture {
    void generate_blocks(fc::time_point_sec timestamp, bool miss_intermediate_blocks = true, uint32_t skip = ~0);
    
    void do_op(const operation& op) { push_op(op, true); }
+   void do_op_no_balance_check(const operation& op) { push_op_no_balance_check(op, true); }
    void push_op(const operation& op, bool gen_block = false);
+   void push_op_no_balance_check(const operation& op, bool gen_block = false);
 
    account_create_operation make_account(
       const account_kind kind,
@@ -401,6 +403,7 @@ struct database_fixture {
    vector<issue_asset_request_object> get_asset_request_objects(account_id_type account_id);
    share_type get_asset_current_supply(asset_id_type asset_id);
    share_type get_web_asset_current_supply() { return get_asset_current_supply(get_web_asset_id()); }
+   void set_external_btc_price(price val);
    void set_last_dascoin_price(price val);
    void set_last_daily_dascoin_price(price val);
    void issue_dascoin(account_id_type vault_id, share_type amount);

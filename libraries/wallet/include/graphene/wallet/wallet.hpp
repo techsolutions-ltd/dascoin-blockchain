@@ -1966,15 +1966,17 @@ class wallet_api
        * @param owner           acccount id of project owner
        * @param token           id of a token that will be issued by this project
        * @param ratios          array of prices of project token
-       * @param min_to_collect  minimum amount of tokens needed for project to be successful
+       * @param goal_amount     minimum amount of tokens needed for project to be successful
        * @param broadcast       true to broadcast transaction to network
        */
       signed_transaction create_das33_project(const string& authority,
                                               const string& name,
                                               const string& owner,
                                               const string& token,
-                                              const vector<pair<string, string>>& ratios,
-                                              share_type min_to_collect,
+                                              vector<pair<string, share_type>> discounts,
+                                              share_type goal_amount,
+                                              share_type min_pledge,
+                                              share_type max_pledge,
                                               bool broadcast) const;
 
       /**
@@ -1985,7 +1987,7 @@ class wallet_api
        * @param name            optional new name of a project
        * @param owner           optional new project owner
        * @param ratios          array of prices of project token, empty array if it shouldn't be changed
-       * @param min_to_collect  optional new minimum amount
+       * @param goal_amount     optional new minimum amount
        * @param status          optional new status of a project
        * @param broadcast       true to broadcast transaction to network
        */
@@ -1993,8 +1995,13 @@ class wallet_api
                                               const string& project_id,
                                               optional<string> name,
                                               optional<string> owner,
-                                              const vector<pair<string, string>>& ratios,
-                                              optional<share_type> min_to_collect,
+                                              optional<share_type> goal_amount,
+                                              optional<price> token_price,
+                                              optional<vector<pair<string, share_type>>> discounts,
+                                              optional<share_type> min_pledge,
+                                              optional<share_type> max_pledge,
+                                              optional<share_type> phase_limit,
+                                              optional<time_point_sec> phase_end,
                                               optional<uint8_t> status,
                                               bool broadcast) const;
 
@@ -2017,6 +2024,13 @@ class wallet_api
        * @returns                a list of das33 project objects
        */
       vector<das33_project_object> get_das33_projects(const string& lower_bound_name, uint32_t limit) const;
+
+      /**
+      * @brief Gets a sum of all pledges made to project
+      * @params project id of a project
+      * @return vector of assets, each with total sum of that asset pledged
+      */
+      vector<asset> get_amount_of_assets_pledged_to_project(das33_project_id_type project) const;
 
       /**
        * @param authority       This MUST be root authority.
@@ -2351,6 +2365,7 @@ FC_API( graphene::wallet::wallet_api,
         (update_das33_project)
         (delete_das33_project)
         (get_das33_projects)
+        (get_amount_of_assets_pledged_to_project)
 
         // Delayed operations resolver:
         (update_delayed_operations_resolver_parameters)

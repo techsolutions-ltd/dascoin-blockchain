@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE( das33_project_test )
     BOOST_CHECK_EQUAL(get_das33_projects().size(), 0);
 
     // Create owner account
-    VAULT_ACTOR(owner);
+    ACTOR(owner);
 
     // Create a new token
     asset_id_type test_asset_id = db.get_index<asset_object>().get_next_id();
@@ -55,35 +55,29 @@ BOOST_AUTO_TEST_CASE( das33_project_test )
     creator.common_options.core_exchange_rate = price({asset(1),asset(1,asset_id_type(1))});
     do_op(creator);
 
-    const price expected_price{ asset{10, get_cycle_asset_id()}, asset{100, test_asset_id} };
-    vector<price> expected_prices;
-    expected_prices.emplace_back( expected_price );
-
     // Create a das33 project
     auto das33_admin_id = get_das33_administrator_id();
-    do_op(das33_project_create_operation(das33_admin_id,"test_project1", owner_id, test_asset_id, expected_prices, 10000));
+    do_op(das33_project_create_operation(das33_admin_id,"test_project1", owner_id, test_asset_id, 10000000, {{get_dascoin_asset_id(),50}}));
 
-    // There should be one inactive das33 project with ratio 10/1
+    // There should be one inactive das33 project with ratio 1/10
     BOOST_CHECK_EQUAL(get_das33_projects().size(), 1);
     auto project = get_das33_projects()[0];
-    BOOST_CHECK_EQUAL(project.collected.value, 0);
+    BOOST_CHECK_EQUAL(project.collected_amount_eur.value, 0);
 
-    BOOST_CHECK_EQUAL(project.token_prices[0].to_real(), 0.1);
+    BOOST_CHECK_EQUAL(project.token_price.to_real(), 0.1);
     BOOST_CHECK_EQUAL(project.status, das33_project_status::inactive);
 
     // Edit status of this project
     das33_project_update_operation op;
     op.project_id = project.id;
     op.authority = das33_admin_id;
-    //op.name = "test_project1";
     op.status = 1;
     do_op(op);
-    //do_op(das33_project_update_operation(root_id, "test_project1", owner_id, expected_price, nullptr, 1));
 
     // Check project
     project = get_das33_projects()[0];
-    BOOST_CHECK_EQUAL(project.collected.value, 0);
-    BOOST_CHECK_EQUAL(project.token_prices[0].to_real(), 0.1);
+    BOOST_CHECK_EQUAL(project.collected_amount_eur.value, 0);
+    BOOST_CHECK_EQUAL(project.token_price.to_real(), 0.1);
     BOOST_CHECK_EQUAL(project.status, das33_project_status::active);
 
     // delete the project
@@ -99,7 +93,7 @@ BOOST_AUTO_TEST_CASE( das33_project_test_fails )
     BOOST_CHECK_EQUAL(get_das33_projects().size(), 0);
 
     // Create owner account
-    VAULT_ACTOR(owner);
+    ACTOR(owner);
 
     // Set authorities
     auto das33_admin_id = get_das33_administrator_id();
@@ -107,178 +101,83 @@ BOOST_AUTO_TEST_CASE( das33_project_test_fails )
 
     asset_id_type test_asset_id = create_new_asset("TEST", 100000000, 2, price({asset(1),asset(1,asset_id_type(1))}));
 
-    // Create prices array
-    const price expected_price{ asset{10, get_cycle_asset_id()}, asset{100, test_asset_id} };
-    vector<price> expected_prices;
-    expected_prices.push_back( expected_price );
+    // Create discounts map
+    map<asset_id_type, share_type> discounts{
+      {
+        get_dascoin_asset_id(),
+        100
+      }
+    };
 
     // Project with wrong issuer
     GRAPHENE_REQUIRE_THROW(
-        do_op(das33_project_create_operation(issuer_id, "test_project1", owner_id, test_asset_id, expected_prices, 10000)),
+        do_op(das33_project_create_operation(issuer_id, "test_project1", owner_id, test_asset_id, 10000, discounts)),
         fc::exception );
     BOOST_CHECK_EQUAL(get_das33_projects().size(), 0);
 
     // Project with wrong token id
     GRAPHENE_REQUIRE_THROW(
-        do_op(das33_project_create_operation(das33_admin_id, "test_project1", owner_id, db.get_index<asset_object>().get_next_id(), expected_prices, 10000)),
+        do_op(das33_project_create_operation(das33_admin_id, "test_project1", owner_id, db.get_index<asset_object>().get_next_id(), 10000, discounts)),
         fc::exception );
     BOOST_CHECK_EQUAL(get_das33_projects().size(), 0);
 
     // Project with DASC as token
     GRAPHENE_REQUIRE_THROW(
-        do_op(das33_project_create_operation(das33_admin_id, "test_project1", owner_id, get_dascoin_asset_id(), expected_prices, 10000)),
+        do_op(das33_project_create_operation(das33_admin_id, "test_project1", owner_id, get_dascoin_asset_id(), 10000, discounts)),
         fc::exception );
     BOOST_CHECK_EQUAL(get_das33_projects().size(), 0);
 
-    // Project with wrong prices
-    const price wrong_price{ asset{10, get_cycle_asset_id()}, asset{100, get_dascoin_asset_id()} };
-    vector<price> wrong_prices;
-    wrong_prices.push_back( wrong_price );
+    // Project with wrong goal amount
     GRAPHENE_REQUIRE_THROW(
-        do_op(das33_project_create_operation(das33_admin_id, "test_project1", owner_id, test_asset_id, wrong_prices, 10000)),
-        fc::exception );
-    BOOST_CHECK_EQUAL(get_das33_projects().size(), 0);
-    wrong_prices.clear();
-    const price wrong_price2{ asset{10, get_cycle_asset_id()}, asset{100, test_asset_id} };
-    const price wrong_price3{ asset{20, get_cycle_asset_id()}, asset{100, test_asset_id} };
-    GRAPHENE_REQUIRE_THROW(
-        do_op(das33_project_create_operation(das33_admin_id, "test_project1", owner_id, test_asset_id, wrong_prices, 10000)),
+        do_op(das33_project_create_operation(das33_admin_id, "test_project1", owner_id, test_asset_id, 0, discounts)),
         fc::exception );
     BOOST_CHECK_EQUAL(get_das33_projects().size(), 0);
 
     // Create a das33 project
-    do_op(das33_project_create_operation(das33_admin_id,"test_project1", owner_id, test_asset_id, expected_prices, 10000));
+    do_op(das33_project_create_operation(das33_admin_id,"test_project1", owner_id, test_asset_id, 10000, discounts));
     BOOST_CHECK_EQUAL(get_das33_projects().size(), 1);
 
     // Project with same name
     GRAPHENE_REQUIRE_THROW(
-        do_op(das33_project_create_operation(das33_admin_id, "test_project1", owner_id, test_asset_id, expected_prices, 10000)),
+        do_op(das33_project_create_operation(das33_admin_id, "test_project1", owner_id, test_asset_id, 10000, discounts)),
         fc::exception );
     BOOST_CHECK_EQUAL(get_das33_projects().size(), 1);
 
     // Project with same token
     GRAPHENE_REQUIRE_THROW(
-        do_op(das33_project_create_operation(das33_admin_id, "test_project2", owner_id, test_asset_id, expected_prices, 10000)),
+        do_op(das33_project_create_operation(das33_admin_id, "test_project2", owner_id, test_asset_id, 10000, discounts)),
         fc::exception );
     BOOST_CHECK_EQUAL(get_das33_projects().size(), 1);
 } FC_LOG_AND_RETHROW() }
-
-/** DISABLED (Cannot pledge cycles) **
-BOOST_AUTO_TEST_CASE( das33_pledge_cycles_test )
-{ try {
-
-    ACTOR(user);
-    VAULT_ACTOR(userv);
-    VAULT_ACTOR(owner);
-
-    // Issue standard locked license and some cycles
-    auto standard_locked = *(_dal.get_license_type("standard_locked"));
-    issue_license_operation issue_license;
-        issue_license.issuer = get_license_issuer_id();
-        issue_license.account = userv_id;
-        issue_license.license = standard_locked.id;
-        issue_license.bonus_percentage = 50;
-        issue_license.frequency_lock = 20;
-        issue_license.activated_at = db.head_block_time();
-    do_op(issue_license);
-    issue_cycles_to_license_operation issue_cycles;
-        issue_cycles.authority = get_cycle_issuer_id();
-        issue_cycles.account = userv_id;
-        issue_cycles.license = standard_locked.id;
-        issue_cycles.amount = 100;
-        issue_cycles.origin = "foo";
-        issue_cycles.comment = "bar";
-    do_op(issue_cycles);
-    generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
-
-    // Create a das33 project
-    asset_id_type test_asset_id = create_new_asset("TEST", 100000000, 2, price({asset(1),asset(1,asset_id_type(1))}));
-    vector<price> prices{
-        {
-            asset{10, get_cycle_asset_id()},
-            asset{100, test_asset_id}
-        }
-    };
-    das33_project_create_operation project_create;
-        project_create.authority      = db.get_global_properties().authorities.root_administrator;
-        project_create.name           = "test_project0";
-        project_create.owner          = owner_id;
-        project_create.token          = test_asset_id;
-        project_create.ratios         = prices;
-        project_create.min_to_collect = 10000;
-    do_op(project_create);
-
-    das33_project_object project = get_das33_projects()[0];
-
-    // Activate project
-    das33_project_update_operation op;
-        op.project_id = project.id;
-        op.authority = db.get_global_properties().authorities.root_administrator;
-        op.status = das33_project_status::active;
-    do_op(op);
-
-    // Initial check
-    BOOST_CHECK_EQUAL(get_das33_pledges().size(), 0);
-
-    // Pledge cycles
-    const auto& license_information_obj = (*userv.license_information)(db);
-    const auto& license_history = license_information_obj.history;
-    const auto& license_record = license_history[0];
-    const auto before_pledge = license_record.total_cycles().value;
-    do_op(das33_pledge_asset_operation(userv_id, asset{10, get_cycle_asset_id()}, license_record.license, project.id));
-    const auto& license_information_obj_2 = (*userv.license_information)(db);
-    const auto& license_history_2 = license_information_obj_2.history;
-    const auto& license_record_2 = license_history_2[0];
-    const auto after_pledge = license_record_2.total_cycles().value;
-    BOOST_CHECK_EQUAL(before_pledge - 10, after_pledge);
-    BOOST_CHECK_EQUAL(get_das33_pledges().size(), 1);
-
-    // Should Fail: when pledging cycles, pledger must be a vault
-    GRAPHENE_REQUIRE_THROW( do_op(das33_pledge_asset_operation(user_id, asset{10, get_cycle_asset_id()}, license_record.license, project.id));, fc::exception );
-
-    // Should Fail: when pledging cycles, license must be provided
-    GRAPHENE_REQUIRE_THROW( do_op(das33_pledge_asset_operation(userv_id, asset{10, get_cycle_asset_id()}, optional<license_type_id_type>{}, project.id));, fc::exception );
-
-    // Should Fail: not enough cycles
-    GRAPHENE_REQUIRE_THROW( do_op(das33_pledge_asset_operation(userv_id, asset{5000, get_cycle_asset_id()}, license_record.license, project.id));, fc::exception );
-
-    // Simple pledge
-    do_op(das33_pledge_asset_operation(userv_id, asset{10, get_cycle_asset_id()}, license_record.license, project.id));
-    BOOST_CHECK_EQUAL(get_das33_pledges().size(), 2);
-
-} FC_LOG_AND_RETHROW() }
-*/
 
 BOOST_AUTO_TEST_CASE( das33_pledge_dasc_test )
 { try {
 
     ACTOR(user);
-    VAULT_ACTOR(owner);
+    ACTOR(owner);
+    VAULT_ACTOR(vault);
 
-    tether_accounts(user_id, owner_id);
+    tether_accounts(user_id, vault_id);
 
     // Issue a bunch of assets
-    issue_dascoin(owner_id, 100);
-    disable_vault_to_wallet_limit(owner_id);
-    transfer_dascoin_vault_to_wallet(owner_id, user_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+    issue_dascoin(vault_id, 100);
+    disable_vault_to_wallet_limit(vault_id);
+    transfer_dascoin_vault_to_wallet(vault_id, user_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
 
     BOOST_CHECK_EQUAL( get_balance(user_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
 
     // Create a das33 project
-    asset_id_type test_asset_id = create_new_asset("TEST", 100000000, 2, price({asset(1),asset(1,asset_id_type(1))}));
-    vector<price> prices{
-        {
-            asset{1 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()},
-            asset{1, test_asset_id}
-        }
-    };
+    asset_id_type test_asset_id = create_new_asset("TEST", 10000000000, 5, price({asset(1),asset(1,asset_id_type(1))}));
+
     das33_project_create_operation project_create;
-        project_create.authority      = get_das33_administrator_id();
-        project_create.name           = "test_project0";
-        project_create.owner          = owner_id;
-        project_create.token          = test_asset_id;
-        project_create.ratios         = prices;
-        project_create.min_to_collect = 10000;
+        project_create.authority       = get_das33_administrator_id();
+        project_create.name            = "test_project0";
+        project_create.owner           = owner_id;
+        project_create.token           = test_asset_id;
+        project_create.discounts       = {{get_dascoin_asset_id(), 60}};
+        project_create.goal_amount_eur = 10000000;
+        project_create.min_pledge      = 0;
+        project_create.max_pledge      = 10000000;
     do_op(project_create);
 
     das33_project_object project = get_das33_projects()[0];
@@ -293,62 +192,70 @@ BOOST_AUTO_TEST_CASE( das33_pledge_dasc_test )
     // Initial check
     BOOST_CHECK_EQUAL(get_das33_pledges().size(), 0);
 
+    // Set last dascoin price
+    set_last_dascoin_price(asset(1 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()) / asset(1 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()));
+
     // Pledge DASC
-    do_op(das33_pledge_asset_operation(user_id, asset{10 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project.id));
-    do_op(das33_pledge_asset_operation(user_id, asset{10 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project.id));
+    do_op_no_balance_check(das33_pledge_asset_operation(user_id, asset{10 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project.id));
+    do_op_no_balance_check(das33_pledge_asset_operation(user_id, asset{10 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project.id));
     BOOST_CHECK_EQUAL(get_das33_pledges().size(), 2);
 
-    // Should Fail: when pledging other than cycles, license must not be provided
-    GRAPHENE_REQUIRE_THROW( do_op(das33_pledge_asset_operation(user_id, asset{50, get_dascoin_asset_id()}, license_type_id_type{}, project.id));, fc::exception );
+    // Check pledges
+    vector<das33_pledge_holder_object> pledges = get_das33_pledges();
+    BOOST_CHECK_EQUAL(pledges.size(), 2);
+
+    BOOST_CHECK(pledges[0].pledged.amount          == 1000000);
+    BOOST_CHECK(pledges[0].pledge_remaining.amount == 1000000);
+    BOOST_CHECK(pledges[0].base_expected.amount    == 1000000);
+    BOOST_CHECK(pledges[0].base_remaining.amount   == 1000000);
+    BOOST_CHECK(pledges[0].bonus_expected.amount   == 666666);
+    BOOST_CHECK(pledges[0].bonus_remaining.amount  == 666666);
+
+    BOOST_CHECK(pledges[1].pledged.amount          == 1000000);
+    BOOST_CHECK(pledges[1].pledge_remaining.amount == 1000000);
+    BOOST_CHECK(pledges[1].base_expected.amount    == 1000000);
+    BOOST_CHECK(pledges[1].base_remaining.amount   == 1000000);
+    BOOST_CHECK(pledges[1].bonus_expected.amount   == 666666);
+    BOOST_CHECK(pledges[1].bonus_remaining.amount  == 666666);
 
     // Should Fail: not enough balance
-    GRAPHENE_REQUIRE_THROW( do_op(das33_pledge_asset_operation(user_id, asset{81 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project.id));, fc::exception );
+    GRAPHENE_REQUIRE_THROW( do_op_no_balance_check(das33_pledge_asset_operation(user_id, asset{81 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project.id));, fc::exception );
 
+    // Complete project
+    do_op_no_balance_check(das33_distribute_project_pledges_operation(get_das33_administrator_id(), project.id, 0, 10000, 10000, 10000));
 } FC_LOG_AND_RETHROW() }
 
-BOOST_AUTO_TEST_CASE( das33_pledge_test )
+BOOST_AUTO_TEST_CASE( das33_pledge_dasc_test_min_max )
 { try {
 
     ACTOR(user);
-    VAULT_ACTOR(owner);
+    ACTOR(owner);
+    VAULT_ACTOR(vault);
 
-    tether_accounts(user_id, owner_id);
+    tether_accounts(user_id, vault_id);
 
-    // Issue asset
-    issue_dascoin(owner_id, 2);
-    disable_vault_to_wallet_limit(owner_id);
-    transfer_dascoin_vault_to_wallet(owner_id, user_id, 2 * DASCOIN_DEFAULT_ASSET_PRECISION);
+    // Issue a bunch of assets
+    issue_dascoin(vault_id, 1000);
+    disable_vault_to_wallet_limit(vault_id);
+    transfer_dascoin_vault_to_wallet(vault_id, user_id, 1000 * DASCOIN_DEFAULT_ASSET_PRECISION);
 
-    BOOST_CHECK_EQUAL( get_balance(user_id, get_dascoin_asset_id()), 200000 );
-
-    // Should Fail: bad project id
-    das33_project_object bad_project;   // default constructed with id 0
-    BOOST_CHECK_EQUAL(get_das33_projects().size(), 0);
-    GRAPHENE_REQUIRE_THROW( do_op(das33_pledge_asset_operation(user_id, asset{100000, get_dascoin_asset_id()}, optional<license_type_id_type>{}, bad_project.id));, fc::exception );
+    BOOST_CHECK_EQUAL( get_balance(user_id, get_dascoin_asset_id()), 1000 * DASCOIN_DEFAULT_ASSET_PRECISION );
 
     // Create a das33 project
-    asset_id_type test_asset_id = create_new_asset("TEST", 100000000, 2, price({asset(1),asset(1,asset_id_type(1))}));
-    vector<price> prices{
-            {
-                    asset{1, test_asset_id},
-                    asset{100000000000, get_web_asset_id()}
-            }
-    };
+    asset_id_type test_asset_id = create_new_asset("TEST", 10000000, 2, price({asset(1),asset(1,asset_id_type(1))}));
 
-    // Create project
     das33_project_create_operation project_create;
-        project_create.authority      = get_das33_administrator_id();
-        project_create.name           = "test_project0";
-        project_create.owner          = owner_id;
-        project_create.token          = test_asset_id;
-        project_create.ratios         = prices;
-        project_create.min_to_collect = 10000;
+        project_create.authority       = get_das33_administrator_id();
+        project_create.name            = "test_project0";
+        project_create.owner           = owner_id;
+        project_create.token           = test_asset_id;
+        project_create.discounts       = {{get_dascoin_asset_id(), 50}};
+        project_create.goal_amount_eur = 10000000;
+        project_create.min_pledge      = 5000;
+        project_create.max_pledge      = 21000;
     do_op(project_create);
 
     das33_project_object project = get_das33_projects()[0];
-
-    // Should Fail: project inactive
-    GRAPHENE_REQUIRE_THROW( do_op(das33_pledge_asset_operation(user_id, asset{1, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project.id));, fc::exception );
 
     // Activate project
     das33_project_update_operation project_update;
@@ -357,8 +264,261 @@ BOOST_AUTO_TEST_CASE( das33_pledge_test )
         project_update.status     = das33_project_status::active;
     do_op(project_update);
 
-    // Should Fail: exceeding tokens max supply limit
-    GRAPHENE_REQUIRE_THROW( do_op(das33_pledge_asset_operation(user_id, asset{100000, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project.id));, fc::exception );
+    // Initial check
+    BOOST_CHECK_EQUAL(get_das33_pledges().size(), 0);
+
+    // Set last dascoin price
+    set_last_dascoin_price(asset(1 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()) / asset(1 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()));
+
+    // Should Fail: amount less than min_pledge
+    GRAPHENE_REQUIRE_THROW( do_op_no_balance_check(das33_pledge_asset_operation(user_id, asset{40 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project.id));, fc::exception );
+
+    // Pledge DASC
+    do_op_no_balance_check(das33_pledge_asset_operation(user_id, asset{50 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project.id));
+    do_op_no_balance_check(das33_pledge_asset_operation(user_id, asset{50 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project.id));
+    BOOST_CHECK_EQUAL(get_das33_pledges().size(), 2);
+
+    // Should Fail: more than max_pledge
+    GRAPHENE_REQUIRE_THROW( do_op_no_balance_check(das33_pledge_asset_operation(user_id, asset{11 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project.id));, fc::exception );
+
+    // Complete project
+    do_op_no_balance_check(das33_distribute_project_pledges_operation(get_das33_administrator_id(), project.id, 0, 10000, 10000, 10000));
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( das33_pledge_test_phase_limit )
+{ try {
+
+    ACTOR(user);
+    ACTOR(owner);
+    VAULT_ACTOR(vault);
+
+    tether_accounts(user_id, vault_id);
+
+    // Issue asset
+    issue_dascoin(vault_id, 2000);
+    disable_vault_to_wallet_limit(vault_id);
+    transfer_dascoin_vault_to_wallet(vault_id, user_id, 2000 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+    BOOST_CHECK_EQUAL( get_balance(user_id, get_dascoin_asset_id()), 200000000 );
+
+    // Should Fail: bad project id
+    das33_project_object bad_project;   // default constructed with id 0
+    BOOST_CHECK_EQUAL(get_das33_projects().size(), 0);
+    GRAPHENE_REQUIRE_THROW( do_op_no_balance_check(das33_pledge_asset_operation(user_id, asset{100000, get_dascoin_asset_id()}, optional<license_type_id_type>{}, bad_project.id));, fc::exception );
+
+    // Create a das33 project
+    asset_id_type test_asset_id = create_new_asset("TEST", 100000, 2, price({asset(1),asset(1,asset_id_type(1))}));
+
+    // Set last dascoin price
+    set_last_dascoin_price(asset(2 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()) / asset(1 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()));
+
+    price last_dsc_price = get_dynamic_global_properties().last_dascoin_price;
+    BOOST_CHECK_EQUAL( last_dsc_price.to_real(), 2000);
+
+    // Create project
+    das33_project_create_operation project_create;
+        project_create.authority       = get_das33_administrator_id();
+        project_create.name            = "test_project0";
+        project_create.owner           = owner_id;
+        project_create.token           = test_asset_id;
+        project_create.discounts        = {{get_dascoin_asset_id(), 50}};
+        project_create.goal_amount_eur = 100000;
+        project_create.min_pledge      = 0;
+        project_create.max_pledge      = 1000000;
+    do_op(project_create);
+
+    das33_project_object project = get_das33_projects()[0];
+
+    // Should Fail: project inactive
+    GRAPHENE_REQUIRE_THROW( do_op_no_balance_check(das33_pledge_asset_operation(user_id, asset{1, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project.id));, fc::exception );
+
+    // Activate project & set phase limit
+    das33_project_update_operation project_update;
+        project_update.project_id = project.id;
+        project_update.authority  = get_das33_administrator_id();
+        project_update.phase_limit = 20000;
+        project_update.status     = das33_project_status::active;
+    do_op(project_update);
+
+    // Should Work: pledge 100 DSC (50 WE)
+    do_op_no_balance_check(das33_pledge_asset_operation(user_id, asset{100 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project.id));
+    BOOST_CHECK_EQUAL(get_das33_pledges().size(), 1);
+    BOOST_CHECK_EQUAL( get_balance(user_id, get_dascoin_asset_id()), 1900 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+    // Should Work: attempt to pledge 200 DSC (100 WE), but actually pledge 100 DSC (50 WE)
+    do_op_no_balance_check(das33_pledge_asset_operation(user_id, asset{200 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project.id));
+    BOOST_CHECK_EQUAL(get_das33_pledges().size(), 2);
+    BOOST_CHECK_EQUAL( get_balance(user_id, get_dascoin_asset_id()), 1800 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+    // Should Fail: all tokens for this phase are sold
+    GRAPHENE_REQUIRE_THROW( do_op_no_balance_check(das33_pledge_asset_operation(user_id, asset{100000, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project.id));, fc::exception );
+
+    // Complete project
+    do_op_no_balance_check(das33_distribute_project_pledges_operation(get_das33_administrator_id(), project.id, 0, 10000, 10000, 10000));
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( das33_complete_project_test )
+{ try {
+
+    ACTOR(user);
+    ACTOR(owner);
+    VAULT_ACTOR(vault);
+
+    tether_accounts(user_id, vault_id);
+
+    // Issue a bunch of assets
+    issue_dascoin(vault_id, 100);
+    disable_vault_to_wallet_limit(vault_id);
+    transfer_dascoin_vault_to_wallet(vault_id, user_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+    BOOST_CHECK_EQUAL( get_balance(user_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+    // Create a das33 project
+    asset_id_type test_asset_id = create_new_asset("TEST", 100000000, 2, price({asset(1),asset(1,asset_id_type(1))}));
+
+    das33_project_create_operation project_create;
+        project_create.authority       = get_das33_administrator_id();
+        project_create.name            = "test_project0";
+        project_create.owner           = owner_id;
+        project_create.token           = test_asset_id;
+        project_create.discounts       = {{get_dascoin_asset_id(), 50}};
+        project_create.goal_amount_eur = 10000000;
+        project_create.min_pledge = 0;
+        project_create.max_pledge = 10000000;
+    do_op(project_create);
+
+    das33_project_object project = get_das33_projects()[0];
+
+    // Activate project
+    das33_project_update_operation project_update;
+        project_update.project_id = project.id;
+        project_update.authority  = get_das33_administrator_id();
+        project_update.status     = das33_project_status::active;
+    do_op(project_update);
+
+    // Initial check
+    BOOST_CHECK_EQUAL(get_das33_pledges().size(), 0);
+
+    // Pledge DASC in phase 0
+    do_op_no_balance_check(das33_pledge_asset_operation(user_id, asset{10 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project.id));
+    do_op_no_balance_check(das33_pledge_asset_operation(user_id, asset{10 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project.id));
+    do_op_no_balance_check(das33_pledge_asset_operation(user_id, asset{10 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project.id));
+    BOOST_CHECK_EQUAL(get_das33_pledges().size(), 3);
+
+    // Complete first pledge: <100%, 100%,  5% >
+    do_op_no_balance_check(das33_distribute_pledge_operation(get_das33_administrator_id(), get_das33_pledges()[0].id, 10000, 10000, 500));
+    BOOST_CHECK_EQUAL(get_das33_pledges().size(), 3);
+
+    // Change project phase
+    das33_project_update_operation project_update_phase;
+        project_update_phase.project_id = project.id;
+        project_update_phase.authority  = get_das33_administrator_id();
+        project_update_phase.phase_number = 1;
+    do_op_no_balance_check(project_update_phase);
+
+    // Pledge DASC in phase 1
+    do_op_no_balance_check(das33_pledge_asset_operation(user_id, asset{10 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project.id));
+    BOOST_CHECK_EQUAL(get_das33_pledges().size(), 4);
+
+    // Complete first pledge: <  0%,   0%, 95% > and remove it
+    do_op_no_balance_check(das33_distribute_pledge_operation(get_das33_administrator_id(), get_das33_pledges()[0].id, 0, 0, 9500));
+    BOOST_CHECK_EQUAL(get_das33_pledges().size(), 3);
+
+    // Complete all phase 0 pledges
+    do_op_no_balance_check(das33_distribute_project_pledges_operation(get_das33_administrator_id(), project.id, 0, 10000, 10000, 10000));
+    BOOST_CHECK_EQUAL(get_das33_pledges().size(), 1);
+
+    // Complete all phase 1 pledges
+    do_op_no_balance_check(das33_distribute_project_pledges_operation(get_das33_administrator_id(), project.id, 1, 10000, 10000, 10000));
+    BOOST_CHECK_EQUAL(get_das33_pledges().size(), 0);
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( das33_reject_project_test )
+{ try {
+
+    ACTOR(user);
+    ACTOR(owner);
+    VAULT_ACTOR(vault);
+
+    tether_accounts(user_id, vault_id);
+
+    // Issue a bunch of assets
+    issue_dascoin(vault_id, 100);
+    disable_vault_to_wallet_limit(vault_id);
+    transfer_dascoin_vault_to_wallet(vault_id, user_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+    BOOST_CHECK_EQUAL( get_balance(user_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
+
+    // Create a das33 project
+    asset_id_type test_asset_id = create_new_asset("ZERO", 100000000, 2, price({asset(1),asset(1,asset_id_type(1))}));
+
+    das33_project_create_operation project_create;
+        project_create.authority       = get_das33_administrator_id();
+        project_create.name            = "test_project0";
+        project_create.owner           = owner_id;
+        project_create.token           = test_asset_id;
+        project_create.discounts       = {{get_dascoin_asset_id(),100}};
+        project_create.goal_amount_eur = 10000000;
+        project_create.min_pledge      = 0;
+        project_create.max_pledge      = 10000000;
+    do_op(project_create);
+
+    // Create a das33 project
+    asset_id_type test_asset_id_2 = create_new_asset("ONE", 100000000, 2, price({asset(1),asset(1,asset_id_type(1))}));
+
+    das33_project_create_operation project_create_2;
+        project_create_2.authority       = get_das33_administrator_id();
+        project_create_2.name            = "test_projec1";
+        project_create_2.owner           = owner_id;
+        project_create_2.token           = test_asset_id_2;
+        project_create_2.discounts       = {{get_dascoin_asset_id(),100}};
+        project_create_2.goal_amount_eur = 10000000;
+        project_create_2.min_pledge      = 0;
+        project_create_2.max_pledge      = 10000000;
+    do_op(project_create_2);
+
+    das33_project_object project_0 = get_das33_projects()[0];
+    das33_project_object project_1 = get_das33_projects()[1];
+
+    // Activate project
+    das33_project_update_operation project_update;
+    project_update.project_id = project_0.id;
+    project_update.authority  = get_das33_administrator_id();
+    project_update.status     = das33_project_status::active;
+    do_op(project_update);
+
+    // Activate project
+    das33_project_update_operation project_update_2;
+    project_update_2.project_id = project_1.id;
+    project_update_2.authority  = get_das33_administrator_id();
+    project_update_2.status     = das33_project_status::active;
+    do_op(project_update_2);
+
+    // Initial check
+    BOOST_CHECK_EQUAL(get_das33_pledges().size(), 0);
+
+    // Pledge DASC
+    do_op_no_balance_check(das33_pledge_asset_operation(user_id, asset{10 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project_0.id));
+    do_op_no_balance_check(das33_pledge_asset_operation(user_id, asset{10 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project_0.id));
+    do_op_no_balance_check(das33_pledge_asset_operation(user_id, asset{10 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project_0.id));
+    do_op_no_balance_check(das33_pledge_asset_operation(user_id, asset{10 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project_1.id));
+    do_op_no_balance_check(das33_pledge_asset_operation(user_id, asset{10 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project_1.id));
+    do_op_no_balance_check(das33_pledge_asset_operation(user_id, asset{10 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project_1.id));
+    BOOST_CHECK_EQUAL(get_das33_pledges().size(), 6);
+
+    // Reject pledge
+    do_op_no_balance_check(das33_pledge_reject_operation(get_das33_administrator_id(), get_das33_pledges()[0].id));
+    BOOST_CHECK_EQUAL(get_das33_pledges().size(), 5);
+
+    // Reject project
+    do_op_no_balance_check(das33_project_reject_operation(get_das33_administrator_id(), project_0.id));
+    BOOST_CHECK_EQUAL(get_das33_pledges().size(), 3);
+
+    // Reject project
+    do_op_no_balance_check(das33_project_reject_operation(get_das33_administrator_id(), project_1.id));
+    BOOST_CHECK_EQUAL(get_das33_pledges().size(), 0);
 
 } FC_LOG_AND_RETHROW() }
 

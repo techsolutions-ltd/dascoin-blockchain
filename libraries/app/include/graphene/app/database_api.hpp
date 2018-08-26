@@ -982,7 +982,14 @@ class database_api
       * @params limit number of projects to return, max 100
       * @return vector of das33 project objects
       */
-      vector<das33_project_object> get_das33_projects(const string& lower_bound_name, uint32_t limit)const;
+      vector<das33_project_object> get_das33_projects(const string& lower_bound_name, uint32_t limit) const;
+
+      /**
+       * @brief Gets a sum of all pledges made to project
+       * @params project id of a project
+       * @return vector of assets, each with total sum of that asset pledged
+       */
+      vector<asset> get_amount_of_assets_pledged_to_project(das33_project_id_type project) const;
 
 private:
       std::shared_ptr< database_api_impl > my;
@@ -1157,4 +1164,5 @@ FC_API( graphene::app::database_api,
    (get_das33_pledges_by_account)
    (get_das33_pledges_by_project)
    (get_das33_projects)
+   (get_amount_of_assets_pledged_to_project)
 )

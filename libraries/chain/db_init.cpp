@@ -290,6 +290,10 @@ void database::initialize_evaluators()
    register_evaluator<das33_project_update_evaluator>();
    register_evaluator<das33_project_delete_evaluator>();
    register_evaluator<das33_pledge_asset_evaluator>();
+   register_evaluator<das33_distribute_project_pledges_evaluator>();
+   register_evaluator<das33_project_reject_evaluator>();
+   register_evaluator<das33_distribute_pledge_evaluator>();
+   register_evaluator<das33_pledge_reject_evaluator>();
    register_evaluator<update_delayed_operations_resolver_parameters_evaluator>();
    register_evaluator<update_global_parameters_evaluator>();
 }
@@ -376,6 +380,8 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    const auto DASCOIN_DEFAULT_START_PRICE = 
       asset{genesis_state.initial_dascoin_price.base_amount, get_dascoin_asset_id()}
       / asset {genesis_state.initial_dascoin_price.quote_amount, get_web_asset_id()};
+
+   const auto BTC_DEFAULT_START_PRICE = asset{0, get_btc_asset_id()};
 
    FC_ASSERT( genesis_state.initial_timestamp != time_point_sec(), "Must initialize genesis timestamp." );
    FC_ASSERT( genesis_state.initial_timestamp.sec_since_epoch() % GRAPHENE_DEFAULT_BLOCK_INTERVAL == 0,
@@ -550,6 +556,23 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       adao.current_supply = 0;
    });
 
+<<<<<<< HEAD
+   const asset_object& dasc_asset = create<asset_object>([&](asset_object& ao){
+      ao.symbol = DASCOIN_DASCOIN_SYMBOL;
+      ao.options.max_supply = genesis_state.max_dascoin_supply;
+      ao.precision = DASCOIN_DEFAULT_ASSET_PRECISION_DIGITS;
+      ao.options.flags = DASCOIN_ASSET_INITIAL_FLAGS;
+      ao.options.issuer_permissions = WEB_ASSET_ISSUER_PERMISSION_MASK;
+      ao.issuer = GRAPHENE_NULL_ACCOUNT;
+      ao.authenticator = GRAPHENE_NULL_ACCOUNT;
+      // TODO: the base conversion rates are ignored.
+      ao.options.core_exchange_rate.base.amount = 1;
+      ao.options.core_exchange_rate.base.asset_id = asset_id_type(0);
+      ao.options.core_exchange_rate.quote.amount = 1;
+      ao.options.core_exchange_rate.quote.asset_id = asset_id_type(0);
+      ao.dynamic_asset_data_id = dascoin_dyn_asset.id;
+   });
+=======
    const asset_object& dasc_asset =
      create<asset_object>([&](asset_object& ao){
          ao.symbol = DASCOIN_DASCOIN_SYMBOL;
@@ -566,6 +589,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
          ao.options.core_exchange_rate.quote.asset_id = asset_id_type(0);
          ao.dynamic_asset_data_id = dascoin_dyn_asset.id;
      });
+>>>>>>> develop
 
    // Create cycle assets:
    const auto& cycle_dyn_asset = create<asset_dynamic_data_object>([&](asset_dynamic_data_object& a){
@@ -585,6 +609,26 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       a.options.core_exchange_rate.quote.amount = 1;
       a.options.core_exchange_rate.quote.asset_id = asset_id_type(3);
       a.dynamic_asset_data_id = cycle_dyn_asset.id;
+   });
+   
+   // Create bitcoin assets:
+   const auto& bitcoin_dyn_asset = create<asset_dynamic_data_object>([&](asset_dynamic_data_object& a){
+         a.current_supply = 0;  // Cycle starts with 0 initial supply.
+      });
+   const asset_object& btc_asset = create<asset_object>( [&]( asset_object& a ) {
+      a.symbol = DASCOIN_BITCOIN_SYMBOL;
+      a.options.max_supply = genesis_state.max_bitcoin_supply;
+      a.precision = DASCOIN_BITCOIN_PRECISION_DIGITS;
+      a.options.flags = BITCOIN_ASSET_INITIAL_FLAGS; //
+      a.options.issuer_permissions = WEB_ASSET_ISSUER_PERMISSION_MASK;  // TODO: set the appropriate issuer permissions.
+      a.issuer = GRAPHENE_NULL_ACCOUNT;
+      a.authenticator = GRAPHENE_NULL_ACCOUNT;
+      // TODO: figure out the base conversion rates.
+      a.options.core_exchange_rate.base.amount = 1;
+      a.options.core_exchange_rate.base.asset_id = asset_id_type(0);
+      a.options.core_exchange_rate.quote.amount = 1;
+      a.options.core_exchange_rate.quote.asset_id = asset_id_type(0);
+      a.dynamic_asset_data_id = bitcoin_dyn_asset.id;
    });
 
    // Create more special assets
@@ -644,6 +688,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       p.recent_slots_filled = fc::uint128::max_value();
       p.frequency = genesis_state.initial_frequency;
       p.last_dascoin_price = DASCOIN_DEFAULT_START_PRICE;
+      p.external_btc_price = BTC_DEFAULT_START_PRICE;
       p.last_daily_dascoin_price = DASCOIN_DEFAULT_START_PRICE;
    });
 
@@ -903,6 +948,12 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    });
 
    modify(dasc_asset, [&](asset_object& a){
+      auto& ca = get_chain_authorities();
+      a.issuer = ca.webasset_issuer;
+      a.authenticator = ca.webasset_authenticator;
+   });
+
+   modify(btc_asset, [&](asset_object& a){
       auto& ca = get_chain_authorities();
       a.issuer = ca.webasset_issuer;
       a.authenticator = ca.webasset_authenticator;

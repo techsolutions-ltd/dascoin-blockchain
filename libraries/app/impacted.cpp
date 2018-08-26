@@ -515,31 +515,62 @@ struct get_impacted_account_visitor
       _impacted.insert( op.account );
    }
 
-    void operator() ( const das33_pledge_asset_operation& op )
-    {
-       _impacted.insert( op.account_id );
-    }
+   void operator() ( const das33_pledge_asset_operation& op )
+   {
+      _impacted.insert( op.account_id );
+   }
 
-    void operator() ( const das33_project_create_operation& op )
-    {
-       _impacted.insert( op.authority );
-       _impacted.insert( op.owner );
-    }
+   void operator() ( const das33_distribute_project_pledges_operation& op )
+   {
+      _impacted.insert(op.authority);
+   }
 
-    void operator() ( const das33_project_update_operation& op )
-    {
-       _impacted.insert( op.authority );
-    }
+   void operator() ( const das33_project_reject_operation& op )
+   {
+      _impacted.insert(op.authority);
+   }
 
-    void operator() ( const das33_project_delete_operation& op )
-    {
-       _impacted.insert( op.authority );
-    }
+   void operator() ( const das33_distribute_pledge_operation& op )
+   {
+      _impacted.insert(op.authority);
+   }
 
-    void operator() ( const update_global_parameters_operation& op )
-    {
-       _impacted.insert(op.authority);
-    }
+   void operator() ( const das33_pledge_reject_operation& op )
+   {
+      _impacted.insert(op.authority);
+   }
+
+   void operator() ( const das33_pledge_result_operation& op )
+   {
+      _impacted.insert(op.funders_account);
+      _impacted.insert(op.account_to_fund);
+   }
+
+   void operator() ( const das33_project_create_operation& op )
+   {
+      _impacted.insert( op.authority );
+      _impacted.insert( op.owner );
+   }
+
+   void operator() ( const das33_project_update_operation& op )
+   {
+      _impacted.insert( op.authority );
+   }
+
+   void operator() ( const das33_project_delete_operation& op )
+   {
+      _impacted.insert( op.authority );
+   }
+
+   void operator() ( const update_global_parameters_operation& op )
+   {
+      _impacted.insert(op.authority);
+   }
+
+   void operator()( const update_external_btc_price_operation& op )
+   {
+      _impacted.insert( op.issuer );
+   }
 };
 
 void operation_get_impacted_accounts( const operation& op, flat_set<account_id_type>& result )

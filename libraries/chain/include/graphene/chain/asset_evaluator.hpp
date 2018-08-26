@@ -168,4 +168,13 @@ namespace graphene { namespace chain {
          const issue_asset_request_object* req_obj_;
    };
 
+   class update_external_btc_price_evaluator : public evaluator<update_external_btc_price_evaluator>
+   {
+      public:
+         typedef update_external_btc_price_operation operation_type;
+
+         void_result do_evaluate(const update_external_btc_price_operation& o);
+         void_result do_apply(const update_external_btc_price_operation& o);
+   };
+
 } } // graphene::chain

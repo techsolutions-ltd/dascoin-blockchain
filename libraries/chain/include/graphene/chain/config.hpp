@@ -224,6 +224,16 @@
 #define DASCOIN_MAX_DASCOIN_SUPPLY int64_t(8589934592LL)    // 2^33
 ///}@
 
+/**
+ * Bitcoin asset parameters:
+ */
+///@{
+#define DASCOIN_BITCOIN_SYMBOL "BTC"
+#define DASCOIN_BITCOIN_INDEX (4)
+#define DASCOIN_BITCOIN_PRECISION_DIGITS (8)
+#define DASCOIN_MAX_BITCOIN_SUPPLY int64_t(21000000LL)
+///}@
+
 
 /**
  * Frequency_type parameters:

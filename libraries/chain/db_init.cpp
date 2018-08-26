@@ -381,6 +381,8 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       asset{genesis_state.initial_dascoin_price.base_amount, get_dascoin_asset_id()}
       / asset {genesis_state.initial_dascoin_price.quote_amount, get_web_asset_id()};
 
+   const auto BTC_DEFAULT_START_PRICE = asset{0, get_btc_asset_id()};
+
    FC_ASSERT( genesis_state.initial_timestamp != time_point_sec(), "Must initialize genesis timestamp." );
    FC_ASSERT( genesis_state.initial_timestamp.sec_since_epoch() % GRAPHENE_DEFAULT_BLOCK_INTERVAL == 0,
               "Genesis timestamp must be divisible by GRAPHENE_DEFAULT_BLOCK_INTERVAL." );
@@ -553,12 +555,13 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    const auto& dascoin_dyn_asset = create<asset_dynamic_data_object>([&](asset_dynamic_data_object& adao){
       adao.current_supply = 0;
    });
-   create<asset_object>([&](asset_object& ao){
+
+   const asset_object& dasc_asset = create<asset_object>([&](asset_object& ao){
       ao.symbol = DASCOIN_DASCOIN_SYMBOL;
       ao.options.max_supply = genesis_state.max_dascoin_supply;
       ao.precision = DASCOIN_DEFAULT_ASSET_PRECISION_DIGITS;
       ao.options.flags = DASCOIN_ASSET_INITIAL_FLAGS;
-      ao.options.issuer_permissions = 0;  // No issuer, no permissions, no problem.
+      ao.options.issuer_permissions = WEB_ASSET_ISSUER_PERMISSION_MASK;
       ao.issuer = GRAPHENE_NULL_ACCOUNT;
       ao.authenticator = GRAPHENE_NULL_ACCOUNT;
       // TODO: the base conversion rates are ignored.
@@ -587,6 +590,26 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       a.options.core_exchange_rate.quote.amount = 1;
       a.options.core_exchange_rate.quote.asset_id = asset_id_type(3);
       a.dynamic_asset_data_id = cycle_dyn_asset.id;
+   });
+   
+   // Create bitcoin assets:
+   const auto& bitcoin_dyn_asset = create<asset_dynamic_data_object>([&](asset_dynamic_data_object& a){
+         a.current_supply = 0;  // Cycle starts with 0 initial supply.
+      });
+   const asset_object& btc_asset = create<asset_object>( [&]( asset_object& a ) {
+      a.symbol = DASCOIN_BITCOIN_SYMBOL;
+      a.options.max_supply = genesis_state.max_bitcoin_supply;
+      a.precision = DASCOIN_BITCOIN_PRECISION_DIGITS;
+      a.options.flags = BITCOIN_ASSET_INITIAL_FLAGS; //
+      a.options.issuer_permissions = WEB_ASSET_ISSUER_PERMISSION_MASK;  // TODO: set the appropriate issuer permissions.
+      a.issuer = GRAPHENE_NULL_ACCOUNT;
+      a.authenticator = GRAPHENE_NULL_ACCOUNT;
+      // TODO: figure out the base conversion rates.
+      a.options.core_exchange_rate.base.amount = 1;
+      a.options.core_exchange_rate.base.asset_id = asset_id_type(0);
+      a.options.core_exchange_rate.quote.amount = 1;
+      a.options.core_exchange_rate.quote.asset_id = asset_id_type(0);
+      a.dynamic_asset_data_id = bitcoin_dyn_asset.id;
    });
 
    // Create more special assets
@@ -646,6 +669,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       p.recent_slots_filled = fc::uint128::max_value();
       p.frequency = genesis_state.initial_frequency;
       p.last_dascoin_price = DASCOIN_DEFAULT_START_PRICE;
+      p.external_btc_price = BTC_DEFAULT_START_PRICE;
       p.last_daily_dascoin_price = DASCOIN_DEFAULT_START_PRICE;
    });
 
@@ -899,6 +923,18 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    // Set up web asset issuer and authenticator:
    // TODO: refactor this to be handled all at once.
    modify(web_asset, [&](asset_object& a){
+      auto& ca = get_chain_authorities();
+      a.issuer = ca.webasset_issuer;
+      a.authenticator = ca.webasset_authenticator;
+   });
+
+   modify(dasc_asset, [&](asset_object& a){
+      auto& ca = get_chain_authorities();
+      a.issuer = ca.webasset_issuer;
+      a.authenticator = ca.webasset_authenticator;
+   });
+
+   modify(btc_asset, [&](asset_object& a){
       auto& ca = get_chain_authorities();
       a.issuer = ca.webasset_issuer;
       a.authenticator = ca.webasset_authenticator;

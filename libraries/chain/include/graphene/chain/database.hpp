@@ -267,6 +267,8 @@ namespace graphene { namespace chain {
          asset_id_type                          get_dascoin_asset_id() const;
          const asset_object&                    get_cycle_asset() const;
          asset_id_type                          get_cycle_asset_id() const;
+         const asset_object&                    get_btc_asset() const;
+         asset_id_type                          get_btc_asset_id() const;
          const chain_property_object&           get_chain_properties()const;
          const global_property_object&          get_global_properties()const;
          const chain_authorities&               get_chain_authorities()const;

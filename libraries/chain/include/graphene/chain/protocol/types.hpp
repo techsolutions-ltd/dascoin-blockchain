@@ -183,16 +183,25 @@ namespace graphene { namespace chain {
       | transfer_restricted
       | disable_confidential;
 
-   const static uint32_t WEB_ASSET_INITIAL_FLAGS = dual_auth_issue_asset  // This must be set for webassets.
-      | transfer_restricted  // Initial transfers are disabled.
-      | disable_confidential;  // TODO: is this okay?
+   const static uint32_t WEB_ASSET_INITIAL_FLAGS = charge_market_fee
+      | white_list
+      | override_authority
+      | transfer_restricted    // Initial transfers are disabled.
+      | disable_confidential   // TODO: is this okay?
+      | dual_auth_issue_asset; // This must be set for webassets.
 
    // TODO: this needs serious review!
-   const static uint32_t WEB_ASSET_ISSUER_PERMISSION_MASK = white_list
+   const static uint32_t WEB_ASSET_ISSUER_PERMISSION_MASK = charge_market_fee
+      | white_list
+      | override_authority
       | transfer_restricted
       | disable_confidential;
 
-   const static uint32_t DASCOIN_ASSET_INITIAL_FLAGS = dual_auth_issue_asset;  // TODO: this is temporary.
+   const static uint32_t DASCOIN_ASSET_INITIAL_FLAGS = charge_market_fee
+      | white_list
+      | override_authority
+      | disable_confidential
+      | dual_auth_issue_asset;  // TODO: this is temporary.
 
    const static uint32_t BITCOIN_ASSET_INITIAL_FLAGS = charge_market_fee
       | white_list

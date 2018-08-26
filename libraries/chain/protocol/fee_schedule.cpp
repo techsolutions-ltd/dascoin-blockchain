@@ -133,10 +133,10 @@ namespace graphene { namespace chain {
       scaled /= GRAPHENE_100_PERCENT;
       FC_ASSERT( scaled <= GRAPHENE_MAX_SHARE_SUPPLY );
       //idump( (base_value)(scaled)(core_exchange_rate) );
-      auto result = asset( scaled.to_uint64(), asset_id_type(3) );
+      auto result = asset( scaled.to_uint64(), fee_asset_id );
       //FC_ASSERT( result * core_exchange_rate >= asset( scaled.to_uint64()) );
 
-      while( result < asset( scaled.to_uint64(), asset_id_type(3)) )
+      while( result < asset( scaled.to_uint64(), fee_asset_id ) )
         result.amount++;
 
       FC_ASSERT( result.amount <= GRAPHENE_MAX_SHARE_SUPPLY );
@@ -192,10 +192,38 @@ namespace graphene { namespace chain {
          ilog( "wire_out_with_fee_operation new fee = ${p}", ("p", param.get<typename wire_out_with_fee_operation::fee_parameters_type>().fee) );
       }
 
+      result_type operator()(  const asset_update_operation& op ) const
+      {
+         param.get<typename asset_update_operation::fee_parameters_type>().fee = new_fee;
+         ilog( "asset_update_operation new fee = ${p}", ("p", param.get<typename asset_update_operation::fee_parameters_type>().fee) );
+      }
+
       template<typename OpType>
       result_type operator()(  const OpType& op ) const
       {
         FC_ASSERT( false, "Undefined call operator for fee change operation in set_new_fee_visitor" );
+      }
+   };
+
+   struct fee_asset_id_visitor
+   {
+      typedef void result_type;
+
+      fee_schedule& schedule;
+
+      fee_asset_id_visitor(fee_schedule& schedule)
+        : schedule(schedule)
+      {}
+
+      result_type operator()( const asset_id_type& asset_id ) const
+      {
+         schedule.fee_asset_id = asset_id;
+         ilog("setting fee asset to ${a}", ("a", schedule.fee_asset_id));
+      }
+
+      template<typename VariantMember>
+      result_type operator()( const VariantMember& op ) const
+      {
       }
    };
 
@@ -232,6 +260,14 @@ namespace graphene { namespace chain {
                  "Maximum transaction expiration time must be greater than a block interval" );
       FC_ASSERT( maximum_proposal_lifetime - committee_proposal_review_period > block_interval,
                  "Committee proposal review period must be less than the maximum proposal lifetime" );
+   }
+
+   void chain_parameters::apply_fee_asset_id()
+   {
+      for (const auto& ext : extensions)
+      {
+         ext.visit(fee_asset_id_visitor{*current_fees});
+      }
    }
 
 } } // graphene::chain

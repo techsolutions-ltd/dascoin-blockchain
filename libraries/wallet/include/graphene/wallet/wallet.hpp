@@ -1052,12 +1052,14 @@ class wallet_api
        * @param to_account the name or id of the account to receive the webasset
        * @param amount the amount to issue, in nominal units
        * @param reserved reserved amount to issue, in nominal units
+       * @param unique_id unique identifier of this issue
        * @param broadcast true to broadcast the transaction on the network
        * @returns the signed transaction issuing the webasset
        */
       signed_transaction issue_webasset(string to_account,
                                         string amount,
                                         string reserved,
+                                        string unique_id,
                                         bool broadcast = false);
 
       /** Update the core options on an asset.
@@ -1155,6 +1157,22 @@ class wallet_api
                                              string symbol,
                                              string amount,
                                              bool broadcast = false);
+
+      /** Claim funds from the accumulated fees pool for the given asset.
+       *
+       * User-issued assets can optionally have a pool of the accumulated fees which are
+       * paid for market fees
+       *
+       * This command allows the issuer to withdraw those funds from the fee pool.
+       *
+       * @param symbol the name or id of the asset whose accumulated fees pool you wish to claim
+       * @param amount the amount of the core asset to withdraw
+       * @param broadcast true to broadcast the transaction on the network
+       * @returns the signed transaction claiming from the fee pool
+       */
+      signed_transaction claim_asset_accumulated_fees_pool(string symbol,
+                                                           string amount,
+                                                           bool broadcast = false);
 
       /** Burns the given user-issued asset.
        *
@@ -2023,6 +2041,19 @@ class wallet_api
                                                   const variant_object& changed_values,
                                                   bool broadcast) const;
 
+      /**
+       * @param authority       This MUST be root authority.
+       * @param new_fee         New operation fee
+       * @param op_num          The operation id whose fee we are changing
+       * @param string          Comment
+       * @param broadcast       true to broadcast transaction to network
+       */
+      signed_transaction change_operation_fee(const string& authority,
+                                              share_type new_fee,
+                                              unsigned op_num,
+                                              string comment,
+                                              bool broadcast) const;
+
       //////////////////////////
       // REQUESTS:            //
       //////////////////////////
@@ -2223,6 +2254,7 @@ FC_API( graphene::wallet::wallet_api,
         (get_asset)
         (get_bitasset_data)
         (fund_asset_fee_pool)
+        (claim_asset_accumulated_fees_pool)
         (reserve_asset)
         (global_settle_asset)
         (settle_asset)
@@ -2340,6 +2372,7 @@ FC_API( graphene::wallet::wallet_api,
         (get_delayed_operations_for_account)
 
         (update_global_parameters)
+        (change_operation_fee)
 
         // Requests:
         (get_all_webasset_issue_requests)

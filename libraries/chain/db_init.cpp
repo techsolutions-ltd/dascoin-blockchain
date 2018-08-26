@@ -556,6 +556,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       adao.current_supply = 0;
    });
 
+<<<<<<< HEAD
    const asset_object& dasc_asset = create<asset_object>([&](asset_object& ao){
       ao.symbol = DASCOIN_DASCOIN_SYMBOL;
       ao.options.max_supply = genesis_state.max_dascoin_supply;
@@ -571,6 +572,24 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       ao.options.core_exchange_rate.quote.asset_id = asset_id_type(0);
       ao.dynamic_asset_data_id = dascoin_dyn_asset.id;
    });
+=======
+   const asset_object& dasc_asset =
+     create<asset_object>([&](asset_object& ao){
+         ao.symbol = DASCOIN_DASCOIN_SYMBOL;
+         ao.options.max_supply = genesis_state.max_dascoin_supply;
+         ao.precision = DASCOIN_DEFAULT_ASSET_PRECISION_DIGITS;
+         ao.options.flags = DASCOIN_ASSET_INITIAL_FLAGS;
+         ao.options.issuer_permissions = WEB_ASSET_ISSUER_PERMISSION_MASK;
+         ao.issuer = GRAPHENE_NULL_ACCOUNT;
+         ao.authenticator = GRAPHENE_NULL_ACCOUNT;
+         // TODO: the base conversion rates are ignored.
+         ao.options.core_exchange_rate.base.amount = 1;
+         ao.options.core_exchange_rate.base.asset_id = asset_id_type(0);
+         ao.options.core_exchange_rate.quote.amount = 1;
+         ao.options.core_exchange_rate.quote.asset_id = asset_id_type(0);
+         ao.dynamic_asset_data_id = dascoin_dyn_asset.id;
+     });
+>>>>>>> develop
 
    // Create cycle assets:
    const auto& cycle_dyn_asset = create<asset_dynamic_data_object>([&](asset_dynamic_data_object& a){

@@ -53,7 +53,13 @@ namespace graphene { namespace chain {
   {
     price result;
     if (original_asset_id == d.get_dascoin_asset_id())
+    {
       result = d.get_dynamic_global_properties().last_dascoin_price;
+    }
+    else if (original_asset_id == d.get_btc_asset_id())
+    {
+      result = d.get_dynamic_global_properties().external_btc_price;
+    }
 
     return result;
   }
@@ -534,7 +540,7 @@ namespace graphene { namespace chain {
 
      auto& index = d.get_index_type<das33_pledge_holder_index>().indices().get<by_project>();
      auto itr = index.lower_bound(op.project);
-     auto end = index.uper_bound(op.project);
+     auto end = index.upper_bound(op.project);
      while(itr != end)
      {
         const das33_pledge_holder_object& pho = *itr;
@@ -560,7 +566,7 @@ namespace graphene { namespace chain {
      {
         auto& index = d.get_index_type<das33_pledge_holder_index>().indices().get<by_project>();
         auto itr = index.lower_bound(op.project);
-        auto end = index.uper_bound(op.project);
+        auto end = index.upper_bound(op.project);
         if(itr == end)
            break;
 

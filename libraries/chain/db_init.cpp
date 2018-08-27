@@ -296,6 +296,7 @@ void database::initialize_evaluators()
    register_evaluator<das33_pledge_reject_evaluator>();
    register_evaluator<update_delayed_operations_resolver_parameters_evaluator>();
    register_evaluator<update_global_parameters_evaluator>();
+   register_evaluator<update_external_btc_price_evaluator>();
 }
 
 void database::initialize_indexes()

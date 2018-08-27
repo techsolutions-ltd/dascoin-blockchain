@@ -1405,6 +1405,101 @@ public:
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (account)(amount)(license)(project)(broadcast) ) }
 
+   signed_transaction das33_pledge_reject(const string& authority,
+                                          const string& pledge_id,
+                                          bool broadcast)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      das33_pledge_reject_operation op;
+
+      op.authority = get_account(authority).id;
+      auto id = maybe_id<das33_pledge_holder_id_type>(pledge_id);
+      op.pledge =  *id;
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (authority)(pledge_id)(broadcast) ) }
+
+   signed_transaction das33_distribute_pledge(const string& authority,
+                                              const string& pledge_id,
+                                              share_type to_escrow,
+                                              share_type base_to_pledger,
+                                              share_type bonus_to_pledger,
+                                              bool broadcast)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      das33_distribute_pledge_operation op;
+
+      op.authority = get_account(authority).id;
+      auto id = maybe_id<das33_pledge_holder_id_type>(pledge_id);
+      op.pledge =  *id;
+      op.to_escrow = to_escrow;
+      op.bonus_to_pledger = bonus_to_pledger;
+      op.base_to_pledger = base_to_pledger;
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (authority)(pledge_id)(to_escrow)(base_to_pledger)(bonus_to_pledger)(broadcast) ) }
+
+   signed_transaction das33_project_reject(const string& authority,
+                                           const string& project_id,
+                                           bool broadcast)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      das33_project_reject_operation op;
+
+      op.authority = get_account(authority).id;
+      auto id = maybe_id<das33_project_id_type>(project_id);
+      op.project =  *id;
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (authority)(project_id)(broadcast) ) }
+
+   signed_transaction das33_distribute_project_pledges(const string& authority,
+                                                       const string& project_id,
+                                                       optional<share_type> phase_number,
+                                                       share_type to_escrow,
+                                                       share_type base_to_pledger,
+                                                       share_type bonus_to_pledger,
+                                                       bool broadcast)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      das33_distribute_project_pledges_operation op;
+
+      op.authority = get_account(authority).id;
+      auto id = maybe_id<das33_project_id_type>(project_id);
+      op.project =  *id;
+      op.phase_number = phase_number;
+      op.to_escrow = to_escrow;
+      op.bonus_to_pledger = bonus_to_pledger;
+      op.base_to_pledger = base_to_pledger;
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (authority)(project_id)(phase_number)(to_escrow)(base_to_pledger)(bonus_to_pledger)(broadcast) ) }
+
+
    signed_transaction update_delayed_operations_resolver_parameters(const string& authority, optional<bool> delayed_operations_resolver_enabled,
                                                         optional<uint32_t> delayed_operations_resolver_interval_time_seconds,
                                                         bool broadcast)
@@ -5605,6 +5700,41 @@ signed_transaction wallet_api::das33_pledge_asset(const string& account,
                                                   bool broadcast) const
 {
    return my->das33_pledge_asset( account, amount, symbol, license, project, broadcast );
+}
+
+signed_transaction wallet_api::das33_pledge_reject(const string& authority,
+                                                   const string& pledge_id,
+                                                   bool broadcast) const
+{
+   return my->das33_pledge_reject( authority, pledge_id, broadcast );
+}
+
+signed_transaction wallet_api::das33_distribute_pledge(const string& authority,
+                                                       const string& pledge_id,
+                                                       share_type to_escrow,
+                                                       share_type base_to_pledger,
+                                                       share_type bonus_to_pledger,
+                                                       bool broadcast) const
+{
+   return my->das33_distribute_pledge(authority, pledge_id, to_escrow, base_to_pledger, bonus_to_pledger, broadcast);
+}
+
+signed_transaction wallet_api::das33_project_reject(const string& authority,
+                                                    const string& project_id,
+                                                    bool broadcast) const
+{
+   return my->das33_pledge_reject( authority, project_id, broadcast );
+}
+
+signed_transaction wallet_api::das33_distribute_project_pledges(const string& authority,
+                                                                const string& project_id,
+                                                                optional<share_type> phase_number,
+                                                                share_type to_escrow,
+                                                                share_type base_to_pledger,
+                                                                share_type bonus_to_pledger,
+                                                                bool broadcast) const
+{
+   return my->das33_distribute_project_pledges(authority, project_id, phase_number, to_escrow, base_to_pledger, bonus_to_pledger, broadcast);
 }
 
 vector<das33_pledge_holder_object> wallet_api::get_das33_pledges(das33_pledge_holder_id_type from, uint32_t limit) const

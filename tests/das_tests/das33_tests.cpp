@@ -448,56 +448,57 @@ BOOST_AUTO_TEST_CASE( das33_reject_project_test )
     tether_accounts(user_id, vault_id);
 
     // Issue a bunch of assets
+
     issue_dascoin(vault_id, 100);
     disable_vault_to_wallet_limit(vault_id);
     transfer_dascoin_vault_to_wallet(vault_id, user_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
-
     BOOST_CHECK_EQUAL( get_balance(user_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
 
-    // Create a das33 project
-    asset_id_type test_asset_id = create_new_asset("ZERO", 1000000, 2, price({asset(1),asset(1,asset_id_type(1))}));
+    // Create project tokens
 
-    das33_project_create_operation project_create;
-        project_create.authority       = get_das33_administrator_id();
-        project_create.name            = "test_project0";
-        project_create.owner           = owner_id;
-        project_create.token           = test_asset_id;
-        project_create.discounts       = {{get_dascoin_asset_id(),100}};
-        project_create.goal_amount_eur = 10000000;
-        project_create.min_pledge      = 0;
-        project_create.max_pledge      = 10000000;
-    do_op(project_create);
+    asset_id_type test_asset_id_0 = create_new_asset("ZERO", 1000000, 2, price({asset(1),asset(1,asset_id_type(1))})); // max_supply is 1.000.000,00000, precision is 5
+    asset_id_type test_asset_id_1 = create_new_asset("ONE", 1000000, 2, price({asset(1),asset(1,asset_id_type(1))})); // max_supply is 1.000.000,00000, precision is 5
 
-    // Create a das33 project
-    asset_id_type test_asset_id_2 = create_new_asset("ONE", 1000000, 2, price({asset(1),asset(1,asset_id_type(1))}));
+    // Create das33 projects
 
-    das33_project_create_operation project_create_2;
-        project_create_2.authority       = get_das33_administrator_id();
-        project_create_2.name            = "test_projec1";
-        project_create_2.owner           = owner_id;
-        project_create_2.token           = test_asset_id_2;
-        project_create_2.discounts       = {{get_dascoin_asset_id(),100}};
-        project_create_2.goal_amount_eur = 10000000;
-        project_create_2.min_pledge      = 0;
-        project_create_2.max_pledge      = 10000000;
-    do_op(project_create_2);
+    das33_project_create_operation project_create_0;
+        project_create_0.authority       = get_das33_administrator_id();
+        project_create_0.name            = "test_project_0";
+        project_create_0.owner           = owner_id;
+        project_create_0.token           = test_asset_id_0;
+        project_create_0.discounts       = {{get_dascoin_asset_id(),100}};
+        project_create_0.goal_amount_eur = 10000000;
+        project_create_0.min_pledge      = 0;
+        project_create_0.max_pledge      = 10000000;
+    do_op(project_create_0);
+
+    das33_project_create_operation project_create_1;
+        project_create_1.authority       = get_das33_administrator_id();
+        project_create_1.name            = "test_project_1";
+        project_create_1.owner           = owner_id;
+        project_create_1.token           = test_asset_id_1;
+        project_create_1.discounts       = {{get_dascoin_asset_id(),100}};
+        project_create_1.goal_amount_eur = 10000000;
+        project_create_1.min_pledge      = 0;
+        project_create_1.max_pledge      = 10000000;
+    do_op(project_create_1);
+
+    // Activate projects
 
     das33_project_object project_0 = get_das33_projects()[0];
     das33_project_object project_1 = get_das33_projects()[1];
 
-    // Activate project
-    das33_project_update_operation project_update;
-    project_update.project_id = project_0.id;
-    project_update.authority  = get_das33_administrator_id();
-    project_update.status     = das33_project_status::active;
-    do_op(project_update);
+    das33_project_update_operation project_update_0;
+        project_update_0.project_id = project_0.id;
+        project_update_0.authority  = get_das33_administrator_id();
+        project_update_0.status     = das33_project_status::active;
+    do_op(project_update_0);
 
-    // Activate project
-    das33_project_update_operation project_update_2;
-    project_update_2.project_id = project_1.id;
-    project_update_2.authority  = get_das33_administrator_id();
-    project_update_2.status     = das33_project_status::active;
-    do_op(project_update_2);
+    das33_project_update_operation project_update_1;
+        project_update_1.project_id = project_1.id;
+        project_update_1.authority  = get_das33_administrator_id();
+        project_update_1.status     = das33_project_status::active;
+    do_op(project_update_1);
 
     // Initial check
     BOOST_CHECK_EQUAL(get_das33_pledges().size(), 0);
@@ -515,11 +516,11 @@ BOOST_AUTO_TEST_CASE( das33_reject_project_test )
     do_op_no_balance_check(das33_pledge_reject_operation(get_das33_administrator_id(), get_das33_pledges()[0].id));
     BOOST_CHECK_EQUAL(get_das33_pledges().size(), 5);
 
-    // Reject project
+    // Reject project 0
     do_op_no_balance_check(das33_project_reject_operation(get_das33_administrator_id(), project_0.id));
     BOOST_CHECK_EQUAL(get_das33_pledges().size(), 3);
 
-    // Reject project
+    // Reject project 1
     do_op_no_balance_check(das33_project_reject_operation(get_das33_administrator_id(), project_1.id));
     BOOST_CHECK_EQUAL(get_das33_pledges().size(), 0);
 

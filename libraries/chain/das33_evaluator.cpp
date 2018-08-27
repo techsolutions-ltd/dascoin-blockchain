@@ -530,7 +530,6 @@ namespace graphene { namespace chain {
 
      auto& pro_index = d.get_index_type<das33_project_index>().indices().get<by_id>();
      auto pro_itr = pro_index.find(op.project);
-     account_id_type pro_owner;
      FC_ASSERT(pro_itr != pro_index.end(), "Missing project object with this project_id!");
 
      _pro_owner = pro_itr->owner;
@@ -547,7 +546,7 @@ namespace graphene { namespace chain {
      while(true)
      {
         auto& index = d.get_index_type<das33_pledge_holder_index>().indices().get<by_project>();
-        auto itr = index.lower_bound(op.project);
+        auto itr = index.find(op.project);
         if(itr == index.end())
            break;
 
@@ -568,7 +567,7 @@ namespace graphene { namespace chain {
            balance_obj.balance += pho.pledged.amount;
         });
 
-        d.remove(*itr);
+        d.remove(pho);
      }
 
     return {};

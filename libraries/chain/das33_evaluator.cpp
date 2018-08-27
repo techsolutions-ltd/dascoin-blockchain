@@ -534,7 +534,8 @@ namespace graphene { namespace chain {
 
      auto& index = d.get_index_type<das33_pledge_holder_index>().indices().get<by_project>();
      auto itr = index.lower_bound(op.project);
-     while(itr != index.end())
+     auto end = index.uper_bound(op.project);
+     while(itr != end)
      {
         const das33_pledge_holder_object& pho = *itr;
         FC_ASSERT(pho.base_expected.amount == pho.base_remaining.amount
@@ -558,8 +559,9 @@ namespace graphene { namespace chain {
      while(true)
      {
         auto& index = d.get_index_type<das33_pledge_holder_index>().indices().get<by_project>();
-        auto itr = index.find(op.project);
-        if(itr == index.end())
+        auto itr = index.lower_bound(op.project);
+        auto end = index.uper_bound(op.project);
+        if(itr == end)
            break;
 
         const das33_pledge_holder_object& pho = *itr;

@@ -532,6 +532,18 @@ namespace graphene { namespace chain {
      auto pro_itr = pro_index.find(op.project);
      FC_ASSERT(pro_itr != pro_index.end(), "Missing project object with this project_id!");
 
+     auto& index = d.get_index_type<das33_pledge_holder_index>().indices().get<by_project>();
+     auto itr = index.lower_bound(op.project);
+     while(itr != index.end())
+     {
+        const das33_pledge_holder_object& pho = *itr;
+        FC_ASSERT(pho.base_expected.amount == pho.base_remaining.amount
+           && pho.bonus_expected.amount == pho.bonus_remaining.amount
+           && pho.pledged.amount == pho.pledge_remaining.amount,
+           "Project already accepted, can't be rejected!");
+        itr++;
+     }
+
      _pro_owner = pro_itr->owner;
 
     return {};

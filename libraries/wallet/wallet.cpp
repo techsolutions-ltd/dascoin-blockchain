@@ -1474,6 +1474,25 @@ public:
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (authority)(new_fee)(op_num)(comment)(broadcast) ) }
 
+   signed_transaction update_external_btc_price(const string& btc_issuer,
+                                                price new_price,
+                                                bool broadcast = false)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      update_external_btc_price_operation op;
+
+      op.issuer = get_account(btc_issuer).id;
+      op.eur_amount_per_btc = new_price;
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (btc_issuer)(new_price)(broadcast) ) }
+
    signed_transaction tether_accounts(string wallet, string vault, bool broadcast = false)
    { try {
       FC_ASSERT( !self.is_locked() );
@@ -5697,12 +5716,19 @@ signed_transaction wallet_api::update_global_parameters(const string& authority,
 }
 
 signed_transaction wallet_api::change_operation_fee(const string& authority,
-                                                   share_type new_fee,
-                                                   unsigned op_num,
-                                                   string comment,
-                                                   bool broadcast) const
+                                                    share_type new_fee,
+                                                    unsigned op_num,
+                                                    string comment,
+                                                    bool broadcast) const
 {
     return my->change_operation_fee(authority, new_fee, op_num, comment, broadcast);
+}
+
+signed_transaction wallet_api::update_external_btc_price(const string& btc_issuer,
+                                                         price new_price,
+                                                         bool broadcast) const
+{
+    return my->update_external_btc_price(btc_issuer, new_price, broadcast);
 }
 
 signed_block_with_info::signed_block_with_info( const signed_block& block )

@@ -2054,6 +2054,15 @@ class wallet_api
                                               string comment,
                                               bool broadcast) const;
 
+      /**
+       * @param btc_issuer      Account of BTC issuer
+       * @param new_price       New BTC price
+       * @param broadcast       true to broadcast transaction to network
+       */
+      signed_transaction update_external_btc_price(const string& btc_issuer,
+                                                   price new_price,
+                                                   bool broadcast) const;
+
       //////////////////////////
       // REQUESTS:            //
       //////////////////////////
@@ -2373,6 +2382,7 @@ FC_API( graphene::wallet::wallet_api,
 
         (update_global_parameters)
         (change_operation_fee)
+        (update_external_btc_price)
 
         // Requests:
         (get_all_webasset_issue_requests)

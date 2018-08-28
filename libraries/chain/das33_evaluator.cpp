@@ -115,10 +115,17 @@ namespace graphene { namespace chain {
       // Check that discounts exist
       FC_ASSERT(op.discounts.size() > 0, "Discounts must be provided. Only assets in discounts can be pledged.");
 
-      // Check that discounts are grater then 0
+      // Check that discounts are in (0,1] range
       for (auto itr = op.discounts.begin(); itr != op.discounts.end(); itr++)
       {
-        FC_ASSERT(itr->second > 0, "Discount can not be zero or negative");
+        FC_ASSERT(itr->second > 0,
+                  "Discount can not be zero or negative (${name}:${value})",
+                  ("name", itr->first)
+                  ("value", itr->second));
+        FC_ASSERT(itr->second <= 1 * BONUS_PRECISION,
+                  "Discount can not be larger than 1.00 (${name}:${value})",
+                  ("name", itr->first)
+                  ("value", itr->second));
       }
       return {};
 
@@ -193,9 +200,17 @@ namespace graphene { namespace chain {
       // Check bonuses
       if (op.discounts.valid())
       {
-        for (auto itr = (*op.discounts).begin(); itr != (*op.discounts).end(); ++itr)
+        // Check that discounts are in (0,1] range
+        for (auto itr = op.discounts->begin(); itr != op.discounts->end(); itr++)
         {
-          FC_ASSERT(itr->second > 0, "Bonus can not be zero or negative");
+          FC_ASSERT(itr->second > 0,
+                    "Discount can not be zero or negative (${name}:${value})",
+                    ("name", itr->first)
+                    ("value", itr->second));
+          FC_ASSERT(itr->second <= 1 * BONUS_PRECISION,
+                    "Discount can not be larger than 1.00  (${name}:${value})",
+                    ("name", itr->first)
+                    ("value", itr->second));
         }
       }
 

@@ -1922,8 +1922,10 @@ class wallet_api
        * @param name            name of a project
        * @param owner           acccount id of project owner
        * @param token           id of a token that will be issued by this project
-       * @param ratios          array of prices of project token
+       * @param discounts       array of discounts for project tokens
        * @param goal_amount     minimum amount of tokens needed for project to be successful
+       * @param min_pledge      minimum amount allowed in a pledge
+       * @param max_pledge      maximum amount allowed in a pledge
        * @param broadcast       true to broadcast transaction to network
        */
       signed_transaction create_das33_project(const string& authority,
@@ -1943,9 +1945,14 @@ class wallet_api
        * @param project_id      id of a project to edit
        * @param name            optional new name of a project
        * @param owner           optional new project owner
-       * @param ratios          array of prices of project token, empty array if it shouldn't be changed
        * @param goal_amount     optional new minimum amount
-       * @param status          optional new status of a project
+       * @param toke_price      optional new token price
+       * @param discounts       optional new array of discounts for project tokens
+       * @param min_pledge      optional new minimum amount allowed in a pledge
+       * @param max_pledge      optional new maximum amount allowed in a pledge
+       * @param phase_limit     optional phase limit amount
+       * @param phase_end       optional time point until phase lasts
+       * @param status          optional status of a project
        * @param broadcast       true to broadcast transaction to network
        */
       signed_transaction update_das33_project(const string& authority,
@@ -2012,9 +2019,9 @@ class wallet_api
        * Distribute assets of a single pledge
        * @param authority        authority that is issuing this operation, must be das33_administrator
        * @param pledge_id        pledge id
-       * @param to_escrow        ratio of pledged amount to distribute to project owner
-       * @param base_to_pledger  ratio of expected base tokens to distribute to pledger
-       * @param bonus_to_pledger ratio of expected bonus tokens to distribute to pledger
+       * @param to_escrow        percent of pledged amount to distribute to project owner
+       * @param base_to_pledger  percent of expected base tokens to distribute to pledger
+       * @param bonus_to_pledger percent of expected bonus tokens to distribute to pledger
        * @param broadcast        true to broadcast the transaction on the network.
        */
       signed_transaction das33_distribute_pledge(const string& authority,
@@ -2039,9 +2046,9 @@ class wallet_api
        * @param authority        authority that is issuing this operation, must be das33_administrator
        * @param project_id       project id
        * @param phase_number     optional project phase number. If not provided, pledges from all phases will be distributed
-       * @param to_escrow        ratio of pledged amount to distribute to project owner
-       * @param base_to_pledger  ratio of expected base tokens to distribute to pledger
-       * @param bonus_to_pledger ratio of expected bonus tokens to distribute to pledger
+       * @param to_escrow        percent of pledged amount to distribute to project owner
+       * @param base_to_pledger  percent of expected base tokens to distribute to pledger
+       * @param bonus_to_pledger percent of expected bonus tokens to distribute to pledger
        * @param broadcast        true to broadcast the transaction on the network.
        */
       signed_transaction das33_distribute_project_pledges(const string& authority,

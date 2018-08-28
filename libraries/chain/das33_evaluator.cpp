@@ -138,7 +138,7 @@ namespace graphene { namespace chain {
       auto& d = db();
 
       const asset_object token = op.token(d);
-      const asset max_supply {token.options.max_supply * std::pow(10, token.precision), token.id};
+      const asset max_supply {token.options.max_supply, token.id};
       const asset to_collect {op.goal_amount_eur, d.get_web_asset_id()};
       const price token_price = to_collect / max_supply;
 
@@ -226,12 +226,12 @@ namespace graphene { namespace chain {
         share_type new_limit = *op.phase_limit;
         asset_object token = project_to_update->token_id(d);
         // If previous limit is not max supply
-        if (project_to_update->phase_limit != token.options.max_supply * pow(10, token.precision) )
+        if (project_to_update->phase_limit != token.options.max_supply )
         {
           // New limit must be larger
           FC_ASSERT(new_limit > project_to_update->phase_limit, "New phase limit must be more then the previous one");
         }
-        FC_ASSERT(new_limit <= token.options.max_supply * pow(10, token.precision), "New limit can not be more then max supply of token");
+        FC_ASSERT(new_limit <= token.options.max_supply, "New limit can not be more then max supply of token");
       }
 
       // Check status
@@ -341,7 +341,7 @@ namespace graphene { namespace chain {
     }
 
     // Assure that all tokens aren't sold
-    FC_ASSERT(project_obj.tokens_sold < token_obj.options.max_supply * pow(10, token_obj.precision), "All tokens for project are sold");
+    FC_ASSERT(project_obj.tokens_sold < token_obj.options.max_supply, "All tokens for project are sold");
     FC_ASSERT(project_obj.tokens_sold < project_obj.phase_limit, "All tokens in this phase are sold");
 
     // Calculate expected amount
@@ -369,9 +369,9 @@ namespace graphene { namespace chain {
 
     bool total_reduced = false;
     // Decrease amount if it passes tokens max supply
-    if (project_obj.tokens_sold + total.amount > token_obj.options.max_supply * pow(10, token_obj.precision))
+    if (project_obj.tokens_sold + total.amount > token_obj.options.max_supply)
     {
-        total.amount = token_obj.options.max_supply * pow(10, token_obj.precision) - project_obj.tokens_sold;
+        total.amount = token_obj.options.max_supply - project_obj.tokens_sold;
         total_reduced = true;
     }
 

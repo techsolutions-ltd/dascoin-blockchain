@@ -1,0 +1,4 @@
+// #BLC-216 Allow spending of the last dascoin
+#ifndef HARDFORK_BLC_216_TIME
+#define HARDFORK_BLC_216_TIME (fc::time_point_sec( 1535760000 ))
+#endif

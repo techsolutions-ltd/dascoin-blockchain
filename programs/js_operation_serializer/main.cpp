@@ -21,6 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+#include <graphene/chain/protocol/chain_parameters.hpp>
 #include <graphene/chain/protocol/protocol.hpp>
 #include <graphene/chain/protocol/fee_schedule.hpp>
 
@@ -396,6 +397,7 @@ int main( int argc, char** argv )
     detail_ns::js_name<operation>::name("operation");
     detail_ns::js_name<operation_result>::name("operation_result");
     detail_ns::js_name<future_extensions>::name("future_extensions");
+    detail_ns::js_name<chain_parameters::chain_parameters_extension>::name("chain_parameters_extension");
     detail_ns::js_name<worker_initializer>::name("worker_initializer");
     detail_ns::js_name<predicate>::name("predicate");
     detail_ns::js_name<vesting_policy_initializer>::name("vesting_policy_initializer");

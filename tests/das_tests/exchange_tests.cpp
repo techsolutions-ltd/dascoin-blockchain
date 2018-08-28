@@ -398,6 +398,52 @@ BOOST_AUTO_TEST_CASE( minimum_balance_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( no_minimum_balance_test )
+{ try {
+    // Do this test in time after HARDFORK_BLC_216_TIME
+    generate_blocks(HARDFORK_BLC_216_TIME);
+
+    ACTOR(alice);
+    ACTOR(bobw);
+    VAULT_ACTOR(bob);
+    CUSTODIAN_ACTOR(charlie);
+
+    tether_accounts(bobw_id, bob_id);
+    issue_webasset("1", alice_id, 100, 0);
+    generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
+    share_type cash, reserved;
+    std::tie(cash, reserved) = get_web_asset_amounts(alice_id);
+
+    adjust_dascoin_reward(500 * DASCOIN_DEFAULT_ASSET_PRECISION);
+    adjust_frequency(200);
+
+    set_expiration( db, trx );
+
+    issue_dascoin(bob_id, 100);
+
+    // Set limit to 100 dascoin
+    db.adjust_balance_limit(bob, get_dascoin_asset_id(), 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+    transfer_dascoin_vault_to_wallet(bob_id, bobw_id, 10 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+    // sell order from cash balance
+    create_sell_order(alice_id, asset{100, get_web_asset_id()}, asset{100, get_dascoin_asset_id()});
+
+    // Should succeed: can sell all DSC
+    create_sell_order(bobw_id, asset{10 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, asset{100, get_web_asset_id()});
+
+    transfer_dascoin_vault_to_wallet(bob_id, bobw_id, 10 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+    // Should succeed: can transfer all DSC to custodian
+    transfer(bobw_id, charlie_id, asset{10 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()});
+
+    transfer_dascoin_vault_to_wallet(bob_id, bobw_id, 10 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+    // Should succeed: can transfer all DSC to vault:
+    transfer_dascoin_wallet_to_vault(bobw_id, bob_id, 10 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

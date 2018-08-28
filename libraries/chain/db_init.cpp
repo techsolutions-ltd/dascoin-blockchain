@@ -559,7 +559,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
 
    const asset_object& dasc_asset = create<asset_object>([&](asset_object& ao){
       ao.symbol = DASCOIN_DASCOIN_SYMBOL;
-      ao.options.max_supply = genesis_state.max_dascoin_supply;
+      ao.options.max_supply = genesis_state.max_dascoin_supply * DASCOIN_DEFAULT_ASSET_PRECISION;
       ao.precision = DASCOIN_DEFAULT_ASSET_PRECISION_DIGITS;
       ao.options.flags = DASCOIN_ASSET_INITIAL_FLAGS;
       ao.options.issuer_permissions = WEB_ASSET_ISSUER_PERMISSION_MASK;
@@ -599,7 +599,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       });
    const asset_object& btc_asset = create<asset_object>( [&]( asset_object& a ) {
       a.symbol = DASCOIN_BITCOIN_SYMBOL;
-      a.options.max_supply = genesis_state.max_bitcoin_supply;
+      a.options.max_supply = genesis_state.max_bitcoin_supply * DASCOIN_BITCOIN_PRECISION;
       a.precision = DASCOIN_BITCOIN_PRECISION_DIGITS;
       a.options.flags = BITCOIN_ASSET_INITIAL_FLAGS; //
       a.options.issuer_permissions = WEB_ASSET_ISSUER_PERMISSION_MASK;  // TODO: set the appropriate issuer permissions.

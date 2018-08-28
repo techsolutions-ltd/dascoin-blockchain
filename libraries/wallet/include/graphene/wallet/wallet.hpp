@@ -1916,49 +1916,6 @@ class wallet_api
       //////////////////////////
 
       /**
-       * Pledge some asset to das33 project
-       * @param account         Account name or id
-       * @param amount          Amount of asset to pledge
-       * @param symbol          Symbol of asset to pledge
-       * @param license         License to transfer asset from (Optional - Not null when pledging cycles, null otherwise)
-       * @param project         Project id
-       * @param broadcast       True to broadcast the transaction on the network.
-       */
-      signed_transaction das33_pledge_asset(const string& account,
-                                            const string& amount,
-                                            const string& symbol,
-                                            optional<license_type_id_type> license,
-                                            das33_project_id_type project,
-                                            bool broadcast = false) const;
-
-      /**
-       * @brief Return a part of the pledges table.
-       *
-       * @param from            id of the pledge
-       * @param limit           the number of entries to return (starting from the most recent) (max 100)
-       * @returns               a list of pledge holder objects.
-       */
-      vector<das33_pledge_holder_object> get_das33_pledges(das33_pledge_holder_id_type from, uint32_t limit) const;
-
-      /**
-       * @brief Return a list of pledges for specified account.
-       *
-       * @param account         name or id of the account
-       * @returns               a list of pledge holder objects.
-       */
-      vector<das33_pledge_holder_object> get_das33_pledges_by_account(const string& account) const;
-
-      /**
-       * @brief Return a list of pledges for specified project.
-       *
-       * @param project         name or id of das33 project
-       * @param from            id of the first pledge
-       * @param limit           the number of entries to return (starting from the most recent) (max 100)
-       * @returns               a list of pledge holder objects.
-       */
-      vector<das33_pledge_holder_object> get_das33_pledges_by_project(const string& project, das33_pledge_holder_id_type from, uint32_t limit) const;
-
-      /**
        * @brief Create new das33 project
        *
        * @param authority       authority that is issuing this operation, must be das33_administrator
@@ -2026,11 +1983,111 @@ class wallet_api
       vector<das33_project_object> get_das33_projects(const string& lower_bound_name, uint32_t limit) const;
 
       /**
+       * Pledge some asset to das33 project
+       * @param account         Account name or id
+       * @param amount          Amount of asset to pledge
+       * @param symbol          Symbol of asset to pledge
+       * @param license         License to transfer asset from (Optional - Not null when pledging cycles, null otherwise)
+       * @param project         Project id
+       * @param broadcast       True to broadcast the transaction on the network.
+       */
+      signed_transaction das33_pledge_asset(const string& account,
+                                            const string& amount,
+                                            const string& symbol,
+                                            optional<license_type_id_type> license,
+                                            das33_project_id_type project,
+                                            bool broadcast = false) const;
+
+      /**
+       * Reject a single pledge
+       * @param authority       authority that is issuing this operation, must be das33_administrator
+       * @param pledge_id       pledge id
+       * @param broadcast       true to broadcast the transaction on the network.
+       */
+      signed_transaction das33_pledge_reject(const string& authority,
+                                             const string& pledge_id,
+                                             bool broadcast = false) const;
+
+      /**
+       * Distribute assets of a single pledge
+       * @param authority        authority that is issuing this operation, must be das33_administrator
+       * @param pledge_id        pledge id
+       * @param to_escrow        ratio of pledged amount to distribute to project owner
+       * @param base_to_pledger  ratio of expected base tokens to distribute to pledger
+       * @param bonus_to_pledger ratio of expected bonus tokens to distribute to pledger
+       * @param broadcast        true to broadcast the transaction on the network.
+       */
+      signed_transaction das33_distribute_pledge(const string& authority,
+                                                 const string& pledge_id,
+                                                 share_type to_escrow,
+                                                 share_type base_to_pledger,
+                                                 share_type bonus_to_pledger,
+                                                 bool broadcast = false) const;
+
+      /**
+       * Reject das33 project
+       * @param authority       authority that is issuing this operation, must be das33_administrator
+       * @param project_id      project id
+       * @param broadcast       true to broadcast the transaction on the network.
+      */
+      signed_transaction das33_project_reject(const string& authority,
+                                              const string& project_id,
+                                              bool broadcast = false) const;
+
+      /**
+       * Distribute assets from a project phase
+       * @param authority        authority that is issuing this operation, must be das33_administrator
+       * @param project_id       project id
+       * @param phase_number     optional project phase number. If not provided, pledges from all phases will be distributed
+       * @param to_escrow        ratio of pledged amount to distribute to project owner
+       * @param base_to_pledger  ratio of expected base tokens to distribute to pledger
+       * @param bonus_to_pledger ratio of expected bonus tokens to distribute to pledger
+       * @param broadcast        true to broadcast the transaction on the network.
+       */
+      signed_transaction das33_distribute_project_pledges(const string& authority,
+                                                          const string& project_id,
+                                                          optional<share_type> phase_number,
+                                                          share_type to_escrow,
+                                                          share_type base_to_pledger,
+                                                          share_type bonus_to_pledger,
+                                                          bool broadcast = false) const;
+      /**
+       * @brief Return a part of the pledges table.
+       *
+       * @param from            id of the pledge
+       * @param limit           the number of entries to return (starting from the most recent) (max 100)
+       * @returns               a list of pledge holder objects.
+       */
+      vector<das33_pledge_holder_object> get_das33_pledges(das33_pledge_holder_id_type from, uint32_t limit) const;
+
+      /**
+       * @brief Return a list of pledges for specified account.
+       *
+       * @param account         name or id of the account
+       * @returns               a list of pledge holder objects.
+       */
+      vector<das33_pledge_holder_object> get_das33_pledges_by_account(const string& account) const;
+
+      /**
+       * @brief Return a list of pledges for specified project.
+       *
+       * @param project         name or id of das33 project
+       * @param from            id of the first pledge
+       * @param limit           the number of entries to return (starting from the most recent) (max 100)
+       * @returns               a list of pledge holder objects.
+       */
+      vector<das33_pledge_holder_object> get_das33_pledges_by_project(const string& project, das33_pledge_holder_id_type from, uint32_t limit) const;
+
+      /**
       * @brief Gets a sum of all pledges made to project
       * @params project id of a project
       * @return vector of assets, each with total sum of that asset pledged
       */
       vector<asset> get_amount_of_assets_pledged_to_project(das33_project_id_type project) const;
+
+      //////////////////////////
+      // GLOBALS:             //
+      //////////////////////////
 
       /**
        * @param authority       This MUST be root authority.
@@ -2370,6 +2427,10 @@ FC_API( graphene::wallet::wallet_api,
         (get_das33_pledges)
         (get_das33_pledges_by_account)
         (get_das33_pledges_by_project)
+        (das33_pledge_reject)
+        (das33_distribute_pledge)
+        (das33_project_reject)
+        (das33_distribute_project_pledges)
         (create_das33_project)
         (update_das33_project)
         (delete_das33_project)

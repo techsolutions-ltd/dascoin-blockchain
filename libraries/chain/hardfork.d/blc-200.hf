@@ -1,0 +1,4 @@
+// #BLC-200 Remove (hard-fork) the key rollback functionality
+#ifndef HARDFORK_BLC_200_TIME
+#define HARDFORK_BLC_200_TIME (fc::time_point_sec( 1535760000 ))
+#endif

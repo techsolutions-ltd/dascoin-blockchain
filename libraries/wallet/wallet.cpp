@@ -3863,6 +3863,44 @@ vector<operation_detail> wallet_api::get_account_history_by_operation(string nam
    return result;
 }
 
+vector<operation_detail> wallet_api::get_account_history_by_operation2(string name, flat_set<uint32_t> operations
+      , string start_str, string end_str, int limit)const
+{
+   optional<operation_history_id_type> start_o = detail::maybe_id<operation_history_id_type>(start_str);
+   optional<operation_history_id_type> end_o = detail::maybe_id<operation_history_id_type>(end_str);
+
+   FC_ASSERT(start_o.valid() && end_o.valid(), "Incorrect format of start or end argument.");
+
+   operation_history_id_type start = *start_o;
+   operation_history_id_type end = *end_o;
+
+   vector<operation_detail> result;
+   auto account_id = get_account(name).get_id();
+
+   while( limit > 0 )
+   {
+      if( result.size() )
+      {
+         start = result.back().op.id;
+         if(start == end)
+            break;
+         start = start + 1;
+      }
+
+      vector<operation_history_object> current = my->_remote_hist->get_account_history_by_operation(account_id, operations, end, std::min(100,limit), start);
+      for( auto& o : current ) {
+         std::stringstream ss;
+         auto memo = o.op.visit(detail::operation_printer(ss, *my, o.result));
+         result.push_back( operation_detail{ memo, ss.str(), o } );
+      }
+      if( current.size() < static_cast<vector<operation_history_object>::size_type>(std::min(100,limit)))
+         break;
+      limit -= current.size();
+   }
+
+   return result;
+}
+
 vector<bucket_object> wallet_api::get_market_history( string symbol1, string symbol2, uint32_t bucket )const
 {
    return my->_remote_hist->get_market_history( get_asset_id(symbol1), get_asset_id(symbol2), bucket, fc::time_point_sec(), fc::time_point::now() );

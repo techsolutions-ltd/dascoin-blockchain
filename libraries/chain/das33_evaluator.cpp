@@ -105,6 +105,7 @@ namespace graphene { namespace chain {
       FC_ASSERT(op.token != d.get_core_asset().id
              && op.token != d.get_web_asset_id()
              && op.token != d.get_dascoin_asset_id()
+             && op.token != d.get_btc_asset_id()
              && op.token != d.get_cycle_asset_id(), "Can not create project with system assets");
 
       // Check that token is not used by another project

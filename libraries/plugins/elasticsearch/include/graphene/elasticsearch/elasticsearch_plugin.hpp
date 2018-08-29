@@ -23,6 +23,7 @@
  */
 #pragma once
 
+#include <fc/variant_object.hpp>
 #include <graphene/app/plugin.hpp>
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/operation_history_object.hpp>
@@ -127,7 +128,7 @@ struct operation_history_struct {
    int op_in_trx;
    std::string operation_result;
    int virtual_op;
-   std::string op;
+   variant op;
 };
 
 struct block_struct {
@@ -172,6 +173,37 @@ struct bulk_struct {
    int operation_id_num;
    block_struct block_data;
    optional<visitor_struct> additional_data;
+};
+
+struct adaptor_struct {
+   variant adapt(const variant_object& op)
+   {
+       fc::mutable_variant_object o(op);
+       for (auto i = o.begin(); i != o.end(); ++i)
+       {
+           auto& element = (*i).value();
+           if (element.is_object())
+               element = adapt(element.get_object());
+           else if (element.is_array())
+               adapt(element.get_array());
+       }
+       variant v;
+       fc::to_variant(o, v, FC_PACK_MAX_DEPTH);
+       return v;
+   }
+
+   void adapt(fc::variants& v)
+   {
+       for (auto& array_element : v)
+       {
+           if (array_element.is_object())
+               array_element = adapt(array_element.get_object());
+           else if (array_element.is_array())
+               adapt(array_element.get_array());
+           else
+               array_element = array_element.as_string();
+       }
+   }
 };
 
 } } //graphene::elasticsearch

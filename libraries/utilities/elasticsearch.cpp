@@ -27,6 +27,7 @@
 #include <boost/algorithm/string.hpp>
 #include <fc/log/logger.hpp>
 #include <fc/io/json.hpp>
+#include <fstream>
 
 size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
 {
@@ -64,6 +65,10 @@ const std::string simpleQuery(ES& es)
 bool SendBulk(ES& es)
 {
    std::string bulking = joinBulkLines(es.bulk_lines);
+   std::ofstream outfile;
+
+   outfile.open("bulk.txt", std::ios_base::out);
+   outfile << bulking << "\n";
 
    graphene::utilities::CurlRequest curl_request;
    curl_request.handler = es.curl;

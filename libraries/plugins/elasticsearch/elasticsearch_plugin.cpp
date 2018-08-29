@@ -209,7 +209,13 @@ void elasticsearch_plugin_impl::doOperationHistory(const optional <operation_his
    os.op_in_trx = oho->op_in_trx;
    os.operation_result = fc::json::to_string(oho->result);
    os.virtual_op = oho->virtual_op;
-   os.op = fc::json::to_string(oho->op);
+   oho->op.visit( fc::from_static_variant(os.op, FC_PACK_MAX_DEPTH) );
+   if (os.op.is_object())
+   {
+      adaptor_struct adaptor;
+      os.op = adaptor.adapt(os.op.get_object());
+   }
+//   os.op = fc::json::to_string(oho->op);
 }
 
 void elasticsearch_plugin_impl::doBlock(const optional <operation_history_object>& oho, const signed_block& b)

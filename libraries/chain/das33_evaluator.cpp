@@ -726,7 +726,7 @@ namespace graphene { namespace chain {
            "Project already accepted, can't be rejected!");
 
     return {};
-7
+
   } FC_CAPTURE_AND_RETHROW((op)) }
 
   void_result das33_pledge_reject_evaluator::do_apply(const das33_pledge_reject_operation& op)

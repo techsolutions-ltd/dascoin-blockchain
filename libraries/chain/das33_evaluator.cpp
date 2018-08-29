@@ -366,7 +366,7 @@ namespace graphene { namespace chain {
 
     // Assure that pledge amount is below maximum for current user
     auto previous_pledges = users_total_pledges_in_round(op.account_id, op.project_id, project_obj.phase_number, d);
-    FC_ASSERT( previous_pledges + base.amount <= project_obj.max_pledge,
+    FC_ASSERT( previous_pledges + total.amount <= project_obj.max_pledge,
               "Can not buy more then ${max} tokens per phase and you already pledged for ${previous} in this phase.",
               ("max", project_obj.max_pledge)
               ("previous", previous_pledges));

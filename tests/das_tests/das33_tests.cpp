@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE( das33_pledge_dasc_test_min_max )
         project_create.discounts       = {{get_dascoin_asset_id(), 50}};
         project_create.goal_amount_eur = 10000000;
         project_create.min_pledge      = 5000;
-        project_create.max_pledge      = 21000;
+        project_create.max_pledge      = 20000;
     do_op(project_create);
 
     das33_project_object project = get_das33_projects()[0];
@@ -274,15 +274,15 @@ BOOST_AUTO_TEST_CASE( das33_pledge_dasc_test_min_max )
     set_last_dascoin_price(asset(1 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()) / asset(1 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()));
 
     // Should Fail: amount less than min_pledge
-    GRAPHENE_REQUIRE_THROW( do_op_no_balance_check(das33_pledge_asset_operation(user_id, asset{40 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project.id));, fc::exception );
+    GRAPHENE_REQUIRE_THROW( do_op_no_balance_check(das33_pledge_asset_operation(user_id, asset{49.99999 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project.id));, fc::exception );
 
     // Pledge DASC
-    do_op_no_balance_check(das33_pledge_asset_operation(user_id, asset{50 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project.id));
-    do_op_no_balance_check(das33_pledge_asset_operation(user_id, asset{50 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project.id));
+    do_op_no_balance_check(das33_pledge_asset_operation(user_id, asset{100 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project.id));
+    do_op_no_balance_check(das33_pledge_asset_operation(user_id, asset{100 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project.id));
     BOOST_CHECK_EQUAL(get_das33_pledges().size(), 2);
 
-    // Should Fail: more than max_pledge
-    GRAPHENE_REQUIRE_THROW( do_op_no_balance_check(das33_pledge_asset_operation(user_id, asset{11 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project.id));, fc::exception );
+    // Should Fail: more than max_pledge in current round
+    GRAPHENE_REQUIRE_THROW( do_op_no_balance_check(das33_pledge_asset_operation(user_id, asset{0.00001 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, optional<license_type_id_type>{}, project.id));, fc::exception );
 
     // Complete project
     do_op_no_balance_check(das33_distribute_project_pledges_operation(get_das33_administrator_id(), project.id, 0, 10000, 10000, 10000));

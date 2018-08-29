@@ -36,7 +36,7 @@ namespace graphene { namespace chain {
     for( auto it = idx.first; it != idx.second; ++it )
     {
       if (it->project_id == project_id && it->phase_number == round)
-        sum += (it->base_expected.amount + it->bonus_expected.amount);
+        sum += (it->base_expected.amount);
     }
     return sum;
   }
@@ -355,6 +355,13 @@ namespace graphene { namespace chain {
     // Assure that pledge amount is above minimum
     FC_ASSERT(base.amount >= project_obj.min_pledge, "Can not pledge: must buy at least ${min} tokens", ("min", project_obj.min_pledge));
 
+    // Assure that pledge amount is below maximum for current user
+    auto previous_pledges = users_total_pledges_in_round(op.account_id, op.project_id, project_obj.phase_number, d);
+    FC_ASSERT( previous_pledges + total.amount <= project_obj.max_pledge,
+              "Can not buy more then ${max} tokens per phase and you already pledged for ${previous} in this phase.",
+              ("max", project_obj.max_pledge)
+              ("previous", previous_pledges));
+
     // Calculate expected amount with discounts
     auto discount_iterator = project_obj.discounts.find(op.pledged.asset_id);
     FC_ASSERT( discount_iterator != project_obj.discounts.end(), "This asset can not be used in this project phase" );
@@ -382,14 +389,6 @@ namespace graphene { namespace chain {
         total.amount = project_obj.phase_limit - project_obj.tokens_sold;
         total_reduced = true;
     }
-
-    // Assure that pledge amount is below maximum for current user
-    auto previous_pledges = users_total_pledges_in_round(op.account_id, op.project_id, project_obj.phase_number, d);
-    FC_ASSERT( previous_pledges + total.amount <= project_obj.max_pledge,
-              "Can not buy more then ${max} tokens per round but amount to receive with bonus is ${this} and you already pledged for ${previous}.",
-              ("max", project_obj.max_pledge)
-              ("this", total.amount)
-              ("previous", previous_pledges));
 
     if (total_reduced)
     {

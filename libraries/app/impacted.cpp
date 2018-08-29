@@ -540,6 +540,11 @@ struct get_impacted_account_visitor
       _impacted.insert(op.authority);
    }
 
+   void operator() ( const das33_set_use_external_btc_price_operation& op)
+   {
+     _impacted.insert(op.authority);
+   }
+
    void operator() ( const das33_pledge_result_operation& op )
    {
       _impacted.insert(op.funders_account);

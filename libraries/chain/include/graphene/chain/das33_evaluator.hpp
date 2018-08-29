@@ -128,5 +128,14 @@ namespace graphene { namespace chain {
     account_id_type _pro_owner;
   };
 
+  class das33_set_use_external_btc_price_evaluator : public evaluator<das33_set_use_external_btc_price_evaluator>
+  {
+  public:
+    typedef das33_set_use_external_btc_price_operation operation_type;
+
+    void_result do_evaluate( const operation_type& op );
+    void_result do_apply( const operation_type& op );
+  };
+
 
 } }  // namespace graphene::chain

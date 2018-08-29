@@ -277,6 +277,26 @@ namespace graphene { namespace chain {
     void validate() const;
   };
 
+  struct das33_set_use_external_btc_price_operation : public base_operation
+  {
+    struct fee_parameters_type { uint64_t fee = 0; };
+    asset fee;
+
+    account_id_type              authority;
+    bool                         use_external_btc_price;
+    extensions_type              extensions;
+
+    das33_set_use_external_btc_price_operation() = default;
+
+    explicit das33_set_use_external_btc_price_operation(const account_id_type& authority,
+                                              bool  use_external_btc_price)
+                : authority(authority)
+                , use_external_btc_price(use_external_btc_price) {}
+
+    account_id_type fee_payer() const { return authority; }
+    void validate() const;
+  };
+
 } }  // namespace graphene::chain
 
 ////////////////////////////////
@@ -370,6 +390,14 @@ FC_REFLECT( graphene::chain::das33_pledge_reject_operation,
             (fee)
             (authority)
             (pledge)
+            (extensions)
+          )
+
+FC_REFLECT( graphene::chain::das33_set_use_external_btc_price_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::das33_set_use_external_btc_price_operation,
+            (fee)
+            (authority)
+            (use_external_btc_price)
             (extensions)
           )
 

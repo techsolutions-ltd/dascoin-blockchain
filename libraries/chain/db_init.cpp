@@ -297,6 +297,7 @@ void database::initialize_evaluators()
    register_evaluator<update_delayed_operations_resolver_parameters_evaluator>();
    register_evaluator<update_global_parameters_evaluator>();
    register_evaluator<update_external_btc_price_evaluator>();
+   register_evaluator<das33_set_use_external_btc_price_evaluator>();
 }
 
 void database::initialize_indexes()
@@ -382,7 +383,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       asset{genesis_state.initial_dascoin_price.base_amount, get_dascoin_asset_id()}
       / asset {genesis_state.initial_dascoin_price.quote_amount, get_web_asset_id()};
 
-   const auto BTC_DEFAULT_START_PRICE = asset{0, get_btc_asset_id()};
+   const auto BTC_DEFAULT_START_PRICE = price();
 
    FC_ASSERT( genesis_state.initial_timestamp != time_point_sec(), "Must initialize genesis timestamp." );
    FC_ASSERT( genesis_state.initial_timestamp.sec_since_epoch() % GRAPHENE_DEFAULT_BLOCK_INTERVAL == 0,
@@ -670,6 +671,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       p.recent_slots_filled = fc::uint128::max_value();
       p.frequency = genesis_state.initial_frequency;
       p.last_dascoin_price = DASCOIN_DEFAULT_START_PRICE;
+      p.last_btc_price = BTC_DEFAULT_START_PRICE;
       p.external_btc_price = BTC_DEFAULT_START_PRICE;
       p.last_daily_dascoin_price = DASCOIN_DEFAULT_START_PRICE;
    });

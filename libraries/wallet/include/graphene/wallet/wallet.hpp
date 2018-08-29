@@ -2058,6 +2058,17 @@ class wallet_api
                                                           share_type base_to_pledger,
                                                           share_type bonus_to_pledger,
                                                           bool broadcast = false) const;
+
+      /**
+       * Sets value of use_external_btc_price flag
+       * @param authority               authority that is issuing this operation, must be das33_administrator
+       * @param use_exteranl_btc_price  new value for flag
+       * @param broadcast               true to broadcast the transaction on the network.
+       */
+      signed_transaction das33_set_use_external_btc_price (const string& authority,
+                                                           bool use_exteranl_btc_price,
+                                                           bool broadcast = false) const;
+
       /**
        * @brief Return a part of the pledges table.
        *
@@ -2443,6 +2454,7 @@ FC_API( graphene::wallet::wallet_api,
         (delete_das33_project)
         (get_das33_projects)
         (get_amount_of_assets_pledged_to_project)
+        (das33_set_use_external_btc_price)
 
         // Delayed operations resolver:
         (update_delayed_operations_resolver_parameters)

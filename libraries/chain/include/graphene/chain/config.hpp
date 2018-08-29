@@ -328,3 +328,10 @@
 
 #define ORDER_BOOK_QUERY_PRECISION (static_cast<uint64_t>(1000000))
 #define ORDER_BOOK_GROUP_QUERY_PRECISION_DIFF (static_cast<uint64_t>(10000))
+
+/**
+ * Das33 parameters:
+ */
+///@{
+#define DAS33_DEFAULT_USE_EXTERNAL_BTC_PRICE  (true)
+///@}

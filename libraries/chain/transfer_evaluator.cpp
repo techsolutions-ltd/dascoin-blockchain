@@ -26,7 +26,6 @@
 #include <graphene/chain/exceptions.hpp>
 #include <graphene/chain/hardfork.hpp>
 #include <graphene/chain/is_authorized_asset.hpp>
-#include <graphene/chain/balance_checker.hpp>
 
 namespace graphene { namespace chain {
 void_result transfer_evaluator::do_evaluate( const transfer_operation& op )
@@ -81,8 +80,6 @@ void_result transfer_evaluator::do_evaluate( const transfer_operation& op )
       FC_ASSERT( insufficient_balance,
                  "Insufficient Balance: ${balance}, unable to transfer '${total_transfer}' from account '${a}' to '${t}'",
                  ("a",from_account.name)("t",to_account.name)("total_transfer",d.to_pretty_string(op.amount))("balance",d.to_pretty_string(d.get_balance(from_account, asset_type))) );
-
-      balance_checker::check_remaining_balance(d, from_account, asset_type, op.amount);
 
       return void_result();
 
@@ -267,8 +264,6 @@ void_result transfer_wallet_to_vault_evaluator::do_evaluate(const transfer_walle
               ("total_transfer",d.to_pretty_string(asset(op.reserved_to_transfer, d.get_web_asset_id())))
               ("balance",d.to_pretty_string(from_balance_obj.get_reserved_balance()))
             );
-
-   balance_checker::check_remaining_balance(d, op.from_wallet(d), op.asset_to_transfer.asset_id(d), op.asset_to_transfer);
 
    from_balance_obj_ = &from_balance_obj;
    to_balance_obj_ = &to_balance_obj;

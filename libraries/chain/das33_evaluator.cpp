@@ -24,7 +24,6 @@
 
 #include <graphene/chain/das33_evaluator.hpp>
 #include <graphene/chain/database.hpp>
-#include <graphene/chain/balance_checker.hpp>
 
 namespace graphene { namespace chain {
 
@@ -330,10 +329,6 @@ namespace graphene { namespace chain {
                ("l", d.to_pretty_string(balance_obj.get_balance()))
                ("n", d.to_pretty_string(op.pledged))
     );
-
-    // Assure we dont spend last DASC:
-    const auto& asset_obj = op.pledged.asset_id(d);
-    balance_checker::check_remaining_balance(d, account_obj, asset_obj, op.pledged.amount);
 
     // Assure current phase hasn't ended
     if (project_obj.phase_end != time_point_sec::min())

@@ -111,7 +111,6 @@ add_library( graphene_chain
              wire_out_with_fee_evaluator.cpp
              cycle_evaluator.cpp
              change_fee_evaluator.cpp
-             balance_checker.cpp
 
              access_layer.cpp
 

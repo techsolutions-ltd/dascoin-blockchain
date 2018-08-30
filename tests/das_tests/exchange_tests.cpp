@@ -372,17 +372,8 @@ BOOST_AUTO_TEST_CASE( minimum_balance_test )
     // sell order from cash balance
     create_sell_order(alice_id, asset{100, get_web_asset_id()}, asset{100, get_dascoin_asset_id()});
 
-    // Expect fail: can not sell all DSC
-    GRAPHENE_REQUIRE_THROW(create_sell_order(bobw_id, asset{100 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, asset{100, get_web_asset_id()}), fc::exception);
-
     // Expect success: sell smaller amount of DSC:
     create_sell_order(bobw_id, asset{50 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, asset{50, get_web_asset_id()});
-
-    // Expect fail: can not transfer all DSC to custodian
-    GRAPHENE_REQUIRE_THROW(transfer(bobw_id, charlie_id, asset{50 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}), fc::exception);
-
-    // Expect fail: can not transfer all DSC to vault:
-    GRAPHENE_REQUIRE_THROW(transfer_dascoin_wallet_to_vault(bobw_id, bob_id, 50 * DASCOIN_DEFAULT_ASSET_PRECISION), fc::exception);
 
     // Expect success: transfer some DSC to custodian
     transfer(bobw_id, charlie_id, asset{20 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()});

@@ -621,6 +621,10 @@ asset database::calculate_market_fee( const asset_object& trade_asset, const ass
    fc::uint128 a(trade_amount.amount.value);
    a *= trade_asset.options.market_fee_percent;
    a /= GRAPHENE_100_PERCENT;
+
+   if (a == 0) // if market fee is zero, set it to the smallest asset's value
+       a = 1;
+
    asset percent_fee = trade_asset.amount(a.to_uint64());
 
    if( percent_fee.amount > trade_asset.options.max_market_fee )

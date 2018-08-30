@@ -336,6 +336,65 @@ BOOST_AUTO_TEST_CASE( account_to_credit_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( market_fee_test )
+{ try {
+    ACTOR(alice);
+    ACTOR(bob);
+    VAULT_ACTOR(bobv);
+    VAULT_ACTOR(alicev);
+
+    tether_accounts(alice_id, alicev_id);
+    tether_accounts(bob_id, bobv_id);
+
+    issue_dascoin(bobv_id, 100);
+
+    db.adjust_balance_limit(bobv, get_dascoin_asset_id(), 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+
+    transfer_dascoin_vault_to_wallet(bobv_id, bob_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+    issue_webasset("1", alice_id, 2 * DASCOIN_FIAT_ASSET_PRECISION, 0);
+
+    // Set market fee of 1 percent on web euro asset:
+    const auto& web_asset = db.get_web_asset();
+    asset_options opts = web_asset.options;
+    opts.market_fee_percent = 100;
+    opts.core_exchange_rate.quote.amount = 1;
+    opts.core_exchange_rate.quote.asset_id = db.get_web_asset_id();
+    asset_update_operation auo;
+    auo.issuer = web_asset.issuer;
+    auo.asset_to_update = db.get_web_asset_id();
+    auo.new_options = opts;
+    do_op(auo);
+
+    const auto& wa = db.get_web_asset();
+    BOOST_CHECK_EQUAL( wa.options.market_fee_percent, 100);
+
+    // place two orders which will produce a match
+    create_sell_order(alice_id, asset{1 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()},
+                      asset{1 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()});
+    create_sell_order(bob_id, asset{1 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()},
+                      asset{1 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()});
+
+    // Since we have a 1% market fee on web euro, we'll get 99 cents:
+    BOOST_CHECK_EQUAL( get_balance(bob_id, get_web_asset_id()), 99 );
+
+    // Now set market fee to 0.2%:
+    auo.new_options.market_fee_percent = 20;
+    do_op(auo);
+
+    const auto& wa2 = db.get_web_asset();
+    BOOST_CHECK_EQUAL( wa2.options.market_fee_percent, 20);
+
+    // place two orders which will produce a match
+    create_sell_order(alice_id, asset{1 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()},
+                      asset{1 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()});
+    create_sell_order(bob_id, asset{1 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()},
+                      asset{1 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()});
+
+    // Market fee is now 0.2%, but that is less than 1 euro cent, so market fee is set to 1 cent:
+    BOOST_CHECK_EQUAL( get_balance(bob_id, get_web_asset_id()), 198 );
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

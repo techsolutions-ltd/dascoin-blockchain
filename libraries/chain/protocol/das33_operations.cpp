@@ -111,4 +111,7 @@ namespace graphene { namespace chain {
   void das33_pledge_result_operation::validate() const
   {  }
 
+  void das33_set_use_external_btc_price_operation::validate() const
+  {  }
+
 } } // namespace graphene::chain

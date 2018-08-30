@@ -204,6 +204,7 @@ namespace graphene { namespace chain {
             das33_project_reject_operation,
             das33_distribute_pledge_operation,
             das33_pledge_reject_operation,
+            das33_set_use_external_btc_price_operation,
 
             // Virtual operations below this point:
 

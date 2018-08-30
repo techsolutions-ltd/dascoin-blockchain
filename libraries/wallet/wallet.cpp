@@ -1499,6 +1499,24 @@ public:
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (authority)(project_id)(phase_number)(to_escrow)(base_to_pledger)(bonus_to_pledger)(broadcast) ) }
 
+   signed_transaction das33_set_use_external_btc_price (const string& authority,
+                                                        bool use_exteranl_btc_price,
+                                                        bool broadcast = false)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      das33_set_use_external_btc_price_operation op;
+
+      op.authority = get_account(authority).id;
+      op.use_external_btc_price = use_exteranl_btc_price;
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (authority)(use_exteranl_btc_price)(broadcast) ) }
 
    signed_transaction update_delayed_operations_resolver_parameters(const string& authority, optional<bool> delayed_operations_resolver_enabled,
                                                         optional<uint32_t> delayed_operations_resolver_interval_time_seconds,
@@ -5773,6 +5791,13 @@ signed_transaction wallet_api::das33_distribute_project_pledges(const string& au
                                                                 bool broadcast) const
 {
    return my->das33_distribute_project_pledges(authority, project_id, phase_number, to_escrow, base_to_pledger, bonus_to_pledger, broadcast);
+}
+
+signed_transaction wallet_api::das33_set_use_external_btc_price (const string& authority,
+                                                                 bool use_exteranl_btc_price,
+                                                                 bool broadcast) const
+{
+  return my->das33_set_use_external_btc_price(authority, use_exteranl_btc_price, broadcast);
 }
 
 vector<das33_pledge_holder_object> wallet_api::get_das33_pledges(das33_pledge_holder_id_type from, uint32_t limit) const

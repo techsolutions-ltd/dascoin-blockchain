@@ -64,9 +64,6 @@ void_result transfer_evaluator::do_evaluate( const transfer_operation& op )
          );
       }
 
-      // Check if we are transferring dascoin
-      FC_ASSERT( op.amount.asset_id == d.get_dascoin_asset_id(), "Can only transfer dascoins" );
-
       // Check if account types are valid
       FC_ASSERT( from_account.is_wallet() || from_account.is_custodian(),
                  "Source '${f}' must be a wallet or custodian account",

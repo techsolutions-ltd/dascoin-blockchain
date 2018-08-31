@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.4.4] - 2018-08-31
+### Added
+ - Hardfork: key rollback removed
+ - BTC asset created
+ - New operation: update external BTC price
+ - New operation: use external BTC price or price from internal exchange
+ - New operation: distribute das33 project pledges
+ - New operation: reject das33 project
+ - New operation: distribute single das33 pledge
+ - New operation: reject single das33 pledge
+ - New query: get tethered accounts balances
+ - New query: get amount of assets pledged to a project
+ - Support for fees in other assets
+ - Cli Wallet: new method get account history by operation
+ - Cli Wallet: new method update external btc price
+
+### Updated
+ - Flags of DAS and WEBEUR assets are fixed
+ - Issuer of DAS asset is now webasset-issuer
+ - Transfer operation now obeys asset restrictions
+ - Restriction that last DAS cannot be spent is removed
+ - Changed internal das33 mechanics
+
 ## [0.4.3] - 2018-08-03
 ### Added
  - New query: get limit orders collection grouped by price

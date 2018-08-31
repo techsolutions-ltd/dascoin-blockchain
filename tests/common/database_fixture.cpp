@@ -416,6 +416,18 @@ void database_fixture::push_op(const operation& op, bool gen_block)
         generate_block();
 }
 
+void database_fixture::push_op_no_balance_check(const operation& op, bool gen_block)
+{
+  trx.operations.clear();
+  set_expiration(db, trx);
+  trx.operations.push_back(op);
+  trx.validate();
+  db.push_transaction(trx, ~0);
+  trx.operations.clear();
+  if ( gen_block )
+        generate_block();
+}
+
 account_create_operation database_fixture::make_account(
    const account_kind kind,
    const account_id_type registrar,

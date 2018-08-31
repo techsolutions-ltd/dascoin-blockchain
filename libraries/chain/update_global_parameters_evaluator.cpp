@@ -22,6 +22,7 @@
  * SOFTWARE.
  */
 
+#include <fc/smart_ref_impl.hpp>
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/update_global_parameters_evaluator.hpp>
 
@@ -49,6 +50,7 @@ namespace graphene { namespace chain {
 
     d.modify(d.get_global_properties(), [&op](global_property_object& gpo) {
       gpo.parameters = op.new_parameters;
+      gpo.parameters.apply_fee_asset_id();
     });
 
     return {};

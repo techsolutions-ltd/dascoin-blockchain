@@ -170,7 +170,7 @@ namespace graphene { namespace chain {
 
          /**
           * How deep in the hierarchy is this account? For now the depth is:
-          * 0 - wallet or vault without thethering
+          * 0 - wallet or vault without tethering
           * 1 - vault tethered to a wallet
           * Greater values should not be allowed.
           */
@@ -184,7 +184,7 @@ namespace graphene { namespace chain {
 
          /**
           * This set contains all wallet parents for a certain vault account. For all other account kinds it must be
-          * enory.
+          * empty.
           */
          flat_set<account_id_type> parents;
 

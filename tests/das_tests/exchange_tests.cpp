@@ -336,65 +336,62 @@ BOOST_AUTO_TEST_CASE( account_to_credit_test )
 
 } FC_LOG_AND_RETHROW() }
 
-BOOST_AUTO_TEST_CASE( minimum_balance_test )
+BOOST_AUTO_TEST_CASE( market_fee_test )
 { try {
-    // Do this test in time after HARDFORK-EXEX-127-TIME
-    generate_blocks(HARDFORK_EXEX_127_TIME);
-
     ACTOR(alice);
-    ACTOR(bobw);
-    VAULT_ACTOR(bob);
-    CUSTODIAN_ACTOR(charlie);
+    ACTOR(bob);
+    VAULT_ACTOR(bobv);
+    VAULT_ACTOR(alicev);
 
-    tether_accounts(bobw_id, bob_id);
-    issue_webasset("1", alice_id, 100, 0);
-    generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
-    share_type cash, reserved;
-    std::tie(cash, reserved) = get_web_asset_amounts(alice_id);
+    tether_accounts(alice_id, alicev_id);
+    tether_accounts(bob_id, bobv_id);
 
-    BOOST_CHECK_EQUAL( cash.value, 100 );
-    BOOST_CHECK_EQUAL( reserved.value, 0 );
+    issue_dascoin(bobv_id, 100);
 
-    adjust_dascoin_reward(500 * DASCOIN_DEFAULT_ASSET_PRECISION);
-    adjust_frequency(200);
+    db.adjust_balance_limit(bobv, get_dascoin_asset_id(), 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
 
-    set_expiration( db, trx );
+    transfer_dascoin_vault_to_wallet(bobv_id, bob_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+    issue_webasset("1", alice_id, 2 * DASCOIN_FIAT_ASSET_PRECISION, 0);
 
-    issue_dascoin(bob_id, 100);
+    // Set market fee of 1 percent on web euro asset:
+    const auto& web_asset = db.get_web_asset();
+    asset_options opts = web_asset.options;
+    opts.market_fee_percent = 100;
+    opts.core_exchange_rate.quote.amount = 1;
+    opts.core_exchange_rate.quote.asset_id = db.get_web_asset_id();
+    asset_update_operation auo;
+    auo.issuer = web_asset.issuer;
+    auo.asset_to_update = db.get_web_asset_id();
+    auo.new_options = opts;
+    do_op(auo);
 
-    BOOST_CHECK_EQUAL( get_balance(bob_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
+    const auto& wa = db.get_web_asset();
+    BOOST_CHECK_EQUAL( wa.options.market_fee_percent, 100);
 
-    // Set limit to 100 dascoin
-    db.adjust_balance_limit(bob, get_dascoin_asset_id(), 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+    // place two orders which will produce a match
+    create_sell_order(alice_id, asset{1 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()},
+                      asset{1 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()});
+    create_sell_order(bob_id, asset{1 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()},
+                      asset{1 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()});
 
-    transfer_dascoin_vault_to_wallet(bob_id, bobw_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
+    // Since we have a 1% market fee on web euro, we'll get 99 cents:
+    BOOST_CHECK_EQUAL( get_balance(bob_id, get_web_asset_id()), 99 );
 
-    // sell order from cash balance
-    create_sell_order(alice_id, asset{100, get_web_asset_id()}, asset{100, get_dascoin_asset_id()});
+    // Now set market fee to 0.2%:
+    auo.new_options.market_fee_percent = 20;
+    do_op(auo);
 
-    // Expect fail: can not sell all DSC
-    GRAPHENE_REQUIRE_THROW(create_sell_order(bobw_id, asset{100 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, asset{100, get_web_asset_id()}), fc::exception);
+    const auto& wa2 = db.get_web_asset();
+    BOOST_CHECK_EQUAL( wa2.options.market_fee_percent, 20);
 
-    // Expect success: sell smaller amount of DSC:
-    create_sell_order(bobw_id, asset{50 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, asset{50, get_web_asset_id()});
+    // place two orders which will produce a match
+    create_sell_order(alice_id, asset{1 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()},
+                      asset{1 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()});
+    create_sell_order(bob_id, asset{1 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()},
+                      asset{1 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()});
 
-    // Expect fail: can not transfer all DSC to custodian
-    GRAPHENE_REQUIRE_THROW(transfer(bobw_id, charlie_id, asset{50 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}), fc::exception);
-
-    // Expect fail: can not transfer all DSC to vault:
-    GRAPHENE_REQUIRE_THROW(transfer_dascoin_wallet_to_vault(bobw_id, bob_id, 50 * DASCOIN_DEFAULT_ASSET_PRECISION), fc::exception);
-
-    // Expect success: transfer some DSC to custodian
-    transfer(bobw_id, charlie_id, asset{20 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()});
-
-    // Expect success: sell remaining allowed amount of DSC:
-    create_sell_order(bobw_id, asset{29 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, asset{49, get_web_asset_id()});
-
-    // Expect success: can use last DSC to buy cycle asset
-    do_op(purchase_cycle_asset_operation(bobw_id, asset{1 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()}, 200, 2));
-
-    // Expect success: custodian can transfer all of its DSC
-    transfer(charlie_id, bobw_id, asset{20 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()});
+    // Market fee is now 0.2%, but that is less than 1 euro cent, so market fee is set to 1 cent:
+    BOOST_CHECK_EQUAL( get_balance(bob_id, get_web_asset_id()), 198 );
 
 } FC_LOG_AND_RETHROW() }
 

@@ -126,6 +126,27 @@ public:
    std::string operator()(const asset_create_operation& op)const;
 };
 
+struct fee_asset_id_visitor
+{
+   typedef void result_type;
+
+   fee_schedule& schedule;
+
+   fee_asset_id_visitor(fee_schedule& schedule)
+   : schedule(schedule)
+   {}
+
+   result_type operator()( const asset_id_type& asset_id ) const
+   {
+      schedule.fee_asset_id = asset_id;
+   }
+
+   template<typename VariantMember>
+   result_type operator()( const VariantMember& op ) const
+   {
+   }
+};
+
 template<class T>
 optional<T> maybe_id( const string& name_or_id )
 {
@@ -503,6 +524,14 @@ public:
 
    void set_operation_fees( signed_transaction& tx, const fee_schedule& s  )
    {
+      const auto& params = _remote_db->get_global_properties().parameters;
+      fee_schedule& tmp_fee_schedule = const_cast<fee_schedule&>(s);
+
+      for (const auto& ext : params.extensions)
+      {
+         ext.visit(fee_asset_id_visitor{tmp_fee_schedule});
+      }
+
       for( auto& op : tx.operations )
          s.set_fee(op);
    }
@@ -1248,8 +1277,10 @@ public:
                                            const string& name,
                                            const string& owner,
                                            const string& token,
-                                           const vector<pair<string, string>>& ratios,
-                                           share_type min_to_collect,
+                                           const vector<pair<string, share_type>>& discounts,
+                                           share_type goal_amount,
+                                           share_type min_pledge,
+                                           share_type max_pledge,
                                            bool broadcast)
    { try {
          FC_ASSERT( !self.is_locked() );
@@ -1260,15 +1291,18 @@ public:
          op.name = name;
          op.owner = get_account(owner).id;
          op.token = get_asset_id(token);
-         op.min_to_collect = min_to_collect;
+         op.goal_amount_eur = goal_amount;
+         op.min_pledge = min_pledge;
+         op.max_pledge = max_pledge;
 
-         FC_ASSERT(ratios.size() % 2 == 0, "Must have even number of assets in ratios");
-         vector<price> prices;
-         for(uint32_t i=0; i<ratios.size(); i+=2)
+         //FC_ASSERT(ratios.size() % 2 == 0, "Must have even number of items in bonuses");
+         map<asset_id_type, share_type> discount_map;
+         for(uint32_t i=0; i<discounts.size(); i++)
          {
-             prices.emplace_back(get_asset(ratios[i].second).amount_from_string(ratios[i].first), get_asset(ratios[i+1].second).amount_from_string(ratios[i+1].first));
+             //bonus_map.emplace_back(get_asset(ratios[i].second).amount_from_string(ratios[i].first), get_asset(ratios[i+1].second).amount_from_string(ratios[i+1].first));
+             discount_map[get_asset_id(discounts[i].first)] = discounts[i].second;
          }
-         op.ratios = prices;
+         op.discounts = discount_map;
 
          signed_transaction tx;
          tx.operations.push_back(op);
@@ -1276,14 +1310,19 @@ public:
          tx.validate();
 
          return sign_transaction(tx, broadcast);
-      } FC_CAPTURE_AND_RETHROW( (authority)(name)(owner)(token)(ratios)(min_to_collect)(broadcast) ) }
+      } FC_CAPTURE_AND_RETHROW( (authority)(name)(owner)(token)(discounts)(goal_amount)(broadcast) ) }
 
    signed_transaction update_das33_project(const string& authority,
                                            const string& project_id,
                                            optional<string> name,
                                            optional<string> owner,
-                                           const vector<pair<string, string>>& ratios,
-                                           optional<share_type> min_to_collect,
+                                           optional<share_type> goal_amount,
+                                           optional<price> token_price,
+                                           optional<vector<pair<string, share_type>>> discounts,
+                                           optional<share_type> min_pledge,
+                                           optional<share_type> max_pledge,
+                                           optional<share_type> phase_limit,
+                                           optional<time_point_sec> phase_end,
                                            optional<uint8_t> status,
                                            bool broadcast)
    { try {
@@ -1296,18 +1335,22 @@ public:
          op.project_id = *id;
          if (name) op.name = name;
          if (owner) op.owner = get_account(*owner).id;
-         if (min_to_collect) op.min_to_collect = *min_to_collect;
+         if (goal_amount) op.goal_amount = *goal_amount;
+         if (token_price) op.token_price = *token_price;
+         if (min_pledge) op.min_pledge = *min_pledge;
+         if (max_pledge) op.max_pledge = *max_pledge;
+         if (phase_limit) op.phase_limit = *phase_limit;
+         if (phase_end) op.phase_end = *phase_end;
          if (status) op.status = *status;
 
-         if (ratios.size() > 0)
+         if (discounts)
          {
-	   FC_ASSERT(ratios.size() % 2 == 0, "Must have even number of assets in ratios");
-	   vector<price> prices;
-	   for(uint32_t i=0; i<ratios.size(); i+=2)
-	   {
-	       prices.emplace_back(get_asset(ratios[i].second).amount_from_string(ratios[i].first), get_asset(ratios[i+1].second).amount_from_string(ratios[i+1].first));
-	   }
-	   op.ratios = prices;
+           map<asset_id_type, share_type> bonus_map;
+           for(uint32_t i=0; i<(*discounts).size(); i++)
+           {
+             bonus_map[get_asset_id((*discounts)[i].first)] = (*discounts)[i].second;
+           }
+           op.discounts = bonus_map;
          }
 
          signed_transaction tx;
@@ -1316,7 +1359,7 @@ public:
          tx.validate();
 
          return sign_transaction(tx, broadcast);
-      } FC_CAPTURE_AND_RETHROW( (authority)(project_id)(name)(owner)(ratios)(min_to_collect)(status)(broadcast) ) }
+      } FC_CAPTURE_AND_RETHROW( (authority)(project_id)(name)(owner)(discounts)(token_price)(status)(broadcast) ) }
 
    signed_transaction delete_das33_project(const string& authority,
                                            const string& project_id,
@@ -1361,6 +1404,119 @@ public:
 
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (account)(amount)(license)(project)(broadcast) ) }
+
+   signed_transaction das33_pledge_reject(const string& authority,
+                                          const string& pledge_id,
+                                          bool broadcast)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      das33_pledge_reject_operation op;
+
+      op.authority = get_account(authority).id;
+      auto id = maybe_id<das33_pledge_holder_id_type>(pledge_id);
+      op.pledge =  *id;
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (authority)(pledge_id)(broadcast) ) }
+
+   signed_transaction das33_distribute_pledge(const string& authority,
+                                              const string& pledge_id,
+                                              share_type to_escrow,
+                                              share_type base_to_pledger,
+                                              share_type bonus_to_pledger,
+                                              bool broadcast)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      das33_distribute_pledge_operation op;
+
+      op.authority = get_account(authority).id;
+      auto id = maybe_id<das33_pledge_holder_id_type>(pledge_id);
+      op.pledge =  *id;
+      op.to_escrow = to_escrow;
+      op.bonus_to_pledger = bonus_to_pledger;
+      op.base_to_pledger = base_to_pledger;
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (authority)(pledge_id)(to_escrow)(base_to_pledger)(bonus_to_pledger)(broadcast) ) }
+
+   signed_transaction das33_project_reject(const string& authority,
+                                           const string& project_id,
+                                           bool broadcast)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      das33_project_reject_operation op;
+
+      op.authority = get_account(authority).id;
+      auto id = maybe_id<das33_project_id_type>(project_id);
+      op.project =  *id;
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (authority)(project_id)(broadcast) ) }
+
+   signed_transaction das33_distribute_project_pledges(const string& authority,
+                                                       const string& project_id,
+                                                       optional<share_type> phase_number,
+                                                       share_type to_escrow,
+                                                       share_type base_to_pledger,
+                                                       share_type bonus_to_pledger,
+                                                       bool broadcast)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      das33_distribute_project_pledges_operation op;
+
+      op.authority = get_account(authority).id;
+      auto id = maybe_id<das33_project_id_type>(project_id);
+      op.project =  *id;
+      op.phase_number = phase_number;
+      op.to_escrow = to_escrow;
+      op.bonus_to_pledger = bonus_to_pledger;
+      op.base_to_pledger = base_to_pledger;
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (authority)(project_id)(phase_number)(to_escrow)(base_to_pledger)(bonus_to_pledger)(broadcast) ) }
+
+   signed_transaction das33_set_use_external_btc_price (const string& authority,
+                                                        bool use_exteranl_btc_price,
+                                                        bool broadcast = false)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      das33_set_use_external_btc_price_operation op;
+
+      op.authority = get_account(authority).id;
+      op.use_external_btc_price = use_exteranl_btc_price;
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (authority)(use_exteranl_btc_price)(broadcast) ) }
 
    signed_transaction update_delayed_operations_resolver_parameters(const string& authority, optional<bool> delayed_operations_resolver_enabled,
                                                         optional<uint32_t> delayed_operations_resolver_interval_time_seconds,
@@ -1407,6 +1563,48 @@ public:
 
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (authority)(changed_values)(broadcast) ) }
+
+   signed_transaction change_operation_fee(const string& authority,
+                                           share_type new_fee,
+                                           unsigned op_num,
+                                           string comment,
+                                           bool broadcast = false)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      change_operation_fee_operation op;
+
+      op.issuer = get_account(authority).id;
+      op.new_fee = new_fee.value;
+      op.op_num = op_num;
+      op.comment = comment;
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (authority)(new_fee)(op_num)(comment)(broadcast) ) }
+
+   signed_transaction update_external_btc_price(const string& btc_issuer,
+                                                price new_price,
+                                                bool broadcast = false)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      update_external_btc_price_operation op;
+
+      op.issuer = get_account(btc_issuer).id;
+      op.eur_amount_per_btc = new_price;
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (btc_issuer)(new_price)(broadcast) ) }
 
    signed_transaction tether_accounts(string wallet, string vault, bool broadcast = false)
    { try {
@@ -1758,6 +1956,26 @@ public:
 
       return sign_transaction( tx, broadcast );
    } FC_CAPTURE_AND_RETHROW( (from)(symbol)(amount)(broadcast) ) }
+
+   signed_transaction claim_asset_accumulated_fees_pool(string symbol,
+                                                        string amount,
+                                                        bool broadcast /* = false */)
+   { try {
+      optional<asset_object> asset_pool_to_claim = find_asset(symbol);
+      if (!asset_pool_to_claim)
+        FC_THROW("No asset with that symbol exists!");
+
+      asset_claim_fees_operation claim_op;
+      claim_op.issuer = asset_pool_to_claim->issuer;
+      claim_op.amount_to_claim = asset_pool_to_claim->amount_from_string(amount);
+
+      signed_transaction tx;
+      tx.operations.push_back( claim_op );
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees);
+      tx.validate();
+
+      return sign_transaction( tx, broadcast );
+   } FC_CAPTURE_AND_RETHROW( (symbol)(amount)(broadcast) ) }
 
    signed_transaction reserve_asset(string from,
                                  string amount,
@@ -2689,7 +2907,7 @@ public:
       return sign_transaction(tx, broadcast);
    }
 
-   signed_transaction issue_webasset(string to_account, string amount, string reserved, bool broadcast)
+   signed_transaction issue_webasset(string to_account, string amount, string reserved, string unique_id, bool broadcast)
    {
        const auto asset_obj = get_web_asset();
 
@@ -2703,6 +2921,7 @@ public:
        issue_op.asset_id = asset_obj.id;
        issue_op.reserved_amount =
            asset_obj.amount_from_string(reserved).amount;
+       issue_op.unique_id = unique_id;
 
        signed_transaction tx;
        tx.operations.push_back(issue_op);
@@ -3662,6 +3881,44 @@ vector<operation_detail> wallet_api::get_account_history_by_operation(string nam
    return result;
 }
 
+vector<operation_detail> wallet_api::get_account_history_by_operation2(string name, flat_set<uint32_t> operations
+      , string start_str, string end_str, int limit)const
+{
+   optional<operation_history_id_type> start_o = detail::maybe_id<operation_history_id_type>(start_str);
+   optional<operation_history_id_type> end_o = detail::maybe_id<operation_history_id_type>(end_str);
+
+   FC_ASSERT(start_o.valid() && end_o.valid(), "Incorrect format of start or end argument.");
+
+   operation_history_id_type start = *start_o;
+   operation_history_id_type end = *end_o;
+
+   vector<operation_detail> result;
+   auto account_id = get_account(name).get_id();
+
+   while( limit > 0 )
+   {
+      if( result.size() )
+      {
+         start = result.back().op.id;
+         if(start == end)
+            break;
+         start = start + 1;
+      }
+
+      vector<operation_history_object> current = my->_remote_hist->get_account_history_by_operation(account_id, operations, end, std::min(100,limit), start);
+      for( auto& o : current ) {
+         std::stringstream ss;
+         auto memo = o.op.visit(detail::operation_printer(ss, *my, o.result));
+         result.push_back( operation_detail{ memo, ss.str(), o } );
+      }
+      if( current.size() < static_cast<vector<operation_history_object>::size_type>(std::min(100,limit)))
+         break;
+      limit -= current.size();
+   }
+
+   return result;
+}
+
 vector<bucket_object> wallet_api::get_market_history( string symbol1, string symbol2, uint32_t bucket )const
 {
    return my->_remote_hist->get_market_history( get_asset_id(symbol1), get_asset_id(symbol2), bucket, fc::time_point_sec(), fc::time_point::now() );
@@ -4011,9 +4268,9 @@ signed_transaction wallet_api::issue_asset(string to_account, string amount, str
    return my->issue_asset(to_account, amount, symbol, memo, broadcast);
 }
 
-signed_transaction wallet_api::issue_webasset(string to_account, string amount, string reserved, bool broadcast)
+signed_transaction wallet_api::issue_webasset(string to_account, string amount, string reserved, string unique_id, bool broadcast)
 {
-    return my->issue_webasset(to_account, amount, reserved, broadcast);
+    return my->issue_webasset(to_account, amount, reserved, unique_id, broadcast);
 }
 
 signed_transaction wallet_api::transfer(string from, string to, string amount,
@@ -4075,6 +4332,13 @@ signed_transaction wallet_api::fund_asset_fee_pool(string from,
                                                    bool broadcast /* = false */)
 {
    return my->fund_asset_fee_pool(from, symbol, amount, broadcast);
+}
+
+signed_transaction wallet_api::claim_asset_accumulated_fees_pool(string symbol,
+                                                                string amount,
+                                                                bool broadcast /* = false */)
+{
+   return my->claim_asset_accumulated_fees_pool(symbol, amount, broadcast);
 }
 
 signed_transaction wallet_api::reserve_asset(string from,
@@ -5494,6 +5758,48 @@ signed_transaction wallet_api::das33_pledge_asset(const string& account,
    return my->das33_pledge_asset( account, amount, symbol, license, project, broadcast );
 }
 
+signed_transaction wallet_api::das33_pledge_reject(const string& authority,
+                                                   const string& pledge_id,
+                                                   bool broadcast) const
+{
+   return my->das33_pledge_reject( authority, pledge_id, broadcast );
+}
+
+signed_transaction wallet_api::das33_distribute_pledge(const string& authority,
+                                                       const string& pledge_id,
+                                                       share_type to_escrow,
+                                                       share_type base_to_pledger,
+                                                       share_type bonus_to_pledger,
+                                                       bool broadcast) const
+{
+   return my->das33_distribute_pledge(authority, pledge_id, to_escrow, base_to_pledger, bonus_to_pledger, broadcast);
+}
+
+signed_transaction wallet_api::das33_project_reject(const string& authority,
+                                                    const string& project_id,
+                                                    bool broadcast) const
+{
+   return my->das33_pledge_reject( authority, project_id, broadcast );
+}
+
+signed_transaction wallet_api::das33_distribute_project_pledges(const string& authority,
+                                                                const string& project_id,
+                                                                optional<share_type> phase_number,
+                                                                share_type to_escrow,
+                                                                share_type base_to_pledger,
+                                                                share_type bonus_to_pledger,
+                                                                bool broadcast) const
+{
+   return my->das33_distribute_project_pledges(authority, project_id, phase_number, to_escrow, base_to_pledger, bonus_to_pledger, broadcast);
+}
+
+signed_transaction wallet_api::das33_set_use_external_btc_price (const string& authority,
+                                                                 bool use_exteranl_btc_price,
+                                                                 bool broadcast) const
+{
+  return my->das33_set_use_external_btc_price(authority, use_exteranl_btc_price, broadcast);
+}
+
 vector<das33_pledge_holder_object> wallet_api::get_das33_pledges(das33_pledge_holder_id_type from, uint32_t limit) const
 {
     return my->_remote_db->get_das33_pledges(from, limit);
@@ -5517,20 +5823,29 @@ vector<das33_project_object> wallet_api::get_das33_projects(const string& lower_
     return my->_remote_db->get_das33_projects(lower_bound_name, limit);
 }
 
+vector<asset> wallet_api::get_amount_of_assets_pledged_to_project(das33_project_id_type project) const
+{
+  return my->_remote_db->get_amount_of_assets_pledged_to_project(project);
+}
+
 signed_transaction wallet_api::create_das33_project(const string& authority,
                                                     const string& name,
                                                     const string& owner,
                                                     const string& token,
-                                                    const vector<pair<string, string>>& ratios,
-                                                    share_type min_to_collect,
+                                                    vector<pair<string, share_type>> discounts,
+                                                    share_type goal_amount,
+                                                    share_type min_pledge,
+                                                    share_type max_pledge,
                                                     bool broadcast) const
 {
     return my->create_das33_project(authority,
                                     name,
                                     owner,
                                     token,
-                                    ratios,
-                                    min_to_collect,
+                                    discounts,
+                                    goal_amount,
+                                    min_pledge,
+                                    max_pledge,
                                     broadcast);
 }
 
@@ -5538,8 +5853,13 @@ signed_transaction wallet_api::update_das33_project(const string& authority,
                                                     const string& project_id,
                                                     optional<string> name,
                                                     optional<string> owner,
-                                                    const vector<pair<string, string>>& ratios,
-                                                    optional<share_type> min_to_collect,
+                                                    optional<share_type> goal_amount,
+                                                    optional<price> token_price,
+                                                    optional<vector<pair<string, share_type>>> discounts,
+                                                    optional<share_type> min_pledge,
+                                                    optional<share_type> max_pledge,
+                                                    optional<share_type> phase_limit,
+                                                    optional<time_point_sec> phase_end,
                                                     optional<uint8_t> status,
                                                     bool broadcast) const
 {
@@ -5547,8 +5867,13 @@ signed_transaction wallet_api::update_das33_project(const string& authority,
                                   project_id,
                                   name,
                                   owner,
-                                  ratios,
-                                  min_to_collect,
+                                  goal_amount,
+                                  token_price,
+                                  discounts,
+                                  min_pledge,
+                                  max_pledge,
+                                  phase_limit,
+                                  phase_end,
                                   status,
                                   broadcast);
 }
@@ -5578,9 +5903,25 @@ vector<delayed_operation_object> wallet_api::get_delayed_operations_for_account(
 
 signed_transaction wallet_api::update_global_parameters(const string& authority,
                                                         const variant_object& changed_values,
-                                                        bool broadcast /* = false */) const
+                                                        bool broadcast) const
 {
    return my->update_global_parameters( authority, changed_values, broadcast );
+}
+
+signed_transaction wallet_api::change_operation_fee(const string& authority,
+                                                    share_type new_fee,
+                                                    unsigned op_num,
+                                                    string comment,
+                                                    bool broadcast) const
+{
+    return my->change_operation_fee(authority, new_fee, op_num, comment, broadcast);
+}
+
+signed_transaction wallet_api::update_external_btc_price(const string& btc_issuer,
+                                                         price new_price,
+                                                         bool broadcast) const
+{
+    return my->update_external_btc_price(btc_issuer, new_price, broadcast);
 }
 
 signed_block_with_info::signed_block_with_info( const signed_block& block )

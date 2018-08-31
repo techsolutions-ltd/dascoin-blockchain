@@ -347,6 +347,9 @@ class wallet_api
        */
       vector<operation_detail>  get_account_history_by_operation(string name, flat_set<uint32_t> operations, int limit)const;
 
+      vector<operation_detail> get_account_history_by_operation2(string name, flat_set<uint32_t> operations
+            , string start_str, string end_str, int limit)const;
+
 
       vector<bucket_object>             get_market_history(string symbol, string symbol2, uint32_t bucket)const;
       vector<limit_order_object>        get_limit_orders(string a, string b, uint32_t limit)const;
@@ -1052,12 +1055,14 @@ class wallet_api
        * @param to_account the name or id of the account to receive the webasset
        * @param amount the amount to issue, in nominal units
        * @param reserved reserved amount to issue, in nominal units
+       * @param unique_id unique identifier of this issue
        * @param broadcast true to broadcast the transaction on the network
        * @returns the signed transaction issuing the webasset
        */
       signed_transaction issue_webasset(string to_account,
                                         string amount,
                                         string reserved,
+                                        string unique_id,
                                         bool broadcast = false);
 
       /** Update the core options on an asset.
@@ -1155,6 +1160,22 @@ class wallet_api
                                              string symbol,
                                              string amount,
                                              bool broadcast = false);
+
+      /** Claim funds from the accumulated fees pool for the given asset.
+       *
+       * User-issued assets can optionally have a pool of the accumulated fees which are
+       * paid for market fees
+       *
+       * This command allows the issuer to withdraw those funds from the fee pool.
+       *
+       * @param symbol the name or id of the asset whose accumulated fees pool you wish to claim
+       * @param amount the amount of the core asset to withdraw
+       * @param broadcast true to broadcast the transaction on the network
+       * @returns the signed transaction claiming from the fee pool
+       */
+      signed_transaction claim_asset_accumulated_fees_pool(string symbol,
+                                                           string amount,
+                                                           bool broadcast = false);
 
       /** Burns the given user-issued asset.
        *
@@ -1898,6 +1919,80 @@ class wallet_api
       //////////////////////////
 
       /**
+       * @brief Create new das33 project
+       *
+       * @param authority       authority that is issuing this operation, must be das33_administrator
+       * @param name            name of a project
+       * @param owner           acccount id of project owner
+       * @param token           id of a token that will be issued by this project
+       * @param discounts       array of discounts for project tokens
+       * @param goal_amount     minimum amount of tokens needed for project to be successful
+       * @param min_pledge      minimum amount allowed in a pledge
+       * @param max_pledge      maximum amount allowed in a pledge
+       * @param broadcast       true to broadcast transaction to network
+       */
+      signed_transaction create_das33_project(const string& authority,
+                                              const string& name,
+                                              const string& owner,
+                                              const string& token,
+                                              vector<pair<string, share_type>> discounts,
+                                              share_type goal_amount,
+                                              share_type min_pledge,
+                                              share_type max_pledge,
+                                              bool broadcast) const;
+
+      /**
+       * @brief Update exsisting das33 project
+       *
+       * @param authority       authority that is issuing this operation, must be das33_administrator
+       * @param project_id      id of a project to edit
+       * @param name            optional new name of a project
+       * @param owner           optional new project owner
+       * @param goal_amount     optional new minimum amount
+       * @param toke_price      optional new token price
+       * @param discounts       optional new array of discounts for project tokens
+       * @param min_pledge      optional new minimum amount allowed in a pledge
+       * @param max_pledge      optional new maximum amount allowed in a pledge
+       * @param phase_limit     optional phase limit amount
+       * @param phase_end       optional time point until phase lasts
+       * @param status          optional status of a project
+       * @param broadcast       true to broadcast transaction to network
+       */
+      signed_transaction update_das33_project(const string& authority,
+                                              const string& project_id,
+                                              optional<string> name,
+                                              optional<string> owner,
+                                              optional<share_type> goal_amount,
+                                              optional<price> token_price,
+                                              optional<vector<pair<string, share_type>>> discounts,
+                                              optional<share_type> min_pledge,
+                                              optional<share_type> max_pledge,
+                                              optional<share_type> phase_limit,
+                                              optional<time_point_sec> phase_end,
+                                              optional<uint8_t> status,
+                                              bool broadcast) const;
+
+      /**
+       * @brief Delete a das33 project
+       *
+       * @param authority       authority that is issuing this operation, must be das33_administrator
+       * @param project_id      id of a project to delete
+       * @param broadcast       true to broadcast transaction to network
+       */
+      signed_transaction delete_das33_project(const string& authority,
+                                              const string& project_id,
+                                              bool broadcast) const;
+
+      /**
+       * @brief Get das33 projects ordered by project name
+       *
+       * @param lower_bound_name name of the first project
+       * @param limit            the number of projects to return (max 1000)
+       * @returns                a list of das33 project objects
+       */
+      vector<das33_project_object> get_das33_projects(const string& lower_bound_name, uint32_t limit) const;
+
+      /**
        * Pledge some asset to das33 project
        * @param account         Account name or id
        * @param amount          Amount of asset to pledge
@@ -1912,6 +2007,70 @@ class wallet_api
                                             optional<license_type_id_type> license,
                                             das33_project_id_type project,
                                             bool broadcast = false) const;
+
+      /**
+       * Reject a single pledge
+       * @param authority       authority that is issuing this operation, must be das33_administrator
+       * @param pledge_id       pledge id
+       * @param broadcast       true to broadcast the transaction on the network.
+       */
+      signed_transaction das33_pledge_reject(const string& authority,
+                                             const string& pledge_id,
+                                             bool broadcast = false) const;
+
+      /**
+       * Distribute assets of a single pledge
+       * @param authority        authority that is issuing this operation, must be das33_administrator
+       * @param pledge_id        pledge id
+       * @param to_escrow        percent of pledged amount to distribute to project owner
+       * @param base_to_pledger  percent of expected base tokens to distribute to pledger
+       * @param bonus_to_pledger percent of expected bonus tokens to distribute to pledger
+       * @param broadcast        true to broadcast the transaction on the network.
+       */
+      signed_transaction das33_distribute_pledge(const string& authority,
+                                                 const string& pledge_id,
+                                                 share_type to_escrow,
+                                                 share_type base_to_pledger,
+                                                 share_type bonus_to_pledger,
+                                                 bool broadcast = false) const;
+
+      /**
+       * Reject das33 project
+       * @param authority       authority that is issuing this operation, must be das33_administrator
+       * @param project_id      project id
+       * @param broadcast       true to broadcast the transaction on the network.
+      */
+      signed_transaction das33_project_reject(const string& authority,
+                                              const string& project_id,
+                                              bool broadcast = false) const;
+
+      /**
+       * Distribute assets from a project phase
+       * @param authority        authority that is issuing this operation, must be das33_administrator
+       * @param project_id       project id
+       * @param phase_number     optional project phase number. If not provided, pledges from all phases will be distributed
+       * @param to_escrow        percent of pledged amount to distribute to project owner
+       * @param base_to_pledger  percent of expected base tokens to distribute to pledger
+       * @param bonus_to_pledger percent of expected bonus tokens to distribute to pledger
+       * @param broadcast        true to broadcast the transaction on the network.
+       */
+      signed_transaction das33_distribute_project_pledges(const string& authority,
+                                                          const string& project_id,
+                                                          optional<share_type> phase_number,
+                                                          share_type to_escrow,
+                                                          share_type base_to_pledger,
+                                                          share_type bonus_to_pledger,
+                                                          bool broadcast = false) const;
+
+      /**
+       * Sets value of use_external_btc_price flag
+       * @param authority               authority that is issuing this operation, must be das33_administrator
+       * @param use_exteranl_btc_price  new value for flag
+       * @param broadcast               true to broadcast the transaction on the network.
+       */
+      signed_transaction das33_set_use_external_btc_price (const string& authority,
+                                                           bool use_exteranl_btc_price,
+                                                           bool broadcast = false) const;
 
       /**
        * @brief Return a part of the pledges table.
@@ -1941,64 +2100,15 @@ class wallet_api
       vector<das33_pledge_holder_object> get_das33_pledges_by_project(const string& project, das33_pledge_holder_id_type from, uint32_t limit) const;
 
       /**
-       * @brief Create new das33 project
-       *
-       * @param authority       authority that is issuing this operation, must be das33_administrator
-       * @param name            name of a project
-       * @param owner           acccount id of project owner
-       * @param token           id of a token that will be issued by this project
-       * @param ratios          array of prices of project token
-       * @param min_to_collect  minimum amount of tokens needed for project to be successful
-       * @param broadcast       true to broadcast transaction to network
-       */
-      signed_transaction create_das33_project(const string& authority,
-                                              const string& name,
-                                              const string& owner,
-                                              const string& token,
-                                              const vector<pair<string, string>>& ratios,
-                                              share_type min_to_collect,
-                                              bool broadcast) const;
+      * @brief Gets a sum of all pledges made to project
+      * @params project id of a project
+      * @return vector of assets, each with total sum of that asset pledged
+      */
+      vector<asset> get_amount_of_assets_pledged_to_project(das33_project_id_type project) const;
 
-      /**
-       * @brief Update exsisting das33 project
-       *
-       * @param authority       authority that is issuing this operation, must be das33_administrator
-       * @param project_id      id of a project to edit
-       * @param name            optional new name of a project
-       * @param owner           optional new project owner
-       * @param ratios          array of prices of project token, empty array if it shouldn't be changed
-       * @param min_to_collect  optional new minimum amount
-       * @param status          optional new status of a project
-       * @param broadcast       true to broadcast transaction to network
-       */
-      signed_transaction update_das33_project(const string& authority,
-                                              const string& project_id,
-                                              optional<string> name,
-                                              optional<string> owner,
-                                              const vector<pair<string, string>>& ratios,
-                                              optional<share_type> min_to_collect,
-                                              optional<uint8_t> status,
-                                              bool broadcast) const;
-
-      /**
-       * @brief Delete a das33 project
-       *
-       * @param authority       authority that is issuing this operation, must be das33_administrator
-       * @param project_id      id of a project to delete
-       * @param broadcast       true to broadcast transaction to network
-       */
-      signed_transaction delete_das33_project(const string& authority,
-                                              const string& project_id,
-                                              bool broadcast) const;
-
-      /**
-       * @brief Get das33 projects ordered by project name
-       *
-       * @param lower_bound_name name of the first project
-       * @param limit            the number of projects to return (max 1000)
-       * @returns                a list of das33 project objects
-       */
-      vector<das33_project_object> get_das33_projects(const string& lower_bound_name, uint32_t limit) const;
+      //////////////////////////
+      // GLOBALS:             //
+      //////////////////////////
 
       /**
        * @param authority       This MUST be root authority.
@@ -2008,6 +2118,28 @@ class wallet_api
       signed_transaction update_global_parameters(const string& authority,
                                                   const variant_object& changed_values,
                                                   bool broadcast) const;
+
+      /**
+       * @param authority       This MUST be root authority.
+       * @param new_fee         New operation fee
+       * @param op_num          The operation id whose fee we are changing
+       * @param string          Comment
+       * @param broadcast       true to broadcast transaction to network
+       */
+      signed_transaction change_operation_fee(const string& authority,
+                                              share_type new_fee,
+                                              unsigned op_num,
+                                              string comment,
+                                              bool broadcast) const;
+
+      /**
+       * @param btc_issuer      Account of BTC issuer
+       * @param new_price       New BTC price
+       * @param broadcast       true to broadcast transaction to network
+       */
+      signed_transaction update_external_btc_price(const string& btc_issuer,
+                                                   price new_price,
+                                                   bool broadcast) const;
 
       //////////////////////////
       // REQUESTS:            //
@@ -2209,6 +2341,7 @@ FC_API( graphene::wallet::wallet_api,
         (get_asset)
         (get_bitasset_data)
         (fund_asset_fee_pool)
+        (claim_asset_accumulated_fees_pool)
         (reserve_asset)
         (global_settle_asset)
         (settle_asset)
@@ -2234,6 +2367,7 @@ FC_API( graphene::wallet::wallet_api,
         (get_account_count)
         (get_account_history)
         (get_account_history_by_operation)
+        (get_account_history_by_operation2)
         (get_market_history)
         (get_global_properties)
         (get_dynamic_global_properties)
@@ -2315,16 +2449,24 @@ FC_API( graphene::wallet::wallet_api,
         (get_das33_pledges)
         (get_das33_pledges_by_account)
         (get_das33_pledges_by_project)
+        (das33_pledge_reject)
+        (das33_distribute_pledge)
+        (das33_project_reject)
+        (das33_distribute_project_pledges)
         (create_das33_project)
         (update_das33_project)
         (delete_das33_project)
         (get_das33_projects)
+        (get_amount_of_assets_pledged_to_project)
+        (das33_set_use_external_btc_price)
 
         // Delayed operations resolver:
         (update_delayed_operations_resolver_parameters)
         (get_delayed_operations_for_account)
 
         (update_global_parameters)
+        (change_operation_fee)
+        (update_external_btc_price)
 
         // Requests:
         (get_all_webasset_issue_requests)

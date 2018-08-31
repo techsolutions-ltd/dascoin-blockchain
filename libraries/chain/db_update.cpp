@@ -642,11 +642,11 @@ void database::daspay_clearing_start()
   for (const auto& clearing_acc : clearing_accounts)
   {
     const fee_schedule& current_fees = get_global_properties().parameters.current_fees;
-    const auto& cycle_balance = get_balance(clearing_acc, get_cycle_asset_id());
     const auto& fee = current_fees.calculate_fee(limit_order_create_operation());
-    if (fee > cycle_balance)
+    const auto& fee_balance = get_balance(clearing_acc, fee.asset_id);
+    if (fee > fee_balance)
     {
-      wlog("Clearing account ${a} has insufficient balance to pay fee (Balance: ${b}, Fee: ${c})", ("a", clearing_acc)("b", to_pretty_string(cycle_balance))("c", to_pretty_string(fee)));
+      wlog("Clearing account ${a} has insufficient balance to pay fee (Balance: ${b}, Fee: ${c})", ("a", clearing_acc)("b", to_pretty_string(fee_balance))("c", to_pretty_string(fee)));
       continue;
     }
 

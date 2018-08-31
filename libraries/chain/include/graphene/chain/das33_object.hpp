@@ -32,6 +32,8 @@
 
 namespace graphene { namespace chain {
 
+#define BONUS_PRECISION 100
+
   ///////////////////////////////
   // OBJECTS:                  //
   ///////////////////////////////
@@ -42,23 +44,37 @@ namespace graphene { namespace chain {
     static const uint8_t space_id = implementation_ids;
     static const uint8_t type_id  = impl_das33_project_object_type;
 
-    string name;
-    account_id_type owner;
-    asset_id_type token_id;
-    optional<share_type> min_to_collect;
-    share_type collected;
-    vector<price> token_prices;
-    das33_project_status status;
+    string                         name;
+    account_id_type                owner;
+    asset_id_type                  token_id;
+    share_type                     goal_amount_eur;
+    map<asset_id_type, share_type> discounts;
+    share_type                     min_pledge;
+    share_type                     max_pledge;
+    price                          token_price;
+    share_type                     collected_amount_eur = 0;
+    share_type                     tokens_sold = 0;
+    das33_project_status           status;
+    share_type                     phase_number;
+    share_type                     phase_limit;
+    time_point_sec                 phase_end;
 
     das33_project_object() = default;
-    explicit das33_project_object(string name, account_id_type owner, asset_id_type token, share_type min_to_collect, vector<price> ratios)
+    explicit das33_project_object(string name, account_id_type owner, asset_id_type token, share_type goal_amount_eur,
+                                  map<asset_id_type, share_type>& discounts, share_type min_pledge, share_type max_pledge, price price)
              : name(name),
                owner(owner),
                token_id(token),
-               min_to_collect(min_to_collect),
-               collected(0),
-               token_prices(ratios),
-               status(das33_project_status::inactive) {}
+               goal_amount_eur(goal_amount_eur),
+               discounts(discounts),
+               min_pledge(min_pledge),
+               max_pledge(max_pledge),
+               token_price(price),
+               collected_amount_eur(0),
+               tokens_sold(0),
+               status(das33_project_status::inactive),
+               phase_number (0),
+               phase_limit(0) {}
   };
 
   class das33_pledge_holder_object : public abstract_object<das33_pledge_holder_object>
@@ -68,10 +84,14 @@ namespace graphene { namespace chain {
     static const uint8_t type_id  = impl_das33_pledge_holder_object_type;
 
     account_id_type                account_id;
-    asset                          pledged;
-    asset                          expected;
-    optional<license_type_id_type> license_id;
     das33_project_id_type          project_id;
+    asset                          pledged;
+    asset                          pledge_remaining;
+    asset                          base_expected;
+    asset                          base_remaining;
+    asset                          bonus_expected;
+    asset                          bonus_remaining;
+    share_type                     phase_number;
     time_point_sec                 timestamp;
 
     extensions_type extensions;
@@ -79,16 +99,24 @@ namespace graphene { namespace chain {
     das33_pledge_holder_object() = default;
 
     explicit das33_pledge_holder_object(account_id_type account_id,
-                                        asset pledged,
-                                        asset expected,
-                                        optional<license_type_id_type> license_id,
                                         das33_project_id_type project_id,
+                                        asset pledged,
+                                        asset pledge_remaining,
+                                        asset base_expected,
+                                        asset base_remaining,
+                                        asset bonus_expected,
+                                        asset bonus_remaining,
+                                        share_type phase_number,
                                         time_point_sec timestamp)
             : account_id(account_id),
-              pledged(pledged),
-              expected(expected),
-              license_id(license_id),
               project_id(project_id),
+              pledged(pledged),
+              pledge_remaining(pledge_remaining),
+              base_expected(base_expected),
+              base_remaining(base_remaining),
+              bonus_expected(bonus_expected),
+              bonus_remaining(bonus_remaining),
+              phase_number(phase_number),
               timestamp(timestamp) {}
   };
 
@@ -160,10 +188,14 @@ namespace graphene { namespace chain {
 
 FC_REFLECT_DERIVED( graphene::chain::das33_pledge_holder_object, (graphene::db::object),
                     (account_id)
-                    (pledged)
-                    (expected)
-                    (license_id)
                     (project_id)
+                    (pledged)
+                    (pledge_remaining)
+                    (base_expected)
+                    (base_remaining)
+                    (bonus_expected)
+                    (bonus_remaining)
+                    (phase_number)
                     (timestamp)
                   )
 
@@ -171,8 +203,15 @@ FC_REFLECT_DERIVED( graphene::chain::das33_project_object, (graphene::db::object
                     (name)
                     (owner)
                     (token_id)
-                    (min_to_collect)
-                    (collected)
-                    (token_prices)
+                    (goal_amount_eur)
+                    (discounts)
+                    (min_pledge)
+                    (max_pledge)
+                    (token_price)
+                    (collected_amount_eur)
+                    (tokens_sold)
                     (status)
+                    (phase_number)
+                    (phase_limit)
+                    (phase_end)
                   )

@@ -104,6 +104,8 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<balance_object> get_balance_objects( const vector<address>& addrs )const;
       vector<asset> get_vested_balances( const vector<balance_id_type>& objs )const;
       vector<vesting_balance_object> get_vesting_balances( account_id_type account_id )const;
+      tethered_accounts_balances_collection get_tethered_accounts_balances( account_id_type id, asset_id_type asset )const;
+      vector<tethered_accounts_balances_collection> get_tethered_accounts_balances( account_id_type account, const flat_set<asset_id_type>& assets )const;
 
       // Assets
       asset_id_type get_web_asset_id() const;
@@ -202,7 +204,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<das33_pledge_holder_object> get_das33_pledges_by_account(account_id_type account) const;
       vector<das33_pledge_holder_object> get_das33_pledges_by_project(das33_project_id_type project, das33_pledge_holder_id_type from, uint32_t limit) const;
       vector<das33_project_object> get_das33_projects(const string& lower_bound_name, uint32_t limit) const;
-
+      vector<asset> get_amount_of_assets_pledged_to_project(das33_project_id_type project) const;
 
       template<typename T>
       void subscribe_to_item( const T& i )const
@@ -1058,6 +1060,73 @@ vector<vesting_balance_object> database_api_impl::get_vesting_balances( account_
       return result;
    }
    FC_CAPTURE_AND_RETHROW( (account_id) );
+}
+
+vector<tethered_accounts_balances_collection> database_api::get_tethered_accounts_balances( account_id_type id, const flat_set<asset_id_type>& assets )const
+{
+   return my->get_tethered_accounts_balances( id, assets );
+}
+
+vector<tethered_accounts_balances_collection> database_api_impl::get_tethered_accounts_balances( account_id_type account, const flat_set<asset_id_type>& assets )const
+{
+   vector<asset_id_type> tmp;
+   if (assets.empty()) {
+      // if the caller passes in an empty list of assets, get all assets the account owns.
+      const account_balance_index &balance_index = _db.get_index_type<account_balance_index>();
+      auto range = balance_index.indices().get<by_account_asset>().equal_range(boost::make_tuple(account));
+      for (const account_balance_object &balance : boost::make_iterator_range(range.first, range.second))
+         tmp.emplace_back(balance.asset_type);
+   } else {
+      tmp.reserve(assets.size());
+      std::copy(assets.begin(), assets.end(), std::back_inserter(tmp));
+   }
+   vector<tethered_accounts_balances_collection> result;
+   std::transform(tmp.begin(), tmp.end(), std::back_inserter(result), [this, account](asset_id_type id) {
+      return get_tethered_accounts_balances(account, id);
+   });
+   return result;
+}
+
+tethered_accounts_balances_collection database_api_impl::get_tethered_accounts_balances( account_id_type id, asset_id_type asset )const
+{
+   tethered_accounts_balances_collection ret;
+   ret.total = 0;
+   ret.asset_id = asset;
+   const auto& idx = _db.get_index_type<account_index>().indices().get<by_id>();
+   const auto it = idx.find(id);
+   flat_set<tuple<account_id_type, string, account_kind>> accounts;
+   if (it != idx.end())
+   {
+      const auto& account = *it;
+      if (account.kind == account_kind::wallet)
+      {
+         accounts.insert(make_tuple(id, account.name, account.kind));
+         std::transform(account.vault.begin(), account.vault.end(), std::inserter(accounts, accounts.begin()), [&](account_id_type vault)
+         {
+            const auto& vault_acc = vault(_db);
+            return make_tuple(vault, vault_acc.name, account_kind::vault);
+         });
+      }
+      else if (account.kind == account_kind::custodian || account.kind == account_kind::special)
+      {
+         accounts.insert(make_tuple(id, account.name, account.kind));
+      }
+      else if (account.kind == account_kind::vault)
+      {
+          if (account.parents.empty())
+             accounts.insert(make_tuple(id, account.name, account.kind));
+          else
+             return get_tethered_accounts_balances(*(account.parents.begin()), asset);
+      }
+   }
+
+   for (const auto& i : accounts)
+   {
+      const auto& balance_obj = _db.get_balance_object(get<0>(i), asset);
+      ret.total += balance_obj.balance + balance_obj.reserved;
+      ret.details.emplace_back(tethered_accounts_balance{get<0>(i), get<1>(i), get<2>(i), balance_obj.balance, balance_obj.reserved});
+   }
+   return ret;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -2710,7 +2779,7 @@ vector<dasc_holder> database_api_impl::get_top_dasc_holders() const
         {
             holder.vaults = account.vault.size();
             const auto& balance_obj = _db.get_balance_object(account.id, dasc_id);
-            holder.amount = balance_obj.balance;
+            holder.amount = balance_obj.balance + balance_obj.reserved;
             std::for_each(account.vault.begin(), account.vault.end(), [this, &holder, &dasc_id](const account_id_type& vault_id) {
                 const auto& balance_obj = _db.get_balance_object(vault_id, dasc_id);
                 holder.amount += balance_obj.balance;
@@ -2873,6 +2942,38 @@ vector<das33_project_object> database_api_impl::get_das33_projects(const string&
   {
      if (itr->id != default_project_id)
        result.emplace_back(*itr);
+  }
+
+  return result;
+}
+
+vector<asset> database_api::get_amount_of_assets_pledged_to_project(das33_project_id_type project) const
+{
+  return my->get_amount_of_assets_pledged_to_project(project);
+}
+
+vector<asset> database_api_impl::get_amount_of_assets_pledged_to_project(das33_project_id_type project) const
+{
+  vector<asset> result;
+  map<asset_id_type, int> index_map;
+
+  auto default_pledge_id = das33_pledge_holder_id_type();
+
+  const auto& pledges = _db.get_index_type<das33_pledge_holder_index>().indices().get<by_project>();
+  for( auto itr = pledges.lower_bound(project); itr != pledges.upper_bound(project); ++itr )
+  {
+   if (itr->id != default_pledge_id)
+   {
+     if (index_map.find(itr->pledged.asset_id) != index_map.end())
+     {
+       result[index_map[itr->pledged.asset_id]] += itr->pledged;
+     }
+     else
+     {
+       index_map[itr->pledged.asset_id] = result.size();
+       result.emplace_back(itr->pledged);
+     }
+   }
   }
 
   return result;

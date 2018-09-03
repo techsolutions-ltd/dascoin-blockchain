@@ -141,6 +141,11 @@ asset_id_type database_fixture::get_dascoin_asset_id() const
   return db.get_dascoin_asset_id();
 }
 
+asset_id_type database_fixture::get_btc_asset_id() const
+{
+  return db.get_btc_asset_id();
+}
+
 frequency_type database_fixture::get_global_frequency() const
 {
   return db.get_dynamic_global_properties().frequency;

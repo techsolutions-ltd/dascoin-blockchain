@@ -364,7 +364,6 @@ namespace graphene { namespace chain {
   { try {
 
     const auto& d = db();
-    const auto& account_obj = op.account_id(d);
     const auto& project_obj = op.project_id(d);
     const auto& token_obj = project_obj.token_id(d);
 
@@ -546,22 +545,7 @@ namespace graphene { namespace chain {
           pledge_result.timestamp = d.head_block_time();
        d.push_applied_operation(pledge_result);
 
-       // give to project owner pledged amount
-       // issue balance object if it does not exists
-       if(!d.check_if_balance_object_exists(_pro_owner,pho.pledged.asset_id))
-       {
-         d.create<account_balance_object>([&pho, this](account_balance_object& abo){
-           abo.owner = _pro_owner;
-           abo.asset_type = pho.pledged.asset_id;
-           abo.balance = 0;
-           abo.reserved = 0;
-         });
-       }
-
-       auto& balance_obj = d.get_balance_object(_pro_owner, pho.pledged.asset_id);
-       d.modify(balance_obj, [&](account_balance_object& balance_obj){
-          balance_obj.balance += pledge;
-       });
+       d.adjust_balance(_pro_owner, asset{pledge, pho.pledged.asset_id}, 0 /*reserved_delta*/);
 
        // issue balance object if it does not exists
        if(!d.check_if_balance_object_exists(pho.account_id,pho.base_expected.asset_id))
@@ -716,11 +700,7 @@ namespace graphene { namespace chain {
         pledge_result.timestamp = d.head_block_time();
      d.push_applied_operation(pledge_result);
 
-     // give to project owner pledged amount
-     auto& balance_obj = d.get_balance_object(_pro_owner, pho.pledged.asset_id);
-     d.modify(balance_obj, [&](account_balance_object& balance_obj){
-        balance_obj.balance += pledge;
-     });
+     d.adjust_balance(_pro_owner, asset{pledge, pho.pledged.asset_id}, 0 /*reserved_delta*/);
 
      // issue balance object if it does not exists
      if(!d.check_if_balance_object_exists(pho.account_id,pho.base_expected.asset_id))

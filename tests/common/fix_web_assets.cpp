@@ -247,6 +247,15 @@ void database_fixture::set_last_dascoin_price(price val)
 
 } FC_LOG_AND_RETHROW() }
 
+void database_fixture::set_external_bitcoin_price(price val)
+{ try {
+
+  db.modify(get_dynamic_global_properties(), [val](dynamic_global_property_object& dgpo){
+    dgpo.external_btc_price = val;
+  });
+
+} FC_LOG_AND_RETHROW() }
+
 void database_fixture::set_last_daily_dascoin_price(price val)
 { try {
 

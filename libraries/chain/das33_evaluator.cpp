@@ -24,6 +24,7 @@
 
 #include <graphene/chain/das33_evaluator.hpp>
 #include <graphene/chain/database.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
 
 namespace graphene { namespace chain {
 
@@ -80,6 +81,53 @@ namespace graphene { namespace chain {
       result = std::pow(10, a.precision - b.precision);
     }
     return result;
+  }
+
+  typedef boost::multiprecision::uint128_t uint128_t;
+
+  asset asset_price_multiply ( const asset& a, int64_t precision, const price& b, const price& c )
+  {
+    uint128_t result;
+     if( a.asset_id == b.base.asset_id )
+     {
+        FC_ASSERT( b.base.amount.value > 0 );
+        result = (uint128_t(a.amount.value) * precision * b.quote.amount.value)/b.base.amount.value;
+        if (b.quote.asset_id == c.base.asset_id)
+        {
+          FC_ASSERT( c.base.amount.value > 0 );
+          result = (result * c.quote.amount.value)/c.base.amount.value;
+          result = result / precision;
+          return asset( result.convert_to<int64_t>(), c.quote.asset_id );
+        }
+        else
+        {
+          FC_ASSERT( c.quote.amount.value > 0 );
+          result = (result * c.base.amount.value)/c.quote.amount.value;
+          result = result / precision;
+          return asset( result.convert_to<int64_t>(), c.base.asset_id );
+        }
+
+     }
+     else if( a.asset_id == b.quote.asset_id )
+     {
+        FC_ASSERT( b.quote.amount.value > 0 );
+        result = (uint128_t(a.amount.value) * precision * b.base.amount.value)/b.quote.amount.value;
+        if (b.base.asset_id == c.base.asset_id)
+        {
+          FC_ASSERT( c.base.amount.value > 0 );
+          result = (result * c.quote.amount.value)/c.base.amount.value;
+          result = result / precision;
+          return asset( result.convert_to<int64_t>(), c.quote.asset_id );
+        }
+        else
+        {
+          FC_ASSERT( c.quote.amount.value > 0 );
+          result = (result * c.base.amount.value)/c.quote.amount.value;
+          result = result / precision;
+          return asset( result.convert_to<int64_t>(), c.base.asset_id );
+        }
+     }
+     FC_THROW_EXCEPTION( fc::assert_exception, "invalid asset * price", ("asset",a)("price",b) );
   }
 
   // method implementations:
@@ -353,8 +401,7 @@ namespace graphene { namespace chain {
     share_type precision = precision_modifier(op.pledged.asset_id(d), d.get_web_asset_id()(d));
     total.asset_id = project_obj.token_id;
     price_at_evaluation = get_price_in_web_eur(op.pledged.asset_id, d);
-    base = asset{op.pledged.amount * precision, op.pledged.asset_id} * price_at_evaluation * project_obj.token_price;
-    base.amount = base.amount / precision;
+    base = asset_price_multiply(op.pledged, precision.value, price_at_evaluation, project_obj.token_price);
 
     // Assure that pledge amount is above minimum
     FC_ASSERT(base.amount >= project_obj.min_pledge, "Can not pledge: must buy at least ${min} tokens", ("min", project_obj.min_pledge));
@@ -399,8 +446,7 @@ namespace graphene { namespace chain {
       base = {total.amount * discount / BONUS_PRECISION, total.asset_id};
       bonus = total - base;
       precision = precision_modifier(base.asset_id(d), d.get_web_asset_id()(d));
-      to_take = asset{base.amount * precision, base.asset_id} * project_obj.token_price * price_at_evaluation;
-      to_take.amount = to_take.amount / precision;
+      to_take = asset_price_multiply(base, precision.value, project_obj.token_price, price_at_evaluation);
     }
     else
     {
@@ -501,6 +547,17 @@ namespace graphene { namespace chain {
        d.push_applied_operation(pledge_result);
 
        // give to project owner pledged amount
+       // issue balance object if it does not exists
+       if(!d.check_if_balance_object_exists(_pro_owner,pho.pledged.asset_id))
+       {
+         d.create<account_balance_object>([&pho, this](account_balance_object& abo){
+           abo.owner = _pro_owner;
+           abo.asset_type = pho.pledged.asset_id;
+           abo.balance = 0;
+           abo.reserved = 0;
+         });
+       }
+
        auto& balance_obj = d.get_balance_object(_pro_owner, pho.pledged.asset_id);
        d.modify(balance_obj, [&](account_balance_object& balance_obj){
           balance_obj.balance += pledge;

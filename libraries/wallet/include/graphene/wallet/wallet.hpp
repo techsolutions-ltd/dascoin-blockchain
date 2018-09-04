@@ -2087,7 +2087,7 @@ class wallet_api
        * @param account         name or id of the account
        * @returns               a list of pledge holder objects.
        */
-      vector<das33_pledge_holder_object> get_das33_pledges_by_account(const string& account) const;
+      das33_pledges_by_account_result get_das33_pledges_by_account(const string& account) const;
 
       /**
        * @brief Return a list of pledges for specified project.
@@ -2101,10 +2101,27 @@ class wallet_api
 
       /**
       * @brief Gets a sum of all pledges made to project
-      * @params project id of a project
+      * @param project id of a project
       * @return vector of assets, each with total sum of that asset pledged
       */
       vector<asset> get_amount_of_assets_pledged_to_project(das33_project_id_type project) const;
+
+      /**
+      * @brief Gets the amount of project tokens that a pledger can get for pledging a certain amount of asset
+      * @param project id of a project
+      * @param to_pledge asset user is pledging
+      * @return amount of project tokens to get
+      */
+      das33_project_tokens_amount get_amount_of_project_tokens_received_for_asset(das33_project_id_type project, asset to_pledge) const;
+
+      /**
+      * @brief Gets the amount of assets needed to be pledge to get given amount of base project tokens
+      * @params project id of a project
+      * @params asset_id id of an asset user wants to get amount for
+      * @params to_pledge project token user wants to get
+      * @return amount of project tokens to get
+      */
+      das33_project_tokens_amount get_amount_of_asset_needed_for_project_token(das33_project_id_type project, asset_id_type asset_id, asset tokens) const;
 
       //////////////////////////
       // GLOBALS:             //
@@ -2458,6 +2475,8 @@ FC_API( graphene::wallet::wallet_api,
         (delete_das33_project)
         (get_das33_projects)
         (get_amount_of_assets_pledged_to_project)
+        (get_amount_of_project_tokens_received_for_asset)
+        (get_amount_of_asset_needed_for_project_token)
         (das33_set_use_external_btc_price)
 
         // Delayed operations resolver:

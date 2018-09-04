@@ -218,6 +218,23 @@ struct license_objects_grouped_by_kind_res {
     vector<license_type_object> licenses;
 };
 
+struct das33_project_tokens_amount {
+  das33_project_tokens_amount() = default;
+  explicit das33_project_tokens_amount(asset pledge, asset base, asset bonus)
+    : pledge(pledge),base(base), bonus(bonus)
+  {}
+  asset pledge;
+  asset base;
+  asset bonus;
+};
+
+struct das33_pledges_by_account_result {
+  das33_pledges_by_account_result() = default;
+  map<das33_project_id_type, share_type> total_expected;
+  map<das33_project_id_type, share_type> base_expected_in_last_round;
+  vector<das33_pledge_holder_object> pledges;
+};
+
 struct signed_block_with_num
 {
   uint32_t num;
@@ -406,3 +423,13 @@ FC_REFLECT(graphene::chain::license_types_grouped_by_kind_res,
 FC_REFLECT(graphene::chain::license_objects_grouped_by_kind_res,
            (kind)
            (licenses))
+
+FC_REFLECT(graphene::chain::das33_project_tokens_amount,
+           (pledge)
+           (base)
+           (bonus))
+
+FC_REFLECT(graphene::chain::das33_pledges_by_account_result,
+           (pledges)
+           (total_expected)
+           (base_expected_in_last_round))

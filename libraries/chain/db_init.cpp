@@ -614,6 +614,25 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       a.dynamic_asset_data_id = bitcoin_dyn_asset.id;
    });
 
+   // Create one placeholder asset for id 1.3.5
+   const asset_dynamic_data_object& placholder_dyn_asset =
+     create<asset_dynamic_data_object>([&](asset_dynamic_data_object& a) {
+       a.current_supply = 0;
+     });
+   const asset_object& placeholder_asset_obj = create<asset_object>( [&]( asset_object& a ) {
+     a.symbol = "PLCHLD";
+     a.options.max_supply = 1;
+     a.precision = GRAPHENE_BLOCKCHAIN_PRECISION_DIGITS;
+     a.options.flags = 0;
+     a.options.issuer_permissions = 0;
+     a.issuer = GRAPHENE_NULL_ACCOUNT;
+     a.options.core_exchange_rate.base.amount = 1;
+     a.options.core_exchange_rate.base.asset_id = asset_id_type(0);
+     a.options.core_exchange_rate.quote.amount = 1;
+     a.options.core_exchange_rate.quote.asset_id = asset_id_type(0);
+     a.dynamic_asset_data_id = placholder_dyn_asset.id;
+   });
+
    // Create more special assets
    while( true )
    {
@@ -943,6 +962,12 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       auto& ca = get_chain_authorities();
       a.issuer = ca.webasset_issuer;
       a.authenticator = ca.webasset_authenticator;
+   });
+
+   modify(placeholder_asset_obj, [&](asset_object& a){
+     auto& ca = get_chain_authorities();
+     a.issuer = ca.webasset_issuer;
+     a.authenticator = ca.webasset_authenticator;
    });
 
    // Initialize licenses:

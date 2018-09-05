@@ -392,6 +392,8 @@ struct database_fixture {
                                                     share_type cash, share_type reserved);
    const issued_asset_record_object* issue_cycleasset(const string& unique_id, account_id_type receiver_id,
                                                     share_type cash, share_type reserved);
+    const issued_asset_record_object* issue_btcasset(const string& unique_id, account_id_type receiver_id,
+                                                       share_type cash, share_type reserved);
    void deny_issue_request(issue_asset_request_id_type request_id);
    std::pair<share_type, share_type> get_web_asset_amounts(account_id_type owner_id);
    std::pair<asset, asset> get_web_asset_balances(account_id_type owner_id);

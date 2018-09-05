@@ -32,12 +32,18 @@ using namespace graphene::chain::test;
 
 BOOST_FIXTURE_TEST_SUITE( dascoin_tests, database_fixture )
 
+BOOST_FIXTURE_TEST_SUITE( wire_out_with_fee_unit_tests, database_fixture )
+
 BOOST_AUTO_TEST_CASE( wire_out_with_fee_web_asset_test )
 { try {
   ACTOR(wallet);
   generate_block();
   VAULT_ACTOR(vault);
-  generate_block();
+
+  tether_accounts(wallet_id, vault_id);
+  issue_dascoin(vault_id, 100);
+  disable_vault_to_wallet_limit(vault_id);
+  transfer_dascoin_vault_to_wallet(vault_id, wallet_id, 100 * DASCOIN_DEFAULT_ASSET_PRECISION);
 
   const auto check_balances = [this](const account_object& account, share_type expected_cash,
                                      share_type expected_reserved)
@@ -51,6 +57,12 @@ BOOST_AUTO_TEST_CASE( wire_out_with_fee_web_asset_test )
 
   // Reject, insufficient balance:
   GRAPHENE_REQUIRE_THROW( wire_out_with_fee(wallet_id, web_asset(10000), "BTC", "SOME_BTC_ADDRESS"), fc::exception );
+
+  // Reject, cannot wire out cycles:
+  GRAPHENE_REQUIRE_THROW( wire_out_with_fee(wallet_id, asset{1, get_cycle_asset_id()}, "BTC", "SOME_BTC_ADDRESS"), fc::exception );
+
+  // Reject, cannot wire out dascoin:
+  GRAPHENE_REQUIRE_THROW( wire_out_with_fee(wallet_id, asset{1, get_dascoin_asset_id()}, "BTC", "SOME_BTC_ADDRESS"), fc::exception );
 
   issue_webasset("1", wallet_id, 15000, 15000);
   generate_blocks(db.head_block_time() + fc::hours(24) + fc::seconds(1));
@@ -96,6 +108,9 @@ BOOST_AUTO_TEST_CASE( wire_out_with_fee_web_asset_test )
   // Check if the wire out holder object was deleted:
   BOOST_CHECK_EQUAL( get_wire_out_with_fee_holders(wallet_id, {get_web_asset_id()}).size(), 0 );
 
+  issue_btcasset("1", wallet_id, 15000, 15000);
+  wire_out_with_fee(wallet_id, asset{5000, get_btc_asset_id()}, "BTC", "SOME_BTC_ADDRESS");
+
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_CASE( wire_out_with_fee_web_asset_history_test )
@@ -132,5 +147,7 @@ BOOST_AUTO_TEST_CASE( wire_out_with_fee_web_asset_history_test )
   BOOST_CHECK ( op.completed );
 
 } FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

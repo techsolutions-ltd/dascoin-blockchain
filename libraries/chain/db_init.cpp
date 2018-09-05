@@ -618,7 +618,9 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    while( true )
    {
       uint64_t id = get_index<asset_object>().get_next_id().instance();
-      if( id >= genesis_state.immutable_parameters.num_special_assets )
+      //Note: this is a workaround so we do not change genesis.json
+      //if( id >= genesis_state.immutable_parameters.num_special_assets )
+      if ( id >= DASCOIN_PLACEHOLDER_ASSET_COUNT)
          break;
       const asset_dynamic_data_object& dyn_asset =
          create<asset_dynamic_data_object>([&](asset_dynamic_data_object& a) {

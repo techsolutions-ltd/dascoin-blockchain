@@ -621,7 +621,7 @@ void database::init_genesis(const genesis_state_type& genesis_state)
      });
    const asset_object& placeholder_asset_obj = create<asset_object>( [&]( asset_object& a ) {
      a.symbol = "PLCHLD";
-     a.options.max_supply = 1;
+     a.options.max_supply = GRAPHENE_MAX_SHARE_SUPPLY;
      a.precision = GRAPHENE_BLOCKCHAIN_PRECISION_DIGITS;
      a.options.flags = 0;
      a.options.issuer_permissions = 0;

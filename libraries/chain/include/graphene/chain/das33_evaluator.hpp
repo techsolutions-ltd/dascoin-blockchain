@@ -137,5 +137,9 @@ namespace graphene { namespace chain {
     void_result do_apply( const operation_type& op );
   };
 
+  asset asset_price_multiply ( const asset& a, int64_t precision, const price& b, const price& c );
+  share_type precision_modifier(asset_object a, asset_object b);
+  price get_price_in_web_eur(asset_id_type original_asset_id, const database& d);
+
 
 } }  // namespace graphene::chain

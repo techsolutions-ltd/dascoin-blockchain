@@ -5805,7 +5805,7 @@ vector<das33_pledge_holder_object> wallet_api::get_das33_pledges(das33_pledge_ho
     return my->_remote_db->get_das33_pledges(from, limit);
 }
 
-vector<das33_pledge_holder_object> wallet_api::get_das33_pledges_by_account(const string& account) const
+das33_pledges_by_account_result wallet_api::get_das33_pledges_by_account(const string& account) const
 {
    account_object account_obj = my->get_account(account);
    return my->_remote_db->get_das33_pledges_by_account(account_obj.id);
@@ -5826,6 +5826,16 @@ vector<das33_project_object> wallet_api::get_das33_projects(const string& lower_
 vector<asset> wallet_api::get_amount_of_assets_pledged_to_project(das33_project_id_type project) const
 {
   return my->_remote_db->get_amount_of_assets_pledged_to_project(project);
+}
+
+das33_project_tokens_amount wallet_api::get_amount_of_project_tokens_received_for_asset(das33_project_id_type project, asset to_pledge) const
+{
+  return my->_remote_db->get_amount_of_project_tokens_received_for_asset(project, to_pledge);
+}
+
+das33_project_tokens_amount wallet_api::get_amount_of_asset_needed_for_project_token(das33_project_id_type project, asset_id_type asset_id, asset tokens) const
+{
+  return my->_remote_db->get_amount_of_asset_needed_for_project_token(project, asset_id, tokens);
 }
 
 signed_transaction wallet_api::create_das33_project(const string& authority,

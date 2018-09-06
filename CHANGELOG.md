@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.4.5] - 2018-09-06
+### Added
+ - Hardfork: use correct Dascoin price in clearing contract
+ - New query: get amount of project tokens received for asset
+ - New query: get amount of asset needed for project token
+ - Reserved first 20 places in asset_id space for system assets
+
+### Updated
+ - Cli Wallet: performance of get_account_history_by_operation query is
+   vastly improved
+ - Allow wireout of BTC asset
+
 ## [0.4.4] - 2018-08-31
 ### Added
  - Hardfork: key rollback removed

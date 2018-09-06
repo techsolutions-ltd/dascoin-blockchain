@@ -362,6 +362,7 @@ struct database_fixture {
    asset_id_type get_web_asset_id() const;
    asset_id_type get_cycle_asset_id() const;
    asset_id_type get_dascoin_asset_id() const;
+   asset_id_type get_btc_asset_id() const;
    frequency_type get_global_frequency() const;
    const global_property_object::daspay& get_daspay_parameters() const;
 
@@ -391,6 +392,8 @@ struct database_fixture {
                                                     share_type cash, share_type reserved);
    const issued_asset_record_object* issue_cycleasset(const string& unique_id, account_id_type receiver_id,
                                                     share_type cash, share_type reserved);
+    const issued_asset_record_object* issue_btcasset(const string& unique_id, account_id_type receiver_id,
+                                                       share_type cash, share_type reserved);
    void deny_issue_request(issue_asset_request_id_type request_id);
    std::pair<share_type, share_type> get_web_asset_amounts(account_id_type owner_id);
    std::pair<asset, asset> get_web_asset_balances(account_id_type owner_id);
@@ -405,6 +408,7 @@ struct database_fixture {
    share_type get_web_asset_current_supply() { return get_asset_current_supply(get_web_asset_id()); }
    void set_external_btc_price(price val);
    void set_last_dascoin_price(price val);
+   void set_external_bitcoin_price(price val);
    void set_last_daily_dascoin_price(price val);
    void issue_dascoin(account_id_type vault_id, share_type amount);
    void issue_dascoin(account_object& vault_obj, share_type amount);

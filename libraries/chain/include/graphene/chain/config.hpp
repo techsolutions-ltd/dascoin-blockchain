@@ -235,6 +235,13 @@
 #define DASCOIN_MAX_BITCOIN_SUPPLY int64_t(10000000LL)
 ///}@
 
+/**
+ * Placeholder asset parameter
+ */
+///@{
+#define DASCOIN_PLACEHOLDER_ASSET_COUNT (20)
+///}@
+
 
 /**
  * Frequency_type parameters:

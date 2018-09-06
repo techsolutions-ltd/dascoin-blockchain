@@ -101,6 +101,12 @@ const issued_asset_record_object* database_fixture::issue_cycleasset(const strin
   return issue_asset(unique_id, receiver_id, cash, reserved, get_cycle_asset_id(), get_webasset_issuer_id(), "TEST_ISSUE_CYCLE_ASSET");
 }
 
+const issued_asset_record_object* database_fixture::issue_btcasset(const string& unique_id, account_id_type receiver_id,
+                                                                   share_type cash, share_type reserved)
+{
+  return issue_asset(unique_id, receiver_id, cash, reserved, get_btc_asset_id(), get_webasset_issuer_id(), "TEST_ISSUE_BTC_ASSET");
+}
+
 std::pair<share_type, share_type> database_fixture::get_web_asset_amounts(account_id_type owner_id)
 {
   const auto& balance_obj = db.get_balance_object(owner_id, get_web_asset_id());
@@ -243,6 +249,15 @@ void database_fixture::set_last_dascoin_price(price val)
 
   db.modify(get_dynamic_global_properties(), [val](dynamic_global_property_object& dgpo){
     dgpo.last_dascoin_price = val;
+  });
+
+} FC_LOG_AND_RETHROW() }
+
+void database_fixture::set_external_bitcoin_price(price val)
+{ try {
+
+  db.modify(get_dynamic_global_properties(), [val](dynamic_global_property_object& dgpo){
+    dgpo.external_btc_price = val;
   });
 
 } FC_LOG_AND_RETHROW() }

@@ -1592,7 +1592,27 @@ class wallet_api
         bool broadcast /* false */
         );
 
-      /** 
+      /**
+       * Submit cycles from a license to the minting queue.
+       *
+       * @param account           The account that submits cycles.
+       * @param amount            The amount submitted.
+       * @param license           The name or id of the license from which to submit.
+       * @param frequency         Frequency lock for this license.
+       * @param comment           Comment for this submissions.
+       * @param broadcast         true if you wish to broadcast the transaction.
+       * @return                  The signed version of the transaction.
+       */
+      signed_transaction submit_cycles_to_queue_by_license(
+        const string& account,
+        share_type amount,
+        const string& license,
+        frequency_type frequency,
+        const string& comment,
+        bool broadcast /* false */
+      );
+
+      /**
        * Get all license type ids found on the blockchain
        *
        * @return Vector of license type ids
@@ -2428,6 +2448,7 @@ FC_API( graphene::wallet::wallet_api,
         (receive_blind_transfer)
         // Licenses:
         (issue_license)
+        (submit_cycles_to_queue_by_license)
         (get_license_information)
         (get_license_type_names_ids)
 

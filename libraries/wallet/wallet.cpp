@@ -3456,6 +3456,33 @@ public:
       return sign_transaction( tx, broadcast );
    }
 
+   signed_transaction submit_cycles_to_queue_by_license(
+      const string& account,
+      share_type amount,
+      const string& license,
+      frequency_type frequency,
+      const string& comment,
+      bool broadcast)
+   {
+      auto account_id = get_account( account ).id;
+      auto license_type = get_license_type( license );
+
+      submit_cycles_to_queue_by_license_operation op;
+
+      op.account = account_id;
+      op.amount = amount;
+      op.license_type = license_type.id;
+      op.frequency_lock = frequency;
+      op.comment = comment;
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction( tx, broadcast );
+   }
+
    signed_transaction update_queue_parameters(
        optional<bool> enable_dascoin_queue,
        optional<uint32_t> reward_interval_time_seconds,
@@ -5730,6 +5757,12 @@ signed_transaction wallet_api::issue_license( const string& issuer, const string
                                               bool broadcast )
 {
    return my->issue_license( issuer, account, license, bonus_percentage, account_frequency, broadcast );
+}
+
+signed_transaction wallet_api::submit_cycles_to_queue_by_license( const string& account, share_type amount, const string& license,
+                                                                  frequency_type frequency, const string& comment, bool broadcast )
+{
+   return my->submit_cycles_to_queue_by_license( account, amount, license, frequency, comment, broadcast );
 }
 
 signed_transaction wallet_api::update_queue_parameters(

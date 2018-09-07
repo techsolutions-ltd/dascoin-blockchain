@@ -1137,6 +1137,22 @@ BOOST_AUTO_TEST_CASE( upgrade_executed_with_ultility_licences_test )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( submit_cycles_to_queue_from_charter_license_test )
+{ try {
+   VAULT_ACTOR(foo);
+   auto standard_charter = *(_dal.get_license_type("standard_charter"));
+   const share_type bonus_percent = 0;
+   const share_type frequency_lock = 100;
+   const time_point_sec issue_time = db.head_block_time();
+
+   do_op(issue_license_operation(get_license_issuer_id(), foo_id, standard_charter.id,
+                                  bonus_percent, frequency_lock, issue_time));
+
+   // This fails - cannot submit cycles from a charter license:
+   GRAPHENE_REQUIRE_THROW( do_op(submit_cycles_to_queue_by_license_operation(foo_id, 1000, standard_charter.id, 100, "TEST")), fc::exception );
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

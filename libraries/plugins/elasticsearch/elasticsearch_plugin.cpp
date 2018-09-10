@@ -28,6 +28,7 @@
 #include <fc/smart_ref_impl.hpp>
 #include <curl/curl.h>
 #include <graphene/utilities/elasticsearch.hpp>
+#include <fc/io/json.hpp>
 
 namespace graphene { namespace elasticsearch {
 
@@ -209,13 +210,14 @@ void elasticsearch_plugin_impl::doOperationHistory(const optional <operation_his
    os.op_in_trx = oho->op_in_trx;
    os.operation_result = fc::json::to_string(oho->result);
    os.virtual_op = oho->virtual_op;
+//   variant tmp;
    oho->op.visit( fc::from_static_variant(os.op, FC_PACK_MAX_DEPTH) );
    if (os.op.is_object())
    {
       adaptor_struct adaptor;
       os.op = adaptor.adapt(os.op.get_object());
    }
-//   os.op = fc::json::to_string(oho->op);
+//   os.op = fc::json::to_string(tmp, fc::json::output_formatting::legacy_generator);
 }
 
 void elasticsearch_plugin_impl::doBlock(const optional <operation_history_object>& oho, const signed_block& b)
@@ -316,7 +318,7 @@ void elasticsearch_plugin_impl::createBulkLine(const account_transaction_history
    bulk_line_struct.block_data = bs;
    if(_elasticsearch_visitor)
       bulk_line_struct.additional_data = vs;
-   bulk_line = fc::json::to_string(bulk_line_struct);
+   bulk_line = fc::json::to_string(bulk_line_struct, fc::json::legacy_generator);
 }
 
 void elasticsearch_plugin_impl::prepareBulk(const account_transaction_history_id_type& ath_id)

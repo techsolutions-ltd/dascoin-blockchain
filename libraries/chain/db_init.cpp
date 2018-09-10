@@ -952,9 +952,9 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       create_license_type(license_kind::utility, "standard_utility", DASCOIN_BASE_STANDARD_CYCLES, {1}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_STANDARD, license_type_object::upgrade_policy::utility);
       create_license_type(license_kind::utility, "manager_utility", DASCOIN_BASE_MANAGER_CYCLES, {1}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_MANAGER, license_type_object::upgrade_policy::utility);
       create_license_type(license_kind::utility, "pro_utility", DASCOIN_BASE_PRO_CYCLES, {1}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_PRO, license_type_object::upgrade_policy::utility);
-      create_license_type(license_kind::utility, "executive_utility", DASCOIN_BASE_EXECUTIVE_CYCLES_NEW_VALUE, {1,1}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_EXECUTIVE, license_type_object::upgrade_policy::utility);
-      create_license_type(license_kind::utility, "vice_president_utility", DASCOIN_BASE_VICE_PRESIDENT_CYCLES_NEW_VALUE, {1,1}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_VICE_PRESIDENT, license_type_object::upgrade_policy::utility);
-      create_license_type(license_kind::utility, "president_utility", DASCOIN_BASE_PRESIDENT_CYCLES, {1,2,4}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_PRESIDENT, license_type_object::upgrade_policy::utility_president);
+      create_license_type(license_kind::utility, "executive_utility", DASCOIN_BASE_EXECUTIVE_CYCLES_NEW_VALUE, {1,2}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_EXECUTIVE, license_type_object::upgrade_policy::utility);
+      create_license_type(license_kind::utility, "vice_president_utility", DASCOIN_BASE_VICE_PRESIDENT_CYCLES_NEW_VALUE, {1,2}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_VICE_PRESIDENT, license_type_object::upgrade_policy::utility);
+      create_license_type(license_kind::utility, "president_utility", DASCOIN_BASE_PRESIDENT_CYCLES, {1,2,4}, {}, {}, DASCOIN_DEFAULT_EUR_LIMIT_PRESIDENT, license_type_object::upgrade_policy::utility);
    }
 
    // Create historic upgrade events:

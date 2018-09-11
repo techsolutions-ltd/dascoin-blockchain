@@ -154,6 +154,7 @@ void_result submit_cycles_to_queue_by_license_evaluator::do_evaluate(const opera
 { try {
   detail::submit_cycles_evaluator_helper helper(db());
   _license_information_obj = helper.do_evaluate(op, op.license_type, op.frequency_lock);
+  FC_ASSERT( _license_information_obj->vault_license_kind != chartered, "Cannot submit cycles to the minting queue from a chartered license" );
   return {};
 
 } FC_CAPTURE_AND_RETHROW((op)) }

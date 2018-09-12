@@ -219,6 +219,10 @@ struct adaptor_struct {
                }
            }
        }
+       if (o.find("kind") != o.end())
+       {
+           o["kind"] = o["kind"].as_string();
+       }
        variant v;
        fc::to_variant(o, v, FC_PACK_MAX_DEPTH);
        return v;

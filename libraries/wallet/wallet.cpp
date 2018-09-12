@@ -3038,7 +3038,7 @@ public:
       m["get_account_history_by_operation"] = //m["get_account_history"];
       [this](variant result, const fc::variants& a)
       {
-         auto r = result.as<vector<operation_detail>>();
+         auto r = result.as<vector<operation_detail>>( GRAPHENE_MAX_NESTED_OBJECTS );
          std::stringstream ss;
 
          for( operation_detail& d : r )
@@ -4165,13 +4165,13 @@ vector<operation_detail> wallet_api::get_account_history_by_operation(string nam
       // get all account objects
       auto account_object_variant_vec = my->_remote_db->get_objects(acc_ids);
       for( size_t i = 0; i < account_object_variant_vec.size(); i++ ) {
-         cached_accounts[acc_ids[i]] = account_object_variant_vec[i].as<account_object>();
+         cached_accounts[acc_ids[i]] = account_object_variant_vec[i].as<account_object>( GRAPHENE_MAX_NESTED_OBJECTS );
       }
 
       // get all asset objects
       auto asset_object_variant_vec = my->_remote_db->get_objects(ast_ids);
       for( size_t i = 0; i < asset_object_variant_vec.size(); i++ ) {
-         cached_assets[ast_ids[i]] = asset_object_variant_vec[i].as<asset_object>();
+         cached_assets[ast_ids[i]] = asset_object_variant_vec[i].as<asset_object>( GRAPHENE_MAX_NESTED_OBJECTS );
       }
 
       for( auto& o : current ) {

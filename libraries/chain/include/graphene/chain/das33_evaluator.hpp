@@ -70,12 +70,76 @@ namespace graphene { namespace chain {
     object_id_type do_apply( const operation_type& op );
 
   private:
-    void_result do_evaluate_cycles(const database &d, const das33_pledge_asset_operation &op, const account_object &account_obj) const;
-    void_result do_evaluate_asset(const database &d, const das33_pledge_asset_operation &op, const account_object &balance_obj) const;
-    void_result do_apply_cycles(database &d, const das33_pledge_asset_operation &op, const license_information_object &license_obj) const;
-    void_result do_apply_asset(database &d, const das33_pledge_asset_operation &op, const account_balance_object &balance_obj) const;
-
-    asset expected;
+    asset total;
+    asset base;
+    asset bonus;
+    asset to_take;
+    price price_at_evaluation;
+    share_type discount;
   };
+
+  class das33_distribute_project_pledges_evaluator : public evaluator<das33_distribute_project_pledges_evaluator>
+  {
+  public:
+    typedef das33_distribute_project_pledges_operation operation_type;
+
+    void_result do_evaluate( const operation_type& op );
+    void_result do_apply( const operation_type& op );
+
+  private:
+        account_id_type _pro_owner;
+  };
+
+  class das33_project_reject_evaluator : public evaluator<das33_project_reject_evaluator>
+  {
+  public:
+    typedef das33_project_reject_operation operation_type;
+
+    void_result do_evaluate( const operation_type& op );
+    void_result do_apply( const operation_type& op );
+
+  private:
+      account_id_type _pro_owner;
+  };
+
+  class das33_distribute_pledge_evaluator : public evaluator<das33_distribute_pledge_evaluator>
+  {
+  public:
+    typedef das33_distribute_pledge_operation operation_type;
+
+    void_result do_evaluate( const operation_type& op );
+    void_result do_apply( const operation_type& op );
+
+  private:
+    const das33_pledge_holder_object* _pledge_holder_ptr = nullptr;
+    account_id_type _pro_owner;
+  };
+
+  class das33_pledge_reject_evaluator : public evaluator<das33_pledge_reject_evaluator>
+  {
+  public:
+    typedef das33_pledge_reject_operation operation_type;
+
+    void_result do_evaluate( const operation_type& op );
+    void_result do_apply( const operation_type& op );
+
+  private:
+    const das33_pledge_holder_object* _pledge_holder_ptr = nullptr;
+    account_id_type _pro_owner;
+  };
+
+  class das33_set_use_external_btc_price_evaluator : public evaluator<das33_set_use_external_btc_price_evaluator>
+  {
+  public:
+    typedef das33_set_use_external_btc_price_operation operation_type;
+
+    void_result do_evaluate( const operation_type& op );
+    void_result do_apply( const operation_type& op );
+  };
+
+  asset asset_price_multiply ( const asset& a, int64_t precision, const price& b, const price& c );
+  share_type precision_modifier(asset_object a, asset_object b);
+  price get_price_in_web_eur(asset_id_type original_asset_id, const database& d);
+
 
 } }  // namespace graphene::chain

@@ -74,10 +74,13 @@ namespace graphene { namespace chain {
       bool                    enable_cycle_issuing = true;
       bool                    enable_dascoin_queue = false;
 
-      extensions_type         extensions;
+      using chain_parameters_extension = static_variant<void_t, asset_id_type>;
+      using chain_parameters_extension_type = flat_set<chain_parameters_extension>;
+      chain_parameters_extension_type         extensions;
 
       /** defined in fee_schedule.cpp */
       void validate()const;
+      void apply_fee_asset_id();
    };
 
 } }  // graphene::chain

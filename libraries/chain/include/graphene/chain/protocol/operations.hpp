@@ -198,6 +198,13 @@ namespace graphene { namespace chain {
             das33_pledge_asset_operation,
 
             update_global_parameters_operation,
+            update_external_btc_price_operation,
+
+            das33_distribute_project_pledges_operation,
+            das33_project_reject_operation,
+            das33_distribute_pledge_operation,
+            das33_pledge_reject_operation,
+            das33_set_use_external_btc_price_operation,
 
             // Virtual operations below this point:
 
@@ -214,7 +221,8 @@ namespace graphene { namespace chain {
             fill_order_operation,
             wire_out_result_operation,
             wire_out_with_fee_result_operation,
-            unreserve_completed_operation
+            unreserve_completed_operation,
+            das33_pledge_result_operation
    > operation;
 
    /// @} // operations group

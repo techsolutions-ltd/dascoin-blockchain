@@ -50,6 +50,7 @@ namespace graphene { namespace chain {
 
     d.modify(d.get_global_properties(), [&op](global_property_object& gpo) {
       gpo.parameters = op.new_parameters;
+      gpo.parameters.apply_fee_asset_id();
     });
 
     return {};

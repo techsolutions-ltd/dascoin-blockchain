@@ -24,25 +24,110 @@
 
 #include <graphene/chain/das33_evaluator.hpp>
 #include <graphene/chain/database.hpp>
-#include <graphene/chain/balance_checker.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
 
 namespace graphene { namespace chain {
 
   // Helper methods:
-  void prices_check(const vector<price>& prices, asset_id_type token)
+  share_type users_total_pledges_in_round(account_id_type user_id, das33_project_id_type project_id, share_type round, const database& d)
   {
-    // check that all prices are for project token and that no price for asset is used multiple times:
-    std::map<asset_id_type, int> asset_count;
-    for(const auto& item : prices)
+    share_type sum = 0;
+    const auto& idx = d.get_index_type<das33_pledge_holder_index>().indices().get<by_user>().equal_range(user_id);
+    for( auto it = idx.first; it != idx.second; ++it )
     {
-      FC_ASSERT(item.base.asset_id == token || item.quote.asset_id == token, "All prices must be for project token");
-      asset_count[item.base.asset_id]++;
-      asset_count[item.quote.asset_id]++;
+      if (it->project_id == project_id && it->phase_number == round)
+        sum += (it->base_expected.amount);
+    }
+    return sum;
+  }
+
+  void price_check(const price& price_to_check, asset_id_type first_asset, asset_id_type second_asset)
+  {
+    FC_ASSERT(price_to_check.base.asset_id == first_asset || price_to_check.quote.asset_id == first_asset,
+              "Price must be for ${1}", ("1", first_asset));
+    FC_ASSERT(price_to_check.base.asset_id == second_asset || price_to_check.quote.asset_id == second_asset,
+                  "Price must be for ${1}", ("1", second_asset));
+  }
+
+  price get_price_in_web_eur(asset_id_type original_asset_id, const database& d)
+  {
+    price result;
+    if (original_asset_id == d.get_dascoin_asset_id())
+    {
+      result = d.get_dynamic_global_properties().last_dascoin_price;
+    }
+    else if (original_asset_id == d.get_btc_asset_id())
+    {
+      if (d.get_global_properties().das33_parameters.use_external_btc_price)
+      {
+        result = d.get_dynamic_global_properties().external_btc_price;
+      }
+      else
+      {
+        result = d.get_dynamic_global_properties().last_btc_price;
+      }
     }
 
-    const auto& it = std::find_if(asset_count.begin(), asset_count.end(),
-      [token](const std::pair<asset_id_type, int>& m) -> bool { return m.first != token && m.second != 1; });
-    FC_ASSERT(it == asset_count.end(), "Each asset can appear only once in ratios");
+    FC_ASSERT(!result.is_null(), "There is no proper price for ${asset}", ("asset", original_asset_id));
+
+    return result;
+  }
+
+  share_type precision_modifier(asset_object a, asset_object b)
+  {
+    share_type result = 1;
+    if (a.precision > b.precision)
+    {
+      result = std::pow(10, a.precision - b.precision);
+    }
+    return result;
+  }
+
+  typedef boost::multiprecision::uint128_t uint128_t;
+
+  asset asset_price_multiply ( const asset& a, int64_t precision, const price& b, const price& c )
+  {
+    uint128_t result;
+     if( a.asset_id == b.base.asset_id )
+     {
+        FC_ASSERT( b.base.amount.value > 0 );
+        result = (uint128_t(a.amount.value) * precision * b.quote.amount.value)/b.base.amount.value;
+        if (b.quote.asset_id == c.base.asset_id)
+        {
+          FC_ASSERT( c.base.amount.value > 0 );
+          result = (result * c.quote.amount.value)/c.base.amount.value;
+          result = result / precision;
+          return asset( result.convert_to<int64_t>(), c.quote.asset_id );
+        }
+        else
+        {
+          FC_ASSERT( c.quote.amount.value > 0 );
+          result = (result * c.base.amount.value)/c.quote.amount.value;
+          result = result / precision;
+          return asset( result.convert_to<int64_t>(), c.base.asset_id );
+        }
+
+     }
+     else if( a.asset_id == b.quote.asset_id )
+     {
+        FC_ASSERT( b.quote.amount.value > 0 );
+        result = (uint128_t(a.amount.value) * precision * b.base.amount.value)/b.quote.amount.value;
+        if (b.base.asset_id == c.base.asset_id)
+        {
+          FC_ASSERT( c.base.amount.value > 0 );
+          result = (result * c.quote.amount.value)/c.base.amount.value;
+          result = result / precision;
+          return asset( result.convert_to<int64_t>(), c.quote.asset_id );
+        }
+        else
+        {
+          FC_ASSERT( c.quote.amount.value > 0 );
+          result = (result * c.base.amount.value)/c.quote.amount.value;
+          result = result / precision;
+          return asset( result.convert_to<int64_t>(), c.base.asset_id );
+        }
+     }
+     FC_THROW_EXCEPTION( fc::assert_exception, "invalid asset * price", ("asset",a)("price",b) );
   }
 
   // method implementations:
@@ -53,24 +138,54 @@ namespace graphene { namespace chain {
       const auto& d = db();
       const auto& gpo = d.get_global_properties();
 
+      // Check authority
       const auto& authority_obj = op.authority(d);
       d.perform_chain_authority_check("das33 authority", gpo.authorities.das33_administrator, authority_obj);
 
+      // Check that name is unique
       const auto& idx = d.get_index_type<das33_project_index>().indices().get<by_project_name>();
       FC_ASSERT(idx.find(op.name) == idx.end(), "Das33 project called ${1} already exists.", ("1", op.name));
 
-      // Chcek that token isn't one of the system assets
-      FC_ASSERT(op.token != d.get_core_asset().id && op.token != d.get_web_asset_id()
-                && op.token != d.get_dascoin_asset_id() && op.token != d.get_cycle_asset_id(), "Can not create project with system assets");
+      // Check that owner is a wallet
+      const auto& owner_obj = op.owner(d);
+      FC_ASSERT( owner_obj.is_wallet(), "Owner account '${name}' is not a wallet account", ("name", owner_obj.name));
+
+      // Check that token exists
+      const auto& token_index = d.get_index_type<asset_index>().indices().get<by_id>();
+      FC_ASSERT(token_index.find(op.token) != token_index.end(), "Token with id ${1} does not exist", ("1", op.token));
+
+      // Check that token has max_supply
+      FC_ASSERT(op.token(d).options.max_supply > 0, "Token must have max_supply > 0");
+
+      // Check that token isn't one of the system assets
+      FC_ASSERT(op.token != d.get_core_asset().id
+             && op.token != d.get_web_asset_id()
+             && op.token != d.get_dascoin_asset_id()
+             && op.token != d.get_btc_asset_id()
+             && op.token != d.get_cycle_asset_id(), "Can not create project with system assets");
 
       // Check that token is not used by another project
       const auto& it = std::find_if(idx.begin(), idx.end(),
             [op](const das33_project_object& m) -> bool { return m.token_id == op.token; });
       FC_ASSERT(it == idx.end(), "Token with id ${1} is already used by another project", ("1", op.token));
 
-      prices_check(op.ratios, op.token);
+      // Check that discounts exist
+      FC_ASSERT(op.discounts.size() > 0, "Discounts must be provided. Only assets in discounts can be pledged.");
 
+      // Check that discounts are in (0,1] range
+      for (auto itr = op.discounts.begin(); itr != op.discounts.end(); itr++)
+      {
+        FC_ASSERT(itr->second > 0,
+                  "Discount can not be zero or negative (${name}:${value})",
+                  ("name", itr->first)
+                  ("value", itr->second));
+        FC_ASSERT(itr->second <= 1 * BONUS_PRECISION,
+                  "Discount can not be larger than 1.00 (${name}:${value})",
+                  ("name", itr->first)
+                  ("value", itr->second));
+      }
       return {};
+
     } FC_CAPTURE_AND_RETHROW((op))
   }
 
@@ -79,14 +194,26 @@ namespace graphene { namespace chain {
     try {
       auto& d = db();
 
+      const asset_object token = op.token(d);
+      const asset max_supply {token.options.max_supply, token.id};
+      const asset to_collect {op.goal_amount_eur, d.get_web_asset_id()};
+      const price token_price = to_collect / max_supply;
+
       return d.create<das33_project_object>([&](das33_project_object& dpo){
              dpo.name = op.name;
              dpo.owner = op.owner;
              dpo.token_id = op.token;
-             dpo.min_to_collect = op.min_to_collect;
-             dpo.collected = 0;
-             dpo.token_prices = op.ratios;
+             dpo.goal_amount_eur = op.goal_amount_eur;
+             dpo.discounts = op.discounts;
+             dpo.min_pledge = op.min_pledge;
+             dpo.max_pledge = op.max_pledge;
+             dpo.token_price = token_price;
+             dpo.collected_amount_eur = 0;
+             dpo.tokens_sold = 0;
              dpo.status = das33_project_status::inactive;
+             dpo.phase_number = 0;
+             dpo.phase_limit = max_supply.amount;
+             dpo.phase_end = time_point_sec::min();
            }).id;
     } FC_CAPTURE_AND_RETHROW((op))
   }
@@ -97,16 +224,78 @@ namespace graphene { namespace chain {
       const auto& d = db();
       const auto& gpo = d.get_global_properties();
 
+      // Check authority
       const auto& authority_obj = op.authority(d);
       d.perform_chain_authority_check("das33 authority", gpo.authorities.das33_administrator, authority_obj);
 
+      // Get project
       const auto& idx = d.get_index_type<das33_project_index>().indices().get<by_id>();
       auto project_iterator = idx.find(op.project_id);
       FC_ASSERT(project_iterator != idx.end(), "Das33 project with id ${1} does not exist.", ("1", op.project_id));
       project_to_update = &(*project_iterator);
 
-      if (op.ratios.size() > 0)
-        prices_check(op.ratios, project_to_update->token_id);
+      // Check name
+      if (op.name.valid())
+      {
+        const auto& name_index = d.get_index_type<das33_project_index>().indices().get<by_project_name>();
+        FC_ASSERT(name_index.find(*op.name) == name_index.end(), "Das33 project called ${1} already exists.", ("1", *op.name));
+      }
+
+      // Check owner
+      if (op.owner.valid())
+      {
+        const auto& owner_obj = (*op.owner)(d);
+        FC_ASSERT( owner_obj.is_wallet(), "Owner account '${name}' is not a wallet account", ("name", owner_obj.name));
+      }
+
+      // Check price
+      if (op.token_price.valid())
+      {
+        price_check(*op.token_price, d.get_web_asset_id(), project_to_update->token_id);
+      }
+
+      // Check bonuses
+      if (op.discounts.valid())
+      {
+        // Check that discounts are in (0,1] range
+        for (auto itr = op.discounts->begin(); itr != op.discounts->end(); itr++)
+        {
+          FC_ASSERT(itr->second > 0,
+                    "Discount can not be zero or negative (${name}:${value})",
+                    ("name", itr->first)
+                    ("value", itr->second));
+          FC_ASSERT(itr->second <= 1 * BONUS_PRECISION,
+                    "Discount can not be larger than 1.00  (${name}:${value})",
+                    ("name", itr->first)
+                    ("value", itr->second));
+        }
+      }
+
+      // Check phase number
+      if (op.phase_number.valid())
+      {
+        FC_ASSERT(*op.phase_number > project_to_update->phase_number, "Phase number can not be decreased");
+      }
+
+      // Check phase limit
+      if (op.phase_limit.valid())
+      {
+        share_type new_limit = *op.phase_limit;
+        asset_object token = project_to_update->token_id(d);
+        // If previous limit is not max supply
+        if (project_to_update->phase_limit != token.options.max_supply )
+        {
+          // New limit must be larger
+          FC_ASSERT(new_limit > project_to_update->phase_limit, "New phase limit must be more then the previous one");
+        }
+        FC_ASSERT(new_limit <= token.options.max_supply, "New limit can not be more then max supply of token");
+      }
+
+      // Check status
+      if (op.status.valid())
+      {
+        FC_ASSERT(*op.status < das33_project_status::DAS33_PROJECT_STATUS_COUNT, "Unknown status value");
+      }
 
       return {};
     } FC_CAPTURE_AND_RETHROW((op))
@@ -120,9 +309,18 @@ namespace graphene { namespace chain {
       d.modify<das33_project_object>(*project_to_update, [&](das33_project_object& dpo){
         if (op.name) dpo.name = *op.name;
         if (op.owner) dpo.owner = *op.owner;
-        if (op.min_to_collect) dpo.min_to_collect = op.min_to_collect;
-        if (op.ratios.size() > 0) dpo.token_prices = op.ratios;
+        // token_id: we can't alter
+        if (op.goal_amount) dpo.goal_amount_eur = *op.goal_amount;
+        if (op.discounts) dpo.discounts = *op.discounts;
+        if (op.min_pledge) dpo.min_pledge = *op.min_pledge;
+        if (op.max_pledge) dpo.max_pledge = *op.max_pledge;
+        if (op.token_price) dpo.token_price = *op.token_price;
+        // collected_amount_eur: we can't alter
+        // tokens_sold: we can't alter
         if (op.status) dpo.status = static_cast<das33_project_status>(*op.status);
+        if (op.phase_number) dpo.phase_number = *op.phase_number;
+        if (op.phase_limit) dpo.phase_limit = *op.phase_limit;
+        if (op.phase_end) dpo.phase_end = *op.phase_end;
       });
 
       return {};
@@ -145,7 +343,7 @@ namespace graphene { namespace chain {
 
       const auto& pledges_idx = d.get_index_type<das33_pledge_holder_index>().indices().get<by_project>().equal_range(op.project_id);
       //auto pledges_iterator = pledges_idx.begin();
-      FC_ASSERT(pledges_idx.first == pledges_idx.second, "Project can not be deleted as it has no pledges");
+      FC_ASSERT(pledges_idx.first == pledges_idx.second, "Project can not be deleted as it has pledges");
 
       return {};
     } FC_CAPTURE_AND_RETHROW((op))
@@ -166,134 +364,18 @@ namespace graphene { namespace chain {
   { try {
 
     const auto& d = db();
-    const auto& account_obj = op.account_id(d);
     const auto& project_obj = op.project_id(d);
     const auto& token_obj = project_obj.token_id(d);
 
     // Check if pledged asset and project token are different assets
-    FC_ASSERT( op.pledged.asset_id != project_obj.token_id,
-               "Cannot pledge project tokens"
-    );
-
-    // Check if project is active
-    FC_ASSERT(project_obj.status == das33_project_status::active, "Pladge can only be made to active project");
-
-    // Evaluate different things for cycles and other assets
-    if( op.pledged.asset_id == d.get_cycle_asset_id() )
-    {
-      do_evaluate_cycles(d, op, account_obj);
-    }
-    else
-    {
-      do_evaluate_asset(d, op, account_obj);
-    }
+    FC_ASSERT( op.pledged.asset_id != project_obj.token_id, "Cannot pledge project tokens" );
 
     // Assure target project exists:
     const auto& idx = d.get_index_type<das33_project_index>().indices().get<by_id>();
     FC_ASSERT( idx.find(project_obj.id) != idx.end(), "Bad project id" );
 
-    // Calculate expected amount
-    expected.asset_id = project_obj.token_id;
-    for( const auto& current : project_obj.token_prices )
-    {
-      if( current.base.asset_id == op.pledged.asset_id )
-        expected.amount = op.pledged.amount.value * current.quote.amount.value / current.base.amount.value;
-      else if( current.quote.asset_id == op.pledged.asset_id)
-        expected.amount = op.pledged.amount.value * current.base.amount.value / current.quote.amount.value;
-    }
-    FC_ASSERT(expected.amount > 0,
-              "Cannot pledge because expected amount of ${tok} is ${ex}",
-              ("tok", token_obj.symbol)
-              ("ex", d.to_pretty_string(expected))
-    );
-
-    // Assure that amount pledged would not exceed token max supply limit.
-    FC_ASSERT(project_obj.collected + expected.amount <= token_obj.options.max_supply,
-              "Cannot pledge ${am} because it would exceed token's max supply limit ${max_limit}",
-              ("am", d.to_pretty_string(op.pledged))
-              ("max_limit", d.to_pretty_string(expected))
-    );
-
-    return {};
-
-  } FC_CAPTURE_AND_RETHROW((op)) }
-
-  object_id_type das33_pledge_asset_evaluator::do_apply(const das33_pledge_asset_operation& op)
-  { try {
-
-    auto& d = db();
-    const auto& account_obj = op.account_id(d);
-
-    // Apply different things for cycles and other assets
-    if( op.pledged.asset_id == d.get_cycle_asset_id() )
-    {
-      const auto& license_information_obj = (*account_obj.license_information)(d);
-      do_apply_cycles(d, op, license_information_obj);
-    }
-    else
-    {
-      const auto& balance_obj = d.get_balance_object(op.account_id, op.pledged.asset_id);
-      do_apply_asset(d, op, balance_obj);
-    }
-
-    // Update project
-    const auto& project_obj = op.project_id(d);
-    d.modify(project_obj, [&](das33_project_object& p){
-        p.collected += expected.amount;
-    });
-
-    // Create the holder object and return its ID:
-    return d.create<das33_pledge_holder_object>([&](das33_pledge_holder_object& cpho){
-      cpho.account_id = op.account_id;
-      cpho.pledged = op.pledged;
-      cpho.expected = expected;
-      cpho.license_id = op.license_id;
-      cpho.project_id = op.project_id;
-      cpho.timestamp = d.head_block_time();
-    }).id;
-
-  } FC_CAPTURE_AND_RETHROW((op)) }
-
-  void_result das33_pledge_asset_evaluator::do_evaluate_cycles(const database &d, const das33_pledge_asset_operation &op, const account_object &account_obj) const {
-
-    // Only vault accounts are allowed to submit cycles:
-    FC_ASSERT( account_obj.is_vault(),
-               "Account '${n}' is not a vault account",
-               ("n", account_obj.name)
-    );
-
-    // Check if this account has a license:
-    FC_ASSERT( account_obj.license_information.valid(),
-               "Cannot pledge cycles, account '${n}' does not have any licenses",
-               ("n", account_obj.name)
-    );
-
-    const auto& license_information_obj = (*account_obj.license_information)(d);
-
-    // Check if this account has a required license:
-    const auto& license_iterator = std::find_if(license_information_obj.history.begin(), license_information_obj.history.end(),
-                                                [&op](const license_information_object::license_history_record& history_record) {
-                                                    return history_record.license == op.license_id;
-                                                });
-    FC_ASSERT ( license_iterator != license_information_obj.history.end(),
-                "License ${l} is not issued to account ${a}",
-                ("l", op.license_id)
-                ("a", op.account_id)
-    );
-
-    // Assure we have enough cycles to submit:
-    FC_ASSERT ( (*license_iterator).amount >= op.pledged.amount,
-                "Trying to pledge ${t} cycles from license ${l} of vault ${v}, while ${r} remaining",
-                ("t", op.pledged.amount)
-                ("l", op.license_id)
-                ("v", op.account_id)
-                ("r", (*license_iterator).amount)
-    );
-
-    return {};
-  }
-
-  void_result das33_pledge_asset_evaluator::do_evaluate_asset(const database &d, const das33_pledge_asset_operation &op, const account_object &account_obj) const {
+    // Check if project is active
+    FC_ASSERT(project_obj.status == das33_project_status::active, "Pladge can only be made to active project");
 
     // Assure we have enough balance to pledge:
     const auto& balance_obj = d.get_balance_object(op.account_id, op.pledged.asset_id);
@@ -304,41 +386,435 @@ namespace graphene { namespace chain {
                ("n", d.to_pretty_string(op.pledged))
     );
 
-    // Assure we dont spend last DASC:
-    const auto& asset_obj = op.pledged.asset_id(d);
-    balance_checker::check_remaining_balance(d, account_obj, asset_obj, op.pledged.amount);
+    // Assure current phase hasn't ended
+    if (project_obj.phase_end != time_point_sec::min())
+    {
+      FC_ASSERT(d.head_block_time() < project_obj.phase_end, "Can not pledge: new ICO phase hasn;t started yet");
+    }
+
+    // Assure that all tokens aren't sold
+    FC_ASSERT(project_obj.tokens_sold < token_obj.options.max_supply, "All tokens for project are sold");
+    FC_ASSERT(project_obj.tokens_sold < project_obj.phase_limit, "All tokens in this phase are sold");
+
+    // Calculate expected amount
+    share_type precision = precision_modifier(op.pledged.asset_id(d), d.get_web_asset_id()(d));
+    total.asset_id = project_obj.token_id;
+    price_at_evaluation = get_price_in_web_eur(op.pledged.asset_id, d);
+    base = asset_price_multiply(op.pledged, precision.value, price_at_evaluation, project_obj.token_price);
+
+    // Assure that pledge amount is above minimum
+    FC_ASSERT(base.amount >= project_obj.min_pledge, "Can not pledge: must buy at least ${min} tokens", ("min", project_obj.min_pledge));
+
+    // Assure that pledge amount is below maximum for current user
+    auto previous_pledges = users_total_pledges_in_round(op.account_id, op.project_id, project_obj.phase_number, d);
+    FC_ASSERT( previous_pledges + base.amount <= project_obj.max_pledge,
+              "Can not buy more then ${max} tokens per phase and you already pledged for ${previous} in this phase.",
+              ("max", project_obj.max_pledge)
+              ("previous", previous_pledges));
+
+    // Calculate expected amount with discounts
+    auto discount_iterator = project_obj.discounts.find(op.pledged.asset_id);
+    FC_ASSERT( discount_iterator != project_obj.discounts.end(), "This asset can not be used in this project phase" );
+    discount = discount_iterator->second;
+    total.amount = base.amount * BONUS_PRECISION / discount;
+
+    // Assure that pledge amount is above zero
+    FC_ASSERT(total.amount > 0,
+              "Cannot pledge because expected amount of ${tok} is ${ex}",
+              ("tok", token_obj.symbol)
+              ("ex", d.to_pretty_string(total))
+    );
+
+    bool total_reduced = false;
+    // Decrease amount if it passes tokens max supply
+    if (project_obj.tokens_sold + total.amount > token_obj.options.max_supply)
+    {
+        total.amount = token_obj.options.max_supply - project_obj.tokens_sold;
+        total_reduced = true;
+    }
+
+    // Decrease amount if it passes current phase limit
+    if (project_obj.tokens_sold + total.amount > project_obj.phase_limit)
+    {
+        total.amount = project_obj.phase_limit - project_obj.tokens_sold;
+        total_reduced = true;
+    }
+
+    if (total_reduced)
+    {
+      base = {total.amount * discount / BONUS_PRECISION, total.asset_id};
+      bonus = total - base;
+      precision = precision_modifier(base.asset_id(d), d.get_web_asset_id()(d));
+      to_take = asset_price_multiply(base, precision.value, project_obj.token_price, price_at_evaluation);
+    }
+    else
+    {
+      bonus = total - base;
+      to_take = op.pledged;
+    }
 
     return {};
-  }
 
-  void_result das33_pledge_asset_evaluator::do_apply_cycles(database &d, const das33_pledge_asset_operation &op, const license_information_object &license_obj) const {
+  } FC_CAPTURE_AND_RETHROW((op)) }
 
-    // Spend cycles:
-    d.modify(license_obj, [&](license_information_object& lio) {
-      lio.subtract_cycles(*op.license_id, op.pledged.amount);
-    });
+  object_id_type das33_pledge_asset_evaluator::do_apply(const das33_pledge_asset_operation& op)
+  { try {
 
-    return {};
-  }
-
-
-  void_result das33_pledge_asset_evaluator::do_apply_asset(database &d, const das33_pledge_asset_operation &op, const account_balance_object &balance_obj) const {
+    auto& d = db();
+    const auto& project_obj = op.project_id(d);
 
     // Adjust the balance and spent amount:
+    const auto& balance_obj = d.get_balance_object(op.account_id, op.pledged.asset_id);
     d.modify(balance_obj, [&](account_balance_object& from){
-      from.balance -= op.pledged.amount;
-      from.spent += op.pledged.amount;
+      from.balance -= to_take.amount;
+      from.spent += to_take.amount;
     });
 
-    //TODO: I think we shouldn't do this here
-    // Decrease asset supply:
-    const auto& asset_obj = op.pledged.asset_id(d);
-    d.modify(asset_obj.dynamic_asset_data_id(d), [&](asset_dynamic_data_object& data){
-      data.current_supply -= op.pledged.amount;
+    // Update project
+    d.modify(project_obj, [&](das33_project_object& p){
+        p.tokens_sold += total.amount;
+        p.collected_amount_eur += (to_take * price_at_evaluation).amount;
     });
+
+    // Create the holder object and return its ID:
+    return d.create<das33_pledge_holder_object>([&](das33_pledge_holder_object& cpho){
+      cpho.account_id = op.account_id;
+      cpho.pledged = to_take;
+      cpho.pledge_remaining = to_take;
+      cpho.base_remaining = base;
+      cpho.base_expected = base;
+      cpho.bonus_remaining = bonus;
+      cpho.bonus_expected = bonus;
+      cpho.phase_number = project_obj.phase_number;
+      cpho.project_id = op.project_id;
+      cpho.timestamp = d.head_block_time();
+    }).id;
+
+  } FC_CAPTURE_AND_RETHROW((op)) }
+
+  void_result das33_distribute_project_pledges_evaluator::do_evaluate(const das33_distribute_project_pledges_operation& op)
+  { try {
+
+     auto& d = db();
+
+     auto& pro_index = d.get_index_type<das33_project_index>().indices().get<by_id>();
+     auto pro_itr = pro_index.find(op.project);
+     account_id_type pro_owner;
+     FC_ASSERT(pro_itr != pro_index.end(), "Missing project object with this project_id!");
+
+     _pro_owner = pro_itr->owner;
 
     return {};
-  }
+
+  } FC_CAPTURE_AND_RETHROW((op)) }
+
+  void_result das33_distribute_project_pledges_evaluator::do_apply(const das33_distribute_project_pledges_operation& op)
+  { try {
+
+    auto& d = db();
+
+    std::vector<object_id_type> pledges_to_remove;
+    const auto& index = d.get_index_type<das33_pledge_holder_index>().indices().get<by_project>().equal_range(op.project);
+    auto itr = index.first;
+
+    while(itr != index.second)
+    {
+       if(op.phase_number.valid() && itr->phase_number != *op.phase_number) {
+           ++itr;
+           continue;
+       }
+
+       const das33_pledge_holder_object& pho = *itr;
+
+       // calc amount of token and asset that will be exchanged
+       share_type base = std::round(static_cast<double>(pho.base_expected.amount.value) * op.base_to_pledger.value / BONUS_PRECISION / 100);
+                  base = (base < pho.base_remaining.amount) ? base : pho.base_remaining.amount;
+       share_type bonus = std::round(static_cast<double>(pho.bonus_expected.amount.value) * op.bonus_to_pledger.value / BONUS_PRECISION / 100);
+                  bonus = (bonus < pho.bonus_remaining.amount) ? bonus : pho.bonus_remaining.amount;
+       share_type pledge = std::round(static_cast<double>(pho.pledged.amount.value) * op.to_escrow.value / BONUS_PRECISION / 100);
+                  pledge = (pledge < pho.pledge_remaining.amount) ? pledge : pho.pledge_remaining.amount;
+
+       // make virtual op for history traking
+       das33_pledge_result_operation pledge_result;
+          pledge_result.funders_account = pho.account_id;
+          pledge_result.account_to_fund = _pro_owner;
+          pledge_result.completed = true;
+          pledge_result.pledged = pledge;
+          pledge_result.received = base + bonus;
+          pledge_result.project_id = op.project;
+          pledge_result.timestamp = d.head_block_time();
+       d.push_applied_operation(pledge_result);
+
+       d.adjust_balance(_pro_owner, asset{pledge, pho.pledged.asset_id}, 0 /*reserved_delta*/);
+
+       // issue balance object if it does not exists
+       if(!d.check_if_balance_object_exists(pho.account_id,pho.base_expected.asset_id))
+       {
+          d.create<account_balance_object>([&pho](account_balance_object& abo){
+             abo.owner = pho.account_id;
+             abo.asset_type = pho.base_expected.asset_id;
+             abo.balance = 0;
+             abo.reserved = 0;
+          });
+       }
+
+       // issue token asset
+       auto& balance1_obj = d.get_balance_object(pho.account_id, pho.base_expected.asset_id);
+       d.issue_asset(balance1_obj, base + bonus, 0);
+
+       // update pledge holder object
+       d.modify(pho, [&](das33_pledge_holder_object& p){
+          p.pledge_remaining.amount -= pledge;
+          p.base_remaining.amount -= base;
+          p.bonus_remaining.amount -= bonus;
+       });
+
+       // if everything is distributed remove object
+       if(pho.pledge_remaining.amount + pho.base_remaining.amount + pho.bonus_remaining.amount <= 0)
+       {
+          pledges_to_remove.push_back(pho.id);
+       }
+       itr++;
+    }
+
+    auto& index1 = d.get_index_type<das33_pledge_holder_index>().indices().get<by_id>();
+    for(object_id_type id : pledges_to_remove)
+    {
+       auto itr = index1.find(id);
+       if(itr != index1.end())
+          d.remove(*itr);
+    }
+
+    return {};
+
+  } FC_CAPTURE_AND_RETHROW((op)) }
+
+  void_result das33_project_reject_evaluator::do_evaluate(const das33_project_reject_operation& op)
+  { try {
+
+     auto& d = db();
+
+     auto& pro_index = d.get_index_type<das33_project_index>().indices().get<by_id>();
+     auto pro_itr = pro_index.find(op.project);
+     FC_ASSERT(pro_itr != pro_index.end(), "Missing project object with this project_id!");
+
+     auto& index = d.get_index_type<das33_pledge_holder_index>().indices().get<by_project>();
+     auto itr = index.lower_bound(op.project);
+     auto end = index.upper_bound(op.project);
+     while(itr != end)
+     {
+        const das33_pledge_holder_object& pho = *itr;
+        FC_ASSERT(pho.base_expected.amount == pho.base_remaining.amount
+           && pho.bonus_expected.amount == pho.bonus_remaining.amount
+           && pho.pledged.amount == pho.pledge_remaining.amount,
+           "Project already accepted, can't be rejected!");
+        itr++;
+     }
+
+     _pro_owner = pro_itr->owner;
+
+    return {};
+
+  } FC_CAPTURE_AND_RETHROW((op)) }
+
+  void_result das33_project_reject_evaluator::do_apply(const das33_project_reject_operation& op)
+  { try {
+
+     auto& d = db();
+
+     while(true)
+     {
+        auto& index = d.get_index_type<das33_pledge_holder_index>().indices().get<by_project>();
+        auto itr = index.lower_bound(op.project);
+        auto end = index.upper_bound(op.project);
+        if(itr == end)
+           break;
+
+        const das33_pledge_holder_object& pho = *itr;
+
+        das33_pledge_result_operation pledge_result;
+           pledge_result.funders_account = pho.account_id;
+           pledge_result.account_to_fund = _pro_owner;
+           pledge_result.completed = false;
+           pledge_result.pledged = pho.pledged;
+           pledge_result.received = pho.pledged;
+           pledge_result.project_id = op.project;
+           pledge_result.timestamp = d.head_block_time();
+        d.push_applied_operation(pledge_result);
+
+        auto& balance_obj = d.get_balance_object(pho.account_id, pho.pledged.asset_id);
+        d.modify(balance_obj, [&](account_balance_object& balance_obj){
+           balance_obj.balance += pho.pledged.amount;
+        });
+
+        d.remove(pho);
+     }
+
+    return {};
+
+  } FC_CAPTURE_AND_RETHROW((op)) }
+
+  void_result das33_distribute_pledge_evaluator::do_evaluate(const das33_distribute_pledge_operation& op)
+  { try {
+     auto& d = db();
+
+     // find pledge object
+     auto& index = d.get_index_type<das33_pledge_holder_index>().indices().get<by_id>();
+     auto itr = index.find(op.pledge);
+     FC_ASSERT(itr != index.end(),"Missing pledge object with this pledge_id.");
+
+     auto& pro_index = d.get_index_type<das33_project_index>().indices().get<by_id>();
+     auto pro_itr = pro_index.find(itr->project_id);
+     account_id_type pro_owner;
+     FC_ASSERT(pro_itr != pro_index.end(), "Missing project object with this project_id!");
+
+     _pro_owner = pro_itr->owner;
+     _pledge_holder_ptr = &(*itr);
+
+    return {};
+
+  } FC_CAPTURE_AND_RETHROW((op)) }
+
+  void_result das33_distribute_pledge_evaluator::do_apply(const das33_distribute_pledge_operation& op)
+  { try {
+
+     auto& d = db();
+     const das33_pledge_holder_object& pho = *_pledge_holder_ptr;
+
+     // calc amount of token and asset that will be exchanged
+     share_type base = std::round(static_cast<double>(pho.base_expected.amount.value) * op.base_to_pledger.value / BONUS_PRECISION / 100);
+                base = (base < pho.base_remaining.amount) ? base : pho.base_remaining.amount;
+     share_type bonus = std::round(static_cast<double>(pho.bonus_expected.amount.value) * op.bonus_to_pledger.value / BONUS_PRECISION / 100);
+                bonus = (bonus < pho.bonus_remaining.amount) ? bonus : pho.bonus_remaining.amount;
+     share_type pledge = std::round(static_cast<double>(pho.pledged.amount.value) * op.to_escrow.value / BONUS_PRECISION / 100);
+                pledge = (pledge < pho.pledge_remaining.amount) ? pledge : pho.pledge_remaining.amount;
+
+     // make virtual op for history traking
+     das33_pledge_result_operation pledge_result;
+        pledge_result.funders_account = pho.account_id;
+        pledge_result.account_to_fund = _pro_owner;
+        pledge_result.completed = true;
+        pledge_result.pledged = pledge;
+        pledge_result.received = base + bonus;
+        pledge_result.project_id = pho.project_id;
+        pledge_result.timestamp = d.head_block_time();
+     d.push_applied_operation(pledge_result);
+
+     d.adjust_balance(_pro_owner, asset{pledge, pho.pledged.asset_id}, 0 /*reserved_delta*/);
+
+     // issue balance object if it does not exists
+     if(!d.check_if_balance_object_exists(pho.account_id,pho.base_expected.asset_id))
+     {
+        d.create<account_balance_object>([&pho](account_balance_object& abo){
+           abo.owner = pho.account_id;
+           abo.asset_type = pho.base_expected.asset_id;
+           abo.balance = 0;
+           abo.reserved = 0;
+        });
+     }
+
+     // issue token asset
+     auto& balance1_obj = d.get_balance_object(pho.account_id, pho.base_expected.asset_id);
+     d.issue_asset(balance1_obj, base + bonus, 0);
+
+     // update pledge holder object
+     d.modify(pho, [&](das33_pledge_holder_object& p){
+        p.pledge_remaining.amount -= pledge;
+        p.base_remaining.amount -= base;
+        p.bonus_remaining.amount -= bonus;
+     });
+
+     // if everything is distributed remove object
+     if(pho.pledge_remaining.amount + pho.base_remaining.amount + pho.bonus_remaining.amount <= 0)
+     {
+        d.remove(pho);
+     }
+
+    return {};
+
+  } FC_CAPTURE_AND_RETHROW((op)) }
+
+  void_result das33_pledge_reject_evaluator::do_evaluate(const das33_pledge_reject_operation& op)
+  { try {
+
+     auto& d = db();
+
+     // find pledge object
+     auto& index = d.get_index_type<das33_pledge_holder_index>().indices().get<by_id>();
+     auto itr = index.find(op.pledge);
+     FC_ASSERT(itr != index.end(),"Missing pledge object with this pledge_id.");
+
+     auto& pro_index = d.get_index_type<das33_project_index>().indices().get<by_id>();
+     auto pro_itr = pro_index.find(itr->project_id);
+     account_id_type pro_owner;
+     FC_ASSERT(pro_itr != pro_index.end(), "Missing project object with this project_id!");
+
+     _pro_owner = pro_itr->owner;
+     _pledge_holder_ptr = &(*itr);
+     const das33_pledge_holder_object& pho = *_pledge_holder_ptr;
+     FC_ASSERT(pho.base_expected.amount == pho.base_remaining.amount
+           && pho.bonus_expected.amount == pho.bonus_remaining.amount
+           && pho.pledged.amount == pho.pledge_remaining.amount,
+           "Project already accepted, can't be rejected!");
+
+    return {};
+
+  } FC_CAPTURE_AND_RETHROW((op)) }
+
+  void_result das33_pledge_reject_evaluator::do_apply(const das33_pledge_reject_operation& op)
+  { try {
+
+     auto& d = db();
+
+     // make virtual op for history traking
+     const das33_pledge_holder_object& pho = *_pledge_holder_ptr;
+
+     // make virtual op for history traking
+     das33_pledge_result_operation pledge_result;
+        pledge_result.funders_account = pho.account_id;
+        pledge_result.account_to_fund = _pro_owner;
+        pledge_result.completed = false;
+        pledge_result.pledged = pho.pledged;
+        pledge_result.received = pho.pledged;
+        pledge_result.project_id = pho.project_id;
+        pledge_result.timestamp = d.head_block_time();
+     d.push_applied_operation(pledge_result);
+
+     // give to project owner pledged amount
+     auto& balance_obj = d.get_balance_object(pho.account_id, pho.pledged.asset_id);
+     d.modify(balance_obj, [&](account_balance_object& balance_obj){
+        balance_obj.balance += pho.pledged.amount;
+     });
+
+     d.remove(pho);
+
+    return {};
+
+  } FC_CAPTURE_AND_RETHROW((op)) }
+
+  void_result das33_set_use_external_btc_price_evaluator::do_evaluate(const operation_type& op)
+  { try {
+      const auto& d = db();
+      const auto& gpo = d.get_global_properties();
+      const auto& authority_obj = op.authority(d);
+
+      d.perform_chain_authority_check("das33 authority", gpo.authorities.das33_administrator, authority_obj);
+
+      return {};
+
+  } FC_CAPTURE_AND_RETHROW((op)) }
+
+  void_result das33_set_use_external_btc_price_evaluator::do_apply(const operation_type& op)
+  { try {
+      auto& d = db();
+
+      d.modify(d.get_global_properties(), [&](global_property_object& gpo){
+        gpo.das33_parameters.use_external_btc_price = op.use_external_btc_price;
+      });
+
+      return {};
+
+  } FC_CAPTURE_AND_RETHROW((op)) }
 
 
 } }  // namespace graphene::chain

@@ -642,11 +642,11 @@ void database::daspay_clearing_start()
   for (const auto& clearing_acc : clearing_accounts)
   {
     const fee_schedule& current_fees = get_global_properties().parameters.current_fees;
-    const auto& cycle_balance = get_balance(clearing_acc, get_cycle_asset_id());
     const auto& fee = current_fees.calculate_fee(limit_order_create_operation());
-    if (fee > cycle_balance)
+    const auto& fee_balance = get_balance(clearing_acc, fee.asset_id);
+    if (fee > fee_balance)
     {
-      wlog("Clearing account ${a} has insufficient balance to pay fee (Balance: ${b}, Fee: ${c})", ("a", clearing_acc)("b", to_pretty_string(cycle_balance))("c", to_pretty_string(fee)));
+      wlog("Clearing account ${a} has insufficient balance to pay fee (Balance: ${b}, Fee: ${c})", ("a", clearing_acc)("b", to_pretty_string(fee_balance))("c", to_pretty_string(fee)));
       continue;
     }
 
@@ -661,16 +661,22 @@ void database::daspay_clearing_start()
 
       auto to_sell = dasc_balance - asset{ params.daspay_parameters.collateral_dascoin, get_dascoin_asset_id() };
       auto price_it = buy_prices.begin();
-      std::advance(price_it, buy_prices.size() - 1); // Use the second price if available
-      share_type buy_price = *price_it;
+      if (head_block_time() < HARDFORK_BLC_217_TIME)
+      {
+        // Before HARDFORK_BLC_217_TIME this was invalid, prices are sorted in ascending order, so the second best
+        // price is actually the first one
+        std::advance(price_it, buy_prices.size() - 1); // Use the second price if available
 
-      // we cannot spend the last dasc
-      if (params.daspay_parameters.collateral_dascoin < 1 * DASCOIN_DEFAULT_ASSET_PRECISION)
-        to_sell -= asset{ 1 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id() };
+        // we cannot spend the last dasc
+        if (params.daspay_parameters.collateral_dascoin < 1 * DASCOIN_DEFAULT_ASSET_PRECISION)
+          to_sell -= asset{ 1 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id() };
+      }
+      share_type buy_price = *price_it;
 
       const auto& to_buy = asset{ to_sell.amount * buy_price / DASCOIN_DEFAULT_ASSET_PRECISION, get_web_asset_id() };
 
-      limit_orders.emplace_back(limit_order_create_operation{ clearing_acc, to_sell, to_buy, 0, {}, head_block_time() + params.daspay_parameters.clearing_interval_time_seconds });
+      if (to_sell.amount > 0 && to_buy.amount > 0)
+        limit_orders.emplace_back(limit_order_create_operation{ clearing_acc, to_sell, to_buy, 0, {}, head_block_time() + params.daspay_parameters.clearing_interval_time_seconds });
     }
     else if (webeur_balance.amount >= params.daspay_parameters.collateral_webeur && dasc_balance.amount < params.daspay_parameters.collateral_dascoin)
     {
@@ -684,7 +690,7 @@ void database::daspay_clearing_start()
       share_type buy_price = *price_it;
 
       const auto& to_sell = asset{ to_buy.amount * buy_price / DASCOIN_DEFAULT_ASSET_PRECISION, get_web_asset_id() };
-      if (webeur_balance >= to_sell)
+      if (webeur_balance >= to_sell && to_sell.amount > 0 && to_buy.amount > 0)
         limit_orders.emplace_back(limit_order_create_operation{ clearing_acc, to_sell, to_buy, 0, {}, head_block_time() + params.daspay_parameters.clearing_interval_time_seconds });
       else
         wlog("Clearing account ${a} has insufficient balance ${b}", ("a", clearing_acc)("b", to_pretty_string(webeur_balance)));

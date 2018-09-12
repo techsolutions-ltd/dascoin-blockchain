@@ -33,7 +33,6 @@
 #include <graphene/chain/is_authorized_asset.hpp>
 
 #include <graphene/chain/protocol/market.hpp>
-#include <graphene/chain/balance_checker.hpp>
 
 #include <fc/uint128.hpp>
 
@@ -70,8 +69,6 @@ void_result limit_order_create_evaluator::do_evaluate(const limit_order_create_o
 
    FC_ASSERT( d.get_balance( *_seller, *_sell_asset ) >= op.amount_to_sell, "insufficient balance",
               ("balance",d.get_balance(*_seller,*_sell_asset))("amount_to_sell",op.amount_to_sell) );
-
-   balance_checker::check_remaining_balance(d, *_seller, *_sell_asset, op.amount_to_sell);
 
    return {};
 } FC_CAPTURE_AND_RETHROW( (op) ) }

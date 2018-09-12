@@ -229,4 +229,9 @@ void asset_deny_issue_request_operation::validate() const
 
 }
 
+void update_external_btc_price_operation::validate() const {
+   FC_ASSERT( eur_amount_per_btc.base.amount > 0 );
+   FC_ASSERT( eur_amount_per_btc.quote.amount > 0 );
+}
+
 } } // namespace graphene::chain

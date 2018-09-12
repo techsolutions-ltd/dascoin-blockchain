@@ -531,6 +531,9 @@ object_id_type change_public_keys_evaluator::do_apply(const change_public_keys_o
 void_result set_roll_back_enabled_evaluator::do_evaluate(const set_roll_back_enabled_operation& op)
 {
   try {
+
+    FC_ASSERT( db().head_block_time() <= HARDFORK_BLC_200_TIME, "Remove (hard-fork) set_roll_back_enabled operation." );
+
     return {};
   } FC_CAPTURE_AND_RETHROW((op))
 }
@@ -546,6 +549,9 @@ object_id_type set_roll_back_enabled_evaluator::do_apply(const set_roll_back_ena
 void_result roll_back_public_keys_evaluator::do_evaluate(const roll_back_public_keys_operation& op)
 {
   try {
+
+    FC_ASSERT( db().head_block_time() <= HARDFORK_BLC_200_TIME, "Remove (hard-fork) roll_back_public_keys operation." );
+
     const auto op_authority_obj = op.authority(db());
     db().perform_chain_authority_check("personal identity validation",
                                        db().get_global_properties().authorities.pi_validator,

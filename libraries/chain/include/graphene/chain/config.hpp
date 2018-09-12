@@ -226,6 +226,24 @@
 #define DASCOIN_MAX_DASCOIN_SUPPLY int64_t(8589934592LL)    // 2^33
 ///}@
 
+/**
+ * Bitcoin asset parameters:
+ */
+///@{
+#define DASCOIN_BITCOIN_SYMBOL "BTC"
+#define DASCOIN_BITCOIN_INDEX (4)
+#define DASCOIN_BITCOIN_PRECISION_DIGITS (8)
+#define DASCOIN_BITCOIN_PRECISION (100000000LL)
+#define DASCOIN_MAX_BITCOIN_SUPPLY int64_t(10000000LL)
+///}@
+
+/**
+ * Placeholder asset parameter
+ */
+///@{
+#define DASCOIN_PLACEHOLDER_ASSET_COUNT (20)
+///}@
+
 
 /**
  * Frequency_type parameters:
@@ -319,3 +337,10 @@
 
 #define ORDER_BOOK_QUERY_PRECISION (static_cast<uint64_t>(1000000))
 #define ORDER_BOOK_GROUP_QUERY_PRECISION_DIFF (static_cast<uint64_t>(10000))
+
+/**
+ * Das33 parameters:
+ */
+///@{
+#define DAS33_DEFAULT_USE_EXTERNAL_BTC_PRICE  (true)
+///@}

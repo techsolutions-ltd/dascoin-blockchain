@@ -231,7 +231,13 @@ BOOST_AUTO_TEST_CASE( lookup_asset_symbol_unit_test )
   BOOST_CHECK( !symbol3.valid() );
 
   const auto& symbol4 = _dal.lookup_asset_symbol("1.3.4");
-  BOOST_CHECK( !symbol4.valid() );
+  BOOST_CHECK( symbol4.valid() );
+
+  const auto& symbol5 = _dal.lookup_asset_symbol("1.3.5");
+  BOOST_CHECK( symbol5.valid() );
+
+  const auto& symbol6 = _dal.lookup_asset_symbol("1.3.6");
+  BOOST_CHECK( !symbol6.valid() );
 
 } FC_LOG_AND_RETHROW() }
 

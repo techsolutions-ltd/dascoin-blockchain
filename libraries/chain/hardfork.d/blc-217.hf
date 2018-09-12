@@ -1,0 +1,4 @@
+// #BLC-217 Use the second best price in clearing contract when sell dasc
+#ifndef HARDFORK_BLC_217_TIME
+#define HARDFORK_BLC_217_TIME (fc::time_point_sec( 1536235200 ))
+#endif

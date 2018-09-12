@@ -175,6 +175,21 @@ struct daspay_authority
    optional<string>           memo;
 };
 
+struct tethered_accounts_balance
+{
+   account_id_type            account;
+   string                     name;
+   account_kind               kind;
+   share_type                 balance;
+   share_type                 reserved;
+};
+
+struct tethered_accounts_balances_collection
+{
+   share_type                 total;
+   asset_id_type              asset_id;
+   vector<tethered_accounts_balance> details;
+};
 
 /**
  * @brief The database_api class implements the RPC API for the chain database.
@@ -379,6 +394,14 @@ class database_api
       vector<asset> get_vested_balances( const vector<balance_id_type>& objs )const;
 
       vector<vesting_balance_object> get_vesting_balances( account_id_type account_id )const;
+
+      /**
+       * @brief Get a tethered accounts' balances in various assets
+       * @param id ID of the account to get balances for
+       * @param assets IDs of the assets to get balances of; if empty, get all assets account has a balance in
+       * @return Balances of the tethered accounts
+       */
+      vector<tethered_accounts_balances_collection> get_tethered_accounts_balances(account_id_type id, const flat_set<asset_id_type>& assets)const;
 
       /**
        * @brief Get the total number of accounts registered with the blockchain
@@ -944,9 +967,9 @@ class database_api
       /**
       * @brief Get all das33 pledges made by an account
       * @params account id of account
-      * @return vector of das33 pledge objects
+      * @return result containing vector of das33 pledge objects and some stats
       */
-      vector<das33_pledge_holder_object> get_das33_pledges_by_account(account_id_type account) const;
+      das33_pledges_by_account_result get_das33_pledges_by_account(account_id_type account) const;
 
       /**
       * @brief Get das33 pledges for a project
@@ -963,7 +986,31 @@ class database_api
       * @params limit number of projects to return, max 100
       * @return vector of das33 project objects
       */
-      vector<das33_project_object> get_das33_projects(const string& lower_bound_name, uint32_t limit)const;
+      vector<das33_project_object> get_das33_projects(const string& lower_bound_name, uint32_t limit) const;
+
+      /**
+       * @brief Gets a sum of all pledges made to project
+       * @params project id of a project
+       * @return vector of assets, each with total sum of that asset pledged
+       */
+      vector<asset> get_amount_of_assets_pledged_to_project(das33_project_id_type project) const;
+
+      /**
+       * @brief Gets the amount of project tokens that a pledger can get for pledging a certain amount of asset
+       * @params project id of a project
+       * @params to_pledge asset user is pledging
+       * @return amount of project tokens to get
+       */
+      das33_project_tokens_amount get_amount_of_project_tokens_received_for_asset(das33_project_id_type project, asset to_pledge) const;
+
+      /**
+      * @brief Gets the amount of assets needed to be pledge to get given amount of base project tokens
+      * @params project id of a project
+      * @params asset_id id of an asset user wants to get amount for
+      * @params to_pledge project token user wants to get
+      * @return amount of project tokens to get
+      */
+      das33_project_tokens_amount get_amount_of_asset_needed_for_project_token(das33_project_id_type project, asset_id_type asset_id, asset tokens) const;
 
 private:
       std::shared_ptr< database_api_impl > my;
@@ -983,6 +1030,8 @@ FC_REFLECT( graphene::app::limit_orders_collection_grouped_by_price, (buy)(sell)
 FC_REFLECT( graphene::app::cycle_price, (cycle_amount)(asset_amount)(frequency) );
 FC_REFLECT( graphene::app::dasc_holder, (holder)(vaults)(amount) );
 FC_REFLECT( graphene::app::daspay_authority, (payment_provider)(daspay_public_key)(memo) );
+FC_REFLECT( graphene::app::tethered_accounts_balance, (account)(name)(kind)(balance)(reserved) );
+FC_REFLECT( graphene::app::tethered_accounts_balances_collection, (asset_id)(total)(details) );
 
 FC_API( graphene::app::database_api,
    // Objects
@@ -1028,6 +1077,7 @@ FC_API( graphene::app::database_api,
    (get_balance_objects)
    (get_vested_balances)
    (get_vesting_balances)
+   (get_tethered_accounts_balances)
 
    // Assets
    (get_assets)
@@ -1135,4 +1185,7 @@ FC_API( graphene::app::database_api,
    (get_das33_pledges_by_account)
    (get_das33_pledges_by_project)
    (get_das33_projects)
+   (get_amount_of_assets_pledged_to_project)
+   (get_amount_of_project_tokens_received_for_asset)
+   (get_amount_of_asset_needed_for_project_token)
 )

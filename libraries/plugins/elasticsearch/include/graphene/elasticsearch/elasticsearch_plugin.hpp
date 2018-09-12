@@ -223,6 +223,24 @@ struct adaptor_struct {
        {
            o["kind"] = o["kind"].as_string();
        }
+       if (o.find("new_parameters") != o.end())
+       {
+           auto& tmp = o["new_parameters"];
+           if (tmp.is_object())
+           {
+               fc::mutable_variant_object tmp2(tmp.get_object());
+               if (tmp2.find("current_fees") != tmp2.end())
+               {
+                   tmp2.erase("current_fees");
+                   o["new_parameters"] = tmp2;
+               }
+           }
+       }
+       if (o.find("owner") != o.end() && o["owner"].is_string())
+       {
+           o["owner_"] = o["owner"].as_string();
+           o.erase("owner");
+       }
        variant v;
        fc::to_variant(o, v, FC_PACK_MAX_DEPTH);
        return v;

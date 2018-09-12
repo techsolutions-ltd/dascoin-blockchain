@@ -179,13 +179,45 @@ struct adaptor_struct {
    variant adapt(const variant_object& op)
    {
        fc::mutable_variant_object o(op);
+       vector<string> keys_to_rename;
        for (auto i = o.begin(); i != o.end(); ++i)
        {
            auto& element = (*i).value();
            if (element.is_object())
-               element = adapt(element.get_object());
+           {
+               const string& name = (*i).key();
+               auto& vo = element.get_object();
+               if (vo.contains(name.c_str()))
+                   keys_to_rename.emplace_back(name);
+               element = adapt(vo);
+           }
            else if (element.is_array())
                adapt(element.get_array());
+       }
+       for (const auto& i : keys_to_rename)
+       {
+           string new_name = i + "_";
+           o[new_name] = variant(o[i]);
+           o.erase(i);
+       }
+
+       if (o.find("memo") != o.end())
+       {
+           auto& memo = o["memo"];
+           if (memo.is_string())
+           {
+               o["memo_"] = variant(o["memo"]);
+               o.erase("memo");
+           }
+           else if (memo.is_object())
+           {
+               fc::mutable_variant_object tmp(memo.get_object());
+               if (tmp.find("nonce") != tmp.end())
+               {
+                   tmp["nonce"] = tmp["nonce"].as_string();
+                   o["memo"] = tmp;
+               }
+           }
        }
        variant v;
        fc::to_variant(o, v, FC_PACK_MAX_DEPTH);

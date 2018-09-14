@@ -139,7 +139,9 @@ void_result issue_license_evaluator::do_evaluate(const issue_license_operation& 
     const auto& license_information_obj = (*account_obj.license_information)(d);
     const auto& max_license_obj = license_information_obj.max_license(d);
 
-    FC_ASSERT( new_license_obj.kind == license_information_obj.vault_license_kind,
+    FC_ASSERT( new_license_obj.kind == license_information_obj.vault_license_kind
+                   || (new_license_obj.kind == license_kind::utility2 && license_information_obj.vault_license_kind == license_kind::utility)
+                   || (new_license_obj.kind == license_kind::utility && license_information_obj.vault_license_kind == license_kind::utility2),
                "Cannot issue license of kind '${kind}' on account ${a}, current license kind is '${ckind}'",
                ("kind", new_license_obj.kind)
                ("a", account_obj.name)

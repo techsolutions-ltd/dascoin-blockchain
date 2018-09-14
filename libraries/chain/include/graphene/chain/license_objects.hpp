@@ -147,7 +147,7 @@ namespace graphene { namespace chain {
 
       bool is_manual_submit()
       {
-        return (vault_license_kind == license_kind::locked_frequency || vault_license_kind == license_kind::utility || vault_license_kind == license_kind::utility2);
+        return (vault_license_kind == license_kind::locked_frequency || vault_license_kind == license_kind::utility);
       }
 
       void add_license(license_type_id_type license_id, share_type amount, share_type base_amount,

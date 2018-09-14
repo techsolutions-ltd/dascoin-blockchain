@@ -769,7 +769,7 @@ void database::perform_upgrades(const account_object& account, const upgrade_eve
                {
                   auto amount = license_history.balance_upgrade(license_history.amount_to_upgrade());
                   // If this is a president license, add upgraded amount to the current amount:
-                  if (lio.vault_license_kind == chartered || lio.vault_license_kind == utility)
+                  if (lio.vault_license_kind == chartered || lio.vault_license_kind == utility || lio.vault_license_kind == utility2)
                   {
                      auto origin = fc::reflector<dascoin_origin_kind>::to_string(dascoin_origin_kind::reserve_cycles);
                      std::ostringstream comment;

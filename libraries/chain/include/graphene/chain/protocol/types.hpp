@@ -105,7 +105,6 @@ namespace graphene { namespace chain {
       promo = 2,
       locked_frequency = 3,
       utility = 4,
-      utility2 = 5,
       none = 99,
       LICENSE_KIND_COUNT
    };

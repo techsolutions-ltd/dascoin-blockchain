@@ -101,8 +101,8 @@ BOOST_AUTO_TEST_CASE( get_license_types_unit_test )
 
   auto lic_vec = _dal.get_license_types();
 
-  // Number of kinds (regular, chartered, locked, utility, utility2) times number of types (standard, manager, pro, executive, vise president, president + 1:
-  BOOST_CHECK_EQUAL( lic_vec.size(), 31 );
+  // Number of kinds (regular, chartered, locked, utility) times number of types (standard, manager, pro, executive, vise president, president + 1:
+  BOOST_CHECK_EQUAL( lic_vec.size(), 25 );
   
 } FC_LOG_AND_RETHROW() }
 
@@ -1134,12 +1134,6 @@ BOOST_AUTO_TEST_CASE( upgrade_executed_with_ultility_licences_test )
    generate_blocks(dgpo.next_maintenance_time);
    auto queue3 = _dal.get_reward_queue();
    BOOST_CHECK_EQUAL(queue3[15].amount.value, 4 * DASCOIN_BASE_PRESIDENT_CYCLES);
-
-
-   // check licence increasment with mixed license types
-   auto p_utility2 = *(_dal.get_license_type("president_utility2"));
-   do_op(issue_license_operation(get_license_issuer_id(), foofoobar_id, p_utility2.id,
-                                 bonus_percent, frequency_lock, db.head_block_time() + fc::hours(48)));
 
 } FC_LOG_AND_RETHROW() }
 

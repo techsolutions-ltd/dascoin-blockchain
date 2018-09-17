@@ -298,6 +298,8 @@ void database::initialize_evaluators()
    register_evaluator<update_global_parameters_evaluator>();
    register_evaluator<update_external_btc_price_evaluator>();
    register_evaluator<das33_set_use_external_btc_price_evaluator>();
+   register_evaluator<update_external_token_price_evaluator>();
+   register_evaluator<das33_set_use_market_price_for_token_evaluator>();
 }
 
 void database::initialize_indexes()
@@ -316,6 +318,8 @@ void database::initialize_indexes()
    add_index< primary_index<committee_member_index> >();
    add_index< primary_index<witness_index> >();
    add_index< primary_index<limit_order_index > >();
+   add_index< primary_index<last_price_index > >();
+   add_index< primary_index<external_price_index > >();
    add_index< primary_index<call_order_index > >();
 
    auto prop_index = add_index< primary_index<proposal_index > >();

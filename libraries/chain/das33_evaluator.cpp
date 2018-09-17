@@ -25,6 +25,7 @@
 #include <graphene/chain/das33_evaluator.hpp>
 #include <graphene/chain/database.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
+#include <graphene/chain/market_object.hpp>
 
 namespace graphene { namespace chain {
 
@@ -65,6 +66,28 @@ namespace graphene { namespace chain {
       else
       {
         result = d.get_dynamic_global_properties().last_btc_price;
+      }
+    }
+    else
+    {
+      vector<asset_id_type> use_market_price_for_token = d.get_global_properties().das33_parameters.use_market_price_for_token;
+      if (std::find(use_market_price_for_token.begin(), use_market_price_for_token.end(), original_asset_id) != use_market_price_for_token.end())
+      {
+        const auto& market_idx = d.get_index_type<last_price_index>().indices().get<by_market_key>();
+        auto market_itr = market_idx.find(market_key{base:original_asset_id, quote:d.get_web_asset_id()});
+        if (market_itr != market_idx.end())
+        {
+          result = market_itr->last_price;
+        }
+      }
+      else
+      {
+        const auto& external_idx = d.get_index_type<external_price_index>().indices().get<by_market_key>();
+        auto external_itr = external_idx.find(market_key{base:original_asset_id, quote:d.get_web_asset_id()});
+        if (external_itr != external_idx.end())
+        {
+          result = external_itr->external_price;
+        }
       }
     }
 
@@ -285,8 +308,8 @@ namespace graphene { namespace chain {
         // If previous limit is not max supply
         if (project_to_update->phase_limit != token.options.max_supply )
         {
-          // New limit must be larger
-          FC_ASSERT(new_limit > project_to_update->phase_limit, "New phase limit must be more then the previous one");
+          // New limit must be more than what is already collected
+          FC_ASSERT(new_limit >= project_to_update->tokens_sold, "New phase limit must be more than already collected");
         }
         FC_ASSERT(new_limit <= token.options.max_supply, "New limit can not be more then max supply of token");
       }
@@ -816,5 +839,28 @@ namespace graphene { namespace chain {
 
   } FC_CAPTURE_AND_RETHROW((op)) }
 
+  void_result das33_set_use_market_price_for_token_evaluator::do_evaluate(const operation_type& op)
+  { try {
+    const auto& d = db();
+    const auto& gpo = d.get_global_properties();
+    const auto& authority_obj = op.authority(d);
+
+    d.perform_chain_authority_check("das33 authority", gpo.authorities.das33_administrator, authority_obj);
+
+    return {};
+
+  } FC_CAPTURE_AND_RETHROW((op)) }
+
+  void_result das33_set_use_market_price_for_token_evaluator::do_apply(const operation_type& op)
+  { try {
+    auto& d = db();
+
+    d.modify(d.get_global_properties(), [&](global_property_object& gpo){
+      gpo.das33_parameters.use_market_price_for_token = op.use_market_price_for_token;
+  });
+
+      return {};
+
+  } FC_CAPTURE_AND_RETHROW((op)) }
 
 } }  // namespace graphene::chain

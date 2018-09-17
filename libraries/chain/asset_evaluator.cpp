@@ -709,4 +709,41 @@ void_result update_external_btc_price_evaluator::do_apply(const update_external_
 
 } FC_CAPTURE_AND_RETHROW((o)) }
 
+void_result update_external_token_price_evaluator::do_evaluate(const update_external_token_price_operation& o)
+{ try {
+
+  const auto& d = db();
+  FC_ASSERT( o.issuer == d.get_chain_authorities().webasset_issuer );
+
+  return{};
+
+} FC_CAPTURE_AND_RETHROW((o)) }
+
+void_result update_external_token_price_evaluator::do_apply(const update_external_token_price_operation& o)
+{ try {
+  price token_price = o.eur_amount_per_token;
+  time_point_sec timestamp = db().head_block_time();
+
+  const auto& idx = db().get_index_type<external_price_index>().indices().get<by_market_key>();
+  auto itr = idx.find(market_key{o.token_id, db().get_web_asset_id()});
+  if (itr != idx.end())
+  {
+    db().modify(*itr, [token_price, timestamp] (external_price_object &lpo) {
+      lpo.external_price = token_price;
+      lpo.timestamp = timestamp;
+    });
+  }
+  else
+  {
+    db().create<external_price_object>([&](external_price_object &lpo) {
+      lpo.market = market_key{o.token_id, db().get_web_asset_id()};
+      lpo.external_price = token_price;
+      lpo.timestamp = timestamp;
+    });
+  }
+
+  return {};
+
+} FC_CAPTURE_AND_RETHROW((o)) }
+
 } } // graphene::chain

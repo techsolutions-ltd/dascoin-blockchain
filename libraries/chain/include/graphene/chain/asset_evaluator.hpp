@@ -177,4 +177,13 @@ namespace graphene { namespace chain {
          void_result do_apply(const update_external_btc_price_operation& o);
    };
 
+   class update_external_token_price_evaluator : public evaluator<update_external_token_price_evaluator>
+   {
+      public:
+         typedef update_external_token_price_operation operation_type;
+
+         void_result do_evaluate(const update_external_token_price_operation& o);
+         void_result do_apply(const update_external_token_price_operation& o);
+   };
+
 } } // graphene::chain

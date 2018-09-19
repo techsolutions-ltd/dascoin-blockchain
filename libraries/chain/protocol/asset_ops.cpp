@@ -240,4 +240,9 @@ void update_external_btc_price_operation::validate() const {
    FC_ASSERT( eur_amount_per_btc.quote.amount > 0 );
 }
 
+void update_external_token_price_operation::validate() const {
+   FC_ASSERT( eur_amount_per_token.base.amount > 0 );
+   FC_ASSERT( eur_amount_per_token.quote.amount > 0 );
+}
+
 } } // namespace graphene::chain

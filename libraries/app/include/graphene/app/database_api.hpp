@@ -1012,6 +1012,21 @@ class database_api
       */
       das33_project_tokens_amount get_amount_of_asset_needed_for_project_token(das33_project_id_type project, asset_id_type asset_id, asset tokens) const;
 
+      //////////////////////////
+      // Prices:              //
+      //////////////////////////
+
+      /**
+       * @brief Gets all last prices from index
+       * @return Vector of last price objects
+       */
+      vector<last_price_object> get_last_prices() const;
+
+      /**
+       * @brief Gets all external prices from external price index
+       * @return Vector of external price objects
+       */
+      vector<external_price_object> get_external_prices() const;
 private:
       std::shared_ptr< database_api_impl > my;
 };
@@ -1188,4 +1203,8 @@ FC_API( graphene::app::database_api,
    (get_amount_of_assets_pledged_to_project)
    (get_amount_of_project_tokens_received_for_asset)
    (get_amount_of_asset_needed_for_project_token)
+
+   // Prices
+   (get_last_prices)
+   (get_external_prices)
 )

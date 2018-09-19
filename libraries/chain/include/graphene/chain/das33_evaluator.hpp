@@ -137,6 +137,15 @@ namespace graphene { namespace chain {
     void_result do_apply( const operation_type& op );
   };
 
+  class das33_set_use_market_price_for_token_evaluator : public evaluator<das33_set_use_market_price_for_token_evaluator>
+  {
+  public:
+    typedef das33_set_use_market_price_for_token_operation operation_type;
+
+    void_result do_evaluate( const operation_type& op );
+    void_result do_apply( const operation_type& op );
+  };
+
   asset asset_price_multiply ( const asset& a, int64_t precision, const price& b, const price& c );
   share_type precision_modifier(asset_object a, asset_object b);
   price get_price_in_web_eur(asset_id_type original_asset_id, const database& d);

@@ -2136,6 +2136,16 @@ class wallet_api
                                                            bool broadcast = false) const;
 
       /**
+       * Sets value of use_market_token_price array
+       * @param authority               authority that is issuing this operation, must be das33_administrator
+       * @param use_mnarket_token_price new value for array
+       * @param broadcast               true to broadcast the transaction on the network.
+       */
+      signed_transaction das33_set_use_market_token_price (const string& authority,
+                                                           vector<asset_id_type> use_mnarket_token_price,
+                                                           bool broadcast = false) const;
+
+      /**
        * @brief Return a part of the pledges table.
        *
        * @param from            id of the pledge
@@ -2179,12 +2189,28 @@ class wallet_api
 
       /**
       * @brief Gets the amount of assets needed to be pledge to get given amount of base project tokens
-      * @params project id of a project
-      * @params asset_id id of an asset user wants to get amount for
-      * @params to_pledge project token user wants to get
+      * @param project id of a project
+      * @param asset_id id of an asset user wants to get amount for
+      * @param to_pledge project token user wants to get
       * @return amount of project tokens to get
       */
       das33_project_tokens_amount get_amount_of_asset_needed_for_project_token(das33_project_id_type project, asset_id_type asset_id, asset tokens) const;
+
+      //////////////////////////
+      // Prices:              //
+      //////////////////////////
+
+      /**
+      * @brief Gets all last prices from index
+      * @return Vector of last price objects
+      */
+      vector<last_price_object> get_last_prices() const;
+
+      /**
+      * @brief Gets all external prices from index
+      * @return Vector of external price objects
+      */
+      vector<external_price_object> get_external_prices() const;
 
       //////////////////////////
       // GLOBALS:             //
@@ -2218,6 +2244,17 @@ class wallet_api
        * @param broadcast       true to broadcast transaction to network
        */
       signed_transaction update_external_btc_price(const string& btc_issuer,
+                                                   price new_price,
+                                                   bool broadcast) const;
+
+      /**
+       * @param token_issuer    Account of asset issuer
+       * @param token_id        Id of asset to set price for
+       * @param new_price       New token price
+       * @param broadcast       true to broadcast transaction to network
+       */
+      signed_transaction update_external_token_price(const string& token_issuer,
+                                                   asset_id_type token_id,
                                                    price new_price,
                                                    bool broadcast) const;
 
@@ -2336,7 +2373,7 @@ FC_REFLECT( graphene::wallet::brain_key_info,
             (brain_priv_key)
             (wif_priv_key)
             (pub_key)
-          );
+          )
 
 FC_REFLECT( graphene::wallet::exported_account_keys, (account_name)(encrypted_private_keys)(public_keys) )
 
@@ -2543,6 +2580,11 @@ FC_API( graphene::wallet::wallet_api,
         (get_amount_of_project_tokens_received_for_asset)
         (get_amount_of_asset_needed_for_project_token)
         (das33_set_use_external_btc_price)
+        (das33_set_use_market_token_price)
+
+        // Prices
+        (get_last_prices)
+        (get_external_prices)
 
         // Delayed operations resolver:
         (update_delayed_operations_resolver_parameters)
@@ -2551,6 +2593,7 @@ FC_API( graphene::wallet::wallet_api,
         (update_global_parameters)
         (change_operation_fee)
         (update_external_btc_price)
+        (update_external_token_price)
 
         // Requests:
         (get_all_webasset_issue_requests)

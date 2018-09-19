@@ -258,6 +258,8 @@ namespace graphene { namespace chain {
       balance_object_type,
       license_type_object_type,
       upgrade_event_object_type,
+      last_price_object_type,
+      external_price_object_type,
       OBJECT_TYPE_COUNT ///< Sentry value which contains the number of different object types
    };
 
@@ -612,6 +614,8 @@ FC_REFLECT_ENUM( graphene::chain::object_type,
                  (balance_object_type)
                  (license_type_object_type)
                  (upgrade_event_object_type)
+                 (last_price_object_type)
+                 (external_price_object_type)
                  (OBJECT_TYPE_COUNT)
                )
 FC_REFLECT_ENUM( graphene::chain::impl_object_type,

@@ -575,6 +575,25 @@ namespace graphene { namespace chain {
       void            validate()const;
    };
 
+   /**
+   * @brief used to set external price for any token.
+   */
+   struct update_external_token_price_operation : public base_operation
+   {
+     struct fee_parameters_type {};
+     asset fee;
+
+     account_id_type   issuer;
+     asset_id_type     token_id;
+     price             eur_amount_per_token;
+
+     extensions_type   extensions;
+
+     account_id_type fee_payer()const { return issuer; }
+     share_type calculate_fee(const fee_parameters_type& k) const { return 0; }
+     void            validate()const;
+   };
+
 } } // graphene::chain
 
 ////////////////////////////////
@@ -715,5 +734,14 @@ FC_REFLECT( graphene::chain::update_external_btc_price_operation,
             (fee)
             (issuer)
             (eur_amount_per_btc)
+            (extensions)
+          )
+
+FC_REFLECT( graphene::chain::update_external_token_price_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::update_external_token_price_operation,
+            (fee)
+            (issuer)
+            (token_id)
+            (eur_amount_per_token)
             (extensions)
           )

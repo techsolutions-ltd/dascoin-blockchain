@@ -1590,6 +1590,25 @@ public:
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (authority)(use_exteranl_btc_price)(broadcast) ) }
 
+   signed_transaction das33_set_use_market_token_price (const string& authority,
+                                                        vector<asset_id_type> use_market_price_for_token,
+                                                        bool broadcast = false)
+   { try {
+       FC_ASSERT( !self.is_locked() );
+
+       das33_set_use_market_price_for_token_operation op;
+
+       op.authority = get_account(authority).id;
+       op.use_market_price_for_token = use_market_price_for_token;
+
+       signed_transaction tx;
+       tx.operations.push_back(op);
+       set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+       tx.validate();
+
+       return sign_transaction(tx, broadcast);
+    } FC_CAPTURE_AND_RETHROW( (authority)(use_market_price_for_token)(broadcast) ) }
+
    signed_transaction update_delayed_operations_resolver_parameters(const string& authority, optional<bool> delayed_operations_resolver_enabled,
                                                         optional<uint32_t> delayed_operations_resolver_interval_time_seconds,
                                                         bool broadcast)
@@ -1677,6 +1696,27 @@ public:
 
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (btc_issuer)(new_price)(broadcast) ) }
+
+   signed_transaction update_external_token_price(const string& token_issuer,
+                                                  asset_id_type token_id,
+                                                  price new_price,
+                                                  bool broadcast)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      update_external_token_price_operation op;
+
+      op.issuer = get_account(token_issuer).id;
+      op.token_id = token_id;
+      op.eur_amount_per_token = new_price;
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (token_issuer)(token_id)(new_price)(broadcast) ) }
 
    signed_transaction tether_accounts(string wallet, string vault, bool broadcast = false)
    { try {
@@ -3447,6 +3487,33 @@ public:
       op.license = new_license.id;
       op.bonus_percentage = bonus_percentage;
       op.frequency_lock = frequency;
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction( tx, broadcast );
+   }
+
+   signed_transaction submit_cycles_to_queue_by_license(
+      const string& account,
+      share_type amount,
+      const string& license,
+      frequency_type frequency,
+      const string& comment,
+      bool broadcast)
+   {
+      auto account_id = get_account( account ).id;
+      auto license_type = get_license_type( license );
+
+      submit_cycles_to_queue_by_license_operation op;
+
+      op.account = account_id;
+      op.amount = amount;
+      op.license_type = license_type.id;
+      op.frequency_lock = frequency;
+      op.comment = comment;
 
       signed_transaction tx;
       tx.operations.push_back(op);
@@ -5732,6 +5799,12 @@ signed_transaction wallet_api::issue_license( const string& issuer, const string
    return my->issue_license( issuer, account, license, bonus_percentage, account_frequency, broadcast );
 }
 
+signed_transaction wallet_api::submit_cycles_to_queue_by_license( const string& account, share_type amount, const string& license,
+                                                                  frequency_type frequency, const string& comment, bool broadcast )
+{
+   return my->submit_cycles_to_queue_by_license( account, amount, license, frequency, comment, broadcast );
+}
+
 signed_transaction wallet_api::update_queue_parameters(
     optional<bool> enable_dascoin_queue,
     optional<uint32_t> reward_interval_time_seconds,
@@ -6019,6 +6092,13 @@ signed_transaction wallet_api::das33_set_use_external_btc_price (const string& a
   return my->das33_set_use_external_btc_price(authority, use_exteranl_btc_price, broadcast);
 }
 
+signed_transaction wallet_api::das33_set_use_market_token_price (const string& authority,
+                                                     vector<asset_id_type> use_market_price_for_token,
+                                                     bool broadcast) const
+{
+  return my->das33_set_use_market_token_price(authority, use_market_price_for_token, broadcast);
+}
+
 vector<das33_pledge_holder_object> wallet_api::get_das33_pledges(das33_pledge_holder_id_type from, uint32_t limit) const
 {
     return my->_remote_db->get_das33_pledges(from, limit);
@@ -6055,6 +6135,16 @@ das33_project_tokens_amount wallet_api::get_amount_of_project_tokens_received_fo
 das33_project_tokens_amount wallet_api::get_amount_of_asset_needed_for_project_token(das33_project_id_type project, asset_id_type asset_id, asset tokens) const
 {
   return my->_remote_db->get_amount_of_asset_needed_for_project_token(project, asset_id, tokens);
+}
+
+vector<last_price_object> wallet_api::get_last_prices() const
+{
+  return my->_remote_db->get_last_prices();
+}
+
+vector<external_price_object> wallet_api::get_external_prices() const
+{
+  return my->_remote_db->get_external_prices();
 }
 
 signed_transaction wallet_api::create_das33_project(const string& authority,
@@ -6151,6 +6241,14 @@ signed_transaction wallet_api::update_external_btc_price(const string& btc_issue
                                                          bool broadcast) const
 {
     return my->update_external_btc_price(btc_issuer, new_price, broadcast);
+}
+
+signed_transaction wallet_api::update_external_token_price(const string& token_issuer,
+                                               asset_id_type token_id,
+                                               price new_price,
+                                               bool broadcast) const
+{
+  return my->update_external_token_price(token_issuer, token_id, new_price, broadcast);
 }
 
 signed_block_with_info::signed_block_with_info( const signed_block& block )

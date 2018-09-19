@@ -459,6 +459,27 @@ void database::push_fill_order_operation( const fill_order_operation &fill_order
                 dgpo.last_btc_price = btc_price;
             });
         }
+
+        price last_price = fill_order.pays / fill_order.receives;
+        time_point_sec timestamp = head_block_time();
+
+        const auto& idx = get_index_type<last_price_index>().indices().get<by_market_key>();
+        auto itr = idx.find(market_key{base:fill_order.pays.asset_id, quote:fill_order.receives.asset_id});
+        if (itr != idx.end())
+        {
+          modify(*itr, [last_price, timestamp] (last_price_object &lpo) {
+            lpo.last_price = last_price;
+            lpo.timestamp = timestamp;
+          });
+        }
+        else
+        {
+          create<last_price_object>([&](last_price_object &lpo) {
+            lpo.market = market_key{base:fill_order.pays.asset_id, quote:fill_order.receives.asset_id};
+            lpo.last_price = last_price;
+            lpo.timestamp = timestamp;
+          });
+        }
     }
 }
 /**

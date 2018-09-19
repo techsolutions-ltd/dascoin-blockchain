@@ -261,14 +261,14 @@ namespace graphene { namespace chain {
     explicit das33_pledge_result_operation(const account_id_type& funders_account,
                                            const account_id_type& account_to_fund,
                                            const bool completed,
-                                           const asset& pledged,
+                                           const asset& pledge,
                                            const asset& received,
                                            const das33_project_id_type& project_id,
                                            const time_point_sec& timestamp)
               : funders_account(funders_account)
               , account_to_fund(account_to_fund)
               , completed(completed)
-              , pledged(pledged)
+              , pledged(pledge)
               , received(received)
               , project_id(project_id)
               , timestamp(timestamp) {}
@@ -292,6 +292,26 @@ namespace graphene { namespace chain {
                                               bool  use_external_btc_price)
                 : authority(authority)
                 , use_external_btc_price(use_external_btc_price) {}
+
+    account_id_type fee_payer() const { return authority; }
+    void validate() const;
+  };
+
+  struct das33_set_use_market_price_for_token_operation : public base_operation
+  {
+    struct fee_parameters_type { uint64_t fee = 0; };
+    asset fee;
+
+    account_id_type              authority;
+    vector<asset_id_type>        use_market_price_for_token;
+    extensions_type              extensions;
+
+    das33_set_use_market_price_for_token_operation() = default;
+
+    explicit das33_set_use_market_price_for_token_operation(const account_id_type& authority,
+                                                            vector<asset_id_type> use_market_price_for_token)
+                  : authority(authority)
+                  , use_market_price_for_token(use_market_price_for_token) {}
 
     account_id_type fee_payer() const { return authority; }
     void validate() const;
@@ -398,6 +418,14 @@ FC_REFLECT( graphene::chain::das33_set_use_external_btc_price_operation,
             (fee)
             (authority)
             (use_external_btc_price)
+            (extensions)
+          )
+
+FC_REFLECT( graphene::chain::das33_set_use_market_price_for_token_operation::fee_parameters_type, (fee) )
+FC_REFLECT( graphene::chain::das33_set_use_market_price_for_token_operation,
+            (fee)
+            (authority)
+            (use_market_price_for_token)
             (extensions)
           )
 

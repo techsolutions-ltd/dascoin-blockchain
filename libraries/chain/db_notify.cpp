@@ -541,6 +541,11 @@ struct get_impacted_account_visitor
       _impacted.insert(op.authority);
    }
 
+   void operator() ( const das33_set_use_market_price_for_token_operation& op )
+   {
+      _impacted.insert(op.authority);
+   }
+
    void operator() ( const das33_pledge_result_operation& op )
    {
       _impacted.insert(op.funders_account);
@@ -569,6 +574,11 @@ struct get_impacted_account_visitor
    }
 
    void operator()( const update_external_btc_price_operation& op )
+   {
+      _impacted.insert( op.issuer );
+   }
+
+   void operator()( const update_external_token_price_operation& op )
    {
       _impacted.insert( op.issuer );
    }
@@ -667,6 +677,10 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
                break;
             } case upgrade_event_object_type:{
                break;
+            } case last_price_object_type:{
+              break;
+            } case external_price_object_type:{
+              break;
             }
          }
       }

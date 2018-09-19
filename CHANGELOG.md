@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.4.6] - 2018-09-19
+### Added
+ - New operation: update external token price
+ - New operation: das33 set use market price for token
+ - New query: get last prices
+ - New query: get external prices
+ - Cli Wallet: new method submit cycles to queue by license
+ - Cli Wallet: new method das33 set use market token price
+ - Cli Wallet: new method update external token price
+ - Cli Wallet: new method get last prices
+ - Cli Wallet: new method get external prices
+ - New indices: last token price and external token price
+
+### Updated
+ - It is no longer possible to submit cycles from a chartered license to the
+   minting queue
+ - Utility licenses now have more upgrades
+
 ## [0.4.5] - 2018-09-06
 ### Added
  - Hardfork: use correct Dascoin price in clearing contract

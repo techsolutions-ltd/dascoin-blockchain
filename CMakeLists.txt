@@ -2,7 +2,7 @@
 project( DasCoin )
 cmake_minimum_required( VERSION 2.8.12 )
 
-set( BLOCKCHAIN_NAME "Dascoin Blockchain" )
+set( BLOCKCHAIN_NAME "Dascoin" )
 
 set( CLI_CLIENT_EXECUTABLE_NAME dascoin_client )
 set( GUI_CLIENT_EXECUTABLE_NAME DasCoin )
@@ -31,6 +31,8 @@ set(GRAPHENE_EGENESIS_JSON "${CMAKE_CURRENT_SOURCE_DIR}/genesis.json" )
 if (USE_PCH)
   include (cotire)
 endif(USE_PCH)
+
+option(USE_PROFILER "Build with GPROF support(Linux)." OFF)
 
 IF( NOT WIN32 )
   list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libraries/fc/CMakeModules" )
@@ -112,6 +114,9 @@ else( WIN32 ) # Apple AND Linux
         # Linux Specific Options Here
         message( STATUS "Configuring DasCoin on Linux" )
         set( CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++11 -Wall" )
+        if(USE_PROFILER)
+            set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg" )
+        endif( USE_PROFILER )
         set( rt_library rt )
         set( pthread_library pthread)
         if ( NOT DEFINED crypto_library )
@@ -169,7 +174,7 @@ set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/install)
 
 SET(CPACK_PACKAGE_DIRECTORY "${CMAKE_INSTALL_PREFIX}")
 set(CPACK_PACKAGE_NAME "dascoin")
-set(CPACK_PACKAGE_VENDOR "DasCoin, Inc.")
+set(CPACK_PACKAGE_VENDOR "TechSolutions, Ltd.")
 set(CPACK_PACKAGE_VERSION_MAJOR "${VERSION_MAJOR}")
 set(CPACK_PACKAGE_VERSION_MINOR "${VERSION_MINOR}")
 set(CPACK_PACKAGE_VERSION_PATCH "${VERSION_PATCH}")
@@ -203,3 +208,7 @@ endif(LINUX)
 
  include(CPack)
 endif(ENABLE_INSTALLER)
+
+MESSAGE( STATUS "" )
+MESSAGE( STATUS "PROFILER: ${USE_PROFILER}" )
+MESSAGE( STATUS "" )

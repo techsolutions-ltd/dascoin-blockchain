@@ -115,8 +115,6 @@ namespace graphene { namespace chain {
       void            validate()const;
    };
 
-
-
    /**
     *  @ingroup operations
     *
@@ -157,7 +155,7 @@ namespace graphene { namespace chain {
 
       fill_order_operation(){}
       fill_order_operation( object_id_type o, account_id_type a, asset p, asset r, asset f, price fp, bool m )
-         :order_id(o),account_id(a),pays(p),receives(r),fee(f),fill_price(fp),is_maker(m){}
+         :order_id(o),account_id(a),pays(p),receives(r),fee(f),fill_price(fp),is_maker(m) {}
 
       object_id_type      order_id;
       account_id_type     account_id;

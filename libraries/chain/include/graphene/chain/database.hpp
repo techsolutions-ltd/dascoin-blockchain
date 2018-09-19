@@ -204,6 +204,7 @@ namespace graphene { namespace chain {
           *  should not yield and should execute quickly.
           */
          fc::signal<void(const vector<object_id_type>&, const flat_set<account_id_type>&)> new_objects;
+
          /**
           *  Emitted After a block has been applied and committed.  The callback
           *  should not yield and should execute quickly.
@@ -607,6 +608,8 @@ namespace graphene { namespace chain {
    protected:
          //Mark pop_undo() as protected -- we do not want outside calling pop_undo(); it should call pop_block() instead
          void pop_undo() { object_database::pop_undo(); }
+         void notify_applied_block( const signed_block& block );
+         void notify_on_pending_transaction( const signed_transaction& tx );
          void notify_changed_objects();
 
       private:

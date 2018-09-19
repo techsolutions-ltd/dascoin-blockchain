@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE( das33_project_test )
     creator.symbol = "TEST";
     creator.common_options.max_supply = 100000000;
     creator.precision = 2;
-    creator.common_options.core_exchange_rate = price({asset(1),asset(1,asset_id_type(1))});
+    creator.common_options.core_exchange_rate = price{asset(1),asset(1,asset_id_type(1))};
     do_op(creator);
 
     // Create a das33 project
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE( das33_project_test_fails )
     auto das33_admin_id = get_das33_administrator_id();
     auto issuer_id = db.get_global_properties().authorities.webasset_issuer;
 
-    asset_id_type test_asset_id = create_new_asset("TEST", 100000000, 2, price({asset(1),asset(1,asset_id_type(1))}));
+    asset_id_type test_asset_id = create_new_asset("TEST", 100000000, 2, price{asset(1),asset(1,asset_id_type(1))});
 
     // Create discounts map
     map<asset_id_type, share_type> discounts{
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE( das33_pledge_dasc_test )
     // Create project token
     //   max_supply is 1.000.000,00000
     //   precision is 5
-    asset_id_type test_asset_id = create_new_asset("TEST", 100000000000, 5, price({asset(1),asset(1,asset_id_type(1))}));
+    asset_id_type test_asset_id = create_new_asset("TEST", 100000000000, 5, price{asset(1),asset(1,asset_id_type(1))});
 
     // Create a das33 project
     das33_project_create_operation project_create;
@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE( das33_pledge_dasc_test_min_max )
     BOOST_CHECK_EQUAL( get_balance(user_id, get_dascoin_asset_id()), 1000 * DASCOIN_DEFAULT_ASSET_PRECISION );
 
     // Create a das33 project
-    asset_id_type test_asset_id = create_new_asset("TEST", 10000000, 2, price({asset(1),asset(1,asset_id_type(1))}));
+    asset_id_type test_asset_id = create_new_asset("TEST", 10000000, 2, price{asset(1),asset(1,asset_id_type(1))});
 
     das33_project_create_operation project_create;
         project_create.authority       = get_das33_administrator_id();
@@ -310,7 +310,7 @@ BOOST_AUTO_TEST_CASE( das33_pledge_test_phase_limit )
     GRAPHENE_REQUIRE_THROW( do_op_no_balance_check(das33_pledge_asset_operation(user_id, asset{100000, get_dascoin_asset_id()}, optional<license_type_id_type>{}, bad_project.id));, fc::exception );
 
     // Create a das33 project
-    asset_id_type test_asset_id = create_new_asset("TEST", 100000, 2, price({asset(1),asset(1,asset_id_type(1))}));
+    asset_id_type test_asset_id = create_new_asset("TEST", 100000, 2, price{asset(1),asset(1,asset_id_type(1))});
 
     // Set last dascoin price
     set_last_dascoin_price(asset(2 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()) / asset(1 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()));
@@ -378,7 +378,7 @@ BOOST_AUTO_TEST_CASE( das33_pledge_test_overflow )
     BOOST_CHECK_EQUAL( get_balance(user_id, get_dascoin_asset_id()), 20000000000 );
 
     // Create a das33 project
-    asset_id_type test_asset_id = create_new_asset("TEST", 40000000000000, 5, price({asset(1),asset(1,asset_id_type(1))}));
+    asset_id_type test_asset_id = create_new_asset("TEST", 40000000000000, 5, price{asset(1),asset(1,asset_id_type(1))});
 
     // Set last dascoin price
     set_last_dascoin_price(asset(999999 * DASCOIN_DEFAULT_ASSET_PRECISION, get_dascoin_asset_id()) / asset(9999990000 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()));
@@ -440,7 +440,7 @@ BOOST_AUTO_TEST_CASE( das33_pledge_test_bitcoin )
     BOOST_CHECK_EQUAL( get_balance(user_id, get_btc_asset_id()), 200 * DASCOIN_BITCOIN_PRECISION );
 
     // Create a das33 project
-    asset_id_type test_asset_id = create_new_asset("TEST", 200000000000, 5, price({asset(1),asset(1,asset_id_type(1))}));
+    asset_id_type test_asset_id = create_new_asset("TEST", 200000000000, 5, price{asset(1),asset(1,asset_id_type(1))});
 
     // Set last dascoin price
     set_external_bitcoin_price(asset(1 * DASCOIN_BITCOIN_PRECISION, get_btc_asset_id()) / asset(10000 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()));
@@ -522,7 +522,7 @@ BOOST_AUTO_TEST_CASE( das33_complete_project_test )
     BOOST_CHECK_EQUAL( get_balance(user_id, get_dascoin_asset_id()), 100 * DASCOIN_DEFAULT_ASSET_PRECISION );
 
     // Create a das33 project
-    asset_id_type test_asset_id = create_new_asset("TEST", 100000000, 2, price({asset(1),asset(1,asset_id_type(1))}));
+    asset_id_type test_asset_id = create_new_asset("TEST", 100000000, 2, price{asset(1),asset(1,asset_id_type(1))});
 
     das33_project_create_operation project_create;
         project_create.authority       = get_das33_administrator_id();
@@ -600,9 +600,9 @@ BOOST_AUTO_TEST_CASE( das33_reject_project_test )
 
     // Create project tokens
 
-    asset_id_type test_asset_id_0 = create_new_asset("ZERO", 100000000, 2, price({asset(1),asset(1,asset_id_type(1))})); // max_supply is 1.000.000,00000, precision is 2
-    asset_id_type test_asset_id_1 = create_new_asset("ONE", 100000000, 2, price({asset(1),asset(1,asset_id_type(1))})); // max_supply is 1.000.000,00000, precision is 2
-    asset_id_type test_asset_id_2 = create_new_asset("TWO", 100000000, 2, price({asset(1),asset(1,asset_id_type(1))})); // max_supply is 1.000.000,00000, precision is 2
+    asset_id_type test_asset_id_0 = create_new_asset("ZERO", 100000000, 2, price{asset(1),asset(1,asset_id_type(1))}); // max_supply is 1.000.000,00000, precision is 2
+    asset_id_type test_asset_id_1 = create_new_asset("ONE", 100000000, 2, price{asset(1),asset(1,asset_id_type(1))}); // max_supply is 1.000.000,00000, precision is 2
+    asset_id_type test_asset_id_2 = create_new_asset("TWO", 100000000, 2, price{asset(1),asset(1,asset_id_type(1))}); // max_supply is 1.000.000,00000, precision is 2
 
     // Create das33 projects
 

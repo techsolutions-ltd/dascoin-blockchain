@@ -57,8 +57,8 @@ void account_statistics_object::process_fees(const account_object& a, database& 
          // Check the referrer -- if he's no longer a member, pay to the lifetime referrer instead.
          // No need to check the registrar; registrars are required to be lifetime members.
          if( account.referrer(d).is_basic_account(d.head_block_time()) )
-            d.modify(account, [](account_object& a) {
-               a.referrer = a.lifetime_referrer;
+            d.modify( account, [](account_object& acc) {
+               acc.referrer = acc.lifetime_referrer;
             });
 
          share_type network_cut = cut_fee(core_fee_total, account.network_fee_percentage);

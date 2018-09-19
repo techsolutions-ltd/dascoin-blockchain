@@ -761,6 +761,16 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
 
 namespace graphene { namespace chain {
 
+void database::notify_applied_block( const signed_block& block )
+{
+   GRAPHENE_TRY_NOTIFY( applied_block, block )
+}
+
+void database::notify_on_pending_transaction( const signed_transaction& tx )
+{
+   GRAPHENE_TRY_NOTIFY( on_pending_transaction, tx )
+}
+
 void database::notify_changed_objects()
 { try {
    if ( _undo_db.enabled() )

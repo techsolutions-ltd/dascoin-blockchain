@@ -56,11 +56,14 @@ namespace graphene {
 	  {
 		  return false;
 	  }
+
       if( v.size() != sizeof( fc::ripemd160 ) + 4 )
           return false;
+
       const fc::ripemd160 checksum = fc::ripemd160::hash( v.data(), v.size() - 4 );
       if( memcmp( v.data() + 20, (char*)checksum._hash, 4 ) != 0 )
           return false;
+
       return true;
    }
 

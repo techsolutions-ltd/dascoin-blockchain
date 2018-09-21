@@ -99,6 +99,64 @@ typedef multi_index_container<
 
 typedef generic_index<limit_order_object, limit_order_multi_index_type> limit_order_index;
 
+struct market_key
+{
+  asset_id_type        base;
+  asset_id_type        quote;
+
+  friend bool operator < ( const market_key& a, const market_key& b )
+  {
+     return std::tie( a.base, a.quote ) < std::tie( b.base, b.quote );
+  }
+  friend bool operator == ( const market_key& a, const market_key& b )
+  {
+     return std::tie( a.base, a.quote ) == std::tie( b.base, b.quote );
+  }
+};
+
+class last_price_object : public abstract_object<last_price_object>
+{
+   public:
+      static const uint8_t space_id = protocol_ids;
+      static const uint8_t type_id  = last_price_object_type;
+
+      market_key       market;
+      price            last_price;
+      time_point_sec   timestamp;
+};
+
+struct by_market_key;
+typedef multi_index_container<
+    last_price_object,
+    indexed_by<
+      ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
+      ordered_unique< tag<by_market_key>, member< last_price_object, market_key, &last_price_object::market > >
+   >
+> last_price_multi_index_type;
+
+typedef generic_index<last_price_object, last_price_multi_index_type> last_price_index;
+
+class external_price_object : public abstract_object<external_price_object>
+{
+   public:
+      static const uint8_t space_id = protocol_ids;
+      static const uint8_t type_id  = external_price_object_type;
+
+      market_key       market;
+      price            external_price;
+      time_point_sec   timestamp;
+};
+
+typedef multi_index_container<
+    external_price_object,
+    indexed_by<
+      ordered_unique< tag<by_id>, member< object, object_id_type, &object::id > >,
+      ordered_unique< tag<by_market_key>, member< external_price_object, market_key, &external_price_object::market > >
+   >
+> external_price_multi_index_type;
+
+typedef generic_index<external_price_object, external_price_multi_index_type> external_price_index;
+
 /**
  * @class call_order_object
  * @brief tracks debt and call price information
@@ -206,6 +264,20 @@ typedef generic_index<call_order_object, call_order_multi_index_type>           
 typedef generic_index<force_settlement_object, force_settlement_object_multi_index_type>   force_settlement_index;
 
 } } // graphene::chain
+
+FC_REFLECT( graphene::chain::market_key,
+            (base)(quote)
+          )
+
+FC_REFLECT_DERIVED( graphene::chain::last_price_object,
+                    (graphene::db::object),
+                    (market)(last_price)(timestamp)
+                  )
+
+FC_REFLECT_DERIVED( graphene::chain::external_price_object,
+                    (graphene::db::object),
+                    (market)(external_price)(timestamp)
+                  )
 
 FC_REFLECT_DERIVED( graphene::chain::limit_order_object,
                     (graphene::db::object),

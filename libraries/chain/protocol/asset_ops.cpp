@@ -23,32 +23,38 @@
  */
 #include <graphene/chain/protocol/asset_ops.hpp>
 
+#include <locale>
+
 namespace graphene { namespace chain {
 
 /**
  *  Valid symbols can contain [A-Z0-9], and '.'
  *  They must start with [A, Z]
- *  They must end with [A, Z]
+ *  They must end with [A-Z0-9]
  *  They can contain a maximum of one '.'
  */
 bool is_valid_symbol( const string& symbol )
 {
+    static const std::locale& loc = std::locale::classic();
     if( symbol.size() < GRAPHENE_MIN_ASSET_SYMBOL_LENGTH )
+        return false;
+
+    if( symbol.substr(0,3) == "BIT" ) 
         return false;
 
     if( symbol.size() > GRAPHENE_MAX_ASSET_SYMBOL_LENGTH )
         return false;
 
-    if( !isalpha( symbol.front() ) )
+    if( !isalpha( symbol.front(), loc ) )
         return false;
 
-    if( !isalpha( symbol.back() ) )
+    if( !isalnum( symbol.back(), loc ) )
         return false;
 
     bool dot_already_present = false;
     for( const auto c : symbol )
     {
-        if( (isalpha( c ) && isupper( c )) || isdigit(c) )
+        if( (isalpha( c, loc ) && isupper( c, loc )) || isdigit( c, loc ) )
             continue;
 
         if( c == '.' )
@@ -232,6 +238,11 @@ void asset_deny_issue_request_operation::validate() const
 void update_external_btc_price_operation::validate() const {
    FC_ASSERT( eur_amount_per_btc.base.amount > 0 );
    FC_ASSERT( eur_amount_per_btc.quote.amount > 0 );
+}
+
+void update_external_token_price_operation::validate() const {
+   FC_ASSERT( eur_amount_per_token.base.amount > 0 );
+   FC_ASSERT( eur_amount_per_token.quote.amount > 0 );
 }
 
 } } // namespace graphene::chain

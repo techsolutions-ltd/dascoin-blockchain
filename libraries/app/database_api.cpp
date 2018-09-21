@@ -210,6 +210,9 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       das33_project_tokens_amount get_amount_of_project_tokens_received_for_asset(das33_project_id_type project, asset to_pledge) const;
       das33_project_tokens_amount get_amount_of_asset_needed_for_project_token(das33_project_id_type project, asset_id_type asset_id, asset tokens) const;
 
+      // Prices:
+      vector<last_price_object> get_last_prices() const;
+      vector<external_price_object> get_external_prices() const;
 
       template<typename T>
       void subscribe_to_item( const T& i )const
@@ -3118,6 +3121,39 @@ das33_project_tokens_amount database_api_impl::get_amount_of_asset_needed_for_pr
   return result;
 }
 
+//////////////////////////////////////////////////////////////////////
+//                                                                  //
+// Prices:                                                          //
+//                                                                  //
+//////////////////////////////////////////////////////////////////////
+
+vector<last_price_object> database_api::get_last_prices() const
+{
+  return my->get_last_prices();
+}
+
+vector<last_price_object> database_api_impl::get_last_prices() const
+{
+  vector<last_price_object> result;
+  const auto& idx = _db.get_index_type<last_price_index>().indices().get<by_market_key>();
+  for (auto itr = idx.begin(); itr != idx.end(); itr++)
+    result.emplace_back(*itr);
+  return result;
+}
+
+vector<external_price_object> database_api::get_external_prices() const
+{
+  return my->get_external_prices();
+}
+
+vector<external_price_object> database_api_impl::get_external_prices() const
+{
+  vector<external_price_object> result;
+  const auto& idx = _db.get_index_type<external_price_index>().indices().get<by_market_key>();
+  for (auto itr = idx.begin(); itr != idx.end(); itr++)
+    result.emplace_back(*itr);
+  return result;
+}
 
 //////////////////////////////////////////////////////////////////////
 //                                                                  //

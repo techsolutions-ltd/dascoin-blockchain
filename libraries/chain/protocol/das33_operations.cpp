@@ -71,11 +71,6 @@ namespace graphene { namespace chain {
     FC_ASSERT( fee.amount >= 0 );
     FC_ASSERT( pledged.amount > 0, "Must submit a non-zero value" );
     FC_ASSERT( account_id != account_id_type(), "Illegal account id");
-
-    // For now, only dascoins and bitcoins can be pledged
-    FC_ASSERT( pledged.asset_id == asset_id_type{DASCOIN_DASCOIN_INDEX} ||
-               pledged.asset_id == asset_id_type{DASCOIN_BITCOIN_INDEX},
-               "Illegal asset pledged");
   }
 
   void das33_distribute_project_pledges_operation::validate() const
@@ -112,6 +107,9 @@ namespace graphene { namespace chain {
   {  }
 
   void das33_set_use_external_btc_price_operation::validate() const
+  {  }
+
+  void das33_set_use_market_price_for_token_operation::validate() const
   {  }
 
 } } // namespace graphene::chain

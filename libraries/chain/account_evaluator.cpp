@@ -136,7 +136,8 @@ void_result account_create_evaluator::do_evaluate( const account_create_operatio
    if( op.name.size() )
    {
       auto current_account_itr = acnt_indx.indices().get<by_name>().find( op.name );
-      FC_ASSERT( current_account_itr == acnt_indx.indices().get<by_name>().end() );
+      FC_ASSERT( current_account_itr == acnt_indx.indices().get<by_name>().end(),
+                 "Account '${a}' already exists.", ("a",op.name) );
    }
 
    return void_result();
@@ -186,6 +187,7 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
          obj.statistics = d.create<account_statistics_object>([&obj](account_statistics_object& s){
                              s.owner = obj.id;
                              s.name = obj.name;
+                             s.is_voting = obj.options.is_voting();
                           }).id;
 
          if( o.extensions.value.owner_special_authority.valid() )
@@ -325,8 +327,20 @@ void_result account_update_evaluator::do_evaluate( const account_update_operatio
 void_result account_update_evaluator::do_apply( const account_update_operation& o )
 { try {
    database& d = db();
-   bool sa_before, sa_after;
-   d.modify( *acnt, [&](account_object& a){
+
+   bool sa_before = acnt->has_special_authority();
+
+   // update account statistics
+   if( o.new_options.valid() && o.new_options->is_voting() != acnt->options.is_voting() )
+   {
+      d.modify( acnt->statistics( d ), []( account_statistics_object& aso )
+      {
+         aso.is_voting = !aso.is_voting;
+      } );
+   }
+
+   // update account object
+   d.modify( *acnt, [&o](account_object& a){
       if( o.owner )
       {
          a.owner = *o.owner;
@@ -338,7 +352,6 @@ void_result account_update_evaluator::do_apply( const account_update_operation& 
          a.top_n_control_flags = 0;
       }
       if( o.new_options ) a.options = *o.new_options;
-      sa_before = a.has_special_authority();
       if( o.extensions.value.owner_special_authority.valid() )
       {
          a.owner_special_authority = *(o.extensions.value.owner_special_authority);
@@ -349,8 +362,9 @@ void_result account_update_evaluator::do_apply( const account_update_operation& 
          a.active_special_authority = *(o.extensions.value.active_special_authority);
          a.top_n_control_flags = 0;
       }
-      sa_after = a.has_special_authority();
    });
+
+   bool sa_after = acnt->has_special_authority();
 
    if( sa_before && (!sa_after) )
    {

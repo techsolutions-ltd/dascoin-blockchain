@@ -22,7 +22,6 @@
  * THE SOFTWARE.
  */
 #pragma once
-#include <graphene/chain/database.hpp>
 #include <graphene/db/object.hpp>
 #include <graphene/db/generic_index.hpp>
 

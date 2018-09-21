@@ -205,6 +205,9 @@ namespace graphene { namespace chain {
             das33_distribute_pledge_operation,
             das33_pledge_reject_operation,
             das33_set_use_external_btc_price_operation,
+            das33_set_use_market_price_for_token_operation,
+
+            update_external_token_price_operation,
 
             // Virtual operations below this point:
 
@@ -264,7 +267,4 @@ namespace graphene { namespace chain {
 } } // graphene::chain
 
 FC_REFLECT_TYPENAME( graphene::chain::operation )
-
-FC_REFLECT( graphene::chain::op_wrapper,
-            (op)
-          )
+FC_REFLECT( graphene::chain::op_wrapper, (op) )

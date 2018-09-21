@@ -74,7 +74,7 @@ class es_objects_plugin_impl
       void PrepareProposal(const proposal_object& proposal_object, const fc::time_point_sec& block_time, const uint32_t& block_number);
       void PrepareAccount(const account_object& account_object, const fc::time_point_sec& block_time, const uint32_t& block_number);
       void PrepareAsset(const asset_object& asset_object, const fc::time_point_sec& block_time, const uint32_t& block_number);
-      void PrepareBalance(const balance_object& balance_object, const fc::time_point_sec& block_time, const uint32_t& block_number);
+      void PrepareBalance(const account_balance_object& balance_object, const fc::time_point_sec& block_time, const uint32_t& block_number);
       void PrepareLimit(const limit_order_object& limit_object, const fc::time_point_sec& block_time, const uint32_t& block_number);
       void PrepareBitAsset(const asset_bitasset_data_object& bitasset_object, const fc::time_point_sec& block_time, const uint32_t& block_number);
 };
@@ -112,9 +112,9 @@ bool es_objects_plugin_impl::updateDatabase( const vector<object_id_type>& ids ,
          if(a != nullptr)
             PrepareAsset(*a, block_time, block_number);
       }
-      else if(value.is<balance_object>() && _es_objects_balances) {
+      else if(value.is<account_balance_object>() && _es_objects_balances) {
          auto obj = db.find_object(value);
-         auto b = static_cast<const balance_object*>(obj);
+         auto b = static_cast<const account_balance_object*>(obj);
          if(b != nullptr)
             PrepareBalance(*b, block_time, block_number);
       }
@@ -258,15 +258,16 @@ void es_objects_plugin_impl::PrepareAsset(const asset_object& asset_object,
    prepare.clear();
 }
 
-void es_objects_plugin_impl::PrepareBalance(const balance_object& balance_object,
+void es_objects_plugin_impl::PrepareBalance(const account_balance_object& balance_object,
                                             const fc::time_point_sec& block_time, const uint32_t& block_number)
 {
    balance_struct balance;
    balance.object_id = balance_object.id;
    balance.block_time = block_time;
-   balance.block_number = block_number;balance.owner = balance_object.owner;
-   balance.asset_id = balance_object.balance.asset_id;
-   balance.amount = balance_object.balance.amount;
+   balance.block_number = block_number;
+   balance.owner = balance_object.owner;
+   balance.asset_id = balance_object.asset_type;
+   balance.amount = balance_object.balance;
 
    auto it = balances.find(balance_object.id);
    if(it == balances.end())
@@ -276,7 +277,7 @@ void es_objects_plugin_impl::PrepareBalance(const balance_object& balance_object
       else balances[balance_object.id] = balance;
    }
 
-   std::string data = fc::json::to_string(balance);
+   std::string data = fc::json::to_string(balance, fc::json::legacy_generator);
 
    fc::mutable_variant_object bulk_header;
    bulk_header["_index"] = _es_objects_index_prefix + "balance";
@@ -308,7 +309,7 @@ void es_objects_plugin_impl::PrepareLimit(const limit_order_object& limit_object
       else limit_orders[limit_object.id] = limit;
    }
 
-   std::string data = fc::json::to_string(limit);
+   std::string data = fc::json::to_string(limit, fc::json::legacy_generator);
 
    fc::mutable_variant_object bulk_header;
    bulk_header["_index"] = _es_objects_index_prefix + "limitorder";

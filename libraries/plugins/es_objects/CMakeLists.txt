@@ -12,6 +12,8 @@ if(MSVC)
   set_source_files_properties(es_objects.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )
 endif(MSVC)
 
+add_definitions( -DWITH_EXOTIC_JSON_PARSERS )
+
 install( TARGETS
    graphene_es_objects
 

@@ -1718,6 +1718,30 @@ public:
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (token_issuer)(token_id)(new_price)(broadcast) ) }
 
+   signed_transaction set_active_authorities(const string& account_id_or_name,
+                                             vector<public_key_type> keys,
+                                             bool broadcast)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      account_update_operation op;
+      authority auth;
+
+      weight_type i = 1;
+      for (const auto& key : keys)
+          auth.add_authority(key, i++);
+
+      op.account = get_account(account_id_or_name).id;
+      op.active = auth;
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (account_id_or_name)(keys)(broadcast) ) }
+
    signed_transaction tether_accounts(string wallet, string vault, bool broadcast = false)
    { try {
       FC_ASSERT( !self.is_locked() );
@@ -6244,11 +6268,18 @@ signed_transaction wallet_api::update_external_btc_price(const string& btc_issue
 }
 
 signed_transaction wallet_api::update_external_token_price(const string& token_issuer,
-                                               asset_id_type token_id,
-                                               price new_price,
-                                               bool broadcast) const
+                                                           asset_id_type token_id,
+                                                           price new_price,
+                                                           bool broadcast) const
 {
   return my->update_external_token_price(token_issuer, token_id, new_price, broadcast);
+}
+
+signed_transaction wallet_api::set_active_authorities(const string& account_id_or_name,
+                                                      vector<public_key_type> keys,
+                                                      bool broadcast) const
+{
+  return my->set_active_authorities(account_id_or_name, keys, broadcast);
 }
 
 signed_block_with_info::signed_block_with_info( const signed_block& block )

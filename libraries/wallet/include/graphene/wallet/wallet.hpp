@@ -2211,9 +2211,19 @@ class wallet_api
        * @param broadcast       true to broadcast transaction to network
        */
       signed_transaction update_external_token_price(const string& token_issuer,
-                                                   asset_id_type token_id,
-                                                   price new_price,
-                                                   bool broadcast) const;
+                                                     asset_id_type token_id,
+                                                     price new_price,
+                                                     bool broadcast) const;
+
+      /**
+       * @param token_issuer    Account of asset issuer
+       * @param token_id        Id of asset to set price for
+       * @param new_price       New token price
+       * @param broadcast       true to broadcast transaction to network
+       */
+      signed_transaction set_active_authorities(const string& account_id_or_name,
+                                                vector<public_key_type> keys,
+                                                bool broadcast) const;
 
       //////////////////////////
       // REQUESTS:            //
@@ -2546,6 +2556,7 @@ FC_API( graphene::wallet::wallet_api,
         (update_delayed_operations_resolver_parameters)
         (get_delayed_operations_for_account)
 
+        (set_active_authorities)
         (update_global_parameters)
         (change_operation_fee)
         (update_external_btc_price)

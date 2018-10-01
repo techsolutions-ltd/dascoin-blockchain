@@ -43,6 +43,10 @@ namespace graphene { namespace chain {
 
     account_id_type fee_payer() const { return account; }
     void validate() const;
+    void get_required_owner_authorities( flat_set<account_id_type>& a )const
+    {
+      a.insert( account );
+    }
   };
 
   struct wire_out_with_fee_complete_operation : public base_operation

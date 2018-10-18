@@ -57,17 +57,6 @@ namespace graphene { namespace chain {
     {
       result = d.get_dynamic_global_properties().last_dascoin_price;
     }
-    else if (original_asset_id == d.get_btc_asset_id())
-    {
-      if (d.get_global_properties().das33_parameters.use_external_btc_price)
-      {
-        result = d.get_dynamic_global_properties().external_btc_price;
-      }
-      else
-      {
-        result = d.get_dynamic_global_properties().last_btc_price;
-      }
-    }
     else
     {
       vector<asset_id_type> use_market_price_for_token = d.get_global_properties().das33_parameters.use_market_price_for_token;

@@ -133,7 +133,6 @@ namespace graphene { namespace chain {
    struct account_update_operation : public base_operation
    {
 
-
       struct fee_parameters_type
       {
          share_type fee             = 20 * GRAPHENE_BLOCKCHAIN_PRECISION;

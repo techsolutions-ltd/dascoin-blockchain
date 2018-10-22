@@ -201,7 +201,7 @@ namespace graphene { namespace chain {
          /**
           * Last daily dascoin trade price on the DSC:WEBEUR market.
           */
-         price last_daily_dascoin_price;
+         price last_daily_dascoin_price = price{asset{DASCOIN_DEFAULT_STARTING_PRICE_BASE_AMOUNT, asset_id_type{2}}, asset{DASCOIN_FIAT_ASSET_PRECISION, asset_id_type{1}}};
 
          /**
           * This flag is used for enabling use of root authority
@@ -211,7 +211,7 @@ namespace graphene { namespace chain {
 
          /**
           * This is id of account that owns fee pool balance object
-          * It can be set or empy if empty cycles will be burned when fee is payed
+          * It can be set or empty if empty cycles will be burned when fee is payed
           */
          account_id_type fee_pool_account_id;
 
@@ -262,6 +262,7 @@ FC_REFLECT_DERIVED( graphene::chain::dynamic_global_property_object, (graphene::
                     (last_dascoin_price)
                     (last_btc_price)
                     (external_btc_price)
+                    (last_daily_dascoin_price)
                     (fee_pool_account_id)
                   )
 

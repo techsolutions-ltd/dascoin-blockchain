@@ -443,7 +443,12 @@ BOOST_AUTO_TEST_CASE( das33_pledge_test_bitcoin )
     asset_id_type test_asset_id = create_new_asset("TEST", 200000000000, 5, price({asset(1),asset(1,asset_id_type(1))}));
 
     // Set last dascoin price
-    set_external_bitcoin_price(asset(1 * DASCOIN_BITCOIN_PRECISION, get_btc_asset_id()) / asset(10000 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()));
+   // set_external_bitcoin_price(asset(1 * DASCOIN_BITCOIN_PRECISION, get_btc_asset_id()) / asset(10000 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id()));
+    update_external_token_price_operation uepo;
+    uepo.issuer = get_webasset_issuer_id();
+    uepo.token_id = get_btc_asset_id();
+    uepo.eur_amount_per_token = asset(1 * DASCOIN_BITCOIN_PRECISION, get_btc_asset_id()) / asset(10000 * DASCOIN_FIAT_ASSET_PRECISION, get_web_asset_id());
+    do_op(uepo);
 
     // Create project
     das33_project_create_operation project_create;

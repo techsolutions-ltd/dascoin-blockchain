@@ -221,7 +221,6 @@ void elasticsearch_plugin_impl::doOperationHistory(const optional <operation_his
    }
    else
       os.op = fc::json::to_string(oho->op);
-
 }
 
 void elasticsearch_plugin_impl::doBlock(uint32_t trx_in_block, const signed_block& b)

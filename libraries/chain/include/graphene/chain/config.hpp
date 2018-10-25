@@ -171,6 +171,8 @@
 // hack for unit test
 #define GRAPHENE_FBA_STEALTH_DESIGNATED_ASSET (asset_id_type(1))
 
+#define GRAPHENE_MAX_NESTED_OBJECTS (200)
+
 /**
  * Maximum length of comments for operations:
  */

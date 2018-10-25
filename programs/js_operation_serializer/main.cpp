@@ -21,8 +21,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+#include <graphene/chain/protocol/block.hpp>
 #include <graphene/chain/protocol/chain_parameters.hpp>
-#include <graphene/chain/protocol/protocol.hpp>
 #include <graphene/chain/protocol/fee_schedule.hpp>
 
 #include <graphene/chain/account_object.hpp>
@@ -248,7 +248,7 @@ struct serializer<std::vector<T>,false>
 template<typename T>
 struct serializer<fc::smart_ref<T>,false>
 {
-   static void init() {
+   static void init() { 
       serializer<T>::init(); }
    static void generate() {}
 };

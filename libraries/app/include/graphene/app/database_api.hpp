@@ -201,7 +201,7 @@ struct tethered_accounts_balances_collection
 class database_api
 {
    public:
-      database_api(graphene::chain::database& db);
+      database_api( graphene::chain::database& db, const application_options* app_options );
       ~database_api();
 
       /////////////
@@ -241,6 +241,10 @@ class database_api
        * @return header of the referenced block, or null if no matching block was found
        */
       optional<block_header> get_block_header(uint32_t block_num)const;
+
+
+      map<uint32_t, optional<block_header>> get_block_header_batch(const vector<uint32_t> block_nums)const;
+
 
       /**
        * @brief Retrieve a full, signed block

@@ -1,7 +1,10 @@
 [submodule "docs"]
-    path = docs
-    url = https://github.com/cryptonomex/graphene.wiki.git
-    ignore = dirty
+	path = docs
+	url = git@gitlab.internal.roundglobe.tech:DasCoin/dascoin-docs.git
+	branch = master
+	ignore = dirty
 [submodule "libraries/fc"]
 	path = libraries/fc
-	url = ../dascoin-fc/
+	url = git@gitlab.internal.roundglobe.tech:DasCoin/dascoin-fc.git
+	branch = BLC-170_UpgradeCodebaseWithBitShares
+	ignore = dirty

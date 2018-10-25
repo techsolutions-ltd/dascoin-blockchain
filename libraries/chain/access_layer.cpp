@@ -335,7 +335,7 @@ optional<asset_object> database_access_layer::get_asset_symbol(const asset_index
     const auto& asset_by_symbol = index.indices().get<by_symbol>();
     if( !symbol_or_id.empty() && std::isdigit(symbol_or_id[0]) )
     {
-        auto ptr = _db.find(variant(symbol_or_id).as<asset_id_type>());
+        auto ptr = _db.find(variant(symbol_or_id).as<asset_id_type>( 0 ));
         return ptr == nullptr ? optional<asset_object>{} : *ptr;
     }
     auto itr = asset_by_symbol.find(symbol_or_id);

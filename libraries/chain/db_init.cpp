@@ -337,9 +337,9 @@ void database::initialize_indexes()
    add_index< primary_index<asset_bitasset_data_index                     > >();
    add_index< primary_index<simple_index<global_property_object          >> >();
    add_index< primary_index<simple_index<dynamic_global_property_object  >> >();
-   add_index< primary_index<simple_index<account_statistics_object       >> >();
+   add_index< primary_index<account_stats_index                           > >();
    add_index< primary_index<simple_index<asset_dynamic_data_object       >> >();
-   add_index< primary_index<flat_index<  block_summary_object            >> >();
+   add_index< primary_index<simple_index<block_summary_object            >> >();
    add_index< primary_index<simple_index<chain_property_object          > > >();
    add_index< primary_index<simple_index<witness_schedule_object        > > >();
    add_index< primary_index<simple_index<budget_record_object           > > >();
@@ -408,8 +408,8 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       uint32_t old_flags;
    } inhibitor(*this);
 
-   flat_index<block_summary_object>& bsi = get_mutable_index_type< flat_index<block_summary_object> >();
-   bsi.resize(0xffff+1);
+   for (uint32_t i = 0; i <= 0x10000; i++)
+     create<block_summary_object>( [&]( block_summary_object&) {});
 
    // Create blockchain accounts
    fc::ecc::private_key null_private_key = fc::ecc::private_key::regenerate(fc::sha256::hash(string("null_key")));
@@ -425,13 +425,20 @@ void database::init_genesis(const genesis_state_type& genesis_state)
          n.owner.weight_threshold = 1;
          n.active.weight_threshold = 1;
          n.name = "committee-account";
-         n.statistics = create<account_statistics_object>( [&](account_statistics_object& s){ s.owner = n.id; }).id;
+          n.statistics = create<account_statistics_object>( [&n](account_statistics_object& s){
+                           s.owner = n.id;
+                           s.name = n.name;
+                           s.core_in_balance = GRAPHENE_MAX_SHARE_SUPPLY;
+                        }).id;
       });
    FC_ASSERT(committee_account.get_id() == GRAPHENE_COMMITTEE_ACCOUNT);
    FC_ASSERT(create<account_object>([this](account_object& a) {
        a.kind = account_kind::special;
        a.name = "witness-account";
-       a.statistics = create<account_statistics_object>([&](account_statistics_object& s){s.owner = a.id;}).id;
+       a.statistics = create<account_statistics_object>([&a](account_statistics_object& s){
+                         s.owner = a.id;
+                         s.name = a.name;
+                      }).id;
        a.owner.weight_threshold = 1;
        a.active.weight_threshold = 1;
        a.registrar = a.lifetime_referrer = a.referrer = GRAPHENE_WITNESS_ACCOUNT;
@@ -442,7 +449,10 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    FC_ASSERT(create<account_object>([this](account_object& a) {
        a.kind = account_kind::special;
        a.name = "relaxed-committee-account";
-       a.statistics = create<account_statistics_object>([&](account_statistics_object& s){s.owner = a.id;}).id;
+       a.statistics = create<account_statistics_object>([&a](account_statistics_object& s){
+                         s.owner = a.id;
+                         s.name = a.name;
+                      }).id;
        a.owner.weight_threshold = 1;
        a.active.weight_threshold = 1;
        a.registrar = a.lifetime_referrer = a.referrer = GRAPHENE_RELAXED_COMMITTEE_ACCOUNT;
@@ -453,7 +463,10 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    FC_ASSERT(create<account_object>([this](account_object& a) {
        a.kind = account_kind::special;
        a.name = "null-account";
-       a.statistics = create<account_statistics_object>([&](account_statistics_object& s){s.owner = a.id;}).id;
+       a.statistics = create<account_statistics_object>([&a](account_statistics_object& s){
+                         s.owner = a.id;
+                         s.name = a.name;
+                      }).id;
        a.owner.weight_threshold = 1;
        a.active.weight_threshold = 1;
        a.registrar = a.lifetime_referrer = a.referrer = GRAPHENE_NULL_ACCOUNT;
@@ -464,7 +477,10 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    FC_ASSERT(create<account_object>([this](account_object& a) {
        a.kind = account_kind::special;
        a.name = "temp-account";
-       a.statistics = create<account_statistics_object>([&](account_statistics_object& s){s.owner = a.id;}).id;
+       a.statistics = create<account_statistics_object>([&a](account_statistics_object& s){
+                         s.owner = a.id;
+                         s.name = a.name;
+                      }).id;
        a.owner.weight_threshold = 0;
        a.active.weight_threshold = 0;
        a.registrar = a.lifetime_referrer = a.referrer = GRAPHENE_TEMP_ACCOUNT;
@@ -476,7 +492,10 @@ void database::init_genesis(const genesis_state_type& genesis_state)
    FC_ASSERT(create<account_object>([this](account_object& a) {
        a.kind = account_kind::special;
        a.name = "proxy-to-self";
-       a.statistics = create<account_statistics_object>([&](account_statistics_object& s){s.owner = a.id;}).id;
+       a.statistics = create<account_statistics_object>([&a](account_statistics_object& s){
+                         s.owner = a.id;
+                         s.name = a.name;
+                      }).id;
        a.owner.weight_threshold = 1;
        a.active.weight_threshold = 1;
        a.registrar = a.lifetime_referrer = a.referrer = GRAPHENE_NULL_ACCOUNT;
@@ -491,10 +510,13 @@ void database::init_genesis(const genesis_state_type& genesis_state)
       uint64_t id = get_index<account_object>().get_next_id().instance();
       if( id >= genesis_state.immutable_parameters.num_special_accounts )
          break;
-      const account_object& acct = create<account_object>([&](account_object& a) {
+      const account_object& acct = create<account_object>([this,id](account_object& a) {
           a.kind = account_kind::special;
           a.name = "special-account-" + std::to_string(id);
-          a.statistics = create<account_statistics_object>([&](account_statistics_object& s){s.owner = a.id;}).id;
+          a.statistics = create<account_statistics_object>([&a](account_statistics_object& s){
+                            s.owner = a.id;
+                            s.name = a.name;
+                         }).id;
           a.owner.weight_threshold = 1;
           a.active.weight_threshold = 1;
           a.registrar = a.lifetime_referrer = a.referrer = account_id_type(id);

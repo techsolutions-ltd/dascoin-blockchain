@@ -15,14 +15,10 @@
 #include <graphene/chain/transaction_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
 #include <graphene/chain/witness_object.hpp>
-
-namespace graphene {
-namespace chain {
-
-// TODO: namespace detail?
+#include <graphene/chain/impacted.hpp>
 
 using namespace fc;
-using namespace chain;
+using namespace graphene::chain;
 
 // TODO:  Review all of these, especially no-ops
 struct get_impacted_account_visitor
@@ -304,13 +300,11 @@ struct get_impacted_account_visitor
   void operator()( const wire_out_with_fee_complete_operation& op )
   {
     _impacted.insert( op.wire_out_handler );
-//    _impacted.insert( op.wire_out_with_fee_handler );
   }
 
   void operator()( const wire_out_with_fee_reject_operation& op )
   {
     _impacted.insert( op.wire_out_handler );
-//    _impacted.insert( op.wire_out_with_fee_handler );
   }
 
   void operator()( const wire_out_with_fee_result_operation& op )
@@ -584,13 +578,13 @@ struct get_impacted_account_visitor
    }
 };
 
-void operation_get_impacted_accounts( const operation& op, flat_set<account_id_type>& result )
+void graphene::chain::operation_get_impacted_accounts( const operation& op, flat_set<account_id_type>& result )
 {
    get_impacted_account_visitor vtor = get_impacted_account_visitor( result );
    op.visit( vtor );
 }
 
-void transaction_get_impacted_accounts( const transaction& tx, flat_set<account_id_type>& result )
+void graphene::chain::transaction_get_impacted_accounts( const transaction& tx, flat_set<account_id_type>& result )
 {
    for( const auto& op : tx.operations )
       operation_get_impacted_accounts( op, result );
@@ -777,6 +771,18 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
               break;
       }
    }
+} // end get_relevant_accounts( const object* obj, flat_set<account_id_type>& accounts )
+
+namespace graphene { namespace chain {
+
+void database::notify_applied_block( const signed_block& block )
+{
+   GRAPHENE_TRY_NOTIFY( applied_block, block )
+}
+
+void database::notify_on_pending_transaction( const signed_transaction& tx )
+{
+   GRAPHENE_TRY_NOTIFY( on_pending_transaction, tx )
 }
 
 void database::notify_changed_objects()
@@ -806,7 +812,6 @@ void database::notify_changed_objects()
       {
          vector<object_id_type> changed_ids;  changed_ids.reserve(head_undo.old_values.size());
          flat_set<account_id_type> changed_accounts_impacted;
-
          for( const auto& item : head_undo.old_values )
          {
             changed_ids.push_back(item.first);
@@ -833,7 +838,6 @@ void database::notify_changed_objects()
          removed_objects(removed_ids, removed, removed_accounts_impacted);
       }
    }
-} FC_CAPTURE_AND_LOG( () ) }
+} FC_CAPTURE_AND_LOG( (0) ) }
 
-}  // namespace chain
-}  // namespace graphene
+} }

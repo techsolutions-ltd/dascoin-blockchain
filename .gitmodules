@@ -1,10 +1,10 @@
 [submodule "docs"]
 	path = docs
-	url = git@gitlab.internal.roundglobe.tech:DasCoin/dascoin-docs.git
+	url = ../dascoin-docs
 	branch = master
 	ignore = dirty
 [submodule "libraries/fc"]
 	path = libraries/fc
-	url = git@gitlab.internal.roundglobe.tech:DasCoin/dascoin-fc.git
-	branch = BLC-170_UpgradeCodebaseWithBitShares
+	url = ../dascoin-fc
+	branch = master
 	ignore = dirty

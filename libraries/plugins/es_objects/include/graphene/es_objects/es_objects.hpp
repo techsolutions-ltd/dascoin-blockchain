@@ -88,6 +88,7 @@ struct account_struct {
    string active_address_auths;
    account_id_type voting_account;
    string votes;
+   uint8_t kind;
 };
 struct asset_struct {
    object_id_type object_id;
@@ -106,6 +107,8 @@ struct balance_struct {
    account_id_type owner;
    asset_id_type asset_type;
    share_type balance;
+   share_type reserved_balance;
+   uint8_t owner_kind;
    bool maintenance_flag;
 };
 struct limit_order_struct {
@@ -138,7 +141,7 @@ FC_REFLECT(
         graphene::es_objects::account_struct,
         (object_id)(block_time)(block_number)(membership_expiration_date)(registrar)(referrer)(lifetime_referrer)
         (network_fee_percentage)(lifetime_referrer_fee_percentage)(referrer_rewards_percentage)(name)(owner_account_auths)
-        (owner_key_auths)(owner_address_auths)(active_account_auths)(active_key_auths)(active_address_auths)(voting_account)(votes)
+        (owner_key_auths)(owner_address_auths)(active_account_auths)(active_key_auths)(active_address_auths)(voting_account)(votes) (kind)
 )
 FC_REFLECT(
         graphene::es_objects::asset_struct,
@@ -146,7 +149,7 @@ FC_REFLECT(
 )
 FC_REFLECT(
         graphene::es_objects::balance_struct,
-        (object_id)(block_time)(block_number)(owner)(asset_type)(balance)(maintenance_flag)
+        (object_id)(block_time)(block_number)(owner)(asset_type)(balance)(reserved_balance)(owner_kind)(maintenance_flag)
 )
 FC_REFLECT(
         graphene::es_objects::limit_order_struct,

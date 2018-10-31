@@ -242,6 +242,7 @@ void es_objects_plugin_impl::prepare_account(const account_object& account_objec
    acct.active_address_auths = fc::json::to_string(account_object.active.address_auths);
    acct.voting_account = account_object.options.voting_account;
    acct.votes = fc::json::to_string(account_object.options.votes);
+   acct.kind = static_cast<uint8_t>(account_object.kind);
 
    std::string data = fc::json::to_string(acct);
 
@@ -294,6 +295,11 @@ void es_objects_plugin_impl::prepare_balance(const account_balance_object& accou
    balance.owner = account_balance_object.owner;
    balance.asset_type = account_balance_object.asset_type;
    balance.balance = account_balance_object.balance;
+   balance.reserved_balance = account_balance_object.reserved;
+   auto obj = _self.database().find_object(balance.owner);
+   const account_object* account_obj_ptr = static_cast<const account_object*>(obj);
+   if(account_obj_ptr != nullptr)
+      balance.owner_kind = static_cast<uint8_t>(account_obj_ptr->kind);
 
    std::string data = fc::json::to_string(balance);
 

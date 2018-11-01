@@ -293,6 +293,32 @@ namespace graphene { namespace app {
                                        start);
     }
 
+    vector<operation_history_object> history_api::get_trade_history_for_account( const asset_id_type base,
+                                                                     const asset_id_type quote,
+                                                                     account_id_type account,
+                                                                     operation_history_id_type stop,
+                                                                     unsigned limit,
+                                                                     operation_history_id_type start)const
+    {
+
+       FC_ASSERT( _app.chain_database() );
+       const auto& db = *_app.chain_database();
+       auto fill_operation_type = operation(fill_order_operation()).which();
+       return get_account_history_impl(account,
+                                       [&fill_operation_type, &db, &base, &quote](const account_transaction_history_object* node) {
+                                           auto& op = node->operation_id(db).op;
+                                           if(op.which() == fill_operation_type)
+                                           {
+                                              fill_order_operation fop = op.get<fill_order_operation>();
+                                              return fop.pays.asset_id == base && fop.receives.asset_id == quote;
+                                           }
+                                           return false;
+                                       },
+                                       stop,
+                                       limit,
+                                       start);
+    }
+
     vector<operation_history_object> history_api::get_relative_account_history( account_id_type account,
                                                                                 uint32_t stop,
                                                                                 unsigned limit,

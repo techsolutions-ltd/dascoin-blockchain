@@ -1321,9 +1321,12 @@ limit_orders_grouped_by_price database_api_impl::get_limit_orders_grouped_by_pri
    const auto& limit_price_idx = limit_order_idx.indices().get<by_price>();
 
    limit_orders_grouped_by_price result;
+   bool swap_buy_sell = false;
    if(base < quote)
+   {
       std::swap(base,quote);
-
+      swap_buy_sell = true;
+   }
 
    auto func = [this, &limit_price_idx, limit](asset_id_type& a, asset_id_type& b, std::vector<agregated_limit_orders_with_same_price>& ret, bool ascending){
       std::map<share_type, agregated_limit_orders_with_same_price> helper_map;
@@ -1339,7 +1342,7 @@ limit_orders_grouped_by_price database_api_impl::get_limit_orders_grouped_by_pri
       {
          double price = ascending ? 1 / limit_itr->sell_price.to_real() : limit_itr->sell_price.to_real();
          // adjust price precision and value accordingly so we can forme key
-         auto p = round((ascending ? price * coef : price / coef) * DASCOIN_FIAT_ASSET_PRECISION);
+         auto p = round((ascending ? price * coef : price / coef) * ORDER_BOOK_QUERY_PRECISION);
          share_type price_key = static_cast<share_type>(p);
 
          auto helper_itr = helper_map.find(price_key);
@@ -1389,8 +1392,15 @@ limit_orders_grouped_by_price database_api_impl::get_limit_orders_grouped_by_pri
       }
    };
 
-   func(base, quote, result.sell, true);
-   func(quote, base, result.buy, false);
+   if(swap_buy_sell)
+   {
+      func(base, quote, result.buy, false);
+      func(quote, base, result.sell, true);
+   } else
+   {
+      func(base, quote, result.sell, true);
+      func(quote, base, result.buy, false);
+   }
 
    return std::move(result);
 }

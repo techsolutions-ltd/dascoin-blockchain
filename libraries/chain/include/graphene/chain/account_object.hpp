@@ -591,6 +591,7 @@ FC_REFLECT_DERIVED( graphene::chain::account_object, (graphene::db::object),
 
 FC_REFLECT_DERIVED( graphene::chain::account_statistics_object, (graphene::chain::object),
                     (owner)
+                    (name)
                     (most_recent_op)
                     (total_ops)
                     (total_core_in_orders)

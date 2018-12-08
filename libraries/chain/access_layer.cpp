@@ -158,6 +158,15 @@ optional<total_cycles_res> database_access_layer::get_total_cycles(account_id_ty
             total_cycles_res result;
             for (auto itr = history.begin(); itr != history.end(); ++itr)
             {
+
+                //TODO: Write helper function for code below:
+                auto lic = get_license_type(itr->license);
+                if (lic.valid())
+                  if (!(lic->kind == license_kind::locked_frequency ||
+                      lic->kind == license_kind::utility ||
+                      lic->kind == license_kind::package))
+                    continue;
+
                 result.total_cycles += itr->amount;
                 result.total_cycles += itr->non_upgradeable_amount;
                 result.total_dascoin += _db.cycles_to_dascoin(result.total_cycles, itr->frequency_lock); 

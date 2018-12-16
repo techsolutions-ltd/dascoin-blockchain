@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Cryptonomex, Inc., and contributors.
+ * Copyright (c) 2015-2018 Cryptonomex, Inc., and contributors.
  *
  * The MIT License
  *
@@ -73,6 +73,7 @@ void_result proposal_create_evaluator::do_evaluate(const proposal_create_operati
 
    for( const op_wrapper& op : o.proposed_ops )
       _proposed_trx.operations.push_back(op.op);
+
    _proposed_trx.validate();
 
    return void_result();
@@ -86,6 +87,7 @@ object_id_type proposal_create_evaluator::do_apply(const proposal_create_operati
       _proposed_trx.expiration = o.expiration_time;
       proposal.proposed_transaction = _proposed_trx;
       proposal.expiration_time = o.expiration_time;
+      proposal.proposer = o.fee_paying_account;
       if( o.review_period_seconds )
          proposal.review_period_time = o.expiration_time - *o.review_period_seconds;
 
@@ -177,6 +179,9 @@ void_result proposal_update_evaluator::do_apply(const proposal_update_operation&
       try {
          _processed_transaction = d.push_proposal(*_proposal);
       } catch(fc::exception& e) {
+         d.modify(*_proposal, [&e](proposal_object& p) {
+            p.fail_reason = e.to_string(fc::log_level(fc::log_level::all));
+         });
          wlog("Proposed transaction ${id} failed to apply once approved with exception:\n----\n${reason}\n----\nWill try again when it expires.",
               ("id", o.proposal)("reason", e.to_detail_string()));
          _proposal_failed = true;

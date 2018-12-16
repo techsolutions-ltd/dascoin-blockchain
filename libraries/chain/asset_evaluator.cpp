@@ -33,6 +33,8 @@
 
 #include <functional>
 
+#include <locale>
+
 namespace graphene { namespace chain {
 
 void_result asset_create_evaluator::do_evaluate( const asset_create_operation& op )
@@ -117,23 +119,25 @@ void_result asset_create_evaluator::do_evaluate( const asset_create_operation& o
 
 object_id_type asset_create_evaluator::do_apply( const asset_create_operation& op )
 { try {
+   database& d = db();
+
    const asset_dynamic_data_object& dyn_asset =
-      db().create<asset_dynamic_data_object>( [&]( asset_dynamic_data_object& a ) {
+      d.create<asset_dynamic_data_object>( [&]( asset_dynamic_data_object& a ) {
          a.current_supply = 0;
          a.fee_pool = 0; //core_fee_paid; //op.calculate_fee(db().current_fee_schedule()).value / 2;
       });
 
    asset_bitasset_data_id_type bit_asset_id;
    if( op.bitasset_opts.valid() )
-      bit_asset_id = db().create<asset_bitasset_data_object>( [&]( asset_bitasset_data_object& a ) {
+      bit_asset_id = d.create<asset_bitasset_data_object>( [&]( asset_bitasset_data_object& a ) {
             a.options = *op.bitasset_opts;
             a.is_prediction_market = op.is_prediction_market;
          }).id;
 
-   auto next_asset_id = db().get_index_type<asset_index>().get_next_id();
+   auto next_asset_id = d.get_index_type<asset_index>().get_next_id();
 
    const asset_object& new_asset =
-     db().create<asset_object>( [&]( asset_object& a ) {
+     d.create<asset_object>( [&]( asset_object& a ) {
          a.issuer = op.issuer;
          a.symbol = op.symbol;
          a.precision = op.precision;
@@ -146,7 +150,7 @@ object_id_type asset_create_evaluator::do_apply( const asset_create_operation& o
          if( op.bitasset_opts.valid() )
             a.bitasset_data_id = bit_asset_id;
       });
-   assert( new_asset.id == next_asset_id );
+   FC_ASSERT( new_asset.id == next_asset_id, "Unexpected object database error, object id mismatch" );
 
    return new_asset.id;
 } FC_CAPTURE_AND_RETHROW( (op) ) }
@@ -173,7 +177,7 @@ void_result asset_issue_evaluator::do_apply( const asset_issue_operation& o )
 { try {
    db().adjust_balance( o.issue_to_account, o.asset_to_issue );
 
-   db().modify( *asset_dyn_data, [&]( asset_dynamic_data_object& data ){
+   db().modify( *asset_dyn_data, [&o]( asset_dynamic_data_object& data ){
         data.current_supply += o.asset_to_issue.amount;
    });
 
@@ -205,7 +209,7 @@ void_result asset_reserve_evaluator::do_apply( const asset_reserve_operation& o 
 { try {
    db().adjust_balance( o.payer, -o.amount_to_reserve );
 
-   db().modify( *asset_dyn_data, [&]( asset_dynamic_data_object& data ){
+   db().modify( *asset_dyn_data, [&o]( asset_dynamic_data_object& data ){
         data.current_supply -= o.amount_to_reserve.amount;
    });
 
@@ -227,7 +231,7 @@ void_result asset_fund_fee_pool_evaluator::do_apply(const asset_fund_fee_pool_op
 { try {
    db().adjust_balance(o.from_account, -o.amount);
 
-   db().modify( *asset_dyn_data, [&]( asset_dynamic_data_object& data ) {
+   db().modify( *asset_dyn_data, [&o]( asset_dynamic_data_object& data ) {
       data.fee_pool += o.amount;
    });
 
@@ -291,7 +295,7 @@ void_result asset_update_evaluator::do_apply(const asset_update_operation& o)
    database& d = db();
 
    // If we are now disabling force settlements, cancel all open force settlement orders
-   if( o.new_options.flags & disable_force_settle && asset_to_update->can_force_settle() )
+   if( (o.new_options.flags & disable_force_settle) && asset_to_update->can_force_settle() )
    {
       const auto& idx = d.get_index_type<force_settlement_index>().indices().get<by_expiration>();
       // Funky iteration code because we're removing objects as we go. We have to re-initialize itr every loop instead
@@ -302,7 +306,7 @@ void_result asset_update_evaluator::do_apply(const asset_update_operation& o)
          d.cancel_order(*itr);
    }
 
-   d.modify(*asset_to_update, [&](asset_object& a) {
+   d.modify(*asset_to_update, [&o](asset_object& a) {
       if( o.new_issuer )
          a.issuer = *o.new_issuer;
       a.options = o.new_options;
@@ -497,7 +501,9 @@ void_result asset_publish_feeds_evaluator::do_evaluate(const asset_publish_feed_
    const asset_bitasset_data_object& bitasset = base.bitasset_data(d);
    FC_ASSERT( !bitasset.has_settlement(), "No further feeds may be published after a settlement event" );
 
+   // the settlement price must be quoted in terms of the backing asset
    FC_ASSERT( o.feed.settlement_price.quote.asset_id == bitasset.options.short_backing_asset );
+
    if( d.head_block_time() > HARDFORK_480_TIME )
    {
       if( !o.feed.core_exchange_rate.is_null() )
@@ -705,6 +711,24 @@ void_result update_external_btc_price_evaluator::do_apply(const update_external_
   db().modify(db().get_dynamic_global_properties(), [btc_price](dynamic_global_property_object& dgpo){
     dgpo.external_btc_price = btc_price;
   });
+  time_point_sec timestamp = db().head_block_time();
+  const auto& idx = db().get_index_type<external_price_index>().indices().get<by_market_key>();
+  auto itr = idx.find(market_key{db().get_btc_asset_id(), db().get_web_asset_id()});
+  if (itr != idx.end())
+  {
+    db().modify(*itr, [btc_price, timestamp] (external_price_object &lpo) {
+      lpo.external_price = btc_price;
+      lpo.timestamp = timestamp;
+    });
+  }
+  else
+  {
+    db().create<external_price_object>([&](external_price_object &lpo) {
+      lpo.market = market_key{db().get_btc_asset_id(), db().get_web_asset_id()};
+      lpo.external_price = btc_price;
+      lpo.timestamp = timestamp;
+    });
+  }
   return {};
 
 } FC_CAPTURE_AND_RETHROW((o)) }

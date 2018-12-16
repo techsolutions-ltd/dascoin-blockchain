@@ -333,14 +333,14 @@ class database_access_layer {
     template <typename QueryType, typename IndexType, typename IndexBy>
     typename IndexType::object_type get(QueryType id) const
     {
-        const auto& idx = _db.get_index_type<IndexType>().indices().get<IndexBy>();
+        const auto& idx = _db.get_index_type<IndexType>().indices().template get<IndexBy>();
         return *(idx.find(id));
     }
 
     template <typename QueryType, typename IndexType, typename IndexBy>
     optional<typename IndexType::object_type> get_opt(QueryType id) const
     {
-        const auto& idx = _db.get_index_type<IndexType>().indices().get<IndexBy>();
+        const auto& idx = _db.get_index_type<IndexType>().indices().template get<IndexBy>();
         auto it = idx.find(id);
         if (it != idx.end())
             return {*it};
@@ -350,14 +350,14 @@ class database_access_layer {
     template <typename IndexType, typename IndexBy>
     vector<typename IndexType::object_type> get_all() const
     {
-        const auto& idx = _db.get_index_type<IndexType>().indices().get<IndexBy>();
+        const auto& idx = _db.get_index_type<IndexType>().indices().template get<IndexBy>();
         return vector<typename IndexType::object_type>(idx.begin(), idx.end());
     }
 
     template <typename IndexType, typename IndexBy, int MAX_ELEMENTS = 100>
     vector<typename IndexType::object_type> get_range(uint32_t from, uint32_t amount) const
     {
-        const auto& idx = _db.get_index_type<IndexType>().indices().get<IndexBy>();
+        const auto& idx = _db.get_index_type<IndexType>().indices().template get<IndexBy>();
         FC_ASSERT(idx.size() > from, "Index out of bounds, index: ${from}, size: ${size}", ("from", from)("size", idx.size()));
         FC_ASSERT(idx.size() - from >= amount, "Index out of bounds, amount: ${amount}, size: ${size}", ("amount", amount)("size", idx.size()));
         FC_ASSERT(amount <= MAX_ELEMENTS, "Cannot retrieve more than ${max} elements in one page", ("max", MAX_ELEMENTS));

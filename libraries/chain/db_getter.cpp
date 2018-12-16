@@ -142,6 +142,14 @@ uint32_t database::last_non_undoable_block_num() const
    return head_block_num() - _undo_db.size();
 }
 
+const account_statistics_object& database::get_account_stats_by_owner( account_id_type owner )const
+{
+   auto& idx = get_index_type<account_stats_index>().indices().get<by_owner>();
+   auto itr = idx.find( owner );
+   FC_ASSERT( itr != idx.end(), "Can not find account statistics object for owner ${a}", ("a",owner) );
+   return *itr;
+}
+
 account_id_type database::get_account_id(const string& name)
 {
    const auto& accounts_by_name = get_index_type<account_index>().indices().get<by_name>();

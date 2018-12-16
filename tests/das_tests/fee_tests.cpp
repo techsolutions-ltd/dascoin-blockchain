@@ -117,7 +117,8 @@ BOOST_AUTO_TEST_CASE( successful_fee_change_and_fee_charge_with_fee_burn_test )
    std::tie(cash, reserved) = get_web_asset_amounts(alice_id);
 
    // test db_api->get_required_fees
-   graphene::app::database_api db_api(db);
+   graphene::app::application_options app_options;
+   graphene::app::database_api db_api(db, &app_options);
    vector<operation> ops;
    ops.push_back(limit_order_create_operation());
 
@@ -125,7 +126,7 @@ BOOST_AUTO_TEST_CASE( successful_fee_change_and_fee_charge_with_fee_burn_test )
 
    for(auto v : fees)
    {
-	   asset a = v.as<asset>();
+	   asset a = v.as<asset>(5);
 	   BOOST_CHECK_EQUAL( a.amount.value, 30 );
    }
 

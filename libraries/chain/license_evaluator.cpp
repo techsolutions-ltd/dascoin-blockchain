@@ -139,12 +139,15 @@ void_result issue_license_evaluator::do_evaluate(const issue_license_operation& 
     const auto& license_information_obj = (*account_obj.license_information)(d);
     const auto& max_license_obj = license_information_obj.max_license(d);
 
-    FC_ASSERT( new_license_obj.kind == license_information_obj.vault_license_kind,
+    // Same kind license check skips case when we are going from utility->package
+    FC_ASSERT( new_license_obj.kind == license_kind::package ||
+               (new_license_obj.kind != license_kind::package && new_license_obj.kind == license_information_obj.vault_license_kind),
                "Cannot issue license of kind '${kind}' on account ${a}, current license kind is '${ckind}'",
                ("kind", new_license_obj.kind)
                ("a", account_obj.name)
                ("ckind", fc::reflector<license_kind>::to_string(license_information_obj.vault_license_kind) )
              );
+
     FC_ASSERT( max_license_obj < new_license_obj,
                "Cannot improve license '${l_max}' on account ${a}, new license '${l_new}' is not an improvement",
                ("a", account_obj.name)
@@ -187,7 +190,7 @@ object_id_type issue_license_evaluator::do_apply(const issue_license_operation& 
   auto kind = _new_license_obj->kind;
   share_type amount;
 
-  if ( kind == license_kind::utility )
+  if ( kind == license_kind::utility || kind == license_kind::package)
   {
      amount = _new_license_obj->amount;
      share_type bonus = amount * op.bonus_percentage / 100;
@@ -235,12 +238,15 @@ object_id_type issue_license_evaluator::do_apply(const issue_license_operation& 
       lio.add_license(op.license, amount, _new_license_obj->amount, op.bonus_percentage, op.frequency_lock,
                       op.activated_at, d.head_block_time(), _new_license_obj->balance_upgrade,
                       _new_license_obj->up_policy);
+
+      lio.vault_license_kind = _new_license_obj->kind;
+
       lio.requeue_upgrade += _new_license_obj->requeue_upgrade;
       lio.return_upgrade += _new_license_obj->return_upgrade;
     });
   }
 
-  if ( kind == license_kind::regular || kind == license_kind::locked_frequency || kind == license_kind::utility)
+  if ( kind == license_kind::regular || kind == license_kind::locked_frequency || kind == license_kind::utility || kind == license_kind::package)
   {
     d.issue_cycles(op.account, amount);
   }

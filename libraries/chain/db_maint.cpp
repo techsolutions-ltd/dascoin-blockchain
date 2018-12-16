@@ -76,7 +76,7 @@ vector<std::reference_wrapper<const typename Index::object_type>> database::sort
 template<typename IndexType, typename IndexBy, class... HelperTypes>
 void database::perform_helpers(std::tuple<HelperTypes...> helpers)
 {
-   const auto& idx = get_index_type<IndexType>().indices().get<IndexBy>();
+   const auto& idx = get_index_type<IndexType>().indices().template get<IndexBy>();
    for( const typename IndexType::object_type& a : idx )
       detail::for_each(helpers, a, detail::gen_seq<sizeof...(HelperTypes)>());
 }
@@ -769,7 +769,7 @@ void database::perform_upgrades(const account_object& account, const upgrade_eve
                {
                   auto amount = license_history.balance_upgrade(license_history.amount_to_upgrade());
                   // If this is a president license, add upgraded amount to the current amount:
-                  if (lio.vault_license_kind == chartered || lio.vault_license_kind == utility)
+                  if (lio.vault_license_kind == chartered || lio.vault_license_kind == utility || lio.vault_license_kind == package)
                   {
                      auto origin = fc::reflector<dascoin_origin_kind>::to_string(dascoin_origin_kind::reserve_cycles);
                      std::ostringstream comment;
@@ -1018,8 +1018,8 @@ void database::perform_chain_maintenance(const signed_block& next_block, const g
    });
 
    // Reset all BitAsset force settlement volumes to zero
-   for( const asset_bitasset_data_object* d : get_index_type<asset_bitasset_data_index>() )
-      modify(*d, [](asset_bitasset_data_object& d) { d.force_settled_volume = 0; });
+   for( const auto& d : get_index_type<asset_bitasset_data_index>().indices() )
+      modify( d, [](asset_bitasset_data_object& o) { o.force_settled_volume = 0; });
 
    // process_budget needs to run at the bottom because
    //   it needs to know the next_maintenance_time

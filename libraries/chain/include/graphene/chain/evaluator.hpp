@@ -24,8 +24,11 @@
 #pragma once
 #include <graphene/chain/exceptions.hpp>
 #include <graphene/chain/transaction_evaluation_state.hpp>
+
 #include <graphene/chain/protocol/operations.hpp>
 #include <graphene/chain/hardfork.hpp>
+#include <graphene/chain/protocol/types.hpp>
+#include <graphene/chain/account_object.hpp>
 
 namespace graphene { namespace chain {
 
@@ -142,7 +145,7 @@ namespace graphene { namespace chain {
            op.get_required_active_authorities(authorities);
            for (const auto& auth : authorities)
            {
-             const auto& account = auth(db());
+             const account_object& account = auth(db());
              FC_ASSERT(!account.roll_back_active,
                        "Account '${a}' has activated public key roll back. Only change_public_keys operation is possible.",
                        ("a", account.name)

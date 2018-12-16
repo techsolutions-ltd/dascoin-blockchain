@@ -226,7 +226,7 @@ optional<T> maybe_id( const string& name_or_id )
    {
       try
       {
-         return fc::variant(name_or_id).as<T>();
+         return fc::variant(name_or_id).as<T>( 1 );
       }
       catch (const fc::exception&)
       {
@@ -591,7 +591,7 @@ public:
    T get_object(object_id<T::space_id, T::type_id, T> id)const
    {
       auto ob = _remote_db->get_objects({id}).front();
-      return ob.template as<T>();
+      return ob.template as<T>( GRAPHENE_MAX_NESTED_OBJECTS );
    }
 
    void set_operation_fees( signed_transaction& tx, const fee_schedule& s  )
@@ -615,15 +615,15 @@ public:
       auto dynamic_props = get_dynamic_global_properties();
       fc::mutable_variant_object result;
       result["head_block_num"] = dynamic_props.head_block_number;
-      result["head_block_id"] = dynamic_props.head_block_id;
+      result["head_block_id"] = fc::variant(dynamic_props.head_block_id, 1);
       result["head_block_age"] = fc::get_approximate_relative_time_string(dynamic_props.time,
                                                                           time_point_sec(time_point::now()),
                                                                           " old");
       result["next_maintenance_time"] = fc::get_approximate_relative_time_string(dynamic_props.next_maintenance_time);
       result["chain_id"] = chain_props.chain_id;
       result["participation"] = (100*dynamic_props.recent_slots_filled.popcount()) / 128.0;
-      result["active_witnesses"] = global_props.active_witnesses;
-      result["active_committee_members"] = global_props.active_committee_members;
+      result["active_witnesses"] = fc::variant(global_props.active_witnesses, GRAPHENE_MAX_NESTED_OBJECTS);
+      result["active_committee_members"] = fc::variant(global_props.active_committee_members, GRAPHENE_MAX_NESTED_OBJECTS);
       return result;
    }
 
@@ -766,7 +766,7 @@ public:
       FC_ASSERT( asset_symbol_or_id.size() > 0 );
       vector<optional<asset_object>> opt_asset;
       if( std::isdigit( asset_symbol_or_id.front() ) )
-         return fc::variant(asset_symbol_or_id).as<asset_id_type>();
+         return fc::variant(asset_symbol_or_id, 1).as<asset_id_type>( 1 );
       opt_asset = _remote_db->lookup_asset_symbols( {asset_symbol_or_id} );
       FC_ASSERT( (opt_asset.size() > 0) && (opt_asset[0].valid()) );
       return opt_asset[0]->id;
@@ -777,7 +777,7 @@ public:
       FC_ASSERT( str_or_id.size() > 0 );
       vector<optional<license_type_object>> opt_license_type;
       if( std::isdigit( str_or_id.front() ) )
-         return fc::variant(str_or_id).as<license_type_id_type>();
+         return fc::variant(str_or_id, 1).as<license_type_id_type>( 1 );
       opt_license_type = _remote_db->lookup_license_type_names( {str_or_id} );
       FC_ASSERT( (opt_license_type.size() > 0) && (opt_license_type[0].valid()) );
       return opt_license_type[0]->id;
@@ -854,7 +854,7 @@ public:
       if( ! fc::exists( wallet_filename ) )
          return false;
 
-      _wallet = fc::json::from_file( wallet_filename ).as< wallet_data >();
+      _wallet = fc::json::from_file( wallet_filename ).as< wallet_data >( 2 * GRAPHENE_MAX_NESTED_OBJECTS );
       if( _wallet.chain_id != _chain_id )
          FC_THROW( "Wallet chain ID does not match",
             ("wallet.chain_id", _wallet.chain_id)
@@ -1639,7 +1639,7 @@ public:
       const chain_parameters& current_params = get_global_properties().parameters;
       chain_parameters new_params = current_params;
       fc::reflector<chain_parameters>::visit(
-         fc::from_variant_visitor<chain_parameters>( changed_values, new_params )
+         fc::from_variant_visitor<chain_parameters>( changed_values, new_params, GRAPHENE_MAX_NESTED_OBJECTS )
       );
 
       update_global_parameters_operation op;
@@ -1717,6 +1717,30 @@ public:
 
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (token_issuer)(token_id)(new_price)(broadcast) ) }
+
+   signed_transaction set_active_authorities(const string& account_id_or_name,
+                                             vector<public_key_type> keys,
+                                             bool broadcast)
+   { try {
+      FC_ASSERT( !self.is_locked() );
+
+      account_update_operation op;
+      authority auth;
+
+      weight_type i = 1;
+      for (const auto& key : keys)
+          auth.add_authority(key, i++);
+
+      op.account = get_account(account_id_or_name).id;
+      op.active = auth;
+
+      signed_transaction tx;
+      tx.operations.push_back(op);
+      set_operation_fees( tx, _remote_db->get_global_properties().parameters.current_fees );
+      tx.validate();
+
+      return sign_transaction(tx, broadcast);
+   } FC_CAPTURE_AND_RETHROW( (account_id_or_name)(keys)(broadcast) ) }
 
    signed_transaction tether_accounts(string wallet, string vault, bool broadcast = false)
    { try {
@@ -2316,7 +2340,7 @@ public:
    static WorkerInit _create_worker_initializer( const variant& worker_settings )
    {
       WorkerInit result;
-      from_variant( worker_settings, result );
+      from_variant( worker_settings, result, GRAPHENE_MAX_NESTED_OBJECTS );
       return result;
    }
 
@@ -2404,7 +2428,7 @@ public:
       for( const variant& obj : objects )
       {
          worker_object wo;
-         from_variant( obj, wo );
+         from_variant( obj, wo, GRAPHENE_MAX_NESTED_OBJECTS );
          new_votes.erase( wo.vote_for );
          new_votes.erase( wo.vote_against );
          if( delta.vote_for.find( wo.id ) != delta.vote_for.end() )
@@ -3058,7 +3082,7 @@ public:
 
       m["get_account_history"] = [this](variant result, const fc::variants& a)
       {
-         auto r = result.as<vector<operation_detail>>();
+         auto r = result.as<vector<operation_detail>>( GRAPHENE_MAX_NESTED_OBJECTS );
          std::stringstream ss;
 
          for( operation_detail& d : r )
@@ -3078,7 +3102,7 @@ public:
       m["get_account_history_by_operation"] = //m["get_account_history"];
       [this](variant result, const fc::variants& a)
       {
-         auto r = result.as<vector<operation_detail>>();
+         auto r = result.as<vector<operation_detail>>( GRAPHENE_MAX_NESTED_OBJECTS );
          std::stringstream ss;
 
          for( operation_detail& d : r )
@@ -3095,7 +3119,7 @@ public:
 
       m["list_account_balances"] = [this](variant result, const fc::variants& a)
       {
-         auto r = result.as<vector<asset_reserved>>();
+         auto r = result.as<vector<asset_reserved>>( GRAPHENE_MAX_NESTED_OBJECTS );
          vector<asset_object> asset_recs;
          std::transform(r.begin(), r.end(), std::back_inserter(asset_recs), [this](const asset_reserved& a) {
             return get_asset(a.asset_id);
@@ -3110,7 +3134,7 @@ public:
 
       m["get_blind_balances"] = [this](variant result, const fc::variants& a)
       {
-         auto r = result.as<vector<asset>>();
+         auto r = result.as<vector<asset>>( GRAPHENE_MAX_NESTED_OBJECTS );
          vector<asset_object> asset_recs;
          std::transform(r.begin(), r.end(), std::back_inserter(asset_recs), [this](const asset& a) {
             return get_asset(a.asset_id);
@@ -3124,7 +3148,7 @@ public:
       };
       m["transfer_to_blind"] = [this](variant result, const fc::variants& a)
       {
-         auto r = result.as<blind_confirmation>();
+         auto r = result.as<blind_confirmation>( GRAPHENE_MAX_NESTED_OBJECTS );
          std::stringstream ss;
          auto opv = operation_printer( ss, *this, operation_result());
          r.trx.operations[0].visit( opv  );
@@ -3138,7 +3162,7 @@ public:
       };
       m["blind_transfer"] = [this](variant result, const fc::variants& a)
       {
-         auto r = result.as<blind_confirmation>();
+         auto r = result.as<blind_confirmation>( GRAPHENE_MAX_NESTED_OBJECTS );
          std::stringstream ss;
          auto opv = operation_printer( ss, *this, operation_result() );
          r.trx.operations[0].visit( opv );
@@ -3152,7 +3176,7 @@ public:
       };
       m["receive_blind_transfer"] = [this](variant result, const fc::variants& a)
       {
-         auto r = result.as<blind_receipt>();
+         auto r = result.as<blind_receipt>( GRAPHENE_MAX_NESTED_OBJECTS );
          std::stringstream ss;
          asset_object as = get_asset( r.amount.asset_id );
          ss << as.amount_to_pretty_string( r.amount ) << "  " << r.from_label << "  =>  " << r.to_label  << "  " << r.memo <<"\n";
@@ -3160,7 +3184,7 @@ public:
       };
       m["blind_history"] = [this](variant result, const fc::variants& a)
       {
-         auto records = result.as<vector<blind_receipt>>();
+         auto records = result.as<vector<blind_receipt>>( GRAPHENE_MAX_NESTED_OBJECTS );
          std::stringstream ss;
          ss << "WHEN         "
             << "  " << "AMOUNT"  << "  " << "FROM" << "  =>  " << "TO" << "  " << "MEMO" <<"\n";
@@ -3175,7 +3199,7 @@ public:
       };
       m["get_order_book"] = [this](variant result, const fc::variants& a)
       {
-         auto orders = result.as<order_book>();
+         auto orders = result.as<order_book>( GRAPHENE_MAX_NESTED_OBJECTS );
          auto bids = orders.bids;
          auto asks = orders.asks;
          std::stringstream ss;
@@ -3272,7 +3296,7 @@ public:
       const chain_parameters& current_params = get_global_properties().parameters;
       chain_parameters new_params = current_params;
       fc::reflector<chain_parameters>::visit(
-         fc::from_variant_visitor<chain_parameters>( changed_values, new_params )
+         fc::from_variant_visitor<chain_parameters>( changed_values, new_params, GRAPHENE_MAX_NESTED_OBJECTS )
          );
 
       committee_member_update_global_parameters_operation update_op;
@@ -3344,7 +3368,7 @@ public:
             which = it->second;
          }
 
-         fee_parameters fp = from_which_variant< fee_parameters >( which, item.value() );
+         fee_parameters fp = from_which_variant< fee_parameters >( which, item.value(), GRAPHENE_MAX_NESTED_OBJECTS );
          fee_map[ which ] = fp;
       }
 
@@ -3386,7 +3410,7 @@ public:
       proposal_update_operation update_op;
 
       update_op.fee_paying_account = get_account(fee_paying_account).id;
-      update_op.proposal = fc::variant(proposal_id).as<proposal_id_type>();
+      update_op.proposal = fc::variant(proposal_id, 1).as<proposal_id_type>( 1 );
       // make sure the proposal exists
       get_object( update_op.proposal );
 
@@ -3721,7 +3745,7 @@ public:
       for( const auto& peer : peers )
       {
          variant v;
-         fc::to_variant( peer, v );
+         fc::to_variant( peer, v, GRAPHENE_MAX_NESTED_OBJECTS );
          result.push_back( v );
       }
       return result;
@@ -4031,7 +4055,59 @@ std::string operation_result_printer::operator()(const asset& a)
 
 }}}
 
+namespace graphene { namespace wallet {
+    vector<brain_key_info> utility::derive_owner_keys_from_brain_key(string brain_key, int number_of_desired_keys)
+    {
+      // Safety-check
+      FC_ASSERT( number_of_desired_keys >= 1 );
 
+      // Create as many derived owner keys as requested
+      vector<brain_key_info> results;
+      brain_key = graphene::wallet::detail::normalize_brain_key(brain_key);
+      for (int i = 0; i < number_of_desired_keys; ++i) {
+        fc::ecc::private_key priv_key = graphene::wallet::detail::derive_private_key( brain_key, i );
+
+        brain_key_info result;
+        result.brain_priv_key = brain_key;
+        result.wif_priv_key = key_to_wif( priv_key );
+        result.pub_key = priv_key.get_public_key();
+
+        results.push_back(result);
+      }
+
+      return results;
+    }
+
+    brain_key_info utility::suggest_brain_key()
+    {
+      brain_key_info result;
+      // create a private key for secure entropy
+      fc::sha256 sha_entropy1 = fc::ecc::private_key::generate().get_secret();
+      fc::sha256 sha_entropy2 = fc::ecc::private_key::generate().get_secret();
+      fc::bigint entropy1(sha_entropy1.data(), sha_entropy1.data_size());
+      fc::bigint entropy2(sha_entropy2.data(), sha_entropy2.data_size());
+      fc::bigint entropy(entropy1);
+      entropy <<= 8 * sha_entropy1.data_size();
+      entropy += entropy2;
+      string brain_key = "";
+
+      for (int i = 0; i < BRAIN_KEY_WORD_COUNT; i++)
+      {
+        fc::bigint choice = entropy % graphene::words::word_list_size;
+        entropy /= graphene::words::word_list_size;
+        if (i > 0)
+          brain_key += " ";
+        brain_key += graphene::words::word_list[choice.to_int64()];
+      }
+
+      brain_key = detail::normalize_brain_key(brain_key);
+      fc::ecc::private_key priv_key = detail::derive_private_key(brain_key, 0);
+      result.brain_priv_key = brain_key;
+      result.wif_priv_key = key_to_wif(priv_key);
+      result.pub_key = priv_key.get_public_key();
+      return result;
+    }
+  }}
 
 namespace graphene { namespace wallet {
 
@@ -4042,6 +4118,16 @@ wallet_api::wallet_api(const wallet_data& initial_data, fc::api<login_api> rapi)
 
 wallet_api::~wallet_api()
 {
+}
+
+brain_key_info wallet_api::suggest_brain_key()const
+{
+  return graphene::wallet::utility::suggest_brain_key();
+}
+
+vector<brain_key_info> wallet_api::derive_owner_keys_from_brain_key(string brain_key, int number_of_desired_keys) const
+{
+  return graphene::wallet::utility::derive_owner_keys_from_brain_key(brain_key, number_of_desired_keys);
 }
 
 bool wallet_api::copy_wallet_file(string destination_filename)
@@ -4143,13 +4229,13 @@ vector<operation_detail> wallet_api::get_account_history_by_operation(string nam
       // get all account objects
       auto account_object_variant_vec = my->_remote_db->get_objects(acc_ids);
       for( size_t i = 0; i < account_object_variant_vec.size(); i++ ) {
-         cached_accounts[acc_ids[i]] = account_object_variant_vec[i].as<account_object>();
+         cached_accounts[acc_ids[i]] = account_object_variant_vec[i].as<account_object>( GRAPHENE_MAX_NESTED_OBJECTS );
       }
 
       // get all asset objects
       auto asset_object_variant_vec = my->_remote_db->get_objects(ast_ids);
       for( size_t i = 0; i < asset_object_variant_vec.size(); i++ ) {
-         cached_assets[ast_ids[i]] = asset_object_variant_vec[i].as<asset_object>();
+         cached_assets[ast_ids[i]] = asset_object_variant_vec[i].as<asset_object>( GRAPHENE_MAX_NESTED_OBJECTS );
       }
 
       for( auto& o : current ) {
@@ -4223,36 +4309,6 @@ vector<call_order_object> wallet_api::get_call_orders(string a, uint32_t limit)c
 vector<force_settlement_object> wallet_api::get_settle_orders(string a, uint32_t limit)const
 {
    return my->_remote_db->get_settle_orders(get_asset(a).id, limit);
-}
-
-brain_key_info wallet_api::suggest_brain_key()const
-{
-   brain_key_info result;
-   // create a private key for secure entropy
-   fc::sha256 sha_entropy1 = fc::ecc::private_key::generate().get_secret();
-   fc::sha256 sha_entropy2 = fc::ecc::private_key::generate().get_secret();
-   fc::bigint entropy1( sha_entropy1.data(), sha_entropy1.data_size() );
-   fc::bigint entropy2( sha_entropy2.data(), sha_entropy2.data_size() );
-   fc::bigint entropy(entropy1);
-   entropy <<= 8*sha_entropy1.data_size();
-   entropy += entropy2;
-   string brain_key = "";
-
-   for( int i=0; i<BRAIN_KEY_WORD_COUNT; i++ )
-   {
-      fc::bigint choice = entropy % graphene::words::word_list_size;
-      entropy /= graphene::words::word_list_size;
-      if( i > 0 )
-         brain_key += " ";
-      brain_key += graphene::words::word_list[ choice.to_int64() ];
-   }
-
-   brain_key = normalize_brain_key(brain_key);
-   fc::ecc::private_key priv_key = derive_private_key( brain_key, 0 );
-   result.brain_priv_key = brain_key;
-   result.wif_priv_key = key_to_wif( priv_key );
-   result.pub_key = priv_key.get_public_key();
-   return result;
 }
 
 string wallet_api::serialize_transaction( signed_transaction tx )const
@@ -5265,7 +5321,7 @@ string wallet_api::get_private_key( public_key_type pubkey )const
 
 public_key_type  wallet_api::get_public_key( string label )const
 {
-   try { return fc::variant(label).as<public_key_type>(); } catch ( ... ){}
+   try { return fc::variant(label).as<public_key_type>( 1 ); } catch ( ... ){}
 
    auto key_itr   = my->_wallet.labeled_keys.get<by_label>().find(label);
    if( key_itr != my->_wallet.labeled_keys.get<by_label>().end() )
@@ -6244,11 +6300,18 @@ signed_transaction wallet_api::update_external_btc_price(const string& btc_issue
 }
 
 signed_transaction wallet_api::update_external_token_price(const string& token_issuer,
-                                               asset_id_type token_id,
-                                               price new_price,
-                                               bool broadcast) const
+                                                           asset_id_type token_id,
+                                                           price new_price,
+                                                           bool broadcast) const
 {
   return my->update_external_token_price(token_issuer, token_id, new_price, broadcast);
+}
+
+signed_transaction wallet_api::set_active_authorities(const string& account_id_or_name,
+                                                      vector<public_key_type> keys,
+                                                      bool broadcast) const
+{
+  return my->set_active_authorities(account_id_or_name, keys, broadcast);
 }
 
 signed_block_with_info::signed_block_with_info( const signed_block& block )
@@ -6270,13 +6333,15 @@ vesting_balance_object_with_info::vesting_balance_object_with_info( const vestin
 
 } } // graphene::wallet
 
-void fc::to_variant(const account_multi_index_type& accts, fc::variant& vo)
-{
-   vo = vector<account_object>(accts.begin(), accts.end());
-}
+namespace fc {
+  void to_variant( const account_multi_index_type& accts, variant& vo, uint32_t max_depth )
+  {
+    to_variant( std::vector<account_object>(accts.begin(), accts.end()), vo, max_depth );
+  }
 
-void fc::from_variant(const fc::variant& var, account_multi_index_type& vo)
-{
-   const vector<account_object>& v = var.as<vector<account_object>>();
-   vo = account_multi_index_type(v.begin(), v.end());
+  void from_variant( const variant& var, account_multi_index_type& vo, uint32_t max_depth )
+  {
+    const std::vector<account_object>& v = var.as<std::vector<account_object>>( max_depth );
+    vo = account_multi_index_type(v.begin(), v.end());
+  }
 }

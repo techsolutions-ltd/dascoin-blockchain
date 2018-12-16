@@ -107,6 +107,15 @@ namespace graphene { namespace app {
                                                                           operation_history_id_type stop = operation_history_id_type(),
                                                                           unsigned limit = 100,
                                                                           operation_history_id_type start = operation_history_id_type())const;
+
+
+
+        vector<operation_history_object> get_trade_history_for_account( const asset_id_type base,
+                                                                             const asset_id_type quote,
+                                                                             account_id_type account,
+                                                                             operation_history_id_type stop,
+                                                                             unsigned limit,
+                                                                             operation_history_id_type start)const;
          /**
           * @breif Get operations relevant to the specified account referenced
           * by an event numbering specific to the account. The current number of operations
@@ -172,6 +181,12 @@ namespace graphene { namespace app {
           * block.
           */
          void broadcast_transaction_with_callback( confirmation_callback cb, const signed_transaction& trx);
+
+         /** this version of broadcast transaction registers a callback method that will be called when the transaction is
+          * included into a block.  The callback method includes the transaction id, block number, and transaction number in the
+          * block.
+          */
+         fc::variant broadcast_transaction_synchronous(const signed_transaction& trx);
 
          void broadcast_block( const signed_block& block );
 
@@ -241,16 +256,6 @@ namespace graphene { namespace app {
       public:
          crypto_api();
          
-         fc::ecc::blind_signature blind_sign( const extended_private_key_type& key, const fc::ecc::blinded_hash& hash, int i );
-         
-         signature_type unblind_signature( const extended_private_key_type& key,
-                                              const extended_public_key_type& bob,
-                                              const fc::ecc::blind_signature& sig,
-                                              const fc::sha256& hash,
-                                              int i );
-                                                                  
-         fc::ecc::commitment_type blind( const fc::ecc::blind_factor_type& blind, uint64_t value );
-         
          fc::ecc::blind_factor_type blind_sum( const std::vector<blind_factor_type>& blinds_in, uint32_t non_neg );
          
          bool verify_sum( const std::vector<commitment_type>& commits_in, const std::vector<commitment_type>& neg_commits_in, int64_t excess );
@@ -308,9 +313,9 @@ namespace graphene { namespace app {
          /// @brief Retrieve the debug API (if available)
          fc::api<graphene::debug_witness::debug_api> debug()const;
 
-      private:
          /// @brief Called to enable an API, not reflected.
          void enable_api( const string& api_name );
+      private:
 
          application& _app;
          optional< fc::api<database_api> > _database_api;
@@ -335,6 +340,7 @@ FC_REFLECT( graphene::app::verify_range_proof_rewind_result,
 FC_API(graphene::app::history_api,
        (get_account_history)
        (get_account_history_by_operation)
+       (get_trade_history_for_account)
        (get_relative_account_history)
        (get_fill_order_history)
        (get_market_history)
@@ -343,6 +349,7 @@ FC_API(graphene::app::history_api,
 FC_API(graphene::app::network_broadcast_api,
        (broadcast_transaction)
        (broadcast_transaction_with_callback)
+       (broadcast_transaction_synchronous)
        (broadcast_block)
      )
 FC_API(graphene::app::network_node_api,
@@ -354,9 +361,6 @@ FC_API(graphene::app::network_node_api,
        (set_advanced_node_parameters)
      )
 FC_API(graphene::app::crypto_api,
-       (blind_sign)
-       (unblind_signature)
-       (blind)
        (blind_sum)
        (verify_sum)
        (verify_range)

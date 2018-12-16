@@ -26,7 +26,6 @@
 #include <graphene/app/api.hpp>
 #include <graphene/app/api_access.hpp>
 #include <graphene/app/application.hpp>
-#include <graphene/app/impacted.hpp>
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/get_config.hpp>
 #include <graphene/utilities/key_conversion.hpp>
@@ -40,6 +39,7 @@
 
 #include <fc/crypto/hex.hpp>
 #include <fc/smart_ref_impl.hpp>
+#include <fc/thread/future.hpp>
 
 namespace graphene { namespace app {
 
@@ -78,7 +78,7 @@ namespace graphene { namespace app {
     {
        if( api_name == "database_api" )
        {
-          _database_api = std::make_shared< database_api >( std::ref( *_app.chain_database() ) );
+          _database_api = std::make_shared< database_api >( std::ref( *_app.chain_database() ), &( _app.get_options() ) );
        }
        else if( api_name == "network_broadcast_api" )
        {
@@ -125,7 +125,10 @@ namespace graphene { namespace app {
              {
                 auto block_num = b.block_num();
                 auto& callback = _callbacks.find(id)->second;
-                fc::async( [capture_this,this,id,block_num,trx_num,trx,callback](){ callback( fc::variant(transaction_confirmation{ id, block_num, trx_num, trx}) ); } );
+                auto v = fc::variant( transaction_confirmation{ id, block_num, trx_num, trx }, GRAPHENE_MAX_NESTED_OBJECTS );
+                fc::async( [capture_this,v,callback]() {
+                   callback(v);
+                } );
              }
           }
        }
@@ -135,13 +138,25 @@ namespace graphene { namespace app {
     {
        trx.validate();
        _app.chain_database()->push_transaction(trx);
-       _app.p2p_node()->broadcast_transaction(trx);
+       if( _app.p2p_node() != nullptr )
+          _app.p2p_node()->broadcast_transaction(trx);
+    }
+
+    fc::variant network_broadcast_api::broadcast_transaction_synchronous(const signed_transaction& trx)
+    {
+       fc::promise<fc::variant>::ptr prom( new fc::promise<fc::variant>() );
+       broadcast_transaction_with_callback( [=]( const fc::variant& v ){
+        prom->set_value(v);
+       }, trx );
+
+       return fc::future<fc::variant>(prom).wait();
     }
 
     void network_broadcast_api::broadcast_block( const signed_block& b )
     {
        _app.chain_database()->push_block(b);
-       _app.p2p_node()->broadcast( net::block_message( b ));
+       if( _app.p2p_node() != nullptr )
+          _app.p2p_node()->broadcast( net::block_message( b ));
     }
 
     void network_broadcast_api::broadcast_transaction_with_callback(confirmation_callback cb, const signed_transaction& trx)
@@ -149,7 +164,8 @@ namespace graphene { namespace app {
        trx.validate();
        _callbacks[trx.id()] = cb;
        _app.chain_database()->push_transaction(trx);
-       _app.p2p_node()->broadcast_transaction(trx);
+       if( _app.p2p_node() != nullptr )
+          _app.p2p_node()->broadcast_transaction(trx);
     }
 
     network_node_api::network_node_api( application& a ) : _app( a )
@@ -224,195 +240,6 @@ namespace graphene { namespace app {
        return *_debug_api;
     }
 
-    // TODO: fill this for ALL object types.
-    // TODO: figure out how to properly fill this out for each object type.
-    vector<account_id_type> get_relevant_accounts( const object* obj )
-    {
-       vector<account_id_type> result;
-       if( obj->id.space() == protocol_ids )
-       {
-          switch( (object_type)obj->id.type() )
-          {
-            case null_object_type:
-            case base_object_type:
-            case OBJECT_TYPE_COUNT:
-               return result;
-            case account_object_type:{
-               result.push_back( obj->id );
-               break;
-            } case asset_object_type:{
-               const auto& aobj = dynamic_cast<const asset_object*>(obj);
-               assert( aobj != nullptr );
-               result.push_back( aobj->issuer );
-               break;
-            } case force_settlement_object_type:{
-               const auto& aobj = dynamic_cast<const force_settlement_object*>(obj);
-               assert( aobj != nullptr );
-               result.push_back( aobj->owner );
-               break;
-            } case committee_member_object_type:{
-               const auto& aobj = dynamic_cast<const committee_member_object*>(obj);
-               assert( aobj != nullptr );
-               result.push_back( aobj->committee_member_account );
-               break;
-            } case witness_object_type:{
-               const auto& aobj = dynamic_cast<const witness_object*>(obj);
-               assert( aobj != nullptr );
-               result.push_back( aobj->witness_account );
-               break;
-            } case limit_order_object_type:{
-               const auto& aobj = dynamic_cast<const limit_order_object*>(obj);
-               assert( aobj != nullptr );
-               result.push_back( aobj->seller );
-               break;
-            } case call_order_object_type:{
-               const auto& aobj = dynamic_cast<const call_order_object*>(obj);
-               assert( aobj != nullptr );
-               result.push_back( aobj->borrower );
-               break;
-            } case custom_object_type:{
-              break;
-            } case proposal_object_type:{
-               const auto& aobj = dynamic_cast<const proposal_object*>(obj);
-               assert( aobj != nullptr );
-               flat_set<account_id_type> impacted;
-               transaction_get_impacted_accounts( aobj->proposed_transaction, impacted );
-               result.reserve( impacted.size() );
-               for( auto& item : impacted ) result.emplace_back(item);
-               break;
-            } case operation_history_object_type:{
-               const auto& aobj = dynamic_cast<const operation_history_object*>(obj);
-               assert( aobj != nullptr );
-               flat_set<account_id_type> impacted;
-               operation_get_impacted_accounts( aobj->op, impacted );
-               result.reserve( impacted.size() );
-               for( auto& item : impacted ) result.emplace_back(item);
-               break;
-            } case withdraw_permission_object_type:{
-               const auto& aobj = dynamic_cast<const withdraw_permission_object*>(obj);
-               assert( aobj != nullptr );
-               result.push_back( aobj->withdraw_from_account );
-               result.push_back( aobj->authorized_account );
-               break;
-            } case vesting_balance_object_type:{
-               const auto& aobj = dynamic_cast<const vesting_balance_object*>(obj);
-               assert( aobj != nullptr );
-               result.push_back( aobj->owner );
-               break;
-            } case worker_object_type:{
-               const auto& aobj = dynamic_cast<const worker_object*>(obj);
-               assert( aobj != nullptr );
-               result.push_back( aobj->worker_account );
-               break;
-            } case balance_object_type:
-              case license_type_object_type:
-              case upgrade_event_object_type:
-              case last_price_object_type:
-              case external_price_object_type:{
-               /** these are free from any accounts */
-               break;
-            }
-          }
-       }
-       else if( obj->id.space() == implementation_ids )
-       {
-          switch( (impl_object_type)obj->id.type() )
-          {
-                 case impl_global_property_object_type:
-                  break;
-                 case impl_dynamic_global_property_object_type:
-                  break;
-                 case impl_reserved0_object_type:
-                  break;
-                 case impl_asset_dynamic_data_type:
-                  break;
-                 case impl_asset_bitasset_data_type:
-                  break;
-                 case impl_account_balance_object_type:{
-                  const auto& aobj = dynamic_cast<const account_balance_object*>(obj);
-                  assert( aobj != nullptr );
-                  result.push_back( aobj->owner );
-                  break;
-                 }
-               case impl_account_cycle_balance_object_type:{
-                  const auto& acobj = dynamic_cast<const account_cycle_balance_object*>(obj);
-                  assert( acobj != nullptr );
-                  result.push_back(acobj->owner);
-                  break;
-               } case impl_account_statistics_object_type:{
-                  const auto& aobj = dynamic_cast<const account_statistics_object*>(obj);
-                  assert( aobj != nullptr );
-                  result.push_back( aobj->owner );
-                  break;
-               } case impl_transaction_object_type:{
-                  const auto& aobj = dynamic_cast<const transaction_object*>(obj);
-                  assert( aobj != nullptr );
-                  flat_set<account_id_type> impacted;
-                  transaction_get_impacted_accounts( aobj->trx, impacted );
-                  result.reserve( impacted.size() );
-                  for( auto& item : impacted ) result.emplace_back(item);
-                  break;
-               } case impl_blinded_balance_object_type:{
-                  const auto& aobj = dynamic_cast<const blinded_balance_object*>(obj);
-                  assert( aobj != nullptr );
-                  result.reserve( aobj->owner.account_auths.size() );
-                  for( const auto& a : aobj->owner.account_auths )
-                     result.push_back( a.first );
-                  break;
-               } case impl_license_information_object_type:{
-                  const auto& lio = dynamic_cast<const license_information_object*>(obj);
-                  assert( nullptr != lio );
-                  result.push_back( lio->account );
-                  break;
-               } case impl_issued_asset_record_object_type:{
-                  const auto& iaro = dynamic_cast<const issued_asset_record_object*>(obj);
-                  assert( nullptr != iaro );
-                  result.push_back( iaro->issuer );
-                  result.push_back( iaro->receiver );
-                  break;
-               } case impl_block_summary_object_type:
-                  break;
-                 case impl_account_transaction_history_object_type:
-                  break;
-                 case impl_chain_property_object_type:
-                  break;
-                 case impl_witness_schedule_object_type:
-                  break;
-                 case impl_budget_record_object_type:
-                  break;
-                 case impl_special_authority_object_type:
-                  break;
-                 case impl_buyback_object_type:
-                  break;
-                 case impl_fba_accumulator_object_type:
-                  break;              
-                 case impl_issue_asset_request_object_type:
-                  break;
-                 case impl_wire_out_holder_object_type:
-                  break;
-                 case impl_wire_out_with_fee_holder_object_type:
-                  break;
-                 case impl_payment_service_provider_object_type:
-                  break;
-                 case impl_daspay_authority_object_type:
-                  break;
-                 case impl_delayed_operation_object_type:
-                  break;
-                 case impl_reward_queue_object_type:
-                  break;
-                 case impl_frequency_history_record_object_type:
-                  break;
-                 case impl_witness_delegate_data_colection_object_type:
-                  break;
-                 case impl_das33_project_object_type:
-                  break;
-                 case impl_das33_pledge_holder_object_type:
-                  break;
-          }
-       }
-       return result;
-    } // end get_relevant_accounts( obj )
-
     vector<order_history_object> history_api::get_fill_order_history( asset_id_type a, asset_id_type b, uint32_t limit  )const
     {
        FC_ASSERT(_app.chain_database());
@@ -461,6 +288,32 @@ namespace graphene { namespace app {
        return get_account_history_impl(account,
                                        [&operation_types, &db](const account_transaction_history_object* node) {
                                            return operation_types.find(node->operation_id(db).op.which()) != operation_types.end(); },
+                                       stop,
+                                       limit,
+                                       start);
+    }
+
+    vector<operation_history_object> history_api::get_trade_history_for_account( const asset_id_type base,
+                                                                     const asset_id_type quote,
+                                                                     account_id_type account,
+                                                                     operation_history_id_type stop,
+                                                                     unsigned limit,
+                                                                     operation_history_id_type start)const
+    {
+
+       FC_ASSERT( _app.chain_database() );
+       const auto& db = *_app.chain_database();
+       auto fill_operation_type = operation(fill_order_operation()).which();
+       return get_account_history_impl(account,
+                                       [&fill_operation_type, &db, &base, &quote](const account_transaction_history_object* node) {
+                                           auto& op = node->operation_id(db).op;
+                                           if(op.which() == fill_operation_type)
+                                           {
+                                              fill_order_operation fop = op.get<fill_order_operation>();
+                                              return fop.pays.asset_id == base && fop.receives.asset_id == quote;
+                                           }
+                                           return false;
+                                       },
                                        stop,
                                        limit,
                                        start);
@@ -556,25 +409,6 @@ namespace graphene { namespace app {
     }
 
     crypto_api::crypto_api(){};
-
-    blind_signature crypto_api::blind_sign( const extended_private_key_type& key, const blinded_hash& hash, int i )
-    {
-       return fc::ecc::extended_private_key( key ).blind_sign( hash, i );
-    }
-
-    signature_type crypto_api::unblind_signature( const extended_private_key_type& key,
-                                                     const extended_public_key_type& bob,
-                                                     const blind_signature& sig,
-                                                     const fc::sha256& hash,
-                                                     int i )
-    {
-       return fc::ecc::extended_private_key( key ).unblind_signature( extended_public_key( bob ), sig, hash, i );
-    }
-
-    commitment_type crypto_api::blind( const blind_factor_type& blind, uint64_t value )
-    {
-       return fc::ecc::blind( blind, value );
-    }
 
     blind_factor_type crypto_api::blind_sum( const std::vector<blind_factor_type>& blinds_in, uint32_t non_neg )
     {

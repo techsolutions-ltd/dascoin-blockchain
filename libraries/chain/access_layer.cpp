@@ -158,6 +158,15 @@ optional<total_cycles_res> database_access_layer::get_total_cycles(account_id_ty
             total_cycles_res result;
             for (auto itr = history.begin(); itr != history.end(); ++itr)
             {
+
+                //TODO: Write helper function for code below:
+                auto lic = get_license_type(itr->license);
+                if (lic.valid())
+                  if (!(lic->kind == license_kind::locked_frequency ||
+                      lic->kind == license_kind::utility ||
+                      lic->kind == license_kind::package))
+                    continue;
+
                 result.total_cycles += itr->amount;
                 result.total_cycles += itr->non_upgradeable_amount;
                 result.total_dascoin += _db.cycles_to_dascoin(result.total_cycles, itr->frequency_lock); 
@@ -335,7 +344,7 @@ optional<asset_object> database_access_layer::get_asset_symbol(const asset_index
     const auto& asset_by_symbol = index.indices().get<by_symbol>();
     if( !symbol_or_id.empty() && std::isdigit(symbol_or_id[0]) )
     {
-        auto ptr = _db.find(variant(symbol_or_id).as<asset_id_type>());
+        auto ptr = _db.find(variant(symbol_or_id).as<asset_id_type>( 0 ));
         return ptr == nullptr ? optional<asset_object>{} : *ptr;
     }
     auto itr = asset_by_symbol.find(symbol_or_id);

@@ -296,7 +296,7 @@ namespace graphene { namespace chain {
       flat_set<share_type> buy_prices;
       d.get_groups_of_limit_order_prices(d.get_web_asset_id(), d.get_dascoin_asset_id(), buy_prices, false, 1);
       FC_ASSERT( !buy_prices.empty(), "Cannot debit since there are no buy limit orders" );
-      _to_debit = asset{ tmp.amount * DASCOIN_DEFAULT_ASSET_PRECISION / *(buy_prices.begin()), d.get_dascoin_asset_id() };
+      _to_debit = asset{ tmp.amount * 1000 * DASCOIN_DEFAULT_ASSET_PRECISION / *(buy_prices.begin()), d.get_dascoin_asset_id() };
     }
     else
       _to_debit = tmp * dgpo.last_dascoin_price;
@@ -355,7 +355,7 @@ namespace graphene { namespace chain {
       flat_set<share_type> sell_prices;
       d.get_groups_of_limit_order_prices(d.get_dascoin_asset_id(), d.get_web_asset_id(), sell_prices, true, 1);
       FC_ASSERT( !sell_prices.empty(), "Cannot credit since there are no sell limit orders ${a}", ("a", sell_prices.size()) );
-      _to_credit = asset { tmp.amount * DASCOIN_DEFAULT_ASSET_PRECISION / *(sell_prices.begin()), d.get_dascoin_asset_id() };
+      _to_credit = asset { tmp.amount * 1000 * DASCOIN_DEFAULT_ASSET_PRECISION / *(sell_prices.begin()), d.get_dascoin_asset_id() };
     }
     else
       _to_credit = tmp * dgpo.last_dascoin_price;

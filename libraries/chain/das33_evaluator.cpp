@@ -333,6 +333,11 @@ namespace graphene { namespace chain {
         if (op.phase_number) dpo.phase_number = *op.phase_number;
         if (op.phase_limit) dpo.phase_limit = *op.phase_limit;
         if (op.phase_end) dpo.phase_end = *op.phase_end;
+
+        for (const auto& ext : op.extensions)
+        {
+           ext.visit(das33_project_visitor{dpo.report});
+        }
       });
 
       return {};

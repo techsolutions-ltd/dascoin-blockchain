@@ -30,6 +30,28 @@
 
 namespace graphene { namespace chain {
 
+struct das33_project_visitor
+  {
+     typedef void result_type;
+
+     vector<string>& report;
+
+     das33_project_visitor(vector<string>& report)
+       : report(report)
+     {}
+
+     result_type operator()( const vector<string>& new_report ) const
+     {
+        report = new_report;
+        ilog("setting report to ${a}", ("a", new_report));
+     }
+
+     template<typename VariantMember>
+     result_type operator()( const VariantMember& op ) const
+     {
+     }
+  };
+
   class das33_project_create_evaluator : public evaluator<das33_project_create_evaluator>
   {
   public:

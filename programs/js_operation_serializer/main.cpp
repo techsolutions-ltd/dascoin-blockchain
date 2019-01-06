@@ -24,7 +24,7 @@
 #include <graphene/chain/protocol/block.hpp>
 #include <graphene/chain/protocol/chain_parameters.hpp>
 #include <graphene/chain/protocol/fee_schedule.hpp>
-
+#include <graphene/chain/protocol/das33_operations.hpp>
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/asset_object.hpp>
 #include <graphene/chain/balance_object.hpp>
@@ -397,6 +397,7 @@ int main( int argc, char** argv )
     detail_ns::js_name<operation_result>::name("operation_result");
     detail_ns::js_name<future_extensions>::name("future_extensions");
     detail_ns::js_name<chain_parameters::chain_parameters_extension>::name("chain_parameters_extension");
+    detail_ns::js_name<das33_project_update_operation::das33_project_extension>::name("das33_project_extension");
     detail_ns::js_name<worker_initializer>::name("worker_initializer");
     detail_ns::js_name<predicate>::name("predicate");
     detail_ns::js_name<vesting_policy_initializer>::name("vesting_policy_initializer");

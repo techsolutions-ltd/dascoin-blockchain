@@ -85,7 +85,9 @@ namespace graphene { namespace chain {
     optional<share_type>                     phase_limit;
     optional<time_point_sec>                 phase_end;
     optional<uint8_t>                        status;
-    extensions_type                          extensions;
+    using das33_project_extension = static_variant<void_t, vector<string>>;
+    using das33_project_extension_type = flat_set<das33_project_extension>;
+    das33_project_extension_type extensions;
 
     das33_project_update_operation() = default;
 

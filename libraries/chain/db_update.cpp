@@ -673,7 +673,11 @@ void database::daspay_clearing_start()
       }
       share_type buy_price = *price_it;
 
-      const auto& to_buy = asset{ to_sell.amount * buy_price / DASCOIN_DEFAULT_ASSET_PRECISION / 1000, get_web_asset_id() };
+      asset to_buy;
+      if (head_block_time() >= HARDFORK_FIX_DASPAY_PRICE_TIME)
+        to_buy = asset{ to_sell.amount * buy_price / DASCOIN_DEFAULT_ASSET_PRECISION / 1000, get_web_asset_id() };
+      else
+        to_buy = asset{ to_sell.amount * buy_price / DASCOIN_DEFAULT_ASSET_PRECISION, get_web_asset_id() };
 
       if (to_sell.amount > 0 && to_buy.amount > 0)
         limit_orders.emplace_back(limit_order_create_operation{ clearing_acc, to_sell, to_buy, 0, {}, head_block_time() + params.daspay_parameters.clearing_interval_time_seconds });
@@ -689,7 +693,13 @@ void database::daspay_clearing_start()
       std::advance(price_it, sell_prices.size() - 1); // Use the second price if available
       share_type buy_price = *price_it;
 
-      const auto& to_sell = asset{ to_buy.amount * buy_price / DASCOIN_DEFAULT_ASSET_PRECISION / 1000, get_web_asset_id() };
+      asset to_sell;
+
+      if (head_block_time() >= HARDFORK_FIX_DASPAY_PRICE_TIME)
+        to_sell = asset{ to_buy.amount * buy_price / DASCOIN_DEFAULT_ASSET_PRECISION / 1000, get_web_asset_id() };
+      else
+        to_sell = asset{ to_buy.amount * buy_price / DASCOIN_DEFAULT_ASSET_PRECISION, get_web_asset_id() };
+
       if (webeur_balance >= to_sell && to_sell.amount > 0 && to_buy.amount > 0)
         limit_orders.emplace_back(limit_order_create_operation{ clearing_acc, to_sell, to_buy, 0, {}, head_block_time() + params.daspay_parameters.clearing_interval_time_seconds });
       else

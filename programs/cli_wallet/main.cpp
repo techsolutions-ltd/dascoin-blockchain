@@ -195,9 +195,9 @@ int main( int argc, char** argv )
 
       shared_ptr< fc::http::websocket_client > client;
       idump((wdata.ws_server));
-      if( options.count( "do-not-check-server-certificate" ) )
-         client = std::make_shared<fc::http::websocket_client>( "_none" );
-      else if( options.count( "server-tls-certificate" ) )
+      if( options.count("do-not-check-server-certificate") )
+         client = std::make_shared<fc::http::websocket_client>("_none");
+      else if( options.count("server-tls-certificate") )
          client = std::make_shared<fc::http::websocket_client>(options.at("server-tls-certificate").as<std::string>());
       else
          client = std::make_shared<fc::http::websocket_client>();

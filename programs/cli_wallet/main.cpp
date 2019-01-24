@@ -78,7 +78,8 @@ int main( int argc, char** argv )
          ("server-rpc-endpoint,s", bpo::value<string>()->implicit_value("ws://127.0.0.1:8090"), "Server websocket RPC endpoint")
          ("server-rpc-user,u", bpo::value<string>(), "Server Username")
          ("server-rpc-password,p", bpo::value<string>(), "Server Password")
-         ("do-not-check-server-certificate,C", "Do not check certificate for server websocket TLS RPC")
+         ("do-not-check-server-certificate,n", "Do not check certificate for server websocket TLS RPC")
+         ("server-tls-certificate,C", bpo::value<string>()->implicit_value("server.pem"), "Server's PEM certificate for websocket TLS")
          ("rpc-endpoint,r", bpo::value<string>()->implicit_value("127.0.0.1:8091"), "Endpoint for wallet websocket RPC to listen on")
          ("rpc-tls-endpoint,t", bpo::value<string>()->implicit_value("127.0.0.1:8092"), "Endpoint for wallet websocket TLS RPC to listen on")
          ("rpc-tls-certificate,c", bpo::value<string>()->implicit_value("server.pem"), "PEM certificate for wallet websocket TLS RPC")
@@ -196,6 +197,8 @@ int main( int argc, char** argv )
       idump((wdata.ws_server));
       if( options.count( "do-not-check-server-certificate" ) )
          client = std::make_shared<fc::http::websocket_client>( "_none" );
+      else if( options.count( "server-tls-certificate" ) )
+         client = std::make_shared<fc::http::websocket_client>(options.at("server-tls-certificate").as<std::string>());
       else
          client = std::make_shared<fc::http::websocket_client>();
 

@@ -2150,9 +2150,10 @@ class wallet_api
        *
        * @param from            id of the pledge
        * @param limit           the number of entries to return (starting from the most recent) (max 100)
+       * @param phase           optional - get only pledges from this phase
        * @returns               a list of pledge holder objects.
        */
-      vector<das33_pledge_holder_object> get_das33_pledges(das33_pledge_holder_id_type from, uint32_t limit) const;
+      vector<das33_pledge_holder_object> get_das33_pledges(das33_pledge_holder_id_type from, uint32_t limit, optional<uint32_t> phase = NULL) const;
 
       /**
        * @brief Return a list of pledges for specified account.
@@ -2168,9 +2169,10 @@ class wallet_api
        * @param project         name or id of das33 project
        * @param from            id of the first pledge
        * @param limit           the number of entries to return (starting from the most recent) (max 100)
+       * @param phase           optional - get only pledges from this phase
        * @returns               a list of pledge holder objects.
        */
-      vector<das33_pledge_holder_object> get_das33_pledges_by_project(const string& project, das33_pledge_holder_id_type from, uint32_t limit) const;
+      vector<das33_pledge_holder_object> get_das33_pledges_by_project(const string& project, das33_pledge_holder_id_type from, uint32_t limit, optional<uint32_t> phase = NULL) const;
 
       /**
       * @brief Gets a sum of all pledges made to project

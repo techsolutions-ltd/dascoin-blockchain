@@ -960,9 +960,10 @@ class database_api
        * @brief Get all das33 pledges
        * @params from pledges starting with this id will be returned
        * @params limit number of pledges to return, max 100
+       * @params phase optional - only return pledges from this phase
        * @return vector of das33 pledge objects
        */
-      vector<das33_pledge_holder_object> get_das33_pledges(das33_pledge_holder_id_type from, uint32_t limit) const;
+      vector<das33_pledge_holder_object> get_das33_pledges(das33_pledge_holder_id_type from, uint32_t limit, optional<uint32_t> phase) const;
 
       /**
       * @brief Get all das33 pledges made by an account
@@ -976,9 +977,10 @@ class database_api
       * @params project id of a project
       * @params from pledges starting with this id will be returned
       * @params limit number of pledges to return, max 100
+      * @params phase optional - only return pledges from this phase
       * @return vector of das33 pledge objects
       */
-      vector<das33_pledge_holder_object> get_das33_pledges_by_project(das33_project_id_type project, das33_pledge_holder_id_type from, uint32_t limit) const;
+      vector<das33_pledge_holder_object> get_das33_pledges_by_project(das33_project_id_type project, das33_pledge_holder_id_type from, uint32_t limit, optional<uint32_t> phase = NULL) const;
 
       /**
       * @brief Get all das33 projects

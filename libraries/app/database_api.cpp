@@ -202,9 +202,9 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       vector<delayed_operation_object> get_delayed_operations_for_account(account_id_type account) const;
 
       // Das33
-      vector<das33_pledge_holder_object> get_das33_pledges(das33_pledge_holder_id_type from, uint32_t limit) const;
+      vector<das33_pledge_holder_object> get_das33_pledges(das33_pledge_holder_id_type from, uint32_t limit, optional<uint32_t> phase) const;
       das33_pledges_by_account_result get_das33_pledges_by_account(account_id_type account) const;
-      vector<das33_pledge_holder_object> get_das33_pledges_by_project(das33_project_id_type project, das33_pledge_holder_id_type from, uint32_t limit) const;
+      vector<das33_pledge_holder_object> get_das33_pledges_by_project(das33_project_id_type project, das33_pledge_holder_id_type from, uint32_t limit, optional<uint32_t> phase) const;
       vector<das33_project_object> get_das33_projects(const string& lower_bound_name, uint32_t limit) const;
       vector<asset> get_amount_of_assets_pledged_to_project(das33_project_id_type project) const;
       das33_project_tokens_amount get_amount_of_project_tokens_received_for_asset(das33_project_id_type project, asset to_pledge) const;
@@ -2933,9 +2933,9 @@ vector<delayed_operation_object> database_api_impl::get_delayed_operations_for_a
 //                                                                  //
 //////////////////////////////////////////////////////////////////////
 
-vector<das33_pledge_holder_object> database_api::get_das33_pledges(das33_pledge_holder_id_type from, uint32_t limit) const
+vector<das33_pledge_holder_object> database_api::get_das33_pledges(das33_pledge_holder_id_type from, uint32_t limit, optional<uint32_t> phase) const
 {
-    return my->get_das33_pledges(from, limit);
+    return my->get_das33_pledges(from, limit, phase);
 }
 
 das33_pledges_by_account_result database_api::get_das33_pledges_by_account(account_id_type account) const
@@ -2943,12 +2943,12 @@ das33_pledges_by_account_result database_api::get_das33_pledges_by_account(accou
     return my->get_das33_pledges_by_account(account);
 }
 
-vector<das33_pledge_holder_object> database_api::get_das33_pledges_by_project(das33_project_id_type project, das33_pledge_holder_id_type from, uint32_t limit) const
+vector<das33_pledge_holder_object> database_api::get_das33_pledges_by_project(das33_project_id_type project, das33_pledge_holder_id_type from, uint32_t limit, optional<uint32_t> phase) const
 {
-    return my->get_das33_pledges_by_project(project, from, limit);
+    return my->get_das33_pledges_by_project(project, from, limit, phase);
 }
 
-vector<das33_pledge_holder_object> database_api_impl::get_das33_pledges(das33_pledge_holder_id_type from, uint32_t limit) const
+vector<das33_pledge_holder_object> database_api_impl::get_das33_pledges(das33_pledge_holder_id_type from, uint32_t limit, optional<uint32_t> phase) const
 {
     FC_ASSERT( limit <= 100 );
     vector<das33_pledge_holder_object> result;
@@ -2956,10 +2956,16 @@ vector<das33_pledge_holder_object> database_api_impl::get_das33_pledges(das33_pl
     auto default_pledge_id = das33_pledge_holder_id_type();
 
     const auto& pledges = _db.get_index_type<das33_pledge_holder_index>().indices().get<by_id>();
-    for( auto itr = pledges.lower_bound(from); limit-- && itr != pledges.end(); ++itr )
+    for( auto itr = pledges.lower_bound(from); limit && itr != pledges.end(); ++itr )
     {
       if (itr->id != default_pledge_id)
-        result.emplace_back(*itr);
+      {
+          if (phase && *phase != itr->phase_number)
+              continue;
+          result.emplace_back(*itr);
+          limit--;
+      }
+
     }
 
     return result;
@@ -3017,7 +3023,7 @@ das33_pledges_by_account_result database_api_impl::get_das33_pledges_by_account(
     return result;
 }
 
-vector<das33_pledge_holder_object> database_api_impl::get_das33_pledges_by_project(das33_project_id_type project, das33_pledge_holder_id_type from, uint32_t limit) const
+vector<das33_pledge_holder_object> database_api_impl::get_das33_pledges_by_project(das33_project_id_type project, das33_pledge_holder_id_type from, uint32_t limit, optional<uint32_t> phase) const
 {
     FC_ASSERT( limit <= 100 );
     vector<das33_pledge_holder_object> result;
@@ -3025,10 +3031,15 @@ vector<das33_pledge_holder_object> database_api_impl::get_das33_pledges_by_proje
     auto default_pledge_id = das33_pledge_holder_id_type();
 
     const auto& pledges = _db.get_index_type<das33_pledge_holder_index>().indices().get<by_project>();
-    for( auto itr = pledges.lower_bound(make_tuple(project, from)); limit-- && itr->project_id == project && itr != pledges.end(); ++itr )
+    for( auto itr = pledges.lower_bound(make_tuple(project, from)); limit && itr->project_id == project && itr != pledges.end(); ++itr )
     {
        if (itr->id != default_pledge_id)
-          result.emplace_back(*itr);
+       {
+           if (phase && *phase != itr->phase_number)
+               continue;
+           result.emplace_back(*itr);
+           limit--;
+       }
     }
 
     return result;

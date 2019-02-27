@@ -6155,9 +6155,9 @@ signed_transaction wallet_api::das33_set_use_market_token_price (const string& a
   return my->das33_set_use_market_token_price(authority, use_market_price_for_token, broadcast);
 }
 
-vector<das33_pledge_holder_object> wallet_api::get_das33_pledges(das33_pledge_holder_id_type from, uint32_t limit) const
+vector<das33_pledge_holder_object> wallet_api::get_das33_pledges(das33_pledge_holder_id_type from, uint32_t limit, optional<uint32_t> phase) const
 {
-    return my->_remote_db->get_das33_pledges(from, limit);
+    return my->_remote_db->get_das33_pledges(from, limit, phase);
 }
 
 das33_pledges_by_account_result wallet_api::get_das33_pledges_by_account(const string& account) const
@@ -6166,10 +6166,10 @@ das33_pledges_by_account_result wallet_api::get_das33_pledges_by_account(const s
    return my->_remote_db->get_das33_pledges_by_account(account_obj.id);
 }
 
-vector<das33_pledge_holder_object> wallet_api::get_das33_pledges_by_project(const string& project, das33_pledge_holder_id_type from, uint32_t limit) const
+vector<das33_pledge_holder_object> wallet_api::get_das33_pledges_by_project(const string& project, das33_pledge_holder_id_type from, uint32_t limit, optional<uint32_t> phase) const
 {
   das33_project_object project_obj = my->_remote_db->get_das33_projects(project, 1)[0];
-    return my->_remote_db->get_das33_pledges_by_project(project_obj.id, from, limit);
+    return my->_remote_db->get_das33_pledges_by_project(project_obj.id, from, limit, phase);
 }
 
 

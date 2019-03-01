@@ -3100,8 +3100,7 @@ public:
          return ss.str();
       };
 
-      m["get_account_history_by_operation"] = //m["get_account_history"];
-      [this](variant result, const fc::variants& a)
+      m["get_account_history_by_operation"] = [this](variant result, const fc::variants& a)
       {
          auto r = result.as<vector<operation_detail>>( GRAPHENE_MAX_NESTED_OBJECTS );
          std::stringstream ss;

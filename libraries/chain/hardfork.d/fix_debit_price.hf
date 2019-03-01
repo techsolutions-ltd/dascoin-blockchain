@@ -1,4 +1,4 @@
 // #FixDasPayPrice
 #ifndef HARDFORK_FIX_DASPAY_PRICE_TIME
-#define HARDFORK_FIX_DASPAY_PRICE_TIME (fc::time_point_sec( 1544805000 ))
+#define HARDFORK_FIX_DASPAY_PRICE_TIME (fc::time_point_sec( 1551445200 ))
 #endif

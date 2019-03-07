@@ -3113,8 +3113,11 @@ das33_project_tokens_amount database_api_impl::get_amount_of_project_tokens_rece
   const auto& project_obj = project(_db);
 
   share_type precision = graphene::chain::precision_modifier(to_pledge.asset_id(_db), _db.get_web_asset_id()(_db));
-  price asset_price = graphene::chain::get_price_in_web_eur(to_pledge.asset_id, _db);
-  asset base_asset = graphene::chain::asset_price_multiply(to_pledge, precision.value, asset_price, project_obj.token_price);
+
+  const auto& asset_price = _db.get_price_in_web_eur(to_pledge.asset_id);
+  FC_ASSERT(asset_price.valid(), "There is no proper price for ${asset}", ("asset", to_pledge.asset_id));
+
+  asset base_asset = graphene::chain::asset_price_multiply(to_pledge, precision.value, *asset_price, project_obj.token_price);
 
   asset bonus;
   auto discount_iterator = project_obj.discounts.find(to_pledge.asset_id);
@@ -3138,8 +3141,11 @@ das33_project_tokens_amount database_api_impl::get_amount_of_asset_needed_for_pr
   const auto& project_obj = project(_db);
 
   share_type precision = graphene::chain::precision_modifier(tokens.asset_id(_db), _db.get_web_asset_id()(_db));
-  price asset_price = graphene::chain::get_price_in_web_eur(asset_id, _db);
-  asset to_pledge = graphene::chain::asset_price_multiply(tokens, precision.value, project_obj.token_price, asset_price);
+
+  const auto& asset_price = _db.get_price_in_web_eur(asset_id);
+  FC_ASSERT(asset_price.valid(), "There is no proper price for ${asset}", ("asset", asset_id));
+
+  asset to_pledge = graphene::chain::asset_price_multiply(tokens, precision.value, project_obj.token_price, *asset_price);
 
   asset bonus;
   auto discount_iterator = project_obj.discounts.find(asset_id);

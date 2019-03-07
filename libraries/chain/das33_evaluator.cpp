@@ -50,41 +50,6 @@ namespace graphene { namespace chain {
                   "Price must be for ${1}", ("1", second_asset));
   }
 
-  price get_price_in_web_eur(asset_id_type original_asset_id, const database& d)
-  {
-    price result;
-    if (original_asset_id == d.get_dascoin_asset_id())
-    {
-      result = d.get_dynamic_global_properties().last_dascoin_price;
-    }
-    else
-    {
-      vector<asset_id_type> use_market_price_for_token = d.get_global_properties().das33_parameters.use_market_price_for_token;
-      if (std::find(use_market_price_for_token.begin(), use_market_price_for_token.end(), original_asset_id) != use_market_price_for_token.end())
-      {
-        const auto& market_idx = d.get_index_type<last_price_index>().indices().get<by_market_key>();
-        auto market_itr = market_idx.find(market_key{base:original_asset_id, quote:d.get_web_asset_id()});
-        if (market_itr != market_idx.end())
-        {
-          result = market_itr->last_price;
-        }
-      }
-      else
-      {
-        const auto& external_idx = d.get_index_type<external_price_index>().indices().get<by_market_key>();
-        auto external_itr = external_idx.find(market_key{base:original_asset_id, quote:d.get_web_asset_id()});
-        if (external_itr != external_idx.end())
-        {
-          result = external_itr->external_price;
-        }
-      }
-    }
-
-    FC_ASSERT(!result.is_null(), "There is no proper price for ${asset}", ("asset", original_asset_id));
-
-    return result;
-  }
-
   share_type precision_modifier(asset_object a, asset_object b)
   {
     share_type result = 1;
@@ -416,7 +381,11 @@ namespace graphene { namespace chain {
     // Calculate expected amount
     share_type precision = precision_modifier(op.pledged.asset_id(d), d.get_web_asset_id()(d));
     total.asset_id = project_obj.token_id;
-    price_at_evaluation = get_price_in_web_eur(op.pledged.asset_id, d);
+
+    const auto& conversion_price = d.get_price_in_web_eur(op.pledged.asset_id);
+    FC_ASSERT(conversion_price.valid(), "There is no proper price for ${asset}", ("asset", op.pledged.asset_id));
+
+    price_at_evaluation = *conversion_price;
     base = asset_price_multiply(op.pledged, precision.value, price_at_evaluation, project_obj.token_price);
 
     // Assure that pledge amount is above minimum

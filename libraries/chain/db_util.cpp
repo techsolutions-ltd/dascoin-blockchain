@@ -108,7 +108,7 @@ optional<price> database::get_price_in_web_eur(const asset_id_type asset_id) con
         return price{asset{1, get_web_asset_id()}, asset{1, get_web_asset_id()}};
     }
 
-    const auto& use_market_price_for_token = get_global_properties().das33_parameters.use_market_price_for_token;
+    const auto& use_market_price_for_token = get_global_properties().use_market_price_for_token;
     if (std::find(use_market_price_for_token.begin(), use_market_price_for_token.end(), asset_id) != use_market_price_for_token.end())
     {
       const auto& market_idx = get_index_type<last_price_index>().indices().get<by_market_key>();

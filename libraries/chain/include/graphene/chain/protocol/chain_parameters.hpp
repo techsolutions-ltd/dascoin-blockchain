@@ -24,6 +24,7 @@
 #pragma once
 #include <graphene/chain/protocol/base.hpp>
 #include <graphene/chain/protocol/types.hpp>
+#include <graphene/chain/protocol/withdrawal_limit.hpp>
 #include <fc/smart_ref_fwd.hpp>
 
 namespace graphene { namespace chain { struct fee_schedule; } }
@@ -74,7 +75,7 @@ namespace graphene { namespace chain {
       bool                    enable_cycle_issuing = true;
       bool                    enable_dascoin_queue = false;
 
-      using chain_parameters_extension = static_variant<void_t, asset_id_type>;
+      using chain_parameters_extension = static_variant<void_t, asset_id_type, withdrawal_limit_type>;
       using chain_parameters_extension_type = flat_set<chain_parameters_extension>;
       chain_parameters_extension_type         extensions;
 

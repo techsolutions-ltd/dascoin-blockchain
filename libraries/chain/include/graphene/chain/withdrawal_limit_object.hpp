@@ -25,7 +25,6 @@
 #pragma once
 #include <graphene/chain/protocol/base.hpp>
 #include <graphene/chain/protocol/types.hpp>
-#include <graphene/chain/upgrade_type.hpp>
 #include <graphene/db/generic_index.hpp>
 #include <graphene/db/object.hpp>
 
@@ -40,6 +39,7 @@ namespace graphene { namespace chain {
       static const uint8_t type_id  = impl_withdrawal_limit_object_type;
 
       account_id_type account;
+      bool set_explicitly = false;
       asset limit;
       asset spent;
       time_point_sec beginning_of_withdrawal_interval;
@@ -70,6 +70,7 @@ namespace graphene { namespace chain {
 
 FC_REFLECT_DERIVED( graphene::chain::withdrawal_limit_object, (graphene::db::object),
                     (account)
+                    (set_explicitly)
                     (limit)
                     (spent)
                     (beginning_of_withdrawal_interval)

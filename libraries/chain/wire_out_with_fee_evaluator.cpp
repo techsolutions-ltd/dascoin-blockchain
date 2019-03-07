@@ -25,6 +25,7 @@
 #include <graphene/chain/asset_object.hpp>
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/wire_out_with_fee_evaluator.hpp>
+#include <graphene/chain/withdrawal_limit_object.hpp>
 
 namespace graphene { namespace chain {
 
@@ -55,6 +56,41 @@ namespace graphene { namespace chain {
                ("s", d.to_pretty_string(asset(dyn_data_obj.current_supply, op.asset_to_wire.asset_id)))
                ("a", d.to_pretty_string(op.asset_to_wire))
              );
+ilog("!!!withdraw ${a}", ("a", op.asset_to_wire));
+    // Are withdrawal limits in effect?
+    if (d.head_block_time() >= HARDFORK_BLC_328_TIME)
+    {
+      const auto& global_parameters_ext = d.get_global_properties().parameters.extensions;
+      auto withdrawal_limit_it = std::find_if(global_parameters_ext.begin(), global_parameters_ext.end(),
+                                              [](const chain_parameters::chain_parameters_extension& ext){
+                                                   return ext.which() == chain_parameters::chain_parameters_extension::tag< withdrawal_limit_type >::value;
+                                            });
+      // Is withdrawal limit set?
+      if (withdrawal_limit_it != global_parameters_ext.end())
+      {
+        auto& limit = (*withdrawal_limit_it).get<withdrawal_limit_type>();
+        withdrawal_limit_ = &limit;
+        // Account is withdrawing an asset which has a limit?
+        if (limit.limited_assets.find(op.asset_to_wire.asset_id) != limit.limited_assets.end())
+        {
+          auto &index = d.get_index_type<withdrawal_limit_index>().indices().get<by_account_id>();
+          auto itr = index.find(op.account);
+          if (itr != index.end())
+          {
+            ilog("i have limit obj ${o}", ("o", *itr));
+            withdrawal_limit_obj_ = &(*itr);
+            if (d.head_block_time() - withdrawal_limit_obj_->beginning_of_withdrawal_interval < fc::microseconds(limit.duration.sec_since_epoch() * 1000000))
+              FC_ASSERT( withdrawal_limit_obj_->limit - withdrawal_limit_obj_->spent >= op.asset_to_wire, "Cannot withdraw because of the limit, spent ${s}, amount ${a}", ("s", withdrawal_limit_obj_->spent)("a", op.asset_to_wire) );
+            else
+              FC_ASSERT( withdrawal_limit_obj_->limit >= op.asset_to_wire, "Cannot withdraw because of the limit ${l}", ("l", withdrawal_limit_obj_->limit) );
+          } else
+          {
+            ilog("limit ${l} wo ${w}", ("l", limit.limit)("w", op.asset_to_wire));
+            FC_ASSERT( limit.limit >= op.asset_to_wire, "Withdrawal cannot exceed the absolute limit ${l}, amount ${a}", ("l", limit.limit)("a", op.asset_to_wire) ); // fixme: calculate eventual price here
+          }
+        }
+      }
+    }
 
     from_balance_obj_ = &from_balance_obj;
     asset_dyn_data_ = &dyn_data_obj;
@@ -65,10 +101,37 @@ namespace graphene { namespace chain {
   object_id_type wire_out_with_fee_evaluator::do_apply(const wire_out_with_fee_operation& op)
   { try {
     auto& d = db();
+
+    if (d.head_block_time() >= HARDFORK_BLC_328_TIME)
+    {
+      if (!withdrawal_limit_obj_)
+      {
+        d.create<withdrawal_limit_object>([&](withdrawal_limit_object &o){
+          o.account = op.account;
+          o.beginning_of_withdrawal_interval = o.last_withdrawal = d.head_block_time();
+          o.spent = op.asset_to_wire;
+          o.limit = withdrawal_limit_->limit;
+        });
+      } else
+      {
+        d.modify(*withdrawal_limit_obj_, [&](withdrawal_limit_object& o){
+          o.last_withdrawal = d.head_block_time();
+          if (d.head_block_time() - o.beginning_of_withdrawal_interval > fc::microseconds(withdrawal_limit_->duration.sec_since_epoch() * 1000000))
+          {
+            o.beginning_of_withdrawal_interval = d.head_block_time();
+            o.spent = op.asset_to_wire;
+          } else
+          {
+            o.spent += op.asset_to_wire;
+          }
+        });
+      }
+    }
+
     // Adjust the balance and spent amount:
     d.modify(*from_balance_obj_, [&](account_balance_object& from_b){
-     from_b.balance -= op.asset_to_wire.amount;
-     from_b.spent += op.asset_to_wire.amount;
+      from_b.balance -= op.asset_to_wire.amount;
+      from_b.spent += op.asset_to_wire.amount;
     });
     // Contract the supply:
     d.modify(*asset_dyn_data_, [&]( asset_dynamic_data_object& data){

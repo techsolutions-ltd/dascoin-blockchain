@@ -68,12 +68,7 @@ namespace graphene { namespace chain {
          bool delayed_operations_resolver_enabled = DASCOIN_DEFAULT_DELAYED_OPERATIONS_RESOLVER_ENABLED; ///< by default off
          uint32_t delayed_operations_resolver_interval_time_seconds = DASCOIN_DEFAULT_DELAYED_OPERATIONS_RESOLVER_INTERVAL_TIME_SECONDS; ///< in seconds
 
-         struct das33
-         {
-           bool use_external_btc_price = DAS33_DEFAULT_USE_EXTERNAL_BTC_PRICE; ///< by default set to true
-           vector<asset_id_type> use_market_price_for_token = vector<asset_id_type>(); ///< empty by default -> use external price for all
-         };
-         das33 das33_parameters;
+         flat_set<asset_id_type> use_market_price_for_token{};
    };
 
    /**
@@ -273,11 +268,6 @@ FC_REFLECT( graphene::chain::global_property_object::daspay,
             (collateral_webeur)
           )
 
-FC_REFLECT( graphene::chain::global_property_object::das33,
-            (use_external_btc_price)
-            (use_market_price_for_token)
-          )
-
 FC_REFLECT_DERIVED( graphene::chain::global_property_object, (graphene::db::object),
                     (parameters)
                     (pending_parameters)
@@ -288,5 +278,5 @@ FC_REFLECT_DERIVED( graphene::chain::global_property_object, (graphene::db::obje
                     (daspay_parameters)
                     (delayed_operations_resolver_enabled)
                     (delayed_operations_resolver_interval_time_seconds)
-                    (das33_parameters)
+                    (use_market_price_for_token)
                   )

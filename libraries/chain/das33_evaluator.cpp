@@ -780,11 +780,6 @@ namespace graphene { namespace chain {
 
   void_result das33_set_use_external_btc_price_evaluator::do_evaluate(const operation_type& op)
   { try {
-      const auto& d = db();
-      const auto& gpo = d.get_global_properties();
-      const auto& authority_obj = op.authority(d);
-
-      d.perform_chain_authority_check("das33 authority", gpo.authorities.das33_administrator, authority_obj);
 
       return {};
 
@@ -792,14 +787,8 @@ namespace graphene { namespace chain {
 
   void_result das33_set_use_external_btc_price_evaluator::do_apply(const operation_type& op)
   { try {
-      auto& d = db();
-
-      d.modify(d.get_global_properties(), [&](global_property_object& gpo){
-        gpo.das33_parameters.use_external_btc_price = op.use_external_btc_price;
-      });
 
       return {};
-
   } FC_CAPTURE_AND_RETHROW((op)) }
 
   void_result das33_set_use_market_price_for_token_evaluator::do_evaluate(const operation_type& op)
@@ -819,7 +808,7 @@ namespace graphene { namespace chain {
     auto& d = db();
 
     d.modify(d.get_global_properties(), [&](global_property_object& gpo){
-      gpo.das33_parameters.use_market_price_for_token = op.use_market_price_for_token;
+      gpo.use_market_price_for_token = op.use_market_price_for_token;
   });
 
       return {};

@@ -2562,6 +2562,7 @@ FC_API( graphene::wallet::wallet_api,
         (get_order_book)
         (update_queue_parameters)
         (wire_out)
+        (wire_out_with_fee)
         (transfer_cycles_from_licence_to_wallet)
         (purchase_cycle_asset)
         (calculate_cycle_price)

@@ -50,7 +50,7 @@ namespace graphene { namespace chain {
 
     d.modify(d.get_global_properties(), [&op](global_property_object& gpo) {
 
-      // we have to use temp chain_parameters becouse we have to preserve old fees (fees can't be updated true this operation)
+      // we have to use temp chain_parameters because we have to preserve old fees (fees can't be updated true this operation)
       // reason for this workaround is problem with operation wire_out_with_fee that has missing fee argument in reflection
       chain_parameters temp = op.new_parameters;
       temp.current_fees = gpo.parameters.current_fees;

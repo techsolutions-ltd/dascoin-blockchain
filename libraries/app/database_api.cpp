@@ -391,7 +391,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
 
    private:
       template<typename IterStart, typename IterEnd>
-      void func_re_pack(IterStart helper_itr, IterEnd end, std::vector<agregated_limit_orders_with_same_price_collection>& ret, uint32_t limit_group, uint32_t limit_per_group) const;
+      void func_re_pack(IterStart helper_itr, IterEnd end, std::vector<aggregated_limit_orders_with_same_price_collection>& ret, uint32_t limit_group, uint32_t limit_per_group) const;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -1328,8 +1328,8 @@ limit_orders_grouped_by_price database_api_impl::get_limit_orders_grouped_by_pri
       swap_buy_sell = true;
    }
 
-   auto func = [this, &limit_price_idx, limit](asset_id_type& a, asset_id_type& b, std::vector<agregated_limit_orders_with_same_price>& ret, bool ascending){
-      std::map<share_type, agregated_limit_orders_with_same_price> helper_map;
+   auto func = [this, &limit_price_idx, limit](asset_id_type& a, asset_id_type& b, std::vector<aggregated_limit_orders_with_same_price>& ret, bool ascending){
+      std::map<share_type, aggregated_limit_orders_with_same_price> helper_map;
 
       auto limit_itr = limit_price_idx.lower_bound(price::max(a,b));
       auto limit_end = limit_price_idx.upper_bound(price::min(a,b));
@@ -1350,7 +1350,7 @@ limit_orders_grouped_by_price database_api_impl::get_limit_orders_grouped_by_pri
          // if we are adding limit order with new price
          if(helper_itr == helper_map.end())
          {
-            agregated_limit_orders_with_same_price alo;
+            aggregated_limit_orders_with_same_price alo;
             alo.price = price_key;
             alo.base_volume = limit_itr->for_sale.value;
             alo.quote_volume = round(ascending ? limit_itr->for_sale.value * price : limit_itr->for_sale.value / price);
@@ -1412,14 +1412,14 @@ limit_orders_collection_grouped_by_price database_api::get_limit_orders_collecti
 
 
 template<typename IterStart, typename IterEnd>
-void database_api_impl::func_re_pack(IterStart helper_itr, IterEnd end, std::vector<agregated_limit_orders_with_same_price_collection>& ret, uint32_t limit_group, uint32_t limit_per_group) const
+void database_api_impl::func_re_pack(IterStart helper_itr, IterEnd end, std::vector<aggregated_limit_orders_with_same_price_collection>& ret, uint32_t limit_group, uint32_t limit_per_group) const
 {
    uint32_t count = 0;
    while(helper_itr != end && count < limit_group)
    {
       auto& alo = helper_itr->second;
       share_type group_price_key = static_cast<share_type>(alo.price / ORDER_BOOK_GROUP_QUERY_PRECISION_DIFF);
-      agregated_limit_orders_with_same_price_collection aloc;
+      aggregated_limit_orders_with_same_price_collection aloc;
       aloc.price = group_price_key;
       aloc.base_volume = alo.base_volume;
       aloc.quote_volume = alo.quote_volume;
@@ -1466,8 +1466,8 @@ limit_orders_collection_grouped_by_price database_api_impl::get_limit_orders_col
    }
 
 
-   auto func = [this, &limit_price_idx, limit_group, limit_per_group](asset_id_type& a, asset_id_type& b, std::vector<agregated_limit_orders_with_same_price_collection>& ret, bool ascending){
-      std::map<share_type, agregated_limit_orders_with_same_price> helper_map;
+   auto func = [this, &limit_price_idx, limit_group, limit_per_group](asset_id_type& a, asset_id_type& b, std::vector<aggregated_limit_orders_with_same_price_collection>& ret, bool ascending){
+      std::map<share_type, aggregated_limit_orders_with_same_price> helper_map;
 
       auto limit_itr = limit_price_idx.lower_bound(price::max(a,b));
       auto limit_end = limit_price_idx.upper_bound(price::min(a,b));
@@ -1489,7 +1489,7 @@ limit_orders_collection_grouped_by_price database_api_impl::get_limit_orders_col
          // if we are adding limit order with new price
          if(helper_itr == helper_map.end())
          {
-            agregated_limit_orders_with_same_price alo;
+            aggregated_limit_orders_with_same_price alo;
             alo.price = price_key;
             alo.base_volume = limit_itr->for_sale.value;
             alo.quote_volume = quote_amount;

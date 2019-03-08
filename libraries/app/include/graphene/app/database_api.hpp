@@ -122,36 +122,35 @@ struct market_trade
    account_id_type            side2_account_id = GRAPHENE_NULL_ACCOUNT;
 };
 
-// agregated limit orders with same price
-struct agregated_limit_orders_with_same_price {
+// aggregated limit orders with same price
+struct aggregated_limit_orders_with_same_price {
    share_type                 price;
    share_type                 base_volume;
    share_type                 quote_volume;
    share_type                 count;
 };
 
-// agregated limit orders grouped by price and devided in two vectros for buy/sell limit orders
+// aggregated limit orders grouped by price and devided in two vectors for buy/sell limit orders
 struct limit_orders_grouped_by_price
 {
-   std::vector<agregated_limit_orders_with_same_price> buy;
-   std::vector<agregated_limit_orders_with_same_price> sell;
+   std::vector<aggregated_limit_orders_with_same_price> buy;
+   std::vector<aggregated_limit_orders_with_same_price> sell;
 };
 
-// agregated limit orders with same price
-struct agregated_limit_orders_with_same_price_collection {
+// aggregated limit orders with same price
+struct aggregated_limit_orders_with_same_price_collection {
    share_type                 price;
    share_type                 base_volume;
    share_type                 quote_volume;
    share_type                 count;
-   std::vector<agregated_limit_orders_with_same_price> limit_orders;
-
+   std::vector<aggregated_limit_orders_with_same_price> limit_orders;
 };
 
-// agregated limit orders grouped by price and devided in two vectros for buy/sell limit orders
+// aggregated limit orders grouped by price and devided in two vectors for buy/sell limit orders
 struct limit_orders_collection_grouped_by_price
 {
-   std::vector<agregated_limit_orders_with_same_price_collection> buy;
-   std::vector<agregated_limit_orders_with_same_price_collection> sell;
+   std::vector<aggregated_limit_orders_with_same_price_collection> buy;
+   std::vector<aggregated_limit_orders_with_same_price_collection> sell;
 };
 
 struct cycle_price
@@ -1040,9 +1039,9 @@ FC_REFLECT( graphene::app::order_book, (base)(quote)(bids)(asks) );
 FC_REFLECT( graphene::app::market_ticker, (time)(base)(quote)(latest)(lowest_ask)(highest_bid)(percent_change)(base_volume)(quote_volume) );
 FC_REFLECT( graphene::app::market_hi_low_volume, (base)(quote)(high)(low)(base_volume)(quote_volume) );
 FC_REFLECT( graphene::app::market_trade, (sequence)(date)(price)(amount)(value) );
-FC_REFLECT( graphene::app::agregated_limit_orders_with_same_price, (price)(base_volume)(quote_volume)(count) );
+FC_REFLECT( graphene::app::aggregated_limit_orders_with_same_price, (price)(base_volume)(quote_volume)(count) );
 FC_REFLECT( graphene::app::limit_orders_grouped_by_price, (buy)(sell) );
-FC_REFLECT( graphene::app::agregated_limit_orders_with_same_price_collection, (price)(base_volume)(quote_volume)(count)(limit_orders) );
+FC_REFLECT( graphene::app::aggregated_limit_orders_with_same_price_collection, (price)(base_volume)(quote_volume)(count)(limit_orders) );
 FC_REFLECT( graphene::app::limit_orders_collection_grouped_by_price, (buy)(sell) );
 FC_REFLECT( graphene::app::cycle_price, (cycle_amount)(asset_amount)(frequency) );
 FC_REFLECT( graphene::app::dasc_holder, (holder)(vaults)(amount) );

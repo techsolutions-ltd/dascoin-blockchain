@@ -90,10 +90,14 @@ namespace graphene { namespace chain {
         {
           auto &index = d.get_index_type<withdrawal_limit_index>().indices().get<by_account_id>();
           for (const auto &i : index) {
-            d.modify(i, [&](withdrawal_limit_object& o){
-              o.beginning_of_withdrawal_interval = d.head_block_time();
-              o.spent = asset{0, o.limit.asset_id};
-            });
+            if (!i.set_explicitly)
+            {
+              d.modify(i, [&](withdrawal_limit_object& o){
+                  o.limit = new_limit.limit;
+                  o.beginning_of_withdrawal_interval = d.head_block_time();
+                  o.spent = asset{0, o.limit.asset_id};
+              });
+            }
           }
         }
       }

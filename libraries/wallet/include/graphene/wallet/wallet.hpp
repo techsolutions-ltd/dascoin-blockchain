@@ -2131,7 +2131,7 @@ class wallet_api
        * @param use_exteranl_btc_price  new value for flag
        * @param broadcast               true to broadcast the transaction on the network.
        */
-      signed_transaction das33_set_use_external_btc_price (const string& authority,
+      signed_transaction das33_set_use_external_btc_price(const string& authority,
                                                            bool use_exteranl_btc_price,
                                                            bool broadcast = false) const;
 
@@ -2141,8 +2141,8 @@ class wallet_api
        * @param use_mnarket_token_price new value for array
        * @param broadcast               true to broadcast the transaction on the network.
        */
-      signed_transaction das33_set_use_market_token_price (const string& authority,
-                                                           vector<asset_id_type> use_mnarket_token_price,
+      signed_transaction das33_set_use_market_token_price(const string& authority,
+                                                           flat_set<asset_id_type> use_mnarket_token_price,
                                                            bool broadcast = false) const;
 
       /**

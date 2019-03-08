@@ -5910,6 +5910,11 @@ optional<cycle_price> wallet_api::calculate_cycle_price(share_type cycle_amount,
     return my->_remote_db->calculate_cycle_price(cycle_amount, asset_id);
 }
 
+optional<withdrawal_limit> wallet_api::get_withdrawal_limit(const string& account_id_or_name, const string& asset_symbol_or_id) const
+{
+    return my->_remote_db->get_withdrawal_limit(get_account(account_id_or_name).id, get_asset_id(asset_symbol_or_id));
+}
+
 acc_id_share_t_res wallet_api::get_dascoin_balance(const string& name_or_id) const
 {
    if( auto real_id = detail::maybe_id<account_id_type>(name_or_id) )

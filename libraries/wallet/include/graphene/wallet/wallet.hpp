@@ -1741,6 +1741,12 @@ class wallet_api
        */
       optional<cycle_price> calculate_cycle_price(share_type cycle_amount, string asset_symbol_or_id) const;
 
+      /** Retrieve withdrawal limit for an account, for an asset
+       * @param account_id_or_name         Account id or name.
+       * @param asset_symbol_or_id         Asset id or asset name.
+       */
+      optional<withdrawal_limit> get_withdrawal_limit(const string& account_id_or_name, const string& asset_symbol_or_id) const;
+
       /**
        * Update various reward queue parameters
        * 
@@ -2559,6 +2565,7 @@ FC_API( graphene::wallet::wallet_api,
         (transfer_cycles_from_licence_to_wallet)
         (purchase_cycle_asset)
         (calculate_cycle_price)
+        (get_withdrawal_limit)
 
         // DasPay:
         (set_daspay_transaction_ratio)

@@ -190,6 +190,14 @@ struct tethered_accounts_balances_collection
    vector<tethered_accounts_balance> details;
 };
 
+struct withdrawal_limit
+{
+   asset limit;
+   asset spent;
+   time_point_sec start_of_withdrawal;
+   time_point_sec last_withdrawal;
+};
+
 /**
  * @brief The database_api class implements the RPC API for the chain database.
  *
@@ -928,6 +936,8 @@ class database_api
        */
       vector<dasc_holder> get_top_dasc_holders() const;
 
+      optional<withdrawal_limit> get_withdrawal_limit(account_id_type account, asset_id_type asset_id) const;
+
       //////////////////////////
       // DASPAY:              //
       //////////////////////////
@@ -1048,6 +1058,7 @@ FC_REFLECT( graphene::app::dasc_holder, (holder)(vaults)(amount) );
 FC_REFLECT( graphene::app::daspay_authority, (payment_provider)(daspay_public_key)(memo) );
 FC_REFLECT( graphene::app::tethered_accounts_balance, (account)(name)(kind)(balance)(reserved) );
 FC_REFLECT( graphene::app::tethered_accounts_balances_collection, (asset_id)(total)(details) );
+FC_REFLECT( graphene::app::withdrawal_limit, (limit)(spent)(start_of_withdrawal)(last_withdrawal) );
 
 FC_API( graphene::app::database_api,
    // Objects
@@ -1190,6 +1201,8 @@ FC_API( graphene::app::database_api,
 
    // Top dascoin holders
    (get_top_dasc_holders)
+
+   (get_withdrawal_limit)
 
    // DasPay
    (get_payment_service_providers)

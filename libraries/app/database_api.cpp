@@ -27,7 +27,7 @@
 
 #include <graphene/chain/access_layer.hpp>
 #include <graphene/chain/das33_evaluator.hpp>
-
+#include <graphene/chain/withdrawal_limit_object.hpp>
 #include <graphene/chain/issued_asset_record_object.hpp>
 
 #include <fc/bloom_filter.hpp>
@@ -195,6 +195,8 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
       optional<cycle_price> calculate_cycle_price(share_type cycle_amount, asset_id_type asset_id) const;
 
       vector<dasc_holder> get_top_dasc_holders() const;
+
+      optional<withdrawal_limit> get_withdrawal_limit(account_id_type account, asset_id_type asset_id) const;
 
       // DasPay:
       vector<payment_service_provider_object> get_payment_service_providers() const;
@@ -2871,6 +2873,46 @@ vector<dasc_holder> database_api_impl::get_top_dasc_holders() const
     });
     vector<dasc_holder> ret(tmp.begin(), tmp.begin() + max_holders);
     return ret;
+}
+
+optional<withdrawal_limit> database_api::get_withdrawal_limit(account_id_type account, asset_id_type asset_id) const
+{
+    return my->get_withdrawal_limit(account, asset_id);
+}
+
+optional<withdrawal_limit> database_api_impl::get_withdrawal_limit(account_id_type account, asset_id_type asset_id) const
+{
+    // Do we have a price for this asset?
+    auto p = _db.get_price_in_web_eur(asset_id);
+    if (!p.valid())
+        return {};
+
+    const auto& idx = _db.get_index_type<account_index>().indices().get<by_id>();
+    auto itr = idx.find(account);
+    if (itr == idx.end() || itr->kind != account_kind::wallet)
+        return {};
+    const auto& idx2 = _db.get_index_type<withdrawal_limit_index>().indices().get<by_account_id>();
+    auto itr2 = idx2.find(account);
+    if (itr2 == idx2.end())
+    {
+        const auto& global_parameters_ext = _db.get_global_properties().parameters.extensions;
+        auto withdrawal_limit_it = std::find_if(global_parameters_ext.begin(), global_parameters_ext.end(),
+                                                [](const chain_parameters::chain_parameters_extension& ext){
+                                                     return ext.which() == chain_parameters::chain_parameters_extension::tag< withdrawal_limit_type >::value;
+                                              });
+        // Is withdrawal limit set?
+        if (withdrawal_limit_it == global_parameters_ext.end())
+            return {};
+
+        auto& limit = (*withdrawal_limit_it).get<withdrawal_limit_type>();
+
+        // Is asset limited?
+        if (limit.limited_assets.find(asset_id) == limit.limited_assets.end())
+            return {};
+
+        return withdrawal_limit{limit.limit * *p, asset{0, asset_id}, _db.head_block_time(), {}};
+    }
+    return withdrawal_limit{itr2->limit * *p, itr2->spent * *p, itr2->beginning_of_withdrawal_interval, itr2->last_withdrawal};
 }
 
 //////////////////////////////////////////////////////////////////////

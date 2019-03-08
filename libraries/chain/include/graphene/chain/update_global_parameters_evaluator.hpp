@@ -36,6 +36,9 @@ namespace graphene { namespace chain {
       void_result do_evaluate(const operation_type& op);
 
       void_result do_apply(const operation_type& op);
+
+    private:
+      void apply_extensions(const operation_type& op);
     };
 
 } }  // namespace graphene::chain

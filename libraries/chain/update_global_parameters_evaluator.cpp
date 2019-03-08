@@ -25,6 +25,7 @@
 #include <fc/smart_ref_impl.hpp>
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/update_global_parameters_evaluator.hpp>
+#include <graphene/chain/withdrawal_limit_object.hpp>
 
 namespace graphene { namespace chain {
 
@@ -48,6 +49,8 @@ namespace graphene { namespace chain {
   { try {
     auto& d = db();
 
+    apply_extensions(op);
+
     d.modify(d.get_global_properties(), [&op](global_property_object& gpo) {
 
       // we have to use temp chain_parameters because we have to preserve old fees (fees can't be updated true this operation)
@@ -60,6 +63,41 @@ namespace graphene { namespace chain {
     });
 
     return {};
+
+  } FC_CAPTURE_AND_RETHROW( (op) ) }
+
+  void update_global_parameters_evaluator::apply_extensions(const operation_type &op)
+  { try {
+    auto& d = db();
+    auto old_ext = d.get_global_properties().parameters.extensions;
+    auto withdrawal_limit_it = std::find_if(old_ext.begin(), old_ext.end(),
+                                            [](const chain_parameters::chain_parameters_extension& ext){
+                                                  return ext.which() == chain_parameters::chain_parameters_extension::tag< withdrawal_limit_type >::value;
+                                           });
+    // Is withdrawal limit set?
+    if (withdrawal_limit_it != old_ext.end())
+    {
+      auto new_limit_it = std::find_if(op.new_parameters.extensions.begin(), op.new_parameters.extensions.end(),
+                                       [](const chain_parameters::chain_parameters_extension& ext){
+                                             return ext.which() == chain_parameters::chain_parameters_extension::tag< withdrawal_limit_type >::value;
+                                      });
+      if (new_limit_it != op.new_parameters.extensions.end())
+      {
+        auto& old_limit = (*withdrawal_limit_it).get<withdrawal_limit_type>();
+        auto& new_limit = (*new_limit_it).get<withdrawal_limit_type>();
+        // Reset all limit objects if new global limit is set
+        if (old_limit.limit != new_limit.limit || old_limit.duration != new_limit.duration)
+        {
+          auto &index = d.get_index_type<withdrawal_limit_index>().indices().get<by_account_id>();
+          for (const auto &i : index) {
+            d.modify(i, [&](withdrawal_limit_object& o){
+              o.beginning_of_withdrawal_interval = d.head_block_time();
+              o.spent = asset{0, o.limit.asset_id};
+            });
+          }
+        }
+      }
+    }
 
   } FC_CAPTURE_AND_RETHROW( (op) ) }
 

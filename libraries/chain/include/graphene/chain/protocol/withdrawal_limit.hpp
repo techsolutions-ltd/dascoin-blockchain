@@ -31,7 +31,7 @@ namespace graphene { namespace chain {
   struct withdrawal_limit_type
   {
     asset limit;
-    fc::time_point_sec duration;
+    uint32_t duration;
     flat_set<asset_id_type> limited_assets;
   };
 

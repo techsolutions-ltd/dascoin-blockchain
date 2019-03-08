@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE( wire_out_with_fee_limit_test )
 
   // Set withdrawal limit to 500 eur, 100 sec revolving
   auto new_params = db.get_global_properties().parameters;
-  new_params.extensions.insert(withdrawal_limit_type{asset{500 * DASCOIN_FIAT_ASSET_PRECISION, asset_id_type{DASCOIN_WEB_ASSET_INDEX}}, fc::time_point_sec{100}, {asset_id_type{DASCOIN_WEB_ASSET_INDEX}}});
+  new_params.extensions.insert(withdrawal_limit_type{asset{500 * DASCOIN_FIAT_ASSET_PRECISION, asset_id_type{DASCOIN_WEB_ASSET_INDEX}}, 100, {asset_id_type{DASCOIN_WEB_ASSET_INDEX}}});
   do_op(update_global_parameters_operation(root_id, new_params));
 
   generate_blocks(HARDFORK_BLC_328_TIME + fc::hours(1));
@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE( wire_out_with_fee_limit_test )
   wire_out_with_fee(wallet_id, web_asset(500 * DASCOIN_FIAT_ASSET_PRECISION), "BTC", "SOME_BTC_ADDRESS", "debit");
 
   new_params.extensions.clear();
-  new_params.extensions.insert(withdrawal_limit_type{asset{500 * DASCOIN_FIAT_ASSET_PRECISION, asset_id_type{DASCOIN_WEB_ASSET_INDEX}}, fc::time_point_sec{100}, {asset_id_type{DASCOIN_DASCOIN_INDEX}}});
+  new_params.extensions.insert(withdrawal_limit_type{asset{500 * DASCOIN_FIAT_ASSET_PRECISION, asset_id_type{DASCOIN_WEB_ASSET_INDEX}}, 100, {asset_id_type{DASCOIN_DASCOIN_INDEX}}});
   do_op(update_global_parameters_operation(root_id, new_params));
 
   // Works since eur is no longer limited:

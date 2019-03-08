@@ -2887,32 +2887,45 @@ optional<withdrawal_limit> database_api_impl::get_withdrawal_limit(account_id_ty
     if (!p.valid())
         return {};
 
+    const auto& global_parameters_ext = _db.get_global_properties().parameters.extensions;
+    auto withdrawal_limit_it = std::find_if(global_parameters_ext.begin(), global_parameters_ext.end(),
+                                            [](const chain_parameters::chain_parameters_extension& ext){
+                                                    return ext.which() == chain_parameters::chain_parameters_extension::tag< withdrawal_limit_type >::value;
+                                            });
+    // Is withdrawal limit set?
+    if (withdrawal_limit_it == global_parameters_ext.end())
+        return {};
+
+    auto& limit = (*withdrawal_limit_it).get<withdrawal_limit_type>();
+
+    // Is asset limited?
+    if (limit.limited_assets.find(asset_id) == limit.limited_assets.end())
+        return {};
+
     const auto& idx = _db.get_index_type<account_index>().indices().get<by_id>();
     auto itr = idx.find(account);
     if (itr == idx.end() || itr->kind != account_kind::wallet)
         return {};
+
     const auto& idx2 = _db.get_index_type<withdrawal_limit_index>().indices().get<by_account_id>();
     auto itr2 = idx2.find(account);
     if (itr2 == idx2.end())
-    {
-        const auto& global_parameters_ext = _db.get_global_properties().parameters.extensions;
-        auto withdrawal_limit_it = std::find_if(global_parameters_ext.begin(), global_parameters_ext.end(),
-                                                [](const chain_parameters::chain_parameters_extension& ext){
-                                                     return ext.which() == chain_parameters::chain_parameters_extension::tag< withdrawal_limit_type >::value;
-                                              });
-        // Is withdrawal limit set?
-        if (withdrawal_limit_it == global_parameters_ext.end())
-            return {};
-
-        auto& limit = (*withdrawal_limit_it).get<withdrawal_limit_type>();
-
-        // Is asset limited?
-        if (limit.limited_assets.find(asset_id) == limit.limited_assets.end())
-            return {};
-
         return withdrawal_limit{limit.limit * *p, asset{0, asset_id}, _db.head_block_time(), {}};
+    
+    bool reset_limit = (_db.head_block_time() - itr2->beginning_of_withdrawal_interval > fc::microseconds(limit.duration * 1000000));
+    asset spent;
+    fc::time_point_sec when;
+    if (reset_limit)
+    {
+        spent = asset{0, asset_id};
+        when = _db.head_block_time();
     }
-    return withdrawal_limit{itr2->limit * *p, itr2->spent * *p, itr2->beginning_of_withdrawal_interval, itr2->last_withdrawal};
+    else
+    {
+        spent = itr2->spent * *p;
+        when = itr2->beginning_of_withdrawal_interval;
+    }
+    return withdrawal_limit{itr2->limit * *p, spent, when, itr2->last_withdrawal};
 }
 
 //////////////////////////////////////////////////////////////////////

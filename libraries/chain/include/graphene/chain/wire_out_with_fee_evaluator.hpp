@@ -42,6 +42,7 @@ namespace graphene { namespace chain {
     const account_balance_object*    from_balance_obj_ = nullptr;
     const withdrawal_limit_object*   withdrawal_limit_obj_ = nullptr;
     const withdrawal_limit_type*     withdrawal_limit_ = nullptr;
+    asset                            spent;
   };
 
   class wire_out_with_fee_complete_evaluator : public evaluator<wire_out_with_fee_complete_evaluator>

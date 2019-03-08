@@ -56,7 +56,7 @@ namespace graphene { namespace chain {
                ("s", d.to_pretty_string(asset(dyn_data_obj.current_supply, op.asset_to_wire.asset_id)))
                ("a", d.to_pretty_string(op.asset_to_wire))
              );
-ilog("!!!withdraw ${a}", ("a", op.asset_to_wire));
+
     // Are withdrawal limits in effect?
     if (d.head_block_time() >= HARDFORK_BLC_328_TIME)
     {
@@ -73,20 +73,22 @@ ilog("!!!withdraw ${a}", ("a", op.asset_to_wire));
         // Account is withdrawing an asset which has a limit?
         if (limit.limited_assets.find(op.asset_to_wire.asset_id) != limit.limited_assets.end())
         {
+          auto p = d.get_price_in_web_eur(op.asset_to_wire.asset_id);
+          FC_ASSERT( p.valid(), "Cannot make a withdrawal because the asset's price is unkown (%{a})", ("a", op.asset_to_wire.asset_id) );
+          spent = op.asset_to_wire * *p;
           auto &index = d.get_index_type<withdrawal_limit_index>().indices().get<by_account_id>();
           auto itr = index.find(op.account);
           if (itr != index.end())
           {
-            ilog("i have limit obj ${o}", ("o", *itr));
             withdrawal_limit_obj_ = &(*itr);
             if (d.head_block_time() - withdrawal_limit_obj_->beginning_of_withdrawal_interval < fc::microseconds(limit.duration.sec_since_epoch() * 1000000))
-              FC_ASSERT( withdrawal_limit_obj_->limit - withdrawal_limit_obj_->spent >= op.asset_to_wire, "Cannot withdraw because of the limit, spent ${s}, amount ${a}", ("s", withdrawal_limit_obj_->spent)("a", op.asset_to_wire) );
+              FC_ASSERT( withdrawal_limit_obj_->limit - withdrawal_limit_obj_->spent >= spent, "Cannot withdraw because of the limit, spent ${s}, amount ${a}", ("s", withdrawal_limit_obj_->spent)("a", spent) );
             else
-              FC_ASSERT( withdrawal_limit_obj_->limit >= op.asset_to_wire, "Cannot withdraw because of the limit ${l}", ("l", withdrawal_limit_obj_->limit) );
-          } else
+              FC_ASSERT( withdrawal_limit_obj_->limit >= spent, "Cannot withdraw because of the limit ${l}", ("l", withdrawal_limit_obj_->limit) );
+          }
+          else
           {
-            ilog("limit ${l} wo ${w}", ("l", limit.limit)("w", op.asset_to_wire));
-            FC_ASSERT( limit.limit >= op.asset_to_wire, "Withdrawal cannot exceed the absolute limit ${l}, amount ${a}", ("l", limit.limit)("a", op.asset_to_wire) ); // fixme: calculate eventual price here
+            FC_ASSERT( limit.limit >= op.asset_to_wire, "Withdrawal cannot exceed the absolute limit ${l}, amount ${a}", ("l", limit.limit)("a", spent) );
           }
         }
       }
@@ -109,20 +111,21 @@ ilog("!!!withdraw ${a}", ("a", op.asset_to_wire));
         d.create<withdrawal_limit_object>([&](withdrawal_limit_object &o){
           o.account = op.account;
           o.beginning_of_withdrawal_interval = o.last_withdrawal = d.head_block_time();
-          o.spent = op.asset_to_wire;
+          o.spent = spent;
           o.limit = withdrawal_limit_->limit;
         });
-      } else
+      }
+      else
       {
         d.modify(*withdrawal_limit_obj_, [&](withdrawal_limit_object& o){
           o.last_withdrawal = d.head_block_time();
           if (d.head_block_time() - o.beginning_of_withdrawal_interval > fc::microseconds(withdrawal_limit_->duration.sec_since_epoch() * 1000000))
           {
             o.beginning_of_withdrawal_interval = d.head_block_time();
-            o.spent = op.asset_to_wire;
+            o.spent = spent;
           } else
           {
-            o.spent += op.asset_to_wire;
+            o.spent += spent;
           }
         });
       }

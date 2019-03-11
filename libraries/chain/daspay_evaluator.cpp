@@ -361,7 +361,7 @@ namespace graphene { namespace chain {
       if (d.head_block_time() >= HARDFORK_FIX_DASPAY_PRICE_TIME)
         _to_credit = asset { tmp.amount * 1000 * DASCOIN_DEFAULT_ASSET_PRECISION / *(sell_prices.begin()), d.get_dascoin_asset_id() };
       else
-        _to_credit = asset { tmp.amount * 1000 * DASCOIN_DEFAULT_ASSET_PRECISION / *(sell_prices.begin()), d.get_dascoin_asset_id() };
+        _to_credit = asset { tmp.amount * DASCOIN_DEFAULT_ASSET_PRECISION / *(sell_prices.begin()), d.get_dascoin_asset_id() };
     }
     else
       _to_credit = tmp * dgpo.last_dascoin_price;

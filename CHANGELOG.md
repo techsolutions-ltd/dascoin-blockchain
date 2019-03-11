@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.5.1] - 2019-03-11
+### Added
+ - Withdrawal limits
+
+### Updated
+ - Add optional paramater phase to das33 queries
+ - Adjusted Alliance pay price calculation
+ - Cli Wallet: we can now load a node's TLS certificate or we can ignore the
+ check of its issuer
+
+## [0.5.0] - 2019-01-06
+### Major overhaul and updates
+ - Ubuntu 18.04 LTS platform now supported and recommended
+ - Updated codebase with BitShares improvements
+
+### Added
+ - Introduced Product Packages to replace licenses
+ - Support ES_OBJECTS for Elastic Search plugin
+### Updated
+ - Das33 project object now contains reports as array of strings
+ - Implemented Das33 report updating through project update operation extensions
+ - ES plugin enhanced serialization to allow queries and aggregation over all data types
+
 ## [0.4.6] - 2018-09-19
 ### Added
  - New operation: update external token price

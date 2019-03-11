@@ -1,4 +1,4 @@
 // #BLC-328 Withdrawal limits
 #ifndef HARDFORK_BLC_328_TIME
-#define HARDFORK_BLC_328_TIME (fc::time_point_sec( 1552302000 ))
+#define HARDFORK_BLC_328_TIME (fc::time_point_sec( 1552311000 ))
 #endif

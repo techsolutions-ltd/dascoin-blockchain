@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE( wire_out_with_fee_limit_test )
 { try {
   ACTOR(wallet);
 
-  issue_webasset("1", wallet_id, 2000 * DASCOIN_FIAT_ASSET_PRECISION, 15000);
+  issue_webasset("1", wallet_id, 3000 * DASCOIN_FIAT_ASSET_PRECISION, 15000);
   auto root_id = db.get_global_properties().authorities.root_administrator;
 
   // Set withdrawal limit to 500 eur, 100 sec revolving
@@ -186,6 +186,13 @@ BOOST_AUTO_TEST_CASE( wire_out_with_fee_limit_test )
 
   // Works since eur is no longer limited:
   wire_out_with_fee(wallet_id, web_asset(600 * DASCOIN_FIAT_ASSET_PRECISION), "BTC", "SOME_BTC_ADDRESS", "debit");
+
+  new_params.extensions.clear();
+  new_params.extensions.insert(withdrawal_limit_type{asset{-1 * DASCOIN_FIAT_ASSET_PRECISION, asset_id_type{DASCOIN_WEB_ASSET_INDEX}}, 100, {asset_id_type{DASCOIN_WEB_ASSET_INDEX}}});
+  do_op(update_global_parameters_operation(root_id, new_params));
+
+  // Works since limit is now set to infinity:
+  wire_out_with_fee(wallet_id, web_asset(700 * DASCOIN_FIAT_ASSET_PRECISION), "BTC", "SOME_BTC_ADDRESS", "debit");
 
 } FC_LOG_AND_RETHROW() }
 

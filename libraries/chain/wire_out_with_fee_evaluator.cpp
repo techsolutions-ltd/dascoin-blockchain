@@ -81,14 +81,18 @@ namespace graphene { namespace chain {
           if (itr != index.end())
           {
             withdrawal_limit_obj_ = &(*itr);
-            if (d.head_block_time() - withdrawal_limit_obj_->beginning_of_withdrawal_interval < fc::microseconds(limit.duration * 1000000))
-              FC_ASSERT( withdrawal_limit_obj_->limit - withdrawal_limit_obj_->spent >= spent, "Cannot withdraw because of the limit, spent ${s}, amount ${a}", ("s", withdrawal_limit_obj_->spent)("a", spent) );
-            else
-              FC_ASSERT( withdrawal_limit_obj_->limit >= spent, "Cannot withdraw because of the limit ${l}", ("l", withdrawal_limit_obj_->limit) );
+            // Treat negative limit as infinite:
+            if (withdrawal_limit_obj_->limit.amount >= 0)
+            {
+              if (d.head_block_time() - withdrawal_limit_obj_->beginning_of_withdrawal_interval < fc::microseconds(limit.duration * 1000000))
+                FC_ASSERT( withdrawal_limit_obj_->limit - withdrawal_limit_obj_->spent >= spent, "Cannot withdraw because of the limit, spent ${s}, amount ${a}", ("s", withdrawal_limit_obj_->spent)("a", spent) );
+              else
+                FC_ASSERT( withdrawal_limit_obj_->limit >= spent, "Cannot withdraw because of the limit ${l}", ("l", withdrawal_limit_obj_->limit) );
+            }
           }
           else
           {
-            FC_ASSERT( limit.limit >= op.asset_to_wire, "Withdrawal cannot exceed the absolute limit ${l}, amount ${a}", ("l", limit.limit)("a", spent) );
+            FC_ASSERT( limit.limit.amount < 0 || limit.limit >= op.asset_to_wire, "Withdrawal cannot exceed the absolute limit ${l}, amount ${a}", ("l", limit.limit)("a", spent) );
           }
         }
       }

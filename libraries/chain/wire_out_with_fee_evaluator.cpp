@@ -141,7 +141,7 @@ namespace graphene { namespace chain {
       from_b.spent += op.asset_to_wire.amount;
     });
     // Contract the supply:
-    d.modify(*asset_dyn_data_, [&]( asset_dynamic_data_object& data){
+    d.modify(*asset_dyn_data_, [&](asset_dynamic_data_object& data){
       data.current_supply -= op.asset_to_wire.amount;
     });
     // Create the holder object and return its ID:
@@ -201,7 +201,7 @@ namespace graphene { namespace chain {
     auto& d = db();
     // Revert to the before state: increase the balance amount.
     d.modify(*balance_obj_, [&](account_balance_object& b){
-     b.balance += holder_->amount;
+      b.balance += holder_->amount;
      // TODO: The spending limit should not be restored, it may become negative!
     });
     // Expand the supply:
@@ -212,6 +212,23 @@ namespace graphene { namespace chain {
                                                           holder_->currency_of_choice, holder_->to_address, holder_->memo, holder_->timestamp});
     // Free the holder object:
     d.remove(*holder_);
+
+    // Are withdrawal limits in effect?
+    if (d.head_block_time() >= HARDFORK_BLC_328_TIME)
+    {
+      auto &index = d.get_index_type<withdrawal_limit_index>().indices().get<by_account_id>();
+      auto itr = index.find(holder_->account);
+      if (itr != index.end())
+      {
+        const auto& limit = *itr;
+        if (limit.spent.amount >= holder_->amount)
+        {
+          d.modify(limit, [&](withdrawal_limit_object& o){
+            o.spent.amount -= holder_->amount;
+          });
+        }
+      }
+    }
 
     return {};
 

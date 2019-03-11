@@ -532,6 +532,8 @@ BOOST_AUTO_TEST_CASE( daspay_clearing_test )
   do_op(create_payment_service_provider_operation(root_id, payment_id, v));
   do_op(register_daspay_authority_operation(foo_id, payment_id, pk, {}));
 
+  generate_blocks(HARDFORK_FIX_DASPAY_PRICE_TIME);
+
   db.adjust_balance_limit(bar, get_dascoin_asset_id(), 1000 * DASCOIN_DEFAULT_ASSET_PRECISION);
   db.adjust_balance_limit(foobar, get_dascoin_asset_id(), 1000 * DASCOIN_DEFAULT_ASSET_PRECISION);
 
@@ -600,7 +602,7 @@ BOOST_AUTO_TEST_CASE( daspay_clearing2_test )
   issue_dascoin(bar_id, 1000);
   issue_dascoin(foobar_id, 500);
 
-  generate_blocks(HARDFORK_BLC_217_TIME);
+  generate_blocks(HARDFORK_FIX_DASPAY_PRICE_TIME);
 
   db.adjust_balance_limit(bar, get_dascoin_asset_id(), 1000 * DASCOIN_DEFAULT_ASSET_PRECISION);
   db.adjust_balance_limit(foobar, get_dascoin_asset_id(), 1000 * DASCOIN_DEFAULT_ASSET_PRECISION);
@@ -662,7 +664,7 @@ BOOST_AUTO_TEST_CASE( daspay_clearing3_test )
   issue_dascoin(bar_id, 1000);
   issue_dascoin(foobar_id, 500);
 
-  generate_blocks(HARDFORK_BLC_217_TIME);
+  generate_blocks(HARDFORK_FIX_DASPAY_PRICE_TIME);
 
   vector<account_id_type> v{clearing_id};
   const auto& root_id = db.get_global_properties().authorities.daspay_administrator;

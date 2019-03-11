@@ -145,6 +145,7 @@ public:
    std::string operator()(const account_create_operation& op);
    std::string operator()(const account_update_operation& op);
    std::string operator()(const asset_create_operation& op);
+   std::string operator()(const daspay_debit_account_operation& op);
 
    asset_object get_asset(asset_id_type id);
    account_object get_account(account_id_type id);
@@ -3099,8 +3100,7 @@ public:
          return ss.str();
       };
 
-      m["get_account_history_by_operation"] = //m["get_account_history"];
-      [this](variant result, const fc::variants& a)
+      m["get_account_history_by_operation"] = [this](variant result, const fc::variants& a)
       {
          auto r = result.as<vector<operation_detail>>( GRAPHENE_MAX_NESTED_OBJECTS );
          std::stringstream ss;
@@ -4036,6 +4036,21 @@ std::string operation_printer::operator()(const asset_create_operation& op)
       out << "User-Issue Asset ";
    out << "'" << op.symbol << "' with issuer " << get_account(op.issuer).name;
    return fee(op.fee);
+}
+
+std::string operation_printer::operator()(const daspay_debit_account_operation& op)
+{
+   auto a = get_asset( op.debit_amount.asset_id );
+   auto payer = get_account( op.fee_payer() );
+
+   out << "Daspay debit " << payer.name << " (" << std::string(payer.id) << ") for " << a.amount_to_pretty_string(op.debit_amount);
+   operation_result_printer rprinter(this);
+   std::string str_result = result.visit(rprinter);
+   if( str_result != "" )
+   {
+      out << " charged: " << str_result;
+   }
+   return "";
 }
 
 std::string operation_result_printer::operator()(const void_result& x) const

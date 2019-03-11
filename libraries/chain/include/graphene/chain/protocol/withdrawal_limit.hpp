@@ -23,22 +23,22 @@
  */
 
 #pragma once
-
-#include <graphene/chain/wire_object.hpp>
-#include <graphene/chain/evaluator.hpp>
+#include <fc/time.hpp>
+#include <graphene/chain/protocol/asset.hpp>
 
 namespace graphene { namespace chain {
 
-    class update_global_parameters_evaluator : public evaluator<update_global_parameters_evaluator> {
-    public:
-      typedef update_global_parameters_operation operation_type;
-
-      void_result do_evaluate(const operation_type& op);
-
-      void_result do_apply(const operation_type& op);
-
-    private:
-      void apply_extensions(const operation_type& op);
-    };
+  struct withdrawal_limit_type
+  {
+    asset limit;
+    uint32_t duration;
+    flat_set<asset_id_type> limited_assets;
+  };
 
 } }  // namespace graphene::chain
+
+FC_REFLECT( graphene::chain::withdrawal_limit_type,
+            (limit)
+            (duration)
+            (limited_assets)
+          )

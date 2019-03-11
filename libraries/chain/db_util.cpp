@@ -27,6 +27,7 @@
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/license_evaluator.hpp>
 #include <graphene/chain/queue_objects.hpp>
+#include <graphene/chain/market_object.hpp>
 
 namespace graphene { namespace chain {
 
@@ -93,6 +94,41 @@ share_type database::get_total_dascoin_amount_in_system() const
     return get_dynamic_global_properties().total_dascoin_minted;
 
   return queue.rbegin()->historic_sum;
+}
+
+optional<price> database::get_price_in_web_eur(const asset_id_type asset_id) const
+{
+    if (asset_id == get_dascoin_asset_id())
+    {
+        return get_dynamic_global_properties().last_dascoin_price;
+    }
+
+    if (asset_id == get_web_asset_id())
+    {
+        return price{asset{1, get_web_asset_id()}, asset{1, get_web_asset_id()}};
+    }
+
+    const auto& use_market_price_for_token = get_global_properties().use_market_price_for_token;
+    if (std::find(use_market_price_for_token.begin(), use_market_price_for_token.end(), asset_id) != use_market_price_for_token.end())
+    {
+      const auto& market_idx = get_index_type<last_price_index>().indices().get<by_market_key>();
+      auto market_itr = market_idx.find(market_key{asset_id, get_web_asset_id()});
+      if (market_itr != market_idx.end())
+      {
+        return market_itr->last_price;
+      }
+    }
+    else
+    {
+      const auto& external_idx = get_index_type<external_price_index>().indices().get<by_market_key>();
+      auto external_itr = external_idx.find(market_key{asset_id, get_web_asset_id()});
+      if (external_itr != external_idx.end())
+      {
+        return external_itr->external_price;
+      }
+    }
+
+    return {};
 }
 
 } }  // namespace graphene::chain

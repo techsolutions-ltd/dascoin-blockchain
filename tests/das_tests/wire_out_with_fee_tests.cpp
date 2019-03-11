@@ -25,6 +25,7 @@
 #include <boost/test/unit_test.hpp>
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/wire_out_with_fee_object.hpp>
+#include <graphene/chain/withdrawal_limit_object.hpp>
 #include "../common/database_fixture.hpp"
 
 using namespace graphene::chain;
@@ -145,6 +146,92 @@ BOOST_AUTO_TEST_CASE( wire_out_with_fee_web_asset_history_test )
   // Wire out result should be on top:
   op = history[0].op.get<wire_out_with_fee_result_operation>();
   BOOST_CHECK ( op.completed );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( wire_out_with_fee_limit_test )
+{ try {
+  ACTOR(wallet);
+
+  issue_webasset("1", wallet_id, 3000 * DASCOIN_FIAT_ASSET_PRECISION, 15000);
+  auto root_id = db.get_global_properties().authorities.root_administrator;
+
+  // Set withdrawal limit to 500 eur, 100 sec revolving
+  auto new_params = db.get_global_properties().parameters;
+  new_params.extensions.insert(withdrawal_limit_type{asset{500 * DASCOIN_FIAT_ASSET_PRECISION, asset_id_type{DASCOIN_WEB_ASSET_INDEX}}, 100, {asset_id_type{DASCOIN_WEB_ASSET_INDEX}}});
+  do_op(update_global_parameters_operation(root_id, new_params));
+
+  generate_blocks(HARDFORK_BLC_328_TIME + fc::hours(1));
+
+  // Ought to fail, exceeds the absolute limit:
+  GRAPHENE_REQUIRE_THROW( wire_out_with_fee(wallet_id, web_asset(600 * DASCOIN_FIAT_ASSET_PRECISION), "BTC", "SOME_BTC_ADDRESS", "debit"), fc::exception );
+
+  wire_out_with_fee(wallet_id, web_asset(200 * DASCOIN_FIAT_ASSET_PRECISION), "BTC", "SOME_BTC_ADDRESS", "debit");
+
+  // Fails since limit has been exceeded:
+  GRAPHENE_REQUIRE_THROW( wire_out_with_fee(wallet_id, web_asset(400 * DASCOIN_FIAT_ASSET_PRECISION), "BTC", "SOME_BTC_ADDRESS", "debit"), fc::exception );
+
+  generate_blocks(200);
+  wire_out_with_fee(wallet_id, web_asset(400 * DASCOIN_FIAT_ASSET_PRECISION), "BTC", "SOME_BTC_ADDRESS", "debit");
+
+  // Fails since time limit has been exceeded:
+  GRAPHENE_REQUIRE_THROW( wire_out_with_fee(wallet_id, web_asset(200 * DASCOIN_FIAT_ASSET_PRECISION), "BTC", "SOME_BTC_ADDRESS", "debit"), fc::exception );
+
+  generate_blocks(200);
+  // Works since the limit has been reset:
+  wire_out_with_fee(wallet_id, web_asset(500 * DASCOIN_FIAT_ASSET_PRECISION), "BTC", "SOME_BTC_ADDRESS", "debit");
+
+  new_params.extensions.clear();
+  new_params.extensions.insert(withdrawal_limit_type{asset{500 * DASCOIN_FIAT_ASSET_PRECISION, asset_id_type{DASCOIN_WEB_ASSET_INDEX}}, 100, {asset_id_type{DASCOIN_DASCOIN_INDEX}}});
+  do_op(update_global_parameters_operation(root_id, new_params));
+
+  // Works since eur is no longer limited:
+  wire_out_with_fee(wallet_id, web_asset(600 * DASCOIN_FIAT_ASSET_PRECISION), "BTC", "SOME_BTC_ADDRESS", "debit");
+
+  new_params.extensions.clear();
+  new_params.extensions.insert(withdrawal_limit_type{asset{-1 * DASCOIN_FIAT_ASSET_PRECISION, asset_id_type{DASCOIN_WEB_ASSET_INDEX}}, 100, {asset_id_type{DASCOIN_WEB_ASSET_INDEX}}});
+  do_op(update_global_parameters_operation(root_id, new_params));
+
+  // Works since limit is now set to infinity:
+  wire_out_with_fee(wallet_id, web_asset(700 * DASCOIN_FIAT_ASSET_PRECISION), "BTC", "SOME_BTC_ADDRESS", "debit");
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( wire_out_with_fee_limit_and_reject_test )
+{ try {
+  ACTOR(wallet);
+
+  issue_webasset("1", wallet_id, 3000 * DASCOIN_FIAT_ASSET_PRECISION, 15000);
+  auto root_id = db.get_global_properties().authorities.root_administrator;
+
+  // Set withdrawal limit to 500 eur, 100 sec revolving
+  auto new_params = db.get_global_properties().parameters;
+  new_params.extensions.insert(withdrawal_limit_type{asset{500 * DASCOIN_FIAT_ASSET_PRECISION, asset_id_type{DASCOIN_WEB_ASSET_INDEX}}, 100, {asset_id_type{DASCOIN_WEB_ASSET_INDEX}}});
+  do_op(update_global_parameters_operation(root_id, new_params));
+
+  generate_blocks(HARDFORK_BLC_328_TIME + fc::hours(1));
+
+  // Works since amount is less than the limit:
+  wire_out_with_fee(wallet_id, web_asset(400 * DASCOIN_FIAT_ASSET_PRECISION), "BTC", "SOME_BTC_ADDRESS", "debit");
+
+  const auto& idx = db.get_index_type<withdrawal_limit_index>().indices().get<by_account_id>();
+  auto itr = idx.find(wallet_id);
+  BOOST_CHECK( itr != idx.end() );
+  BOOST_CHECK_EQUAL( itr->spent.amount.value, 400 * DASCOIN_FIAT_ASSET_PRECISION );
+
+  // Fails because of the limit:
+  GRAPHENE_REQUIRE_THROW( wire_out_with_fee(wallet_id, web_asset(200 * DASCOIN_FIAT_ASSET_PRECISION), "BTC", "SOME_BTC_ADDRESS", "debit"), fc::exception );
+
+  // Reject wire out now:
+  auto holders = get_wire_out_with_fee_holders(wallet_id, {get_web_asset_id()});
+  wire_out_with_fee_reject(holders[0].id);
+
+  wire_out_with_fee(wallet_id, web_asset(200 * DASCOIN_FIAT_ASSET_PRECISION), "BTC", "SOME_BTC_ADDRESS", "debit");
+  itr = idx.find(wallet_id);
+  BOOST_CHECK( itr != idx.end() );
+
+  // Spent has been reset to 0 and is 200 now:
+  BOOST_CHECK_EQUAL( itr->spent.amount.value, 200 * DASCOIN_FIAT_ASSET_PRECISION );
 
 } FC_LOG_AND_RETHROW() }
 

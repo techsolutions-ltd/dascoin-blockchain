@@ -122,36 +122,35 @@ struct market_trade
    account_id_type            side2_account_id = GRAPHENE_NULL_ACCOUNT;
 };
 
-// agregated limit orders with same price
-struct agregated_limit_orders_with_same_price {
+// aggregated limit orders with same price
+struct aggregated_limit_orders_with_same_price {
    share_type                 price;
    share_type                 base_volume;
    share_type                 quote_volume;
    share_type                 count;
 };
 
-// agregated limit orders grouped by price and devided in two vectros for buy/sell limit orders
+// aggregated limit orders grouped by price and devided in two vectors for buy/sell limit orders
 struct limit_orders_grouped_by_price
 {
-   std::vector<agregated_limit_orders_with_same_price> buy;
-   std::vector<agregated_limit_orders_with_same_price> sell;
+   std::vector<aggregated_limit_orders_with_same_price> buy;
+   std::vector<aggregated_limit_orders_with_same_price> sell;
 };
 
-// agregated limit orders with same price
-struct agregated_limit_orders_with_same_price_collection {
+// aggregated limit orders with same price
+struct aggregated_limit_orders_with_same_price_collection {
    share_type                 price;
    share_type                 base_volume;
    share_type                 quote_volume;
    share_type                 count;
-   std::vector<agregated_limit_orders_with_same_price> limit_orders;
-
+   std::vector<aggregated_limit_orders_with_same_price> limit_orders;
 };
 
-// agregated limit orders grouped by price and devided in two vectros for buy/sell limit orders
+// aggregated limit orders grouped by price and devided in two vectors for buy/sell limit orders
 struct limit_orders_collection_grouped_by_price
 {
-   std::vector<agregated_limit_orders_with_same_price_collection> buy;
-   std::vector<agregated_limit_orders_with_same_price_collection> sell;
+   std::vector<aggregated_limit_orders_with_same_price_collection> buy;
+   std::vector<aggregated_limit_orders_with_same_price_collection> sell;
 };
 
 struct cycle_price
@@ -189,6 +188,14 @@ struct tethered_accounts_balances_collection
    share_type                 total;
    asset_id_type              asset_id;
    vector<tethered_accounts_balance> details;
+};
+
+struct withdrawal_limit
+{
+   asset limit;
+   asset spent;
+   time_point_sec start_of_withdrawal;
+   time_point_sec last_withdrawal;
 };
 
 /**
@@ -929,6 +936,8 @@ class database_api
        */
       vector<dasc_holder> get_top_dasc_holders() const;
 
+      optional<withdrawal_limit> get_withdrawal_limit(account_id_type account, asset_id_type asset_id) const;
+
       //////////////////////////
       // DASPAY:              //
       //////////////////////////
@@ -1040,15 +1049,16 @@ FC_REFLECT( graphene::app::order_book, (base)(quote)(bids)(asks) );
 FC_REFLECT( graphene::app::market_ticker, (time)(base)(quote)(latest)(lowest_ask)(highest_bid)(percent_change)(base_volume)(quote_volume) );
 FC_REFLECT( graphene::app::market_hi_low_volume, (base)(quote)(high)(low)(base_volume)(quote_volume) );
 FC_REFLECT( graphene::app::market_trade, (sequence)(date)(price)(amount)(value) );
-FC_REFLECT( graphene::app::agregated_limit_orders_with_same_price, (price)(base_volume)(quote_volume)(count) );
+FC_REFLECT( graphene::app::aggregated_limit_orders_with_same_price, (price)(base_volume)(quote_volume)(count) );
 FC_REFLECT( graphene::app::limit_orders_grouped_by_price, (buy)(sell) );
-FC_REFLECT( graphene::app::agregated_limit_orders_with_same_price_collection, (price)(base_volume)(quote_volume)(count)(limit_orders) );
+FC_REFLECT( graphene::app::aggregated_limit_orders_with_same_price_collection, (price)(base_volume)(quote_volume)(count)(limit_orders) );
 FC_REFLECT( graphene::app::limit_orders_collection_grouped_by_price, (buy)(sell) );
 FC_REFLECT( graphene::app::cycle_price, (cycle_amount)(asset_amount)(frequency) );
 FC_REFLECT( graphene::app::dasc_holder, (holder)(vaults)(amount) );
 FC_REFLECT( graphene::app::daspay_authority, (payment_provider)(daspay_public_key)(memo) );
 FC_REFLECT( graphene::app::tethered_accounts_balance, (account)(name)(kind)(balance)(reserved) );
 FC_REFLECT( graphene::app::tethered_accounts_balances_collection, (asset_id)(total)(details) );
+FC_REFLECT( graphene::app::withdrawal_limit, (limit)(spent)(start_of_withdrawal)(last_withdrawal) );
 
 FC_API( graphene::app::database_api,
    // Objects
@@ -1191,6 +1201,8 @@ FC_API( graphene::app::database_api,
 
    // Top dascoin holders
    (get_top_dasc_holders)
+
+   (get_withdrawal_limit)
 
    // DasPay
    (get_payment_service_providers)

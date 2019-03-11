@@ -295,7 +295,8 @@ namespace graphene { namespace chain {
       impl_payment_service_provider_object_type,
       impl_das33_project_object_type,
       impl_das33_pledge_holder_object_type,
-      impl_delayed_operation_object_type
+      impl_delayed_operation_object_type,
+      impl_withdrawal_limit_object_type
    };
 
    //typedef fc::unsigned_int            object_id_type;
@@ -366,6 +367,7 @@ namespace graphene { namespace chain {
    class das33_project_object;
    class das33_pledge_holder_object;
    class delayed_operation_object;
+   class withdrawal_limit_object;
 
    typedef object_id< implementation_ids, impl_global_property_object_type,  global_property_object>                    global_property_id_type;
    typedef object_id< implementation_ids, impl_dynamic_global_property_object_type,  dynamic_global_property_object>    dynamic_global_property_id_type;
@@ -442,6 +444,10 @@ namespace graphene { namespace chain {
    typedef object_id<
          implementation_ids, impl_das33_pledge_holder_object_type, das33_pledge_holder_object
       > das33_pledge_holder_id_type;
+
+   typedef object_id<
+         implementation_ids, impl_withdrawal_limit_object_type, withdrawal_limit_object
+      > withdrawal_limit_id_type;
 
    typedef fc::array<char, GRAPHENE_MAX_ASSET_SYMBOL_LENGTH>    symbol_type;
    typedef fc::ripemd160                                        block_id_type;
@@ -651,6 +657,7 @@ FC_REFLECT_ENUM( graphene::chain::impl_object_type,
                  (impl_das33_project_object_type)
                  (impl_das33_pledge_holder_object_type)
                  (impl_delayed_operation_object_type)
+                 (impl_withdrawal_limit_object_type)
                )
 
 FC_REFLECT_TYPENAME( graphene::chain::share_type )
@@ -699,6 +706,7 @@ FC_REFLECT_TYPENAME( graphene::chain::daspay_authority_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::das33_project_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::das33_pledge_holder_id_type )
 FC_REFLECT_TYPENAME( graphene::chain::delayed_operation_id_type )
+FC_REFLECT_TYPENAME( graphene::chain::withdrawal_limit_id_type )
 
 FC_REFLECT( graphene::chain::void_t, )
 

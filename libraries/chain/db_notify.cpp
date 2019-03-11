@@ -5,6 +5,7 @@
 #include <graphene/chain/protocol/transaction.hpp>
 #include <graphene/chain/protocol/types.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
+#include <graphene/chain/withdrawal_limit_object.hpp>
 #include <graphene/chain/worker_object.hpp>
 #include <graphene/chain/confidential_object.hpp>
 #include <graphene/chain/market_object.hpp>
@@ -672,9 +673,9 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
             } case upgrade_event_object_type:{
                break;
             } case last_price_object_type:{
-              break;
+               break;
             } case external_price_object_type:{
-              break;
+               break;
             }
          }
       }
@@ -731,7 +732,12 @@ void get_relevant_accounts( const object* obj, flat_set<account_id_type>& accoun
                accounts.insert( iaro->issuer );
                accounts.insert( iaro->receiver );
                break;
-            } case impl_block_summary_object_type:
+             } case impl_withdrawal_limit_object_type:{
+                const auto& aobj = dynamic_cast<const withdrawal_limit_object*>(obj);
+                assert( aobj != nullptr );
+                accounts.insert( aobj->account );
+                break;
+             } case impl_block_summary_object_type:
                break;
             case impl_account_transaction_history_object_type:
                break;

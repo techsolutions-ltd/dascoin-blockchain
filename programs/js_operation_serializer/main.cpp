@@ -25,6 +25,7 @@
 #include <graphene/chain/protocol/chain_parameters.hpp>
 #include <graphene/chain/protocol/fee_schedule.hpp>
 #include <graphene/chain/protocol/das33_operations.hpp>
+#include <graphene/chain/protocol/withdrawal_limit.hpp>
 #include <graphene/chain/account_object.hpp>
 #include <graphene/chain/asset_object.hpp>
 #include <graphene/chain/balance_object.hpp>
@@ -409,6 +410,7 @@ int main( int argc, char** argv )
     detail_ns::serializer<operation>::init();
     detail_ns::serializer<transaction>::init();
     detail_ns::serializer<signed_transaction>::init();
+    detail_ns::serializer<withdrawal_limit_type>::init();
     for( const auto& gen : detail_ns::serializers )
        gen();
 

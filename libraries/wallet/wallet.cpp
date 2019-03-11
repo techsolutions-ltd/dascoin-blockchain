@@ -1571,9 +1571,9 @@ public:
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (authority)(project_id)(phase_number)(to_escrow)(base_to_pledger)(bonus_to_pledger)(broadcast) ) }
 
-   signed_transaction das33_set_use_external_btc_price (const string& authority,
-                                                        bool use_exteranl_btc_price,
-                                                        bool broadcast = false)
+   signed_transaction das33_set_use_external_btc_price(const string& authority,
+                                                       bool use_exteranl_btc_price,
+                                                       bool broadcast = false)
    { try {
       FC_ASSERT( !self.is_locked() );
 
@@ -1590,9 +1590,9 @@ public:
       return sign_transaction(tx, broadcast);
    } FC_CAPTURE_AND_RETHROW( (authority)(use_exteranl_btc_price)(broadcast) ) }
 
-   signed_transaction das33_set_use_market_token_price (const string& authority,
-                                                        vector<asset_id_type> use_market_price_for_token,
-                                                        bool broadcast = false)
+   signed_transaction das33_set_use_market_token_price(const string& authority,
+                                                       flat_set<asset_id_type> use_market_price_for_token,
+                                                       bool broadcast = false)
    { try {
        FC_ASSERT( !self.is_locked() );
 
@@ -5910,6 +5910,11 @@ optional<cycle_price> wallet_api::calculate_cycle_price(share_type cycle_amount,
     return my->_remote_db->calculate_cycle_price(cycle_amount, asset_id);
 }
 
+optional<withdrawal_limit> wallet_api::get_withdrawal_limit(const string& account_id_or_name, const string& asset_symbol_or_id) const
+{
+    return my->_remote_db->get_withdrawal_limit(get_account(account_id_or_name).id, get_asset_id(asset_symbol_or_id));
+}
+
 acc_id_share_t_res wallet_api::get_dascoin_balance(const string& name_or_id) const
 {
    if( auto real_id = detail::maybe_id<account_id_type>(name_or_id) )
@@ -6141,16 +6146,16 @@ signed_transaction wallet_api::das33_distribute_project_pledges(const string& au
    return my->das33_distribute_project_pledges(authority, project_id, phase_number, to_escrow, base_to_pledger, bonus_to_pledger, broadcast);
 }
 
-signed_transaction wallet_api::das33_set_use_external_btc_price (const string& authority,
-                                                                 bool use_exteranl_btc_price,
-                                                                 bool broadcast) const
+signed_transaction wallet_api::das33_set_use_external_btc_price(const string& authority,
+                                                                bool use_exteranl_btc_price,
+                                                                bool broadcast) const
 {
   return my->das33_set_use_external_btc_price(authority, use_exteranl_btc_price, broadcast);
 }
 
-signed_transaction wallet_api::das33_set_use_market_token_price (const string& authority,
-                                                     vector<asset_id_type> use_market_price_for_token,
-                                                     bool broadcast) const
+signed_transaction wallet_api::das33_set_use_market_token_price(const string& authority,
+                                                                flat_set<asset_id_type> use_market_price_for_token,
+                                                                bool broadcast) const
 {
   return my->das33_set_use_market_token_price(authority, use_market_price_for_token, broadcast);
 }

@@ -50,6 +50,7 @@
 #include <graphene/chain/wire_object.hpp>
 #include <graphene/chain/wire_out_with_fee_object.hpp>
 #include <graphene/chain/withdraw_permission_object.hpp>
+#include <graphene/chain/withdrawal_limit_object.hpp>
 #include <graphene/chain/witness_object.hpp>
 #include <graphene/chain/witness_schedule_object.hpp>
 #include <graphene/chain/worker_object.hpp>
@@ -178,6 +179,9 @@ const uint8_t frequency_history_record_object::type_id;
 
 const uint8_t upgrade_event_object::space_id;
 const uint8_t upgrade_event_object::type_id;
+
+const uint8_t withdrawal_limit_object::space_id;
+const uint8_t withdrawal_limit_object::type_id;
 
 void database::initialize_genesis_transaction_state()
 {
@@ -364,6 +368,7 @@ void database::initialize_indexes()
    add_index<primary_index<das33_project_index>>();
    add_index<primary_index<das33_pledge_holder_index>>();
    add_index<primary_index<delayed_operations_index>>();
+   add_index<primary_index<withdrawal_limit_index>>();
 }
 
 account_id_type database::initialize_chain_authority(const string& kind_name, const string& acc_name)

@@ -1741,6 +1741,12 @@ class wallet_api
        */
       optional<cycle_price> calculate_cycle_price(share_type cycle_amount, string asset_symbol_or_id) const;
 
+      /** Retrieve withdrawal limit for an account, for an asset
+       * @param account_id_or_name         Account id or name.
+       * @param asset_symbol_or_id         Asset id or asset name.
+       */
+      optional<withdrawal_limit> get_withdrawal_limit(const string& account_id_or_name, const string& asset_symbol_or_id) const;
+
       /**
        * Update various reward queue parameters
        * 
@@ -2131,7 +2137,7 @@ class wallet_api
        * @param use_exteranl_btc_price  new value for flag
        * @param broadcast               true to broadcast the transaction on the network.
        */
-      signed_transaction das33_set_use_external_btc_price (const string& authority,
+      signed_transaction das33_set_use_external_btc_price(const string& authority,
                                                            bool use_exteranl_btc_price,
                                                            bool broadcast = false) const;
 
@@ -2141,8 +2147,8 @@ class wallet_api
        * @param use_mnarket_token_price new value for array
        * @param broadcast               true to broadcast the transaction on the network.
        */
-      signed_transaction das33_set_use_market_token_price (const string& authority,
-                                                           vector<asset_id_type> use_mnarket_token_price,
+      signed_transaction das33_set_use_market_token_price(const string& authority,
+                                                           flat_set<asset_id_type> use_mnarket_token_price,
                                                            bool broadcast = false) const;
 
       /**
@@ -2150,9 +2156,10 @@ class wallet_api
        *
        * @param from            id of the pledge
        * @param limit           the number of entries to return (starting from the most recent) (max 100)
+       * @param phase           optional - get only pledges from this phase
        * @returns               a list of pledge holder objects.
        */
-      vector<das33_pledge_holder_object> get_das33_pledges(das33_pledge_holder_id_type from, uint32_t limit) const;
+      vector<das33_pledge_holder_object> get_das33_pledges(das33_pledge_holder_id_type from, uint32_t limit, optional<uint32_t> phase = NULL) const;
 
       /**
        * @brief Return a list of pledges for specified account.
@@ -2168,9 +2175,10 @@ class wallet_api
        * @param project         name or id of das33 project
        * @param from            id of the first pledge
        * @param limit           the number of entries to return (starting from the most recent) (max 100)
+       * @param phase           optional - get only pledges from this phase
        * @returns               a list of pledge holder objects.
        */
-      vector<das33_pledge_holder_object> get_das33_pledges_by_project(const string& project, das33_pledge_holder_id_type from, uint32_t limit) const;
+      vector<das33_pledge_holder_object> get_das33_pledges_by_project(const string& project, das33_pledge_holder_id_type from, uint32_t limit, optional<uint32_t> phase = NULL) const;
 
       /**
       * @brief Gets a sum of all pledges made to project
@@ -2554,9 +2562,11 @@ FC_API( graphene::wallet::wallet_api,
         (get_order_book)
         (update_queue_parameters)
         (wire_out)
+        (wire_out_with_fee)
         (transfer_cycles_from_licence_to_wallet)
         (purchase_cycle_asset)
         (calculate_cycle_price)
+        (get_withdrawal_limit)
 
         // DasPay:
         (set_daspay_transaction_ratio)
@@ -2609,6 +2619,8 @@ FC_API( graphene::wallet::wallet_api,
         // Requests:
         (get_all_webasset_issue_requests)
         (get_all_wire_out_holders)
+        (get_all_wire_out_with_fee_holders)
+
         // Queue:
         (get_reward_queue)
         (get_reward_queue_by_page)

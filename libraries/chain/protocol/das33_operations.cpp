@@ -106,8 +106,10 @@ namespace graphene { namespace chain {
   void das33_pledge_result_operation::validate() const
   {  }
 
-  void das33_set_use_external_btc_price_operation::validate() const
-  {  }
+  [[ noreturn ]] void das33_set_use_external_btc_price_operation::validate() const
+  {
+    FC_ASSERT( false, "This operation is deprecated!");
+  }
 
   void das33_set_use_market_price_for_token_operation::validate() const
   {  }

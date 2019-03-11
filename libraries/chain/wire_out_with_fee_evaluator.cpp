@@ -25,6 +25,7 @@
 #include <graphene/chain/asset_object.hpp>
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/wire_out_with_fee_evaluator.hpp>
+#include <graphene/chain/withdrawal_limit_object.hpp>
 
 namespace graphene { namespace chain {
 
@@ -56,6 +57,47 @@ namespace graphene { namespace chain {
                ("a", d.to_pretty_string(op.asset_to_wire))
              );
 
+    // Are withdrawal limits in effect?
+    if (d.head_block_time() >= HARDFORK_BLC_328_TIME)
+    {
+      const auto& global_parameters_ext = d.get_global_properties().parameters.extensions;
+      auto withdrawal_limit_it = std::find_if(global_parameters_ext.begin(), global_parameters_ext.end(),
+                                              [](const chain_parameters::chain_parameters_extension& ext){
+                                                   return ext.which() == chain_parameters::chain_parameters_extension::tag< withdrawal_limit_type >::value;
+                                            });
+      // Is withdrawal limit set?
+      if (withdrawal_limit_it != global_parameters_ext.end())
+      {
+        auto& limit = (*withdrawal_limit_it).get<withdrawal_limit_type>();
+        withdrawal_limit_ = &limit;
+        // Account is withdrawing an asset which has a limit?
+        if (limit.limited_assets.find(op.asset_to_wire.asset_id) != limit.limited_assets.end())
+        {
+          auto p = d.get_price_in_web_eur(op.asset_to_wire.asset_id);
+          FC_ASSERT( p.valid(), "Cannot make a withdrawal because the asset's price is unkown (%{a})", ("a", op.asset_to_wire.asset_id) );
+          spent = op.asset_to_wire * *p;
+          auto &index = d.get_index_type<withdrawal_limit_index>().indices().get<by_account_id>();
+          auto itr = index.find(op.account);
+          if (itr != index.end())
+          {
+            withdrawal_limit_obj_ = &(*itr);
+            // Treat negative limit as infinite:
+            if (withdrawal_limit_obj_->limit.amount >= 0)
+            {
+              if (d.head_block_time() - withdrawal_limit_obj_->beginning_of_withdrawal_interval < fc::microseconds(limit.duration * 1000000))
+                FC_ASSERT( withdrawal_limit_obj_->limit - withdrawal_limit_obj_->spent >= spent, "Cannot withdraw because of the limit, spent ${s}, amount ${a}", ("s", withdrawal_limit_obj_->spent)("a", spent) );
+              else
+                FC_ASSERT( withdrawal_limit_obj_->limit >= spent, "Cannot withdraw because of the limit ${l}", ("l", withdrawal_limit_obj_->limit) );
+            }
+          }
+          else
+          {
+            FC_ASSERT( limit.limit.amount < 0 || limit.limit >= op.asset_to_wire, "Withdrawal cannot exceed the absolute limit ${l}, amount ${a}", ("l", limit.limit)("a", spent) );
+          }
+        }
+      }
+    }
+
     from_balance_obj_ = &from_balance_obj;
     asset_dyn_data_ = &dyn_data_obj;
     return {};
@@ -65,13 +107,41 @@ namespace graphene { namespace chain {
   object_id_type wire_out_with_fee_evaluator::do_apply(const wire_out_with_fee_operation& op)
   { try {
     auto& d = db();
+
+    if (d.head_block_time() >= HARDFORK_BLC_328_TIME)
+    {
+      if (!withdrawal_limit_obj_)
+      {
+        d.create<withdrawal_limit_object>([&](withdrawal_limit_object &o){
+          o.account = op.account;
+          o.beginning_of_withdrawal_interval = o.last_withdrawal = d.head_block_time();
+          o.spent = spent;
+          o.limit = withdrawal_limit_->limit;
+        });
+      }
+      else
+      {
+        d.modify(*withdrawal_limit_obj_, [&](withdrawal_limit_object& o){
+          o.last_withdrawal = d.head_block_time();
+          if (d.head_block_time() - o.beginning_of_withdrawal_interval > fc::microseconds(withdrawal_limit_->duration * 1000000))
+          {
+            o.beginning_of_withdrawal_interval = d.head_block_time();
+            o.spent = spent;
+          } else
+          {
+            o.spent += spent;
+          }
+        });
+      }
+    }
+
     // Adjust the balance and spent amount:
     d.modify(*from_balance_obj_, [&](account_balance_object& from_b){
-     from_b.balance -= op.asset_to_wire.amount;
-     from_b.spent += op.asset_to_wire.amount;
+      from_b.balance -= op.asset_to_wire.amount;
+      from_b.spent += op.asset_to_wire.amount;
     });
     // Contract the supply:
-    d.modify(*asset_dyn_data_, [&]( asset_dynamic_data_object& data){
+    d.modify(*asset_dyn_data_, [&](asset_dynamic_data_object& data){
       data.current_supply -= op.asset_to_wire.amount;
     });
     // Create the holder object and return its ID:
@@ -131,7 +201,7 @@ namespace graphene { namespace chain {
     auto& d = db();
     // Revert to the before state: increase the balance amount.
     d.modify(*balance_obj_, [&](account_balance_object& b){
-     b.balance += holder_->amount;
+      b.balance += holder_->amount;
      // TODO: The spending limit should not be restored, it may become negative!
     });
     // Expand the supply:
@@ -142,6 +212,23 @@ namespace graphene { namespace chain {
                                                           holder_->currency_of_choice, holder_->to_address, holder_->memo, holder_->timestamp});
     // Free the holder object:
     d.remove(*holder_);
+
+    // Are withdrawal limits in effect?
+    if (d.head_block_time() >= HARDFORK_BLC_328_TIME)
+    {
+      auto &index = d.get_index_type<withdrawal_limit_index>().indices().get<by_account_id>();
+      auto itr = index.find(holder_->account);
+      if (itr != index.end())
+      {
+        const auto& limit = *itr;
+        if (limit.spent.amount >= holder_->amount)
+        {
+          d.modify(limit, [&](withdrawal_limit_object& o){
+            o.spent.amount -= holder_->amount;
+          });
+        }
+      }
+    }
 
     return {};
 

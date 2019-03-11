@@ -27,7 +27,7 @@
 
 #include <graphene/chain/access_layer.hpp>
 #include <graphene/chain/das33_evaluator.hpp>
-
+#include <graphene/chain/withdrawal_limit_object.hpp>
 #include <graphene/chain/issued_asset_record_object.hpp>
 
 #include <fc/bloom_filter.hpp>
@@ -196,15 +196,17 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
 
       vector<dasc_holder> get_top_dasc_holders() const;
 
+      optional<withdrawal_limit> get_withdrawal_limit(account_id_type account, asset_id_type asset_id) const;
+
       // DasPay:
       vector<payment_service_provider_object> get_payment_service_providers() const;
       optional<vector<daspay_authority>> get_daspay_authority_for_account(account_id_type account) const;
       vector<delayed_operation_object> get_delayed_operations_for_account(account_id_type account) const;
 
       // Das33
-      vector<das33_pledge_holder_object> get_das33_pledges(das33_pledge_holder_id_type from, uint32_t limit) const;
+      vector<das33_pledge_holder_object> get_das33_pledges(das33_pledge_holder_id_type from, uint32_t limit, optional<uint32_t> phase) const;
       das33_pledges_by_account_result get_das33_pledges_by_account(account_id_type account) const;
-      vector<das33_pledge_holder_object> get_das33_pledges_by_project(das33_project_id_type project, das33_pledge_holder_id_type from, uint32_t limit) const;
+      vector<das33_pledge_holder_object> get_das33_pledges_by_project(das33_project_id_type project, das33_pledge_holder_id_type from, uint32_t limit, optional<uint32_t> phase) const;
       vector<das33_project_object> get_das33_projects(const string& lower_bound_name, uint32_t limit) const;
       vector<asset> get_amount_of_assets_pledged_to_project(das33_project_id_type project) const;
       das33_project_tokens_amount get_amount_of_project_tokens_received_for_asset(das33_project_id_type project, asset to_pledge) const;
@@ -391,7 +393,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
 
    private:
       template<typename IterStart, typename IterEnd>
-      void func_re_pack(IterStart helper_itr, IterEnd end, std::vector<agregated_limit_orders_with_same_price_collection>& ret, uint32_t limit_group, uint32_t limit_per_group) const;
+      void func_re_pack(IterStart helper_itr, IterEnd end, std::vector<aggregated_limit_orders_with_same_price_collection>& ret, uint32_t limit_group, uint32_t limit_per_group) const;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -1328,8 +1330,8 @@ limit_orders_grouped_by_price database_api_impl::get_limit_orders_grouped_by_pri
       swap_buy_sell = true;
    }
 
-   auto func = [this, &limit_price_idx, limit](asset_id_type& a, asset_id_type& b, std::vector<agregated_limit_orders_with_same_price>& ret, bool ascending){
-      std::map<share_type, agregated_limit_orders_with_same_price> helper_map;
+   auto func = [this, &limit_price_idx, limit](asset_id_type& a, asset_id_type& b, std::vector<aggregated_limit_orders_with_same_price>& ret, bool ascending){
+      std::map<share_type, aggregated_limit_orders_with_same_price> helper_map;
 
       auto limit_itr = limit_price_idx.lower_bound(price::max(a,b));
       auto limit_end = limit_price_idx.upper_bound(price::min(a,b));
@@ -1350,7 +1352,7 @@ limit_orders_grouped_by_price database_api_impl::get_limit_orders_grouped_by_pri
          // if we are adding limit order with new price
          if(helper_itr == helper_map.end())
          {
-            agregated_limit_orders_with_same_price alo;
+            aggregated_limit_orders_with_same_price alo;
             alo.price = price_key;
             alo.base_volume = limit_itr->for_sale.value;
             alo.quote_volume = round(ascending ? limit_itr->for_sale.value * price : limit_itr->for_sale.value / price);
@@ -1412,14 +1414,14 @@ limit_orders_collection_grouped_by_price database_api::get_limit_orders_collecti
 
 
 template<typename IterStart, typename IterEnd>
-void database_api_impl::func_re_pack(IterStart helper_itr, IterEnd end, std::vector<agregated_limit_orders_with_same_price_collection>& ret, uint32_t limit_group, uint32_t limit_per_group) const
+void database_api_impl::func_re_pack(IterStart helper_itr, IterEnd end, std::vector<aggregated_limit_orders_with_same_price_collection>& ret, uint32_t limit_group, uint32_t limit_per_group) const
 {
    uint32_t count = 0;
    while(helper_itr != end && count < limit_group)
    {
       auto& alo = helper_itr->second;
       share_type group_price_key = static_cast<share_type>(alo.price / ORDER_BOOK_GROUP_QUERY_PRECISION_DIFF);
-      agregated_limit_orders_with_same_price_collection aloc;
+      aggregated_limit_orders_with_same_price_collection aloc;
       aloc.price = group_price_key;
       aloc.base_volume = alo.base_volume;
       aloc.quote_volume = alo.quote_volume;
@@ -1466,8 +1468,8 @@ limit_orders_collection_grouped_by_price database_api_impl::get_limit_orders_col
    }
 
 
-   auto func = [this, &limit_price_idx, limit_group, limit_per_group](asset_id_type& a, asset_id_type& b, std::vector<agregated_limit_orders_with_same_price_collection>& ret, bool ascending){
-      std::map<share_type, agregated_limit_orders_with_same_price> helper_map;
+   auto func = [this, &limit_price_idx, limit_group, limit_per_group](asset_id_type& a, asset_id_type& b, std::vector<aggregated_limit_orders_with_same_price_collection>& ret, bool ascending){
+      std::map<share_type, aggregated_limit_orders_with_same_price> helper_map;
 
       auto limit_itr = limit_price_idx.lower_bound(price::max(a,b));
       auto limit_end = limit_price_idx.upper_bound(price::min(a,b));
@@ -1489,7 +1491,7 @@ limit_orders_collection_grouped_by_price database_api_impl::get_limit_orders_col
          // if we are adding limit order with new price
          if(helper_itr == helper_map.end())
          {
-            agregated_limit_orders_with_same_price alo;
+            aggregated_limit_orders_with_same_price alo;
             alo.price = price_key;
             alo.base_volume = limit_itr->for_sale.value;
             alo.quote_volume = quote_amount;
@@ -2873,6 +2875,59 @@ vector<dasc_holder> database_api_impl::get_top_dasc_holders() const
     return ret;
 }
 
+optional<withdrawal_limit> database_api::get_withdrawal_limit(account_id_type account, asset_id_type asset_id) const
+{
+    return my->get_withdrawal_limit(account, asset_id);
+}
+
+optional<withdrawal_limit> database_api_impl::get_withdrawal_limit(account_id_type account, asset_id_type asset_id) const
+{
+    // Do we have a price for this asset?
+    auto p = _db.get_price_in_web_eur(asset_id);
+    if (!p.valid())
+        return {};
+
+    const auto& global_parameters_ext = _db.get_global_properties().parameters.extensions;
+    auto withdrawal_limit_it = std::find_if(global_parameters_ext.begin(), global_parameters_ext.end(),
+                                            [](const chain_parameters::chain_parameters_extension& ext){
+                                                    return ext.which() == chain_parameters::chain_parameters_extension::tag< withdrawal_limit_type >::value;
+                                            });
+    // Is withdrawal limit set?
+    if (withdrawal_limit_it == global_parameters_ext.end())
+        return {};
+
+    auto& limit = (*withdrawal_limit_it).get<withdrawal_limit_type>();
+
+    // Is asset limited?
+    if (limit.limited_assets.find(asset_id) == limit.limited_assets.end())
+        return {};
+
+    const auto& idx = _db.get_index_type<account_index>().indices().get<by_id>();
+    auto itr = idx.find(account);
+    if (itr == idx.end() || itr->kind != account_kind::wallet)
+        return {};
+
+    const auto& idx2 = _db.get_index_type<withdrawal_limit_index>().indices().get<by_account_id>();
+    auto itr2 = idx2.find(account);
+    if (itr2 == idx2.end())
+        return withdrawal_limit{limit.limit * *p, asset{0, asset_id}, _db.head_block_time(), {}};
+    
+    bool reset_limit = (_db.head_block_time() - itr2->beginning_of_withdrawal_interval > fc::microseconds(limit.duration * 1000000));
+    asset spent;
+    fc::time_point_sec when;
+    if (reset_limit)
+    {
+        spent = asset{0, asset_id};
+        when = _db.head_block_time();
+    }
+    else
+    {
+        spent = itr2->spent * *p;
+        when = itr2->beginning_of_withdrawal_interval;
+    }
+    return withdrawal_limit{itr2->limit * *p, spent, when, itr2->last_withdrawal};
+}
+
 //////////////////////////////////////////////////////////////////////
 //                                                                  //
 // DASPAY:                                                          //
@@ -2933,9 +2988,9 @@ vector<delayed_operation_object> database_api_impl::get_delayed_operations_for_a
 //                                                                  //
 //////////////////////////////////////////////////////////////////////
 
-vector<das33_pledge_holder_object> database_api::get_das33_pledges(das33_pledge_holder_id_type from, uint32_t limit) const
+vector<das33_pledge_holder_object> database_api::get_das33_pledges(das33_pledge_holder_id_type from, uint32_t limit, optional<uint32_t> phase) const
 {
-    return my->get_das33_pledges(from, limit);
+    return my->get_das33_pledges(from, limit, phase);
 }
 
 das33_pledges_by_account_result database_api::get_das33_pledges_by_account(account_id_type account) const
@@ -2943,12 +2998,12 @@ das33_pledges_by_account_result database_api::get_das33_pledges_by_account(accou
     return my->get_das33_pledges_by_account(account);
 }
 
-vector<das33_pledge_holder_object> database_api::get_das33_pledges_by_project(das33_project_id_type project, das33_pledge_holder_id_type from, uint32_t limit) const
+vector<das33_pledge_holder_object> database_api::get_das33_pledges_by_project(das33_project_id_type project, das33_pledge_holder_id_type from, uint32_t limit, optional<uint32_t> phase) const
 {
-    return my->get_das33_pledges_by_project(project, from, limit);
+    return my->get_das33_pledges_by_project(project, from, limit, phase);
 }
 
-vector<das33_pledge_holder_object> database_api_impl::get_das33_pledges(das33_pledge_holder_id_type from, uint32_t limit) const
+vector<das33_pledge_holder_object> database_api_impl::get_das33_pledges(das33_pledge_holder_id_type from, uint32_t limit, optional<uint32_t> phase) const
 {
     FC_ASSERT( limit <= 100 );
     vector<das33_pledge_holder_object> result;
@@ -2956,10 +3011,16 @@ vector<das33_pledge_holder_object> database_api_impl::get_das33_pledges(das33_pl
     auto default_pledge_id = das33_pledge_holder_id_type();
 
     const auto& pledges = _db.get_index_type<das33_pledge_holder_index>().indices().get<by_id>();
-    for( auto itr = pledges.lower_bound(from); limit-- && itr != pledges.end(); ++itr )
+    for( auto itr = pledges.lower_bound(from); limit && itr != pledges.end(); ++itr )
     {
       if (itr->id != default_pledge_id)
-        result.emplace_back(*itr);
+      {
+          if (phase && *phase != itr->phase_number)
+              continue;
+          result.emplace_back(*itr);
+          limit--;
+      }
+
     }
 
     return result;
@@ -3017,7 +3078,7 @@ das33_pledges_by_account_result database_api_impl::get_das33_pledges_by_account(
     return result;
 }
 
-vector<das33_pledge_holder_object> database_api_impl::get_das33_pledges_by_project(das33_project_id_type project, das33_pledge_holder_id_type from, uint32_t limit) const
+vector<das33_pledge_holder_object> database_api_impl::get_das33_pledges_by_project(das33_project_id_type project, das33_pledge_holder_id_type from, uint32_t limit, optional<uint32_t> phase) const
 {
     FC_ASSERT( limit <= 100 );
     vector<das33_pledge_holder_object> result;
@@ -3025,10 +3086,15 @@ vector<das33_pledge_holder_object> database_api_impl::get_das33_pledges_by_proje
     auto default_pledge_id = das33_pledge_holder_id_type();
 
     const auto& pledges = _db.get_index_type<das33_pledge_holder_index>().indices().get<by_project>();
-    for( auto itr = pledges.lower_bound(make_tuple(project, from)); limit-- && itr->project_id == project && itr != pledges.end(); ++itr )
+    for( auto itr = pledges.lower_bound(make_tuple(project, from)); limit && itr->project_id == project && itr != pledges.end(); ++itr )
     {
        if (itr->id != default_pledge_id)
-          result.emplace_back(*itr);
+       {
+           if (phase && *phase != itr->phase_number)
+               continue;
+           result.emplace_back(*itr);
+           limit--;
+       }
     }
 
     return result;
@@ -3102,8 +3168,11 @@ das33_project_tokens_amount database_api_impl::get_amount_of_project_tokens_rece
   const auto& project_obj = project(_db);
 
   share_type precision = graphene::chain::precision_modifier(to_pledge.asset_id(_db), _db.get_web_asset_id()(_db));
-  price asset_price = graphene::chain::get_price_in_web_eur(to_pledge.asset_id, _db);
-  asset base_asset = graphene::chain::asset_price_multiply(to_pledge, precision.value, asset_price, project_obj.token_price);
+
+  const auto& asset_price = _db.get_price_in_web_eur(to_pledge.asset_id);
+  FC_ASSERT(asset_price.valid(), "There is no proper price for ${asset}", ("asset", to_pledge.asset_id));
+
+  asset base_asset = graphene::chain::asset_price_multiply(to_pledge, precision.value, *asset_price, project_obj.token_price);
 
   asset bonus;
   auto discount_iterator = project_obj.discounts.find(to_pledge.asset_id);
@@ -3127,8 +3196,11 @@ das33_project_tokens_amount database_api_impl::get_amount_of_asset_needed_for_pr
   const auto& project_obj = project(_db);
 
   share_type precision = graphene::chain::precision_modifier(tokens.asset_id(_db), _db.get_web_asset_id()(_db));
-  price asset_price = graphene::chain::get_price_in_web_eur(asset_id, _db);
-  asset to_pledge = graphene::chain::asset_price_multiply(tokens, precision.value, project_obj.token_price, asset_price);
+
+  const auto& asset_price = _db.get_price_in_web_eur(asset_id);
+  FC_ASSERT(asset_price.valid(), "There is no proper price for ${asset}", ("asset", asset_id));
+
+  asset to_pledge = graphene::chain::asset_price_multiply(tokens, precision.value, project_obj.token_price, *asset_price);
 
   asset bonus;
   auto discount_iterator = project_obj.discounts.find(asset_id);

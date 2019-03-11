@@ -296,7 +296,7 @@ namespace graphene { namespace chain {
                 , use_external_btc_price(use_external_btc_price) {}
 
     account_id_type fee_payer() const { return authority; }
-    void validate() const;
+    [[ noreturn ]] void validate() const;
   };
 
   struct das33_set_use_market_price_for_token_operation : public base_operation
@@ -305,13 +305,13 @@ namespace graphene { namespace chain {
     asset fee;
 
     account_id_type              authority;
-    vector<asset_id_type>        use_market_price_for_token;
+    flat_set<asset_id_type>      use_market_price_for_token;
     extensions_type              extensions;
 
     das33_set_use_market_price_for_token_operation() = default;
 
     explicit das33_set_use_market_price_for_token_operation(const account_id_type& authority,
-                                                            vector<asset_id_type> use_market_price_for_token)
+                                                            const flat_set<asset_id_type>& use_market_price_for_token)
                   : authority(authority)
                   , use_market_price_for_token(use_market_price_for_token) {}
 

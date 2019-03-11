@@ -2619,6 +2619,8 @@ FC_API( graphene::wallet::wallet_api,
         // Requests:
         (get_all_webasset_issue_requests)
         (get_all_wire_out_holders)
+        (get_all_wire_out_with_fee_holders)
+
         // Queue:
         (get_reward_queue)
         (get_reward_queue_by_page)

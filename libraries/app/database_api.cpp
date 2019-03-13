@@ -3036,7 +3036,7 @@ das33_pledges_by_account_result database_api_impl::get_das33_pledges_by_account(
     std::copy(idx.first, idx.second, std::back_inserter(pledges));
 
     map<das33_project_id_type, share_type> last_round_number;
-    for (u_int i = 0; i < pledges.size(); i++)
+    for (unsigned i = 0; i < pledges.size(); i++)
     {
       das33_project_id_type project_id = pledges[i].project_id;
       share_type round_number = pledges[i].phase_number;
@@ -3058,7 +3058,7 @@ das33_pledges_by_account_result database_api_impl::get_das33_pledges_by_account(
           last_round_number[project_id] = round_number;
       }
     }
-    for (u_int j = 0; j < pledges.size(); j++)
+    for (unsigned j = 0; j < pledges.size(); j++)
     {
       das33_project_id_type project_id = pledges[j].project_id;
       share_type round_number = pledges[j].phase_number;
